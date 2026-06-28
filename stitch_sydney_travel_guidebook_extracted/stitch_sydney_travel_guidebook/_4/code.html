@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+
+<html class="light" lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>시드니 가이드 - 명소</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                "secondary-fixed": "#ffdea8",
+                "primary-container": "#005b94",
+                "on-tertiary": "#ffffff",
+                "tertiary-fixed-dim": "#c9c6c1",
+                "on-primary": "#ffffff",
+                "on-secondary": "#ffffff",
+                "inverse-on-surface": "#f0f0f3",
+                "inverse-primary": "#9acbff",
+                "on-background": "#1a1c1e",
+                "secondary": "#7c5800",
+                "surface-bright": "#f9f9fc",
+                "on-secondary-container": "#6b4b00",
+                "on-tertiary-fixed": "#1c1c18",
+                "surface-container-high": "#e8e8ea",
+                "tertiary-fixed": "#e5e2dc",
+                "error": "#ba1a1a",
+                "primary-fixed": "#d0e4ff",
+                "on-secondary-fixed-variant": "#5e4200",
+                "on-surface": "#1a1c1e",
+                "on-tertiary-fixed-variant": "#474743",
+                "surface-container-highest": "#e2e2e5",
+                "on-surface-variant": "#414750",
+                "on-primary-fixed": "#001d34",
+                "on-error": "#ffffff",
+                "tertiary-container": "#595853",
+                "on-primary-fixed-variant": "#004a79",
+                "surface-container-low": "#f3f3f6",
+                "surface-variant": "#e2e2e5",
+                "on-tertiary-container": "#d0cec8",
+                "secondary-fixed-dim": "#ffba20",
+                "secondary-container": "#feb700",
+                "on-primary-container": "#a9d2ff",
+                "outline": "#717881",
+                "tertiary": "#41413d",
+                "surface-container-lowest": "#ffffff",
+                "surface-tint": "#13629b",
+                "inverse-surface": "#2f3133",
+                "surface-dim": "#dadadc",
+                "outline-variant": "#c1c7d1",
+                "error-container": "#ffdad6",
+                "primary-fixed-dim": "#9acbff",
+                "on-secondary-fixed": "#271900",
+                "surface-container": "#eeeef0",
+                "surface": "#f9f9fc",
+                "on-error-container": "#93000a",
+                "background": "#f9f9fc",
+                "primary": "#00436f"
+              },
+              "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+              },
+              "spacing": {
+                "gutter": "24px",
+                "base": "8px",
+                "margin-desktop": "40px",
+                "margin-mobile": "16px",
+                "container-max": "1280px"
+              },
+              "fontFamily": {
+                "body-lg": ["Inter"],
+                "display-lg-mobile": ["Montserrat"],
+                "label-sm": ["Inter"],
+                "body-md": ["Inter"],
+                "headline-md": ["Montserrat"],
+                "display-lg": ["Montserrat"]
+              },
+              "fontSize": {
+                "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                "display-lg-mobile": ["32px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                "label-sm": ["14px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                "headline-md": ["24px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                "display-lg": ["48px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        body {
+            background-color: #F9F6F0; /* Opera Cream Base */
+            color: #1a1c1e;
+        }
+        .glass-effect {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .card-shadow {
+            box-shadow: 0 4px 20px -2px rgba(0, 67, 111, 0.15); /* Pacific Blue Shadow 15% */
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #00436f;
+            border-radius: 10px;
+        }
+        .timeline-line {
+            background-image: repeating-linear-gradient(0deg, #00436f, #00436f 4px, transparent 4px, transparent 8px);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="font-body-md text-body-md overflow-x-hidden custom-scrollbar">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-surface/80 dark:bg-surface-dim/80 backdrop-blur-md border-b border-outline-variant/10 shadow-sm">
+<div class="flex justify-between items-center h-16 px-margin-desktop max-w-container-max mx-auto">
+<div class="flex items-center gap-8">
+<span class="font-display-lg text-headline-md font-bold text-primary dark:text-primary-fixed-dim">시드니 가이드</span>
+<div class="hidden md:flex space-x-6">
+<a class="text-on-surface-variant dark:text-on-tertiary-container hover:text-primary transition-colors font-body-md text-body-md" href="#">홈</a>
+<a class="text-on-surface-variant dark:text-on-tertiary-container hover:text-primary transition-colors font-body-md text-body-md" href="#">일정</a>
+<a class="text-on-surface-variant dark:text-on-tertiary-container hover:text-primary transition-colors font-body-md text-body-md" href="#">맛집</a>
+<a class="text-primary dark:text-primary-fixed-dim font-bold border-b-2 border-secondary font-body-md text-body-md" href="#">명소</a>
+<a class="text-on-surface-variant dark:text-on-tertiary-container hover:text-primary transition-colors font-body-md text-body-md" href="#">팁</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant/30 rounded-full text-sm focus:ring-2 focus:ring-primary outline-none transition-all w-64" placeholder="명소 검색..." type="text"/>
+</div>
+</div>
+</div>
+</nav>
+<!-- SideNavBar (Desktop Only) -->
+<aside class="hidden xl:flex h-screen w-64 fixed left-0 top-0 bg-surface-container-low dark:bg-surface-container-highest flex-col p-base space-y-4 pt-20 z-40">
+<div class="px-4 mb-8">
+<div class="flex items-center gap-3 mb-4">
+<img alt="사용자 프로필" class="w-10 h-10 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjRc747ZL6yuItdJzaCK5jEYRO97TcYJ6Ipi8-WuZq7OrR66rftyLnVv1okdqFIReVbXtOIvSEeMQ-rxZWQHofpFzEoamOAsm12I3ZNt3mTpUvGHxCGbC5mAcCRDFCM1eH856L6L0UNE8vZB8VQjQY2DyoqtfJqVLOSuXB9u2aUpEEYFp8femPtU34my5rgKjC4uXdj52Suqux6PoGfujS1Ks8w1aHElVgq_QXrpBKOVK_p_RmU-W6IDFt8ZnnYubqJdgc22bUtWQ"/>
+<div>
+<p class="font-headline-md text-label-sm text-primary">시드니 여행</p>
+<p class="text-[12px] text-on-surface-variant">10월 7일 - 15일</p>
+</div>
+</div>
+<button class="w-full bg-secondary-container text-on-secondary-container py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:scale-105 transition-transform">
+<span class="material-symbols-outlined">map</span>
+                지도 보기
+            </button>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:bg-surface-variant/50 rounded-lg transition-all active:scale-95 group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">home</span>
+<span class="font-label-sm">홈</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:bg-surface-variant/50 rounded-lg transition-all active:scale-95 group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">calendar_month</span>
+<span class="font-label-sm">일정</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:bg-surface-variant/50 rounded-lg transition-all active:scale-95 group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">restaurant</span>
+<span class="font-label-sm">맛집</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 bg-secondary-container text-on-secondary-container rounded-lg font-bold transition-all active:scale-95" href="#">
+<span class="material-symbols-outlined">map</span>
+<span class="font-label-sm">명소</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:bg-surface-variant/50 rounded-lg transition-all active:scale-95 group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">info</span>
+<span class="font-label-sm">팁</span>
+</a>
+</nav>
+<div class="border-t border-outline-variant/20 pt-4">
+<a class="flex items-center gap-4 px-4 py-2 text-on-surface-variant hover:text-primary font-label-sm transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+                설정
+            </a>
+<a class="flex items-center gap-4 px-4 py-2 text-on-surface-variant hover:text-primary font-label-sm transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">help</span>
+                고객센터
+            </a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="pt-24 pb-12 px-margin-mobile md:px-margin-desktop xl:ml-64 max-w-container-max mx-auto">
+<!-- Hero Section -->
+<header class="mb-12 relative rounded-3xl overflow-hidden h-[400px] flex items-end p-8 md:p-12">
+<img class="absolute inset-0 w-full h-full object-cover" data-alt="A panoramic wide-angle shot of the Sydney Harbour at sunset, featuring the iconic Opera House and Harbour Bridge bathed in golden hour light. The sky is a gradient of deep orange, soft pink, and violet, reflecting beautifully on the calm Pacific waters. The overall mood is romantic, serene, and majestic, capturing the high-energy yet organized essence of the city. The photography style is sharp with high contrast and vibrant color saturation to align with the brand identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCz7hLHH6vuegDx9FHisaWvabOZDKhVJuLQuGOqohXm-dnAIa_5esSO4JLsJxq2YjiYmR7IE5_O8pn9YX9LS06fhgxJ7Y6KIrfXZXd7oqMbNzsJteDJHvbmJHj-ve3xvA_JJNk8nOWEHNK4EfJQQzC056IRZutCSDeYOPb5eaR_pL5xhM0F6nK8vHhcvu3obUPh3RXrbPMWHUJCIj-orcvkLEc-nnHyF6BjLHkx3EiaQqrJOGSItIHo3EnCqAkBVpv4dlujsoj8lhs"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+<div class="relative z-10">
+<h1 class="font-display-lg text-display-lg-mobile md:text-display-lg text-white mb-4">시드니의 심장을 탐험하다</h1>
+<p class="text-white/90 max-w-2xl font-body-lg">세계에서 가장 아름다운 항구 도시, 시드니의 랜드마크부터 숨겨진 대자연까지. 당신의 특별한 여행을 위한 완벽한 가이드를 제공합니다.</p>
+</div>
+</header>
+<!-- Featured Grid (Bento Style) -->
+<section class="grid grid-cols-1 md:grid-cols-12 gap-gutter mb-16">
+<!-- Opera House (Main Anchor) -->
+<div class="md:col-span-8 group relative rounded-3xl overflow-hidden bg-white card-shadow min-h-[500px] flex flex-col">
+<div class="h-2/3 overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" data-alt="An up-close, architectural detail shot of the Sydney Opera House's white ceramic tiles glowing under a bright, clear blue Australian sky. The sharp geometric shapes and organic curves of the sails create a striking contrast against the vibrant primary blue of the background. Soft shadows define the texture of the building, evoking a sense of structural brilliance and modern minimalism. The lighting is crisp and midday, highlighting the pristine white surfaces." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAkBsVbLEjCe4okX71joHAhMdPfq7HWb8Ma2SFTtSBh2rRNIsrdNQsA3u98uRSiC06JNIlAsXFJDfFyfzGN6VPlivDp8AAL742q47mFEDzKCZuAHQQIZ_7N9IbVHgceaXKJHlweirCg9RyMXUfR2uYC-qPaaCmudmGv7PyFcRKCLBTy1ts9ktDgYCZzBLBaDUuGh001k7BE5WIYeO_keeIoMNm6NVl8hL3PvTmuwfOrkBKY18irCbwzSduxJoZQbNDdMzmJ3EVMHwY"/>
+<div class="absolute top-6 right-6 bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full flex items-center gap-1 shadow-md">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-bold">4.9</span>
+</div>
+</div>
+<div class="p-8 flex-1">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h2 class="font-display-lg text-headline-md text-primary mb-1">시드니 오페라 하우스</h2>
+<p class="text-on-surface-variant">Sydney Opera House</p>
+</div>
+<div class="flex gap-2">
+<span class="px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-bold">건축</span>
+<span class="px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-bold">문화</span>
+</div>
+</div>
+<p class="text-on-surface-variant mb-6">20세기 최고의 건축물 중 하나로 꼽히는 유네스코 세계문화유산입니다. 독특한 조개껍데기 모양의 지붕이 특징이며, 매일 다양한 공연과 가이드 투어가 진행됩니다.</p>
+<div class="grid grid-cols-3 gap-4 border-t border-outline-variant/20 pt-6">
+<div class="flex flex-col gap-1">
+<span class="text-xs text-outline uppercase tracking-wider">추천 시간</span>
+<span class="font-bold text-on-surface">일출 / 일몰</span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="text-xs text-outline uppercase tracking-wider">소요 시간</span>
+<span class="font-bold text-on-surface">1 - 2시간</span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="text-xs text-outline uppercase tracking-wider">입장료</span>
+<span class="font-bold text-on-surface">외부 무료</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Harbour Bridge (Secondary High-Contrast) -->
+<div class="md:col-span-4 group relative rounded-3xl overflow-hidden bg-white card-shadow flex flex-col">
+<div class="h-1/2 overflow-hidden bg-primary">
+<img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" data-alt="A dynamic, low-angle perspective of the Sydney Harbour Bridge's steel arch structure. The dark grey industrial steel frames a bright azure sky, with a few wispy white clouds. The lighting is strong, casting dramatic architectural shadows that emphasize the bridge's strength and engineering. In the background, the sparkling blue water of the harbor adds a sense of place and vibrancy. The style is adventurous and authoritative, matching the Sydney guide brand." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDVAMZ_KKuIZK4AfZoTdV47yVzL9tC5WVr8Zcf3nh7lxefRkoDch32XHmE3rFTOpLOmM7Fess-mukhe6eyAcUzetWIcMcnUZ_va3A6BxQF-1LuL5rEttPuUoKlhk7A27FP7V05Rs1YlJOgNnhWrjyhQ4rvEyZ-C54LK9DnoQv_X9NQG9NPDgj3LWSltowQHgfO_z-C73O0_qycUnQ5yxxsOM0pDX0yTbyx4JSu-xQQ2W6Z0RRHhl7AmexHga2R2Xpkpyew7dGfc85U"/>
+</div>
+<div class="p-6 flex-1">
+<h3 class="font-display-lg text-body-lg font-bold text-primary mb-2">하버 브릿지</h3>
+<p class="text-sm text-on-surface-variant mb-4">'옷걸이'라는 별명을 가진 세계에서 가장 높은 철제 아치교입니다. 브릿지 클라이밍을 통해 시드니 전체를 조망해보세요.</p>
+<ul class="space-y-3">
+<li class="flex items-center gap-3 text-sm">
+<span class="material-symbols-outlined text-secondary text-[20px]">lightbulb</span>
+<span>파일론 전망대에서 저렴하게 뷰 감상</span>
+</li>
+<li class="flex items-center gap-3 text-sm">
+<span class="material-symbols-outlined text-secondary text-[20px]">schedule</span>
+<span>평일 오후가 가장 붐비지 않음</span>
+</li>
+</ul>
+</div>
+</div>
+<!-- Blue Mountains (Asymmetric Content) -->
+<div class="md:col-span-6 group relative rounded-3xl overflow-hidden bg-white card-shadow flex flex-col md:flex-row min-h-[300px]">
+<div class="md:w-2/5 overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" data-alt="A breathtaking landscape of the Blue Mountains, showing the Three Sisters rock formation shrouded in a light morning mist. The vast valley below is covered in dense eucalyptus forest, emitting a subtle blue haze under the soft morning sun. The color palette is dominated by deep forest greens, earthy browns, and the characteristic atmospheric blue tint. The mood is majestic and ancient, inviting exploration and adventure in a vast natural setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBbUPUTQ_rYkG-lcLwdnciDSNaHlP-Wxa8rl1tevTd8dIf9aQYkwRgj3YXzppe10cSVhI9pkvr8LPTjNhCY_MM2ewZakhM4lCJQVlFOPHVL0Qapp_E9-jh6OtgIS0lEYixwxKjGEdfKSL-MoPGsVUmy_LjqofckJS8SBYXs4aEO6T1ngG4lIjdrXeRbJ0p2LTTmUIumn44Gk8mY6wmjHLG9vwTuWpLi8LsBacr6vLHJQCsYJCFVaokE4oPVTk6ck4vAODi6eeVmrLo"/>
+</div>
+<div class="md:w-3/5 p-8 flex flex-col justify-center">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-primary">landscape</span>
+<h3 class="font-display-lg text-body-lg font-bold text-primary">블루 마운틴</h3>
+</div>
+<p class="text-sm text-on-surface-variant mb-6 italic">시드니에서 차로 1시간 30분, 끝없이 펼쳐진 유칼립투스 숲</p>
+<div class="space-y-4">
+<div class="flex items-start gap-3">
+<div class="w-8 h-8 rounded-full bg-secondary-container/20 flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-secondary text-[18px]">info</span>
+</div>
+<div>
+<p class="text-xs font-bold text-secondary">팁</p>
+<p class="text-xs text-on-surface-variant">시닉 월드(Scenic World) 티켓을 미리 예매하세요.</p>
+</div>
+</div>
+<div class="flex items-start gap-3">
+<div class="w-8 h-8 rounded-full bg-primary-container/10 flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-primary text-[18px]">timer</span>
+</div>
+<div>
+<p class="text-xs font-bold text-primary">추천 일정</p>
+<p class="text-xs text-on-surface-variant">당일 투어 (약 8-10시간 소요)</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Taronga Zoo (Glassmorphism Accent) -->
+<div class="md:col-span-6 group relative rounded-3xl overflow-hidden bg-white card-shadow flex flex-col md:flex-row-reverse min-h-[300px]">
+<div class="md:w-2/5 overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" data-alt="A portrait of a koala resting on a eucalyptus branch at Taronga Zoo, with the iconic Sydney skyline and harbor visible in the soft-focus background. The lighting is warm and golden, characteristic of a late afternoon in Sydney. The koala is in sharp focus, showing detailed fur texture, while the city remains a dreamy, atmospheric silhouette. This image captures the unique blend of wildlife and urban sophistication that defines the Sydney experience." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkxUV7zWpe6rUBdPG-Y3aUKM0knVjT7y5tQUk9BZiYRizBPCyEHi4RqYyWM69IqGdTUZv5KZ9Gionb59HCxubrXMNPd5w_GK9EOogG-zTAh9g6JTkcumnDNhHwT5QuVKFBfOv0MnAbNjf__ElCYfxrlDiaYUcgGXaojHe5kaS_HeSgkggyNDJ_XE1EOMX0bHQZtjavXejTG_lwzdaIccjEg6pJIVnw7cxFbs-D5c-JX6xC3qViyZLSuUT-JunxAoaNJrZFO8mVsxg"/>
+</div>
+<div class="md:w-3/5 p-8 flex flex-col justify-center bg-surface-container-low">
+<h3 class="font-display-lg text-body-lg font-bold text-primary mb-4">타롱가 동물원</h3>
+<p class="text-sm text-on-surface-variant mb-6">시드니 하버의 절경을 배경으로 호주 고유의 동물을 만날 수 있는 곳입니다. 페리를 타고 이동하며 즐기는 뷰는 덤!</p>
+<div class="flex flex-wrap gap-2">
+<div class="px-4 py-2 bg-white rounded-xl shadow-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-primary">directions_boat</span>
+<span class="text-xs font-bold">서큘러 키 페리 이용</span>
+</div>
+<div class="px-4 py-2 bg-white rounded-xl shadow-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-primary">schedule</span>
+<span class="text-xs font-bold">오전 10시 개장</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Itinerary Timeline Section -->
+<section class="mb-16">
+<h2 class="font-display-lg text-headline-md text-primary mb-8 text-center">명소 투어 추천 코스</h2>
+<div class="max-w-4xl mx-auto relative px-4">
+<div class="absolute left-8 md:left-1/2 top-0 bottom-0 w-[2px] timeline-line -translate-x-1/2"></div>
+<div class="space-y-12">
+<!-- Step 1 -->
+<div class="relative flex flex-col md:flex-row items-start md:items-center">
+<div class="flex-1 hidden md:block text-right pr-12">
+<p class="text-primary font-bold">09:00 AM</p>
+<h4 class="font-bold">페리 터미널 도착</h4>
+</div>
+<div class="absolute left-8 md:left-1/2 w-4 h-4 bg-primary border-4 border-white rounded-full -translate-x-1/2 z-10"></div>
+<div class="flex-1 pl-16 md:pl-12">
+<div class="bg-white p-6 rounded-2xl shadow-sm border border-outline-variant/10">
+<p class="md:hidden text-primary font-bold text-xs mb-1">09:00 AM</p>
+<h4 class="font-bold mb-2">서큘러 키(Circular Quay)</h4>
+<p class="text-sm text-on-surface-variant">모든 명소의 시작점. 오페라 하우스를 먼저 한 바퀴 돌아보고 타롱가 페리를 준비하세요.</p>
+</div>
+</div>
+</div>
+<!-- Step 2 -->
+<div class="relative flex flex-col md:flex-row items-start md:items-center">
+<div class="flex-1 order-2 md:order-1 pr-12 md:text-right pl-16 md:pl-0">
+<div class="bg-white p-6 rounded-2xl shadow-sm border border-outline-variant/10">
+<p class="md:hidden text-primary font-bold text-xs mb-1">11:00 AM</p>
+<h4 class="font-bold mb-2">타롱가 동물원</h4>
+<p class="text-sm text-on-surface-variant">가장 활발한 오전 시간에 방문하여 코알라와 캥거루를 만나보세요.</p>
+</div>
+</div>
+<div class="absolute left-8 md:left-1/2 w-4 h-4 bg-secondary border-4 border-white rounded-full -translate-x-1/2 z-10"></div>
+<div class="flex-1 order-1 md:order-2 hidden md:block pl-12">
+<p class="text-secondary font-bold">11:00 AM</p>
+<h4 class="font-bold">생생한 자연 체험</h4>
+</div>
+</div>
+<!-- Step 3 -->
+<div class="relative flex flex-col md:flex-row items-start md:items-center">
+<div class="flex-1 hidden md:block text-right pr-12">
+<p class="text-primary font-bold">05:30 PM</p>
+<h4 class="font-bold">선셋 뷰포인트</h4>
+</div>
+<div class="absolute left-8 md:left-1/2 w-4 h-4 bg-primary border-4 border-white rounded-full -translate-x-1/2 z-10"></div>
+<div class="flex-1 pl-16 md:pl-12">
+<div class="bg-white p-6 rounded-2xl shadow-sm border border-outline-variant/10">
+<p class="md:hidden text-primary font-bold text-xs mb-1">05:30 PM</p>
+<h4 class="font-bold mb-2">하버 브릿지 워킹</h4>
+<p class="text-sm text-on-surface-variant">해 질 녘 다리를 건너며 시드니 도심의 야경이 켜지는 순간을 감상하세요.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Visiting Tips Grid -->
+<section class="bg-primary-container text-white rounded-3xl p-12 mb-16 relative overflow-hidden">
+<div class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+<div class="relative z-10">
+<h2 class="font-display-lg text-headline-md mb-8">여행자를 위한 꿀팁</h2>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+<div class="bg-white/10 p-6 rounded-2xl backdrop-blur-sm border border-white/10">
+<span class="material-symbols-outlined text-secondary-fixed mb-4 text-[32px]">credit_card</span>
+<h4 class="font-bold mb-2">오팔 카드(Opal Card)</h4>
+<p class="text-sm text-white/80">대중교통 이용 시 필수입니다. 주말에는 요금 혜택이 크니 먼 거리는 주말에 이동하세요.</p>
+</div>
+<div class="bg-white/10 p-6 rounded-2xl backdrop-blur-sm border border-white/10">
+<span class="material-symbols-outlined text-secondary-fixed mb-4 text-[32px]">sunny</span>
+<h4 class="font-bold mb-2">자외선 차단</h4>
+<p class="text-sm text-white/80">호주의 햇빛은 매우 강합니다. 흐린 날에도 자외선 차단제와 선글라스는 필수입니다.</p>
+</div>
+<div class="bg-white/10 p-6 rounded-2xl backdrop-blur-sm border border-white/10">
+<span class="material-symbols-outlined text-secondary-fixed mb-4 text-[32px]">wifi</span>
+<h4 class="font-bold mb-2">무료 WiFi</h4>
+<p class="text-sm text-white/80">대부분의 역과 공립 박물관에서 무료 WiFi를 제공합니다. 'Sydney Free WiFi'를 찾으세요.</p>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-highest dark:bg-inverse-surface w-full py-12 mt-auto border-t border-outline-variant/20">
+<div class="flex flex-col items-center justify-center space-y-6 px-margin-desktop max-w-container-max mx-auto">
+<div class="flex flex-col items-center gap-2">
+<span class="font-display-lg text-body-lg font-bold text-primary">시드니 여행 가이드</span>
+<p class="text-on-surface-variant text-sm">vibrant, adventurous, and authoritative.</p>
+</div>
+<div class="flex gap-8">
+<a class="text-on-surface-variant dark:text-on-tertiary-container hover:text-secondary transition-colors font-label-sm" href="#">이용약관</a>
+<a class="text-on-surface-variant dark:text-on-tertiary-container hover:text-secondary transition-colors font-label-sm" href="#">개인정보처리방침</a>
+<a class="text-on-surface-variant dark:text-on-tertiary-container hover:text-secondary transition-colors font-label-sm" href="#">문의하기</a>
+</div>
+<div class="flex gap-4">
+<a class="w-10 h-10 rounded-full bg-white/50 flex items-center justify-center hover:bg-primary hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">public</span>
+</a>
+<a class="w-10 h-10 rounded-full bg-white/50 flex items-center justify-center hover:bg-primary hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">share</span>
+</a>
+</div>
+<p class="text-on-surface-variant dark:text-inverse-on-surface font-label-sm opacity-60">© 2024 시드니 여행 가이드. All rights reserved.</p>
+</div>
+</footer>
+<!-- Mobile Bottom Navigation -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white/80 glass-effect border-t border-outline-variant/10 flex items-center justify-around px-4 z-50">
+<button class="flex flex-col items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined">home</span>
+<span class="text-[10px]">홈</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined">calendar_month</span>
+<span class="text-[10px]">일정</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">map</span>
+<span class="text-[10px] font-bold">명소</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined">restaurant</span>
+<span class="text-[10px]">맛집</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined">person</span>
+<span class="text-[10px]">마이</span>
+</button>
+</nav>
+<script>
+        // Simple scroll behavior for the navbar
+        window.addEventListener('scroll', () => {
+            const nav = document.querySelector('nav');
+            if (window.scrollY > 20) {
+                nav.classList.add('shadow-md');
+            } else {
+                nav.classList.remove('shadow-md');
+            }
+        });
+
+        // Intersection Observer for fade-in animations
+        const observerOptions = {
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('opacity-100', 'translate-y-0');
+                    entry.target.classList.remove('opacity-0', 'translate-y-8');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('section, header').forEach(el => {
+            el.classList.add('transition-all', 'duration-1000', 'opacity-0', 'translate-y-8');
+            observer.observe(el);
+        });
+    </script>
+</body></html>

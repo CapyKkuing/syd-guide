@@ -1,0 +1,1277 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>시드니 첫 여행 가이드</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #fafafa;
+      --surface: #ffffff;
+      --surface-warm: var(--surface);
+      --fg: #111111;
+      --fg-2: var(--fg);
+      --muted: #6b6b6b;
+      --meta: var(--muted);
+      --border: #e5e5e5;
+      --border-soft: var(--border);
+      --accent: #2f6feb;
+      --accent-on: #ffffff;
+      --accent-hover: color-mix(in oklab, var(--accent), black 8%);
+      --accent-active: color-mix(in oklab, var(--accent), black 14%);
+      --success: #17a34a;
+      --warn: #eab308;
+      --danger: #dc2626;
+      --font-display: "Inter", -apple-system, system-ui, sans-serif;
+      --font-body: "Inter", -apple-system, system-ui, sans-serif;
+      --font-mono: ui-monospace, "JetBrains Mono", monospace;
+      --text-xs: 12px;
+      --text-sm: 14px;
+      --text-base: 16px;
+      --text-lg: 20px;
+      --text-xl: 24px;
+      --text-2xl: 32px;
+      --text-3xl: 48px;
+      --text-4xl: 64px;
+      --leading-body: 1.5;
+      --leading-tight: 1.2;
+      --tracking-display: -0.01em;
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-5: 20px;
+      --space-6: 24px;
+      --space-8: 32px;
+      --space-12: 48px;
+      --space-20: 80px;
+      --section-y-desktop: 80px;
+      --section-y-tablet: 48px;
+      --section-y-phone: 32px;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-pill: 9999px;
+      --elev-flat: none;
+      --elev-ring: 0 0 0 1px var(--border);
+      --elev-raised: 0 2px 8px color-mix(in oklab, var(--fg), transparent 92%);
+      --focus-ring: 0 0 0 3px color-mix(in oklab, var(--accent), transparent 70%);
+      --motion-fast: 150ms;
+      --motion-base: 200ms;
+      --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+      --container-max: 1200px;
+      --container-gutter-desktop: 24px;
+      --container-gutter-tablet: 16px;
+      --container-gutter-phone: 12px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--font-body);
+      color: var(--fg);
+      line-height: var(--leading-body);
+      background:
+        radial-gradient(circle at 8% 6%, color-mix(in oklab, var(--accent), transparent 94%), transparent 22%),
+        linear-gradient(180deg, var(--bg), color-mix(in oklab, var(--bg), white 2%));
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(color-mix(in oklab, var(--fg), transparent 98%) 1px, transparent 1px),
+        linear-gradient(90deg, color-mix(in oklab, var(--fg), transparent 98%) 1px, transparent 1px);
+      background-size: 48px 48px;
+      opacity: 0.3;
+      mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.45), transparent 72%);
+    }
+
+    a { color: inherit; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    img { display: block; max-width: 100%; height: auto; }
+    button, input { font: inherit; }
+
+    :focus-visible {
+      outline: none;
+      box-shadow: var(--focus-ring);
+      border-color: var(--accent);
+    }
+
+    .container {
+      width: min(calc(100% - 2 * var(--container-gutter-desktop)), var(--container-max));
+      margin: 0 auto;
+    }
+
+    .shell {
+      padding: 20px 0 88px;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      backdrop-filter: blur(18px);
+      background: color-mix(in oklab, var(--bg), white 22%);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .topbar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 14px 0;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+    }
+
+    .brand-mark {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      background: var(--fg);
+      box-shadow: 0 0 0 5px color-mix(in oklab, var(--fg), transparent 92%);
+      flex: 0 0 auto;
+    }
+
+    .nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .nav a,
+    .btn,
+    .chip,
+    .day-tab {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-pill);
+      background: var(--surface);
+      color: var(--fg);
+      padding: 9px 14px;
+      font-size: var(--text-sm);
+      font-weight: 600;
+      transition: transform var(--motion-fast) var(--ease-standard), border-color var(--motion-fast) var(--ease-standard), background var(--motion-fast) var(--ease-standard), color var(--motion-fast) var(--ease-standard);
+    }
+
+    .nav a:hover,
+    .btn:hover,
+    .day-tab:hover {
+      transform: translateY(-1px);
+      border-color: color-mix(in oklab, var(--fg), var(--border) 55%);
+      text-decoration: none;
+    }
+
+    .nav a[aria-current="page"],
+    .btn-primary,
+    .day-tab[aria-pressed="true"] {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: var(--accent-on);
+    }
+
+    .btn-primary:hover,
+    .day-tab[aria-pressed="true"]:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-secondary {
+      background: transparent;
+    }
+
+    .hero {
+      padding: 38px 0 28px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 24px;
+      align-items: center;
+      padding: 28px;
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      background: var(--surface);
+      box-shadow: var(--elev-raised);
+      overflow: hidden;
+    }
+
+    .hero-copy {
+      display: grid;
+      gap: 18px;
+      position: relative;
+      z-index: 1;
+    }
+
+    h1, h2, h3 {
+      margin: 0;
+      letter-spacing: var(--tracking-display);
+      line-height: var(--leading-tight);
+    }
+
+    h1 {
+      font-size: clamp(2.15rem, 4.4vw, 4.2rem);
+      max-width: 9.2ch;
+      text-wrap: balance;
+    }
+
+    .lead {
+      max-width: 54ch;
+      margin: 0;
+      font-size: clamp(0.98rem, 1.45vw, 1.08rem);
+      color: var(--muted);
+      text-wrap: pretty;
+    }
+
+    .meta-row,
+    .stat-row,
+    .cta-row,
+    .mini-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .chip {
+      min-height: 34px;
+      padding: 7px 12px;
+      font-size: var(--text-xs);
+      color: var(--muted);
+      background: color-mix(in oklab, var(--surface), var(--bg) 50%);
+    }
+
+    .hero-actions .btn {
+      min-width: 140px;
+    }
+
+    .hero-panel {
+      display: grid;
+      gap: 14px;
+      align-content: start;
+    }
+
+    .photo-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 12px;
+      min-height: 100%;
+    }
+
+    .photo-card {
+      position: relative;
+      overflow: hidden;
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      box-shadow: var(--elev-flat);
+      min-height: 230px;
+    }
+
+    .photo-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .photo-card.large {
+      grid-row: span 2;
+      min-height: 472px;
+    }
+
+    .photo-overlay {
+      position: absolute;
+      inset: auto 14px 14px 14px;
+      padding: 14px;
+      border-radius: 18px;
+      background: color-mix(in oklab, var(--surface), transparent 15%);
+      border: 1px solid color-mix(in oklab, var(--border), white 20%);
+      backdrop-filter: blur(12px);
+    }
+
+    .photo-overlay strong,
+    .photo-overlay p {
+      display: block;
+      margin: 0;
+    }
+
+    .photo-overlay strong {
+      font-size: 18px;
+    }
+
+    .photo-overlay p {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: var(--text-sm);
+    }
+
+    .panel-note {
+      padding: 16px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .panel-note .stat-row {
+      margin-top: 12px;
+    }
+
+    .stat {
+      flex: 1 1 120px;
+      padding: 12px;
+      border-radius: 16px;
+      background: color-mix(in oklab, var(--bg), white 16%);
+      border: 1px solid var(--border);
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 20px;
+      margin-bottom: 4px;
+    }
+
+    .section {
+      padding: 72px 0 0;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .section-head p {
+      margin: 0;
+      max-width: 56ch;
+      color: var(--muted);
+    }
+
+    .section-title {
+      font-size: clamp(1.6rem, 2.4vw, 2.5rem);
+    }
+
+    .section-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .itinerary-shell {
+      display: grid;
+      grid-template-columns: 0.95fr 1.05fr;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .tab-rail {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .day-panel,
+    .catalog-card,
+    .warning-card,
+    .cta-card {
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      background: var(--surface);
+      box-shadow: var(--elev-flat);
+    }
+
+    .day-panel {
+      overflow: hidden;
+      position: sticky;
+      top: 88px;
+    }
+
+    .day-media {
+      aspect-ratio: 16 / 11;
+      background: color-mix(in oklab, var(--bg), white 10%);
+    }
+
+    .day-media img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .day-copy {
+      padding: 18px;
+    }
+
+    .day-copy h3 {
+      font-size: 1.45rem;
+    }
+
+    .day-copy .lead {
+      margin-top: 10px;
+      font-size: 1rem;
+    }
+
+    .stop-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .stop {
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: color-mix(in oklab, var(--bg), white 12%);
+    }
+
+    .stop span {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .stop p {
+      margin: 0;
+      color: var(--fg);
+    }
+
+    .day-footer {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    .catalog-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .catalog-card {
+      overflow: hidden;
+    }
+
+    .catalog-card .cover {
+      aspect-ratio: 4 / 3;
+      background: color-mix(in oklab, var(--bg), white 12%);
+    }
+
+    .catalog-card .cover img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .catalog-copy {
+      padding: 16px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .catalog-copy h3 {
+      font-size: 1.1rem;
+    }
+
+    .catalog-copy p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .note-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .note-row .chip {
+      background: color-mix(in oklab, var(--bg), white 14%);
+    }
+
+    .warning-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .warning-card {
+      padding: 18px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .warning-card strong {
+      font-size: 1.05rem;
+    }
+
+    .warning-card p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .cta-card {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 18px;
+      align-items: center;
+      padding: 22px;
+      background:
+        linear-gradient(180deg, var(--surface), color-mix(in oklab, var(--bg), white 8%));
+      color: var(--fg);
+      border-color: var(--border);
+    }
+
+    .cta-card h2,
+    .cta-card p,
+    .cta-card a {
+      color: inherit;
+    }
+
+    .cta-card p {
+      color: var(--muted);
+    }
+
+    .cta-card .btn {
+      border-color: var(--border);
+      background: transparent;
+      color: var(--fg);
+    }
+
+    .cta-card .btn-primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: var(--accent-on);
+    }
+
+    .footer {
+      padding: 28px 0 0;
+      color: var(--muted);
+      font-size: var(--text-sm);
+      text-align: center;
+    }
+
+    .eyebrow {
+      font-size: var(--text-xs);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .body-sm {
+      font-size: var(--text-sm);
+    }
+
+    .body-muted {
+      color: var(--muted);
+    }
+
+    .live-task-panel {
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      background: var(--surface);
+      box-shadow: var(--elev-raised);
+    }
+
+    .live-task-summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 14px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .live-task-summary strong {
+      font-size: 18px;
+    }
+
+    .task-list {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .task-item {
+      display: grid;
+      gap: 6px;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: color-mix(in oklab, var(--bg), white 10%);
+    }
+
+    .task-item.done {
+      border-color: color-mix(in oklab, var(--success), var(--border) 65%);
+      background: color-mix(in oklab, var(--success), white 94%);
+    }
+
+    .task-item.pending {
+      border-color: color-mix(in oklab, var(--warn), var(--border) 70%);
+    }
+
+    .task-head {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .task-label {
+      font-weight: 700;
+    }
+
+    .task-state {
+      flex: 0 0 auto;
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .task-item.done .task-state {
+      background: color-mix(in oklab, var(--success), white 88%);
+      color: color-mix(in oklab, var(--success), black 24%);
+    }
+
+    .task-item.pending .task-state {
+      background: color-mix(in oklab, var(--warn), white 88%);
+      color: color-mix(in oklab, var(--warn), black 30%);
+    }
+
+    .task-indent {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    @media (max-width: 1080px) {
+      .hero-grid,
+      .itinerary-shell,
+      .cta-card {
+        grid-template-columns: 1fr;
+      }
+
+      .day-panel {
+        position: static;
+      }
+
+      .warning-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 980px) {
+      .topbar-inner {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .nav {
+        width: 100%;
+        justify-content: flex-start;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .container {
+        width: min(calc(100% - 2 * var(--container-gutter-phone)), var(--container-max));
+      }
+
+      .shell {
+        padding-top: 12px;
+      }
+
+      .nav {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        padding-top: 22px;
+      }
+
+      .hero-grid {
+        padding: 18px;
+      }
+
+      .photo-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .photo-card.large {
+        min-height: 280px;
+        grid-row: auto;
+      }
+
+      .hero-actions,
+      .stat-row {
+        width: 100%;
+      }
+
+      .hero-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .hero-actions .btn {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .cta-card .cta-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .cta-card .btn {
+        width: 100%;
+      }
+
+      .stat-row {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      .section-head {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .catalog-grid,
+      .warning-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .section {
+        padding-top: 56px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *,
+      *::before,
+      *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <a class="brand" href="#top" aria-label="시드니 첫 여행 가이드">
+        <span class="brand-mark" aria-hidden="true"></span>
+        시드니 첫 여행 가이드
+      </a>
+      <nav class="nav" aria-label="페이지 섹션">
+        <a href="#itinerary">일정</a>
+        <a href="#food-cafe">맛집·카페</a>
+        <a href="#practical">주의사항</a>
+        <a href="schedule.html">상세 일정</a>
+        <a href="tips.html">여행 팁</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top" class="shell">
+    <section class="hero">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <h1>시드니 첫 여행, 두 사람의 동선을 한눈에</h1>
+          <p class="lead">맛집, 카페, 일자별 여행코스, 주의사항만 남겨 첫 여행에 바로 쓰게 정리했습니다. 필요한 날과 장소로 바로 이동하면 됩니다.</p>
+
+          <div class="meta-row" aria-label="핵심 요약">
+            <span class="chip">2030 커플</span>
+            <span class="chip">반응형 웹</span>
+            <span class="chip">일정·맛집·카페·주의사항</span>
+          </div>
+
+          <div class="cta-row hero-actions">
+            <a class="btn btn-primary" href="#itinerary">일자별 코스 보기</a>
+            <a class="btn btn-secondary" href="#food-cafe">맛집·카페 보기</a>
+            <a class="btn btn-secondary" href="#practical">주의사항 보기</a>
+          </div>
+
+          <div class="stat-row">
+            <div class="stat">
+              <strong>8일</strong>
+              <span class="body-sm body-muted">도착, 하버, 해변, 블루마운틴, 출국 전까지 묶은 구성</span>
+            </div>
+            <div class="stat">
+              <strong>1개</strong>
+              <span class="body-sm body-muted">동선을 하나로 읽히게 만드는 메인 허브</span>
+            </div>
+            <div class="stat">
+              <strong>4개</strong>
+              <span class="body-sm body-muted">맛집·카페·코스·주의사항으로 즉시 분기</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-panel">
+          <div class="photo-grid" aria-label="시드니 미리보기 이미지">
+            <div class="photo-card large">
+              <img src="images/bondi_beach.jpg" alt="본다이 비치 전경" loading="eager" decoding="async">
+              <div class="photo-overlay">
+                <strong>첫날부터 마지막 날까지 이어지는 해안감</strong>
+                <p>하버와 해변, 도심 식사를 하나의 흐름으로 묶었습니다.</p>
+              </div>
+            </div>
+            <div class="photo-card">
+              <img src="images/royal_botanic_gardens.jpg" alt="로열 보태닉 가든" loading="lazy" decoding="async">
+            </div>
+            <div class="photo-card">
+              <img src="images/gumption.jpg" alt="도심 카페" loading="lazy" decoding="async">
+            </div>
+            <div class="photo-card">
+              <img src="images/mr_wong_restaurant.jpg" alt="도심 저녁 식사 후보" loading="lazy" decoding="async">
+            </div>
+          </div>
+
+          <div class="panel-note">
+            <div class="eyebrow">이번 여행 핵심</div>
+            <div class="stat-row">
+              <div class="stat">
+                <strong>오페라</strong>
+                <span class="body-sm body-muted">외관 중심으로 보고 내부 투어는 제외</span>
+              </div>
+              <div class="stat">
+                <strong>이동</strong>
+                <span class="body-sm body-muted">contactless 결제로 탭온·탭오프</span>
+              </div>
+              <div class="stat">
+                <strong>저장</strong>
+                <span class="body-sm body-muted">각 일정은 상세 페이지로 바로 연결</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="itinerary" class="section" data-od-id="itinerary">
+      <div class="container section-grid">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">일자별 코스</div>
+            <h2 class="section-title">하루씩 눌러 보면 동선이 바로 보이는 여행 흐름</h2>
+          </div>
+          <p>8일치를 한 번에 길게 펼치지 않고, 선택한 날만 자세히 보여 줍니다. 모바일에서도 읽기 편하게 설계했습니다.</p>
+        </div>
+
+        <div class="itinerary-shell">
+          <div>
+            <div class="tab-rail" aria-label="여행 날짜 선택">
+              <button class="day-tab" type="button" data-day="0" aria-pressed="true">1일차</button>
+              <button class="day-tab" type="button" data-day="1" aria-pressed="false">2일차</button>
+              <button class="day-tab" type="button" data-day="2" aria-pressed="false">3일차</button>
+              <button class="day-tab" type="button" data-day="3" aria-pressed="false">4일차</button>
+              <button class="day-tab" type="button" data-day="4" aria-pressed="false">5일차</button>
+              <button class="day-tab" type="button" data-day="5" aria-pressed="false">6일차</button>
+              <button class="day-tab" type="button" data-day="6" aria-pressed="false">7일차</button>
+              <button class="day-tab" type="button" data-day="7" aria-pressed="false">8일차</button>
+            </div>
+
+            <div class="day-panel" data-itinerary-panel>
+              <div class="day-media">
+                <img data-day-image src="images/central_station.jpg" alt="시드니 일정 이미지" loading="eager" decoding="async">
+              </div>
+              <div class="day-copy" aria-live="polite" aria-atomic="true">
+                <h3 data-day-title>도착 후 CBD 적응</h3>
+                <p class="lead" data-day-summary>첫날은 멀리 가지 않고 QVB와 달링하버로 몸을 푼 뒤, 저녁에는 일찍 쉬게 구성합니다.</p>
+
+                <div class="stop-list" data-day-stops></div>
+
+                <div class="day-footer">
+                  <div><strong>추천 식사</strong> <span data-day-pairing>QVB 근처 카페와 가벼운 점심</span></div>
+                  <div><strong>주의</strong> <span data-day-caution>짐 보관과 교통카드 확인을 먼저 처리합니다.</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <aside class="panel-note">
+            <div class="eyebrow">선택 중인 날</div>
+            <div class="body-sm body-muted">버튼을 누르면 이미지, 이동 순서, 식사 조합, 주의점이 함께 바뀝니다.</div>
+            <div class="mini-row" style="margin-top: 14px;">
+              <span class="chip">실시간 전환</span>
+              <span class="chip">복잡한 표 대신 카드</span>
+              <span class="chip">모바일 우선</span>
+            </div>
+            <div style="height: 18px;"></div>
+            <a class="btn btn-primary" href="schedule.html">상세 일정 페이지 열기</a>
+            <a class="btn btn-secondary" href="booking.html" style="margin-left: 8px;">예약·입장료 확인</a>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section id="food-cafe" class="section" data-od-id="food-cafe">
+      <div class="container section-grid">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">맛집·카페</div>
+            <h2 class="section-title">식사와 커피는 여행 리듬에 맞춰 고릅니다</h2>
+          </div>
+          <p>점심, 저녁, 브런치, 커피를 분리해 두어 하루 계획에 맞춰 바로 고를 수 있게 했습니다.</p>
+        </div>
+
+        <div class="catalog-grid">
+          <article class="catalog-card">
+            <div class="cover">
+              <img src="images/mr_wong_restaurant.jpg" alt="Mr Wong 식당 내부" loading="lazy" decoding="async">
+            </div>
+            <div class="catalog-copy">
+              <div class="mini-row">
+                <span class="chip">저녁</span>
+                <span class="chip">예약 권장</span>
+              </div>
+              <h3>Mr. Wong</h3>
+              <p>도심에서 한 끼를 깔끔하게 해결하고 싶을 때 좋은 중식 카드입니다.</p>
+              <div class="note-row">
+                <span class="chip">딤섬</span>
+                <span class="chip">북경오리</span>
+                <span class="chip">해산물 요리</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="catalog-card">
+            <div class="cover">
+              <img src="images/mamak_restaurant.jpg" alt="Mamak 식당" loading="lazy" decoding="async">
+            </div>
+            <div class="catalog-copy">
+              <div class="mini-row">
+                <span class="chip">점심</span>
+                <span class="chip">빠른 회전</span>
+              </div>
+              <h3>Mamak</h3>
+              <p>말레이시아식 메뉴를 가볍게 넣고 싶을 때 쓰기 좋은 여행자 친화형 선택지입니다.</p>
+              <div class="note-row">
+                <span class="chip">roti canai</span>
+                <span class="chip">satay</span>
+                <span class="chip">nasi lemak</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="catalog-card">
+            <div class="cover">
+              <img src="images/grounds_alexandria.jpg" alt="The Grounds of Alexandria" loading="lazy" decoding="async">
+            </div>
+            <div class="catalog-copy">
+              <div class="mini-row">
+                <span class="chip">브런치</span>
+                <span class="chip">사진 명소</span>
+              </div>
+              <h3>The Grounds of Alexandria</h3>
+              <p>브런치 한 끼를 사진과 함께 남기고 싶을 때 알맞은 대형 공간입니다.</p>
+              <div class="note-row">
+                <span class="chip">브런치 플레이트</span>
+                <span class="chip">베이커리</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="catalog-card">
+            <div class="cover">
+              <img src="images/bills_brunch.jpg" alt="Bills 브런치" loading="lazy" decoding="async">
+            </div>
+            <div class="catalog-copy">
+              <div class="mini-row">
+                <span class="chip">브런치</span>
+                <span class="chip">인기 메뉴</span>
+              </div>
+              <h3>Bills</h3>
+              <p>첫 시드니 여행자에게 익숙한 맛으로 시작하기 좋은 브런치 기준점입니다.</p>
+              <div class="note-row">
+                <span class="chip">ricotta hotcakes</span>
+                <span class="chip">scrambled eggs</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="catalog-card">
+            <div class="cover">
+              <img src="images/gumption.jpg" alt="Gumption 카페" loading="lazy" decoding="async">
+            </div>
+            <div class="catalog-copy">
+              <div class="mini-row">
+                <span class="chip">커피</span>
+                <span class="chip">QVB 근처</span>
+              </div>
+              <h3>Gumption</h3>
+              <p>도심 이동 중 잠깐 쉬어 가는 카페로 넣기 좋습니다.</p>
+              <div class="note-row">
+                <span class="chip">플랫화이트</span>
+                <span class="chip">롱블랙</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="catalog-card">
+            <div class="cover">
+              <img src="images/single_o.jpg" alt="Single O 커피 바" loading="lazy" decoding="async">
+            </div>
+            <div class="catalog-copy">
+              <div class="mini-row">
+                <span class="chip">커피</span>
+                <span class="chip">스페셜티</span>
+              </div>
+              <h3>Single O</h3>
+              <p>커피 자체를 좋아하는 두 사람이라면 일정 한 칸을 이곳에 써도 충분합니다.</p>
+              <div class="note-row">
+                <span class="chip">필터커피</span>
+                <span class="chip">원두</span>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="practical" class="section" data-od-id="practical">
+      <div class="container section-grid">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">주의사항</div>
+            <h2 class="section-title">미리 알면 여행 중 덜 흔들리는 것들</h2>
+          </div>
+          <p>복잡한 설명 대신 실제로 챙길 항목만 남겼습니다. 처음 가는 여행일수록 이 섹션이 효율적입니다.</p>
+        </div>
+
+        <div class="warning-grid">
+          <article class="warning-card">
+            <strong>교통과 결제</strong>
+            <p>대중교통은 contactless 결제로 탭온·탭오프하면 됩니다. 같은 카드와 같은 기기를 쓰는 쪽이 안전합니다.</p>
+          </article>
+          <article class="warning-card">
+            <strong>바람과 자외선</strong>
+            <p>하버와 해변은 생각보다 바람이 강하고, 낮 햇빛은 빠르게 세집니다. 얇은 겉옷과 선크림을 같이 챙깁니다.</p>
+          </article>
+          <article class="warning-card">
+            <strong>예약 우선순위</strong>
+            <p>인기 식당과 블루마운틴 같은 당일 변동성 일정은 먼저 잡아 두는 편이 좋습니다.</p>
+          </article>
+          <article class="warning-card">
+            <strong>해변 안전</strong>
+            <p>수영은 빨강·노랑 깃발 사이에서만 하고, 파도가 센 날은 산책 위주로 바꾸는 쪽이 낫습니다.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" data-od-id="cta">
+      <div class="container">
+        <div class="cta-card">
+          <div>
+            <div class="eyebrow">바로 열기</div>
+            <h2 class="section-title">상세 일정, 식당, 카페, 팁으로 바로 넘어가세요</h2>
+            <p>랜딩에서 전체 흐름을 보고, 필요한 화면만 따로 여는 구조입니다. 처음 보는 사람도 헷갈리지 않게 만들었습니다.</p>
+          </div>
+          <div>
+            <div class="cta-row">
+              <a class="btn btn-primary" href="schedule.html">일정 보기</a>
+              <a class="btn" href="food.html">맛집 보기</a>
+              <a class="btn" href="cafe.html">카페 보기</a>
+              <a class="btn" href="tips.html">여행 팁 보기</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" data-od-id="tasks">
+      <div class="container section-grid">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">실시간 작업</div>
+            <h2 class="section-title">TASKS.md를 읽어서 완료 상태를 자동 표시</h2>
+          </div>
+          <p>수동으로 task 추가 안 함. 이 패널은 저장된 체크리스트를 주기적으로 다시 읽어 화면에 갱신한다.</p>
+        </div>
+        <div class="live-task-panel">
+          <div class="live-task-summary">
+            <strong id="taskSummary">불러오는 중...</strong>
+            <span class="body-sm body-muted" id="taskUpdated">갱신 대기 중</span>
+          </div>
+          <ul id="taskList" class="task-list" aria-live="polite"></ul>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer container">
+      여행 전에는 영업시간, 예약 규정, 날씨, 페리 운항을 한 번 더 확인하세요.
+    </footer>
+  </main>
+
+  <script>
+    (function () {
+      var itinerary = [
+        {
+          title: "도착 후 CBD 적응",
+          image: "images/central_station.jpg",
+          summary: "첫날은 QVB와 달링하버 중심으로 몸을 풀고, 저녁은 일찍 끝내 시차를 정리합니다.",
+          stops: [
+            ["오전", "공항 도착 후 숙소 이동, 짐 보관"],
+            ["오후", "QVB와 타운홀 주변 산책, 짧은 커피 휴식"],
+            ["저녁", "달링하버 산책 후 숙소 복귀"]
+          ],
+          pairing: "QVB 근처 카페와 가벼운 점심",
+          caution: "짐 보관 위치와 교통 결제부터 먼저 확인합니다."
+        },
+        {
+          title: "오페라 하우스와 로열 보태닉 가든",
+          image: "images/royal_botanic_gardens.jpg",
+          summary: "오페라 하우스 외관과 정원 산책을 연결해 시드니다운 장면을 먼저 확보합니다.",
+          stops: [
+            ["오전", "서큘러 키에서 오페라 하우스 외관 감상"],
+            ["점심", "Royal Botanic Gardens로 이동해 하버 전망 확인"],
+            ["저녁", "Circular Quay 또는 Bennelong 계열 식사"]
+          ],
+          pairing: "하버 쪽 식사와 느린 산책",
+          caution: "내부 투어는 넣지 않고 외관 중심으로만 잡습니다."
+        },
+        {
+          title: "본다이 해안",
+          image: "images/bondi_beach.jpg",
+          summary: "해변과 절벽 산책을 묶어 시드니의 바다 분위기를 가장 강하게 느끼는 날입니다.",
+          stops: [
+            ["오전", "본다이 비치에서 해변 산책"],
+            ["점심", "Speedos 또는 본다이 브런치"],
+            ["오후", "Bondi to Coogee 일부 구간만 걷기"]
+          ],
+          pairing: "해변 브런치와 아이스커피",
+          caution: "전 구간을 무리하게 걷지 말고 체력에 맞게 줄입니다."
+        },
+        {
+          title: "맨리와 페리",
+          image: "images/darling_harbour.jpg",
+          summary: "페리 이동 자체를 여행의 일부로 보고, 바람을 맞으며 바다 쪽 경치를 즐깁니다.",
+          stops: [
+            ["오전", "Circular Quay 출발"],
+            ["점심", "Taronga 또는 Manly 쪽에서 식사"],
+            ["오후", "해변 산책 후 시내 복귀"]
+          ],
+          pairing: "가벼운 해산물 식사와 페리 뷰",
+          caution: "바람이 강하니 얇은 겉옷을 챙깁니다."
+        },
+        {
+          title: "블루마운틴",
+          image: "images/scenic_world.jpg",
+          summary: "도심에서 벗어나 전망과 케이블카, 산책 코스를 하루 묶음으로 처리합니다.",
+          stops: [
+            ["이른 오전", "센트럴 출발"],
+            ["오전~오후", "Echo Point와 Scenic World"],
+            ["저녁", "시드니 복귀 후 숙소 근처 식사"]
+          ],
+          pairing: "간식과 물, 돌아와서 가벼운 저녁",
+          caution: "날씨와 운영시간을 전날 한 번 더 확인합니다."
+        },
+        {
+          title: "피쉬 마켓과 바랑가루",
+          image: "images/bills_brunch.jpg",
+          summary: "해산물 점심과 도심 산책을 한 날에 묶어 리듬을 부드럽게 만듭니다.",
+          stops: [
+            ["오전", "Sydney Fish Market에서 점심"],
+            ["오후", "Barangaroo와 Darling Harbour 산책"],
+            ["저녁", "Sydney Tower 또는 도심 저녁 식사"]
+          ],
+          pairing: "해산물 점심 + 도심 카페",
+          caution: "시장과 식당 영업시간은 출발 전 확인이 필요합니다."
+        },
+        {
+          title: "MCA와 더 록스",
+          image: "images/mr_wong_restaurant.jpg",
+          summary: "실내와 실외를 섞어 마지막 전날의 속도를 조금 낮춥니다.",
+          stops: [
+            ["오전", "MCA 또는 근처 전시"],
+            ["오후", "더 록스 골목 산책"],
+            ["저녁", "예약 식당에서 마지막 저녁"]
+          ],
+          pairing: "전시 후 저녁 식사",
+          caution: "마지막 전날이라 예약이 있는 쪽이 편합니다."
+        },
+        {
+          title: "출국 전 정리",
+          image: "images/single_o.jpg",
+          summary: "공항으로 가기 전 카페 한 곳과 가벼운 쇼핑만 남겨 두는 마무리 날입니다.",
+          stops: [
+            ["오전", "Single O 같은 카페에서 시작"],
+            ["오후", "NSW 미술관 또는 쇼핑"],
+            ["저녁", "공항 이동과 출국"]
+          ],
+          pairing: "커피 한 잔과 마지막 산책",
+          caution: "짐 위치와 출발 시간을 먼저 확정합니다."
+        }
+      ];
+
+      var tabButtons = Array.prototype.slice.call(document.querySelectorAll("[data-day]"));
+      var dayTitle = document.querySelector("[data-day-title]");
+      var daySummary = document.querySelector("[data-day-summary]");
+      var dayImage = document.querySelector("[data-day-image]");
+      var dayStops = document.querySelector("[data-day-stops]");
+      var dayPairing = document.querySelector("[data-day-pairing]");
+      var dayCaution = document.querySelector("[data-day-caution]");
+
+      function renderDay(index) {
+        var data = itinerary[index];
+        if (!data) return;
+
+        dayTitle.textContent = data.title;
+        daySummary.textContent = data.summary;
+        dayImage.src = data.image;
+        dayImage.alt = data.title + " 관련 이미지";
+        dayStops.innerHTML = data.stops.map(function (item) {
+          return (
+            '<div class="stop"><span>' + item[0] + '</span><p>' + item[1] + "</p></div>"
+          );
+        }).join("");
+        dayPairing.textContent = data.pairing;
+        dayCaution.textContent = data.caution;
+
+        tabButtons.forEach(function (button, buttonIndex) {
+          button.setAttribute("aria-pressed", String(buttonIndex === index));
+        });
+      }
+
+      tabButtons.forEach(function (button) {
+        button.addEventListener("click", function () {
+          renderDay(Number(button.getAttribute("data-day")));
+        });
+      });
+
+      renderDay(0);
+    })();
+  </script>
+</body>
+</html>

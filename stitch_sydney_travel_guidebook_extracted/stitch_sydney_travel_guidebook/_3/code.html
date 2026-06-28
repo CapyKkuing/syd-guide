@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+
+<html lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>시드니 여행 가이드 - 팁 및 주의사항</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&amp;family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .timeline-line {
+            background: repeating-linear-gradient(to bottom, #005b94 0, #005b94 4px, transparent 4px, transparent 8px);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed": "#ffdea8",
+                        "primary-container": "#005b94",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed-dim": "#c9c6c1",
+                        "on-primary": "#ffffff",
+                        "on-secondary": "#ffffff",
+                        "inverse-on-surface": "#f0f0f3",
+                        "inverse-primary": "#9acbff",
+                        "on-background": "#1a1c1e",
+                        "secondary": "#7c5800",
+                        "surface-bright": "#f9f9fc",
+                        "on-secondary-container": "#6b4b00",
+                        "on-tertiary-fixed": "#1c1c18",
+                        "surface-container-high": "#e8e8ea",
+                        "tertiary-fixed": "#e5e2dc",
+                        "error": "#ba1a1a",
+                        "primary-fixed": "#d0e4ff",
+                        "on-secondary-fixed-variant": "#5e4200",
+                        "on-surface": "#1a1c1e",
+                        "on-tertiary-fixed-variant": "#474743",
+                        "surface-container-highest": "#e2e2e5",
+                        "on-surface-variant": "#414750",
+                        "on-primary-fixed": "#001d34",
+                        "on-error": "#ffffff",
+                        "tertiary-container": "#595853",
+                        "on-primary-fixed-variant": "#004a79",
+                        "surface-container-low": "#f3f3f6",
+                        "surface-variant": "#e2e2e5",
+                        "on-tertiary-container": "#d0cec8",
+                        "secondary-fixed-dim": "#ffba20",
+                        "secondary-container": "#feb700",
+                        "on-primary-container": "#a9d2ff",
+                        "outline": "#717881",
+                        "tertiary": "#41413d",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-tint": "#13629b",
+                        "inverse-surface": "#2f3133",
+                        "surface-dim": "#dadadc",
+                        "outline-variant": "#c1c7d1",
+                        "error-container": "#ffdad6",
+                        "primary-fixed-dim": "#9acbff",
+                        "on-secondary-fixed": "#271900",
+                        "surface-container": "#eeeef0",
+                        "surface": "#f9f9fc",
+                        "on-error-container": "#93000a",
+                        "background": "#f9f9fc",
+                        "primary": "#00436f"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "base": "8px",
+                        "margin-desktop": "40px",
+                        "margin-mobile": "16px",
+                        "container-max": "1280px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "display-lg-mobile": ["Montserrat"],
+                        "label-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-md": ["Montserrat"],
+                        "display-lg": ["Montserrat"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "display-lg-mobile": ["32px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                        "label-sm": ["14px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                        "display-lg": ["48px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background font-body-md">
+<!-- Top Navigation Bar -->
+<nav class="fixed top-0 w-full z-50 bg-surface/80 dark:bg-surface-dim/80 backdrop-blur-md border-b border-outline-variant/10 shadow-sm">
+<div class="flex justify-between items-center h-16 px-margin-desktop max-w-container-max mx-auto">
+<div class="font-display-lg text-headline-md font-bold text-primary">시드니 가이드</div>
+<div class="hidden md:flex space-x-8 items-center">
+<a class="text-on-surface-variant hover:text-primary transition-colors font-body-md" href="#">홈</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-body-md" href="#">일정</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-body-md" href="#">맛집</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-body-md" href="#">명소</a>
+<a class="text-primary font-bold border-b-2 border-secondary font-body-md" href="#">팁</a>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden md:block relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="pl-10 pr-4 py-1.5 rounded-full border border-outline-variant bg-surface-container-low focus:outline-none focus:ring-2 focus:ring-primary w-48" placeholder="검색..." type="text"/>
+</div>
+</div>
+</div>
+</nav>
+<main class="pt-24 pb-20 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<!-- Hero Header -->
+<header class="mb-12">
+<h1 class="font-display-lg text-display-lg text-primary mb-4">여행 팁 &amp; 주의사항</h1>
+<p class="text-body-lg text-on-surface-variant max-w-2xl">시드니에서의 완벽한 여행을 위해 꼭 알아두어야 할 안전 수칙, 교통 정보 및 현지 문화를 정리했습니다.</p>
+</header>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+<!-- 1. Safety (Emergency Numbers) -->
+<section class="md:col-span-8 bg-surface-container-lowest p-8 rounded-xl shadow-md border border-outline-variant/10">
+<div class="flex items-center gap-3 mb-6">
+<span class="material-symbols-outlined text-error text-3xl">emergency</span>
+<h2 class="font-headline-md text-headline-md text-primary">긴급 상황 및 안전 정보</h2>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+<div class="p-6 bg-error-container/20 rounded-lg border-l-4 border-error">
+<div class="text-error font-bold mb-1">통합 긴급 전화</div>
+<div class="text-4xl font-display-lg text-on-surface mb-2">000</div>
+<p class="text-label-sm text-on-surface-variant">경찰, 구급차, 소방차 (호주 공통)</p>
+</div>
+<div class="p-6 bg-primary-container/10 rounded-lg border-l-4 border-primary">
+<div class="text-primary font-bold mb-1">비긴급 경찰 지원</div>
+<div class="text-4xl font-display-lg text-on-surface mb-2">131 444</div>
+<p class="text-label-sm text-on-surface-variant">경미한 도난 혹은 사건 보고</p>
+</div>
+</div>
+<div class="mt-8 space-y-4">
+<div class="flex items-start gap-4 p-4 bg-surface-container-low rounded-lg">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">info</span>
+<div>
+<h4 class="font-bold text-on-surface">해변 안전 (Red &amp; Yellow Flags)</h4>
+<p class="text-on-surface-variant">반드시 빨간색과 노란색 깃발 사이에서 수영하세요. 이 구역은 라이프가드가 상주하며 안전을 보장하는 구역입니다.</p>
+</div>
+</div>
+<div class="flex items-start gap-4 p-4 bg-surface-container-low rounded-lg">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">medical_services</span>
+<div>
+<h4 class="font-bold text-on-surface">의료 서비스</h4>
+<p class="text-on-surface-variant">약국은 'Chemist' 또는 'Pharmacy'라고 불립니다. 가벼운 증상은 대형 드럭스토어인 Chemist Warehouse를 추천합니다.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- 2. Weather (October Prep) -->
+<section class="md:col-span-4 bg-primary-container text-on-primary p-8 rounded-xl shadow-lg relative overflow-hidden">
+<div class="relative z-10">
+<div class="flex items-center gap-3 mb-6">
+<span class="material-symbols-outlined text-secondary-fixed text-3xl">wb_sunny</span>
+<h2 class="font-headline-md text-headline-md">10월의 날씨와 옷차림</h2>
+</div>
+<div class="flex items-end gap-2 mb-4">
+<span class="text-5xl font-bold">18°C - 23°C</span>
+<span class="mb-2 opacity-80">평균 기온</span>
+</div>
+<p class="mb-6 opacity-90">시드니의 10월은 봄입니다. 낮에는 따스하지만 아침저녁으로는 서늘할 수 있어 겹쳐 입을 수 있는 가벼운 외투가 필수입니다.</p>
+<div class="space-y-3">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined">check_circle</span>
+<span>얇은 가디건 또는 윈드브레이커</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined">check_circle</span>
+<span>편안한 워킹화 (언덕이 많음)</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined">check_circle</span>
+<span>작은 접이식 우산</span>
+</div>
+</div>
+</div>
+<!-- Decorative element -->
+<div class="absolute -right-10 -bottom-10 opacity-20 transform rotate-12">
+<span class="material-symbols-outlined text-[160px]">beach_access</span>
+</div>
+</section>
+<!-- 3. Transportation (Opal Card) -->
+<section class="md:col-span-6 bg-surface-container-low p-8 rounded-xl border border-outline-variant/10">
+<div class="flex items-center gap-3 mb-6">
+<span class="material-symbols-outlined text-primary text-3xl">directions_transit</span>
+<h2 class="font-headline-md text-headline-md text-primary">오팔(Opal) 카드 및 교통</h2>
+</div>
+<div class="mb-6 rounded-lg overflow-hidden relative h-40">
+<img alt="Sydney Transport" class="w-full h-full object-cover" data-alt="A modern Sydney light rail train gliding through a clean city street at twilight. The scene is illuminated by soft blue and gold ambient city lights, capturing a sophisticated urban transport vibe. The colors are crisp, emphasizing the efficiency and modernity of the Sydney transportation network." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBYSjOFznWcFJgKG1pVaCjyabkjGmhdhyCN7X-fM_r0RNki2Dq5_cfrbV3wpionNKaUyYdhLavAKSq0gCfzMov26dSq0Z7K8IgQUgD31c0TnRkfru-jckT6-H3ScdHNCI0FHuoGaY04Zwp1mIH8Edp4MBJ_PsJWj1JerZtKqabIrw2VNiPir0Ze7485EQfyuerHAXK_p7gxxTlAzOwjFSER6cXLz8Acxtu9mViOG49V2MQzsAlCMxGS9Zub2IpldJAAev3q9b-XTaI"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4">
+<span class="text-white font-bold">대중교통 시스템</span>
+</div>
+</div>
+<div class="space-y-6">
+<div class="flex gap-4">
+<div class="bg-primary text-on-primary w-10 h-10 rounded-full flex items-center justify-center shrink-0">1</div>
+<div>
+<h4 class="font-bold">컨택리스 결제 지원</h4>
+<p class="text-on-surface-variant text-label-sm">별도의 오팔 카드를 사지 않아도 비자/마스터 신용카드 혹은 애플페이로 바로 승하차가 가능합니다.</p>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="bg-primary text-on-primary w-10 h-10 rounded-full flex items-center justify-center shrink-0">2</div>
+<div>
+<h4 class="font-bold">일일/주간 한도제</h4>
+<p class="text-on-surface-variant text-label-sm">일일 $17.80, 주간 $50 이상 결제 시 그 이후의 여정은 무료입니다. (2024 기준)</p>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="bg-primary text-on-primary w-10 h-10 rounded-full flex items-center justify-center shrink-0">3</div>
+<div>
+<h4 class="font-bold">환승 혜택</h4>
+<p class="text-on-surface-variant text-label-sm">기차, 버스, 페리 간 환승 시 $2 할인이 자동으로 적용됩니다. (60분 내 환승 시)</p>
+</div>
+</div>
+</div>
+</section>
+<!-- 4. Sun Protection (Asymmetric Focus) -->
+<section class="md:col-span-6 grid grid-rows-2 gap-8">
+<!-- Sun Protection Card -->
+<div class="bg-secondary-container/20 p-8 rounded-xl border border-secondary/20 flex gap-6 items-center">
+<div class="bg-secondary-container p-6 rounded-full">
+<span class="material-symbols-outlined text-on-secondary-container text-4xl" style="font-variation-settings: 'FILL' 1;">light_mode</span>
+</div>
+<div>
+<h2 class="font-headline-md text-headline-md text-secondary mb-2">자외선 차단 (Slip-Slop-Slap)</h2>
+<p class="text-on-surface-variant">호주의 태양은 매우 강렬합니다. '구름 낀 날'에도 화상을 입을 수 있으니 SPF 50+ 자외선 차단제는 필수입니다. 선글라스와 모자도 반드시 챙기세요.</p>
+</div>
+</div>
+<!-- Local Etiquette Card -->
+<div class="bg-surface-container-highest p-8 rounded-xl">
+<div class="flex items-center gap-3 mb-4">
+<span class="material-symbols-outlined text-primary text-3xl">diversity_3</span>
+<h2 class="font-headline-md text-headline-md text-primary">현지 에티켓</h2>
+</div>
+<ul class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+<li class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">keyboard_double_arrow_right</span>
+<span class="text-label-sm">에스컬레이터는 좌측 서기</span>
+</li>
+<li class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">keyboard_double_arrow_right</span>
+<span class="text-label-sm">팁 문화 의무 아님 (선택)</span>
+</li>
+<li class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">keyboard_double_arrow_right</span>
+<span class="text-label-sm">버스 하차 시 'Thank you' 인사</span>
+</li>
+<li class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">keyboard_double_arrow_right</span>
+<span class="text-label-sm">공공장소 금연 구역 준수</span>
+</li>
+</ul>
+</div>
+</section>
+</div>
+<!-- Extra Tips Horizontal Scroll or Grid -->
+<section class="mt-16">
+<h3 class="font-headline-md text-headline-md text-primary mb-8 border-l-4 border-secondary pl-4">유용한 현지 꿀팁</h3>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+<!-- Tip 1 -->
+<div class="bg-surface p-6 rounded-lg border border-outline-variant/30 shadow-sm hover:shadow-md transition-shadow">
+<span class="material-symbols-outlined text-secondary mb-4">electric_bolt</span>
+<h5 class="font-bold mb-2">전압 및 어댑터</h5>
+<p class="text-label-sm text-on-surface-variant">240V, 50Hz를 사용하며 '팔자(八)' 모양의 3핀 플러그를 사용합니다. 멀티 어댑터를 준비하세요.</p>
+</div>
+<!-- Tip 2 -->
+<div class="bg-surface p-6 rounded-lg border border-outline-variant/30 shadow-sm hover:shadow-md transition-shadow">
+<span class="material-symbols-outlined text-secondary mb-4">water_drop</span>
+<h5 class="font-bold mb-2">수돗물 음용</h5>
+<p class="text-label-sm text-on-surface-variant">호주의 수돗물은 마실 수 있습니다. 빈 병을 챙겨 곳곳에 있는 워터 스테이션을 이용하세요.</p>
+</div>
+<!-- Tip 3 -->
+<div class="bg-surface p-6 rounded-lg border border-outline-variant/30 shadow-sm hover:shadow-md transition-shadow">
+<span class="material-symbols-outlined text-secondary mb-4">storefront</span>
+<h5 class="font-bold mb-2">상점 운영 시간</h5>
+<p class="text-label-sm text-on-surface-variant">대부분의 상점은 오후 5시-6시면 문을 닫습니다. 목요일은 'Shopping Night'으로 밤 9시까지 연장 운영합니다.</p>
+</div>
+<!-- Tip 4 -->
+<div class="bg-surface p-6 rounded-lg border border-outline-variant/30 shadow-sm hover:shadow-md transition-shadow">
+<span class="material-symbols-outlined text-secondary mb-4">wifi</span>
+<h5 class="font-bold mb-2">무료 와이파이</h5>
+<p class="text-label-sm text-on-surface-variant">주요 역, 도서관, 박물관에서 제공되지만 한국보다 속도가 느릴 수 있으니 유심(USIM) 구매를 추천합니다.</p>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-highest border-t border-outline-variant/20 py-12 mt-20">
+<div class="flex flex-col items-center justify-center space-y-6 px-margin-desktop max-w-container-max mx-auto text-center">
+<div class="font-display-lg text-body-lg font-bold text-primary">시드니 여행 가이드</div>
+<div class="flex flex-wrap justify-center gap-8 text-on-surface-variant font-label-sm">
+<a class="hover:text-secondary transition-colors" href="#">이용약관</a>
+<a class="hover:text-secondary transition-colors" href="#">개인정보처리방침</a>
+<a class="hover:text-secondary transition-colors" href="#">문의하기</a>
+</div>
+<p class="text-on-surface-variant text-label-sm opacity-70">© 2024 시드니 여행 가이드. All rights reserved.</p>
+</div>
+</footer>
+<!-- Bottom Nav for Mobile -->
+<div class="md:hidden fixed bottom-0 left-0 w-full glass-card border-t border-outline-variant/10 z-50 flex justify-around items-center h-16 px-4">
+<a class="flex flex-col items-center text-on-surface-variant" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="text-[10px]">홈</span>
+</a>
+<a class="flex flex-col items-center text-on-surface-variant" href="#">
+<span class="material-symbols-outlined">calendar_month</span>
+<span class="text-[10px]">일정</span>
+</a>
+<a class="flex flex-col items-center text-primary font-bold" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">info</span>
+<span class="text-[10px]">팁</span>
+</a>
+<a class="flex flex-col items-center text-on-surface-variant" href="#">
+<span class="material-symbols-outlined">map</span>
+<span class="text-[10px]">지도</span>
+</a>
+<a class="flex flex-col items-center text-on-surface-variant" href="#">
+<span class="material-symbols-outlined">account_circle</span>
+<span class="text-[10px]">프로필</span>
+</a>
+</div>
+<script>
+        // Simple scroll reveal interaction
+        document.addEventListener('DOMContentLoaded', () => {
+            const sections = document.querySelectorAll('section');
+            const observerOptions = {
+                threshold: 0.1
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('opacity-100', 'translate-y-0');
+                        entry.target.classList.remove('opacity-0', 'translate-y-8');
+                    }
+                });
+            }, observerOptions);
+
+            sections.forEach(section => {
+                section.classList.add('transition-all', 'duration-700', 'opacity-0', 'translate-y-8');
+                observer.observe(section);
+            });
+        });
+    </script>
+</body></html>

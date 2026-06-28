@@ -1,0 +1,57 @@
+{
+  "updatedAt": "2026-06-28T00:00:00+09:00",
+  "phase": "잡지형 리디자인 재개",
+  "status": "진행판 한글화 완료; 공유 스타일 업데이트; 홈, 팁, 환율 페이지 정리 완료; 일정, 맛집, 카페는 유지",
+  "files": [
+    {
+      "path": "progress.html",
+      "state": "done",
+      "note": "단독 진행판."
+    },
+    {
+      "path": "progress.json",
+      "state": "live",
+      "note": "진행판의 원본 데이터."
+    },
+    {
+      "path": "index.html",
+      "state": "done",
+      "note": "React 홈 표지."
+    },
+    {
+      "path": "assets/react-home.js",
+      "state": "done",
+      "note": "홈 렌더링 로직."
+    },
+    {
+      "path": "assets/site.css",
+      "state": "done",
+      "note": "공통 편집형 스타일."
+    },
+    {
+      "path": "schedule.html",
+      "state": "done",
+      "note": "일자별 타임라인 유지."
+    },
+    {
+      "path": "food.html",
+      "state": "done",
+      "note": "맛집 카드 유지."
+    },
+    {
+      "path": "cafe.html",
+      "state": "done",
+      "note": "카페 카드 유지."
+    },
+    {
+      "path": "tips.html",
+      "state": "done",
+      "note": "한글 주의사항 페이지."
+    },
+    {
+      "path": "currency.html",
+      "state": "done",
+      "note": "한글 환율 계산기 페이지."
+    }
+  ]
+}

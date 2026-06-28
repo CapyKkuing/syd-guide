@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AUD 환율 계산기</title>
+  <link rel="stylesheet" href="assets/site.css?v=currency-title-1">
+</head>
+<body class="travel-page currency-page">
+  <header class="site-header">
+    <div class="nav-wrap">
+      <a class="brand" href="index.html">시드니 여행 가이드</a>
+      <nav class="nav-links" aria-label="상단 메뉴">
+        <a data-page="index.html" href="index.html">홈</a>
+        <a data-page="schedule.html" href="schedule.html">일정</a>
+        <a data-page="booking.html" href="booking.html">예약·입장료</a>
+        <a data-page="food.html" href="food.html">맛집</a>
+        <a data-page="cafe.html" href="cafe.html">카페</a>
+        <a data-page="tips.html" href="tips.html">주의사항</a>
+        <a data-page="currency.html" href="currency.html">환율계산기</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <div class="hero-layout">
+        <div class="hero-copy">
+          <div class="hero-meta">
+            <span>AUD → KRW</span>
+            <span>직접 수정 가능</span>
+            <span>카드 결제 전 확인</span>
+          </div>
+          <h1 class="currency-title"><span>AUD 환율</span><span>계산기</span></h1>
+          <div class="hero-actions">
+            <a class="button primary" href="#calculator">바로 계산</a>
+            <a class="button" href="#notes">사용 팁</a>
+          </div>
+        </div>
+        <div class="hero-panel">
+          <div class="preview-note">
+            <strong>기준</strong>
+            <p>100 AUD가 얼마인지 먼저 보고, 세부 금액은 직접 바꿔서 확인한다.</p>
+          </div>
+          <div class="preview-note">
+            <strong>오프라인 대비</strong>
+            <p>API가 실패해도 입력값은 남는다. 마지막으로 본 수치를 기준으로 바로 계산할 수 있다.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="calculator">
+      <div class="hero-meta" style="margin-bottom: 14px;">
+        <span>실시간 환율</span>
+        <span>수동 수정 가능</span>
+      </div>
+      <h2>계산</h2>
+      <div class="grid">
+        <article class="card">
+          <div class="card-body">
+            <div class="calc-box calc-box-compact">
+              <div class="amount-field">
+                <label for="audAmount">호주달러 AUD</label>
+                <input id="audAmount" type="number" value="100" min="0" step="1">
+              </div>
+              <div class="rate-field">
+                <label for="audRate">환율 직접 입력</label>
+                <input id="audRate" type="number" value="1069.47" min="0" step="0.01">
+              </div>
+              <div class="refresh-field">
+                <button id="refreshRate" class="button primary small-button" type="button">환율 다시 불러오기</button>
+              </div>
+            </div>
+          </div>
+        </article>
+        <article class="card">
+          <div class="card-body">
+            <h3>결과</h3>
+            <p class="result" id="krwResult">106,947원</p>
+            <p class="muted" id="rateStatus">환율을 불러오는 중...</p>
+            <div class="tag-row">
+              <span class="tag">수수료 별도</span>
+              <span class="tag">즉시 반영</span>
+              <span class="tag">여행 예산용</span>
+            </div>
+          </div>
+        </article>
+      </div>
+      <div class="notice">
+        자동 불러오기가 실패하면 직접 입력값으로 계산한다. 기본값은 2026-06-27 기준 open.er-api.com 응답값 1 AUD = 1059.70 KRW다.
+      </div>
+    </section>
+
+    <section class="section" id="notes">
+      <h2>사용 팁</h2>
+      <div class="grid">
+        <article class="notice">
+          <strong>카드 결제</strong><br>
+          카드 결제 금액은 수수료와 반영 시점 때문에 현장 환율과 조금 다를 수 있다.
+        </article>
+        <article class="notice">
+          <strong>공항·환전</strong><br>
+          공항 환전소보다 카드 결제를 먼저 보고, 현금은 비상용으로만 둔다.
+        </article>
+        <article class="notice">
+          <strong>정확도</strong><br>
+          환율 API는 open.er-api.com 기준이다. 응답이 없으면 수동 입력만 쓰면 된다.
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <nav class="quick-nav" aria-label="빠른 메뉴">
+    <a data-page="schedule.html" href="schedule.html">일정</a>
+    <a data-page="food.html" href="food.html">맛집</a>
+    <a data-page="cafe.html" href="cafe.html">카페</a>
+    <a data-page="tips.html" href="tips.html">팁</a>
+    <a data-page="currency.html" href="currency.html">환율</a>
+  </nav>
+
+  <script src="assets/app.js"></script>
+</body>
+</html>

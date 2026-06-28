@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>작업 진행판</title>
+  <meta name="description" content="현재 작업 진행 상황을 2초마다 다시 읽는 단독 진행판">
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f6f2;
+      --text: #161616;
+      --muted: #666;
+      --line: #dad5ca;
+      --panel: #ffffff;
+      --accent: #222;
+    }
+
+    * { box-sizing: border-box; }
+    html { background: var(--bg); }
+    body {
+      margin: 0;
+      font: 15px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 24px 20px 40px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 28px;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+    }
+
+    p {
+      margin: 8px 0 0;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 16px 0 20px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 4px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--panel);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .note {
+      margin: 0 0 14px;
+      color: var(--muted);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--panel);
+      border: 1px solid var(--line);
+    }
+
+    th,
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+    }
+
+    tr:last-child td { border-bottom: 0; }
+
+    code {
+      font: inherit;
+      color: inherit;
+      background: transparent;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    a:hover,
+    a:focus-visible {
+      text-decoration: underline;
+      outline: none;
+    }
+
+    .error {
+      color: #8f1d1d;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>작업 진행판</h1>
+    <p>단독 작업판. 2초마다 <code>progress.json</code>을 다시 읽는다.</p>
+
+    <div class="meta" aria-label="현재 상태">
+      <span class="chip" id="phase">단계: 불러오는 중</span>
+      <span class="chip" id="updatedAt">갱신: 불러오는 중</span>
+    </div>
+
+    <p id="status" class="note">progress.json 불러오는 중...</p>
+
+    <table aria-label="작업 진행 상황">
+      <thead>
+        <tr>
+          <th>파일</th>
+          <th>상태</th>
+          <th>메모</th>
+        </tr>
+      </thead>
+      <tbody id="rows">
+        <tr><td colspan="3" class="note">불러오는 중...</td></tr>
+      </tbody>
+    </table>
+  </main>
+
+  <script>
+    const phaseEl = document.getElementById('phase');
+    const updatedAtEl = document.getElementById('updatedAt');
+    const statusEl = document.getElementById('status');
+    const rowsEl = document.getElementById('rows');
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }
+
+    function render(data) {
+      phaseEl.textContent = `단계: ${data.phase || '없음'}`;
+      updatedAtEl.textContent = `갱신: ${data.updatedAt || '없음'}`;
+      statusEl.textContent = data.status || '';
+      statusEl.className = 'note';
+
+      const files = Array.isArray(data.files) ? data.files : [];
+      rowsEl.innerHTML = files.length
+        ? files.map((item) => `
+            <tr>
+              <td><a href="${escapeHtml(item.path)}"><code>${escapeHtml(item.path)}</code></a></td>
+              <td>${escapeHtml(item.state || '')}</td>
+              <td>${escapeHtml(item.note || '')}</td>
+            </tr>
+          `).join('')
+        : '<tr><td colspan="3" class="note">파일 없음</td></tr>';
+    }
+
+    async function refresh() {
+      try {
+        const response = await fetch(`progress.json?ts=${Date.now()}`, { cache: 'no-store' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        render(await response.json());
+      } catch (error) {
+        statusEl.textContent = 'progress.json 불러오기 실패';
+        statusEl.className = 'note error';
+        rowsEl.innerHTML = '<tr><td colspan="3" class="note error">갱신 실패</td></tr>';
+      }
+    }
+
+    refresh();
+    setInterval(refresh, 2000);
+  </script>
+</body>
+</html>

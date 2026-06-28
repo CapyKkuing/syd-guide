@@ -1,0 +1,127 @@
+﻿<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>예약·입장료</title>
+  <link rel="stylesheet" href="assets/site.css?v=booking-priority-table-1">
+  <style>
+    .booking-page .booking-table {
+      min-width: 880px;
+      font-family: var(--font-body);
+      font-size: 15px;
+      letter-spacing: -0.01em;
+    }
+
+    .booking-page .booking-table th {
+      font-family: var(--font-body);
+      letter-spacing: 0;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .booking-page .booking-table td {
+      line-height: 1.65;
+      vertical-align: top;
+    }
+
+    .booking-page .booking-table td:first-child {
+      color: var(--fg);
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .booking-page .booking-table a {
+      font-weight: 800;
+      color: color-mix(in oklab, var(--accent), black 18%);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .booking-page .booking-priority-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .booking-page .booking-priority-item {
+      display: grid;
+      grid-template-columns: minmax(120px, 0.26fr) minmax(0, 1fr);
+      gap: 16px;
+      align-items: baseline;
+      padding: 18px 20px;
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      border-radius: 16px;
+      background: color-mix(in oklab, var(--surface), var(--bg) 10%);
+    }
+
+    .booking-page .booking-priority-item strong {
+      font-family: var(--font-display);
+      font-size: 19px;
+      line-height: 1.2;
+      letter-spacing: -0.03em;
+    }
+
+    .booking-page .booking-priority-item span {
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    @media (max-width: 760px) {
+      .booking-page .booking-table {
+        min-width: 0;
+      }
+
+      .booking-page .booking-table td::before {
+        content: attr(data-label);
+      }
+
+      .booking-page .booking-table td:first-child {
+        font-size: 20px;
+      }
+
+      .booking-page .booking-priority-item {
+        grid-template-columns: 1fr;
+        gap: 6px;
+        padding: 16px 18px;
+      }
+    }
+  </style>
+</head>
+<body class="booking-page">
+  <header class="site-header"><div class="nav-wrap"><a class="brand" href="index.html">시드니 8일 여행</a><nav class="nav-links"><a data-page="index.html" href="index.html">홈</a><a data-page="schedule.html" href="schedule.html">일정</a><a data-page="booking.html" href="booking.html">예약·입장료</a><a data-page="food.html" href="food.html">맛집</a><a data-page="cafe.html" href="cafe.html">카페</a><a data-page="tips.html" href="tips.html">여행팁</a><a data-page="currency.html" href="currency.html">환율계산기</a></nav></div></header>
+  <main class="container">
+    <section class="hero"><div class="hero-meta"><span>공식 링크 우선</span><span>가격 확인</span><span>예약 체크</span></div><h1>예약·입장료</h1><p>가격과 운영시간은 변동 가능. 출발 전 공식 링크에서 한 번 더 확인.</p></section>
+    <section class="section">
+      <h2>예약 우선순위</h2>
+      <div class="booking-priority-list">
+        <div class="booking-priority-item"><strong>가장 먼저</strong><span>블루마운틴 투어 또는 시닉 월드, 고래 관람 투어, 특별 저녁 식당.</span></div>
+        <div class="booking-priority-item"><strong>날씨 보고 결정</strong><span>시드니 타워, 본다이 해변 식당, 페리 이동 많은 날.</span></div>
+        <div class="booking-priority-item"><strong>출발 전 확인</strong><span>2026-06-14 웹 조사로 일부 운영시간 확인. 날짜별 가격·휴무·공휴일 운영은 공식 링크에서 재확인.</span></div>
+      </div>
+    </section>
+    <section class="section">
+      <h2>입장·투어 체크표</h2>
+      <div class="table-wrap">
+        <table class="booking-table">
+          <thead><tr><th>항목</th><th>권장</th><th>가격/시간</th><th>링크</th><th>메모</th></tr></thead>
+          <tbody>
+            <tr><td data-label="항목">타롱가 동물원</td><td data-label="권장">온라인 예매 권장</td><td data-label="가격·시간">공식 티켓 화면에서 확인</td><td data-label="링크"><a href="https://taronga.org.au/sydney-zoo" target="_blank" rel="noopener">공식 홈페이지</a></td><td data-label="메모">방문 날짜의 티켓 정보와 운영 안내를 공식 페이지에서 다시 확인. 스카이 사파리 케이블카는 2027년 말 목표로 알려져 2026년 여행에서는 제외하는 편이 안전.</td></tr>
+            <tr><td data-label="항목">시닉 월드</td><td data-label="권장">블루마운틴 가는 날 예매</td><td data-label="가격·시간">일 09:00-16:00, 월-금 10:00-16:00, 토 09:00-17:00</td><td data-label="링크"><a href="https://www.scenicworld.com.au/tickets" target="_blank" rel="noopener">공식 티켓</a></td><td data-label="메모">날씨가 나쁘면 전망이 제한될 수 있음. 날짜별 티켓 가격은 예약 화면에서 확인.</td></tr>
+            <tr><td data-label="항목">고래 관람 투어</td><td data-label="권장">사전 예약 권장</td><td data-label="가격·시간">투어사별 가격 확인</td><td data-label="링크"><a href="https://www.google.com/search?q=Sydney+whale+watching+tour" target="_blank" rel="noopener">투어 검색</a></td><td data-label="메모">10월은 시즌 후반. 운항 여부, 멀미 가능성, 취소와 환불 규정을 먼저 확인.</td></tr>
+            <tr><td data-label="항목">시드니 타워 아이</td><td data-label="권장">날씨 보고 예약</td><td data-label="가격·시간">공식 페이지에서 당일 운영시간 확인</td><td data-label="링크"><a href="https://www.sydneytowereye.com.au/tickets-passes/" target="_blank" rel="noopener">공식 티켓</a></td><td data-label="메모">일몰 시간대 선호. 구름이 많으면 전망 가치가 낮아질 수 있음.</td></tr>
+            <tr><td data-label="항목">오페라하우스</td><td data-label="권장">내부 투어 제외</td><td data-label="가격·시간">외관 관람</td><td data-label="링크"><a href="https://www.sydneyoperahouse.com/" target="_blank" rel="noopener">공식 홈페이지</a></td><td data-label="메모">공연 관람 계획이 생기면 별도로 예약.</td></tr>
+            <tr><td data-label="항목">페리·대중교통</td><td data-label="권장">비접촉 결제 사용</td><td data-label="가격·시간">성인 Opal 요금 기준</td><td data-label="링크"><a href="https://transportnsw.info/" target="_blank" rel="noopener">교통 정보</a></td><td data-label="메모">같은 카드나 같은 기기로 탭온·탭오프.</td></tr>
+            <tr><td data-label="항목">시드니 피쉬 마켓</td><td data-label="권장">점심 방문 추천</td><td data-label="가격·시간">일-목 07:00-22:00, 금·토 07:00-24:00</td><td data-label="링크"><a href="https://www.sydneyfishmarket.com.au/" target="_blank" rel="noopener">공식 홈페이지</a></td><td data-label="메모">개별 매장 운영시간은 다를 수 있음. 새 시장이라 혼잡 가능.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+  <nav class="quick-nav"><a data-page="schedule.html" href="schedule.html">일정</a><a data-page="food.html" href="food.html">맛집</a><a data-page="tips.html" href="tips.html">팁</a><a data-page="currency.html" href="currency.html">환율</a></nav>
+  <script src="assets/app.js"></script>
+</body>
+</html>
+

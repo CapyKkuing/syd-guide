@@ -1,0 +1,10 @@
+.agents/
+.codex/
+.codegraph/
+.od-skills/
+.chrome-mobile-check*/
+server*.log
+*.err.log
+*.out.log
+*.zip
+*.artifact.json

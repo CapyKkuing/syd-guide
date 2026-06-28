@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+
+<html class="light" lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>시드니 가이드 - 맛집 &amp; 카페</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&amp;family=Inter:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-fixed": "#ffdea8",
+                    "primary-container": "#005b94",
+                    "on-tertiary": "#ffffff",
+                    "tertiary-fixed-dim": "#c9c6c1",
+                    "on-primary": "#ffffff",
+                    "on-secondary": "#ffffff",
+                    "inverse-on-surface": "#f0f0f3",
+                    "inverse-primary": "#9acbff",
+                    "on-background": "#1a1c1e",
+                    "secondary": "#7c5800",
+                    "surface-bright": "#f9f9fc",
+                    "on-secondary-container": "#6b4b00",
+                    "on-tertiary-fixed": "#1c1c18",
+                    "surface-container-high": "#e8e8ea",
+                    "tertiary-fixed": "#e5e2dc",
+                    "error": "#ba1a1a",
+                    "primary-fixed": "#d0e4ff",
+                    "on-secondary-fixed-variant": "#5e4200",
+                    "on-surface": "#1a1c1e",
+                    "on-tertiary-fixed-variant": "#474743",
+                    "surface-container-highest": "#e2e2e5",
+                    "on-surface-variant": "#414750",
+                    "on-primary-fixed": "#001d34",
+                    "on-error": "#ffffff",
+                    "tertiary-container": "#595853",
+                    "on-primary-fixed-variant": "#004a79",
+                    "surface-container-low": "#f3f3f6",
+                    "surface-variant": "#e2e2e5",
+                    "on-tertiary-container": "#d0cec8",
+                    "secondary-fixed-dim": "#ffba20",
+                    "secondary-container": "#feb700",
+                    "on-primary-container": "#a9d2ff",
+                    "outline": "#717881",
+                    "tertiary": "#41413d",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-tint": "#13629b",
+                    "inverse-surface": "#2f3133",
+                    "surface-dim": "#dadadc",
+                    "outline-variant": "#c1c7d1",
+                    "error-container": "#ffdad6",
+                    "primary-fixed-dim": "#9acbff",
+                    "on-secondary-fixed": "#271900",
+                    "surface-container": "#eeeef0",
+                    "surface": "#f9f9fc",
+                    "on-error-container": "#93000a",
+                    "background": "#f9f9fc",
+                    "primary": "#00436f"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "gutter": "24px",
+                    "base": "8px",
+                    "margin-desktop": "40px",
+                    "margin-mobile": "16px",
+                    "container-max": "1280px"
+            },
+            "fontFamily": {
+                    "body-lg": ["Inter"],
+                    "display-lg-mobile": ["Montserrat"],
+                    "label-sm": ["Inter"],
+                    "body-md": ["Inter"],
+                    "headline-md": ["Montserrat"],
+                    "display-lg": ["Montserrat"]
+            },
+            "fontSize": {
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "display-lg-mobile": ["32px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                    "label-sm": ["14px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .glass-nav {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .text-shadow-sm {
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 24px;
+        }
+        .floating-card {
+            box-shadow: 0 10px 30px -5px rgba(0, 67, 111, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .floating-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px -10px rgba(0, 67, 111, 0.15);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col">
+<!-- Top Navigation Bar -->
+<nav class="fixed top-0 w-full z-50 bg-surface/80 dark:bg-surface-dim/80 backdrop-blur-md border-b border-outline-variant/10 shadow-sm">
+<div class="flex justify-between items-center h-16 px-margin-desktop max-w-container-max mx-auto">
+<div class="font-display-lg text-headline-md font-bold text-primary dark:text-primary-fixed-dim">시드니 가이드</div>
+<div class="hidden md:flex items-center space-x-8">
+<a class="text-on-surface-variant dark:text-on-tertiary-container hover:text-primary transition-colors font-body-md" href="#">홈</a>
+<a class="text-on-surface-variant dark:text-on-tertiary-container hover:text-primary transition-colors font-body-md" href="#">일정</a>
+<a class="text-primary dark:text-primary-fixed-dim font-bold border-b-2 border-secondary font-body-md" href="#">맛집</a>
+<a class="text-on-surface-variant dark:text-on-tertiary-container hover:text-primary transition-colors font-body-md" href="#">명소</a>
+<a class="text-on-surface-variant dark:text-on-tertiary-container hover:text-primary transition-colors font-body-md" href="#">팁</a>
+</div>
+<div class="flex items-center space-x-4">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-full text-label-sm focus:outline-none focus:border-primary w-48 lg:w-64 transition-all" placeholder="맛집 검색..." type="text"/>
+</div>
+<button class="bg-primary text-on-primary px-6 py-2 rounded-full font-label-sm hover:opacity-90 transition-opacity">로그인</button>
+</div>
+</div>
+</nav>
+<main class="flex-grow pt-24 pb-12 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto w-full">
+<!-- Hero Section -->
+<header class="mb-12">
+<h1 class="font-display-lg text-display-lg-mobile md:text-display-lg text-primary mb-4">시드니 최고의 미식 경험</h1>
+<p class="text-on-surface-variant font-body-lg max-w-2xl">하버 브릿지가 보이는 파인 다이닝부터 현지인들이 사랑하는 숨은 카페까지, 시드니의 진정한 맛을 가이드해 드립니다.</p>
+</header>
+<!-- Filters & Category Chips -->
+<section class="mb-10 flex flex-wrap items-center justify-between gap-4">
+<div class="flex flex-wrap gap-2">
+<button class="px-5 py-2 rounded-full bg-primary text-on-primary font-label-sm transition-all shadow-md">전체</button>
+<button class="px-5 py-2 rounded-full bg-surface-container-high text-on-surface-variant hover:bg-secondary-container/20 font-label-sm transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">restaurant</span>맛집
+                </button>
+<button class="px-5 py-2 rounded-full bg-surface-container-high text-on-surface-variant hover:bg-secondary-container/20 font-label-sm transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">local_cafe</span>카페
+                </button>
+<button class="px-5 py-2 rounded-full bg-surface-container-high text-on-surface-variant hover:bg-secondary-container/20 font-label-sm transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">brunch_dining</span>브런치
+                </button>
+</div>
+<button class="flex items-center gap-2 px-6 py-2 border-2 border-secondary-container rounded-full text-secondary font-label-sm hover:bg-secondary-container hover:text-on-secondary-container transition-all">
+<span class="material-symbols-outlined">near_me</span>
+                내 주변 맛집 보기
+            </button>
+</section>
+<!-- Bento Grid Layout for Top Recommendations -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+<!-- Card 1: The Grounds of Alexandria (Large Feature) -->
+<div class="lg:col-span-2 group relative overflow-hidden rounded-2xl bg-white floating-card border border-outline-variant/10">
+<div class="relative h-[400px]">
+<img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="A sun-drenched, lush garden cafe in Alexandria, Sydney, filled with hanging plants, rustic wooden tables, and vintage industrial decor. The lighting is warm and golden, capturing the vibrant morning atmosphere with people enjoying artisan coffee. The overall aesthetic is organic, eclectic, and highly detailed, reflecting the premium Sydney lifestyle." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDqD9nPVCRbjmUNP9zz9P3_6TZtBsvO5QlichbEM_peKF62lsrLlxUipE5YtZH4AJfNyLIa5F-f0L6zgkvHajraH004etbepJ5jT1ukv-5MKLgzZ8Szyi_prxW1qRsNPzr5XJd7I-uiJNzc6FDUOQqxqOK2MSMR6mVPuz4D9RyLQjnGGPgVZ2FOvwsRE4ap3sitmdSMvDuaehahiMO4sZ0LlBidoRS1S1Tbx623iYfXi7sF9G78Bm0MR2rgMIZ2YGuYt5ls2t88EFQ"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+<div class="absolute top-6 right-6 bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full flex items-center gap-1 font-label-sm">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span>4.8</span>
+</div>
+<div class="absolute bottom-8 left-8 text-white">
+<span class="inline-block px-3 py-1 bg-primary/30 backdrop-blur-md rounded text-label-sm mb-3">Cafe</span>
+<h2 class="font-headline-md text-[32px] mb-2">The Grounds of Alexandria</h2>
+<p class="font-body-md opacity-90 max-w-md">"마치 정원 속에 들어온 듯한 환상적인 분위기. 모든 코너가 포토존인 시드니 필수 방문 카페입니다."</p>
+</div>
+</div>
+<div class="p-6 bg-white flex justify-between items-center">
+<div>
+<span class="text-outline font-label-sm uppercase tracking-wider block mb-1">Key Menu</span>
+<span class="text-primary font-bold font-body-lg">에보카도 토스트 &amp; 플랫 화이트</span>
+</div>
+<button class="p-3 rounded-full bg-surface-container hover:bg-primary hover:text-white transition-all">
+<span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Card 2: Pancakes on the Rocks -->
+<div class="flex flex-col rounded-2xl overflow-hidden bg-white floating-card border border-outline-variant/10">
+<div class="relative h-64">
+<img class="w-full h-full object-cover" data-alt="A stack of fluffy, decadent pancakes topped with melting chocolate butter, fresh strawberries, and a drizzle of rich maple syrup. The background is a cozy, bustling restaurant interior with historic stone walls typical of The Rocks area in Sydney. The lighting is intimate and warm, emphasizing the appetizing textures and vibrant colors of the food." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBjswx9Px4ZuN_6sS1q7E-u_vqBscwNRvLb0j9WzUJO1qjDxAWj6lGbhSBJrv7dzAiNqLZolDcLnsl9QEJEN-FVuA4j0SBHCf1qybt2tyge9FMqbv5SnwoxzT-Ju5mq-VI8ns3Eu1PwxSLrXuYIFAyxVxMP8LH2JMc4V0zrrFUTWYUDfb3xwcM4IjE41fxogzT7GK-IymBzd0hGzTWEiVCdE-M2GcA-lGbyoL-2Vi9iJ2INrZr_cHX-drtUjk0Ll-cGfUu2Ms62Eqg"/>
+<div class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-primary font-label-sm">Food</div>
+<div class="absolute top-4 right-4 bg-secondary-container text-on-secondary-container px-2 py-1 rounded-full flex items-center gap-1 font-label-sm">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span>4.5</span>
+</div>
+</div>
+<div class="p-6">
+<h3 class="font-headline-md text-on-surface mb-2">Pancakes on the Rocks</h3>
+<p class="text-on-surface-variant font-body-md mb-4 line-clamp-2">"24시간 운영되는 록스의 전설적인 맛집. 초콜릿 팬케이크는 반드시 맛봐야 합니다."</p>
+<div class="pt-4 border-t border-outline-variant/20">
+<span class="text-outline font-label-sm block mb-1">시그니처 메뉴</span>
+<span class="text-on-surface font-semibold">데빌스 딜라이트 팬케이크</span>
+</div>
+</div>
+</div>
+<!-- Card 3: Bills -->
+<div class="flex flex-col rounded-2xl overflow-hidden bg-white floating-card border border-outline-variant/10">
+<div class="relative h-64">
+<img class="w-full h-full object-cover" data-alt="A bright, minimalist breakfast spread at Bills restaurant in Sydney, featuring their famous ricotta hotcakes with honeycomb butter and banana. The scene is airy and high-key, with soft morning light streaming through large windows onto a white table. The aesthetic is clean, modern, and captures the sophisticated yet relaxed Australian breakfast culture." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAlgoAU3VCRVM-TPfCuiBTFO9gN0WHX-OzhjnBqUcEj-jJ_7K-xNHLid7NHm4N-q3gjyChAqRopZWWP5cbMB6cXzfAVkHwU7PtycsdaSgTommDQ8qCB3PXvpj0kVKwAFZKsGv44EiMlFOFN72xzOa8ZI44eud3Al2YK6DIadWIpKUdHVS28T3eSUfO1BZ5z3IZVNRgnywD-QzYXrXppbHR0Hnq2iWDIBR6u46hl710N3g9yU9D9oUQj7jZgHdfLZpHL_vZP3ZdAYKY"/>
+<div class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-primary font-label-sm">Cafe / Brunch</div>
+<div class="absolute top-4 right-4 bg-secondary-container text-on-secondary-container px-2 py-1 rounded-full flex items-center gap-1 font-label-sm">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span>4.7</span>
+</div>
+</div>
+<div class="p-6">
+<h3 class="font-headline-md text-on-surface mb-2">Bills Darlinghurst</h3>
+<p class="text-on-surface-variant font-body-md mb-4 line-clamp-2">"세계 최고의 아침 식사라는 수식어가 아깝지 않은 곳. 리코타 핫케이크의 부드러움이 일품입니다."</p>
+<div class="pt-4 border-t border-outline-variant/20">
+<span class="text-outline font-label-sm block mb-1">시그니처 메뉴</span>
+<span class="text-on-surface font-semibold">리코타 핫케이크 &amp; 스크램블 에그</span>
+</div>
+</div>
+</div>
+<!-- Card 4: Mamak -->
+<div class="flex flex-col rounded-2xl overflow-hidden bg-white floating-card border border-outline-variant/10">
+<div class="relative h-64">
+<img class="w-full h-full object-cover" data-alt="A vibrant and busy Malaysian restaurant in Sydney's Haymarket, showcasing chefs skillfully pulling Roti Canai in an open kitchen. The scene is energetic and colorful, with warm lighting and rustic decor. The photo focuses on a golden, flaky roti served with spicy curry dipping sauces on a stainless steel tray, capturing the authentic street-food vibe." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAzVQ4YYsfkTNP0GD75-c5HP-lTgWOcdl1ZCXv3U2oPb3hHFbtN5x-rhXTV4qwbaDdbOqobLqaNFJEMJag5C_X4EoBN36QTJ_VV9W43Bw7fB0dAfD3rVvH7K_WQ3JKF10PIXpCOrTF5j3CPufIDq_ESwNUVhs83dD_nV4zj2NKDC6114NkDxEi_7A5GlnYWphzVd0KZauX0arX9PylWu8Ei8Y5mMsPtOCUpLEIqtt_rBteEcFLIo3u3nLRN9xxzkVQkhGekPuFT-ko"/>
+<div class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-primary font-label-sm">Food</div>
+<div class="absolute top-4 right-4 bg-secondary-container text-on-secondary-container px-2 py-1 rounded-full flex items-center gap-1 font-label-sm">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span>4.6</span>
+</div>
+</div>
+<div class="p-6">
+<h3 class="font-headline-md text-on-surface mb-2">Mamak</h3>
+<p class="text-on-surface-variant font-body-md mb-4 line-clamp-2">"헤이마켓에서 가장 긴 줄을 자랑하는 말레이시아 맛집. 갓 구운 로티의 바삭함이 환상적입니다."</p>
+<div class="pt-4 border-t border-outline-variant/20">
+<span class="text-outline font-label-sm block mb-1">시그니처 메뉴</span>
+<span class="text-on-surface font-semibold">로티 카나이 &amp; 사테이</span>
+</div>
+</div>
+</div>
+<!-- Card 5: Black Star Pastry -->
+<div class="flex flex-col rounded-2xl overflow-hidden bg-white floating-card border border-outline-variant/10">
+<div class="relative h-64">
+<img class="w-full h-full object-cover" data-alt="An exquisite strawberry watermelon cake from Black Star Pastry, featuring distinct layers of almond dacquoise, cream, and fresh watermelon slices, topped with dried rose petals and grapes. The close-up shot emphasizes the delicate textures and vibrant red and pink colors. The lighting is professional and soft, highlighting the cake as a work of modern culinary art." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAjWCuvQCA6ntj6oc8lOdZP9B5nGM_TC0nBPDkTDfuCTupc-pPHOzCf0Y7CTZWKSDg8pLoLF9zTuW24Mz8Ua9h_8rBkAky9dziCbwYIgqVcv6lLOiB7ieowcN-sRjMfVu17vXMdusZiY3AG-56S36HaF8J6ciExMYfRWbjF560-mQN9gkt-vSL081-R-6uSDwEzkd25WJrHGvppTQmnJQ7dYKvztUWVafGRCmy_-4zYpCYCZmR_-0lIlXds5-HB8VKxLnhJM1TV0yQ"/>
+<div class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-primary font-label-sm">Cafe / Dessert</div>
+<div class="absolute top-4 right-4 bg-secondary-container text-on-secondary-container px-2 py-1 rounded-full flex items-center gap-1 font-label-sm">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span>4.9</span>
+</div>
+</div>
+<div class="p-6">
+<h3 class="font-headline-md text-on-surface mb-2">Black Star Pastry</h3>
+<p class="text-on-surface-variant font-body-md mb-4 line-clamp-2">"인스타그램에서 가장 유명한 수박 케이크. 장미 향과 수박의 청량함이 어우러진 독특한 디저트입니다."</p>
+<div class="pt-4 border-t border-outline-variant/20">
+<span class="text-outline font-label-sm block mb-1">시그니처 메뉴</span>
+<span class="text-on-surface font-semibold">딸기 수박 케이크</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Side Navigation Drawer (Mobile) -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-surface-container-low dark:bg-surface-container-highest z-[60] -translate-x-full transition-transform duration-300 md:hidden flex flex-col p-base space-y-4 shadow-md" id="side-nav">
+<div class="flex items-center justify-between p-4 mb-4">
+<div class="font-display-lg text-headline-md text-primary">시드니 여행</div>
+<button class="material-symbols-outlined" onclick="toggleSideNav()">close</button>
+</div>
+<div class="space-y-1">
+<a class="flex items-center gap-4 p-4 text-on-surface-variant hover:bg-surface-variant/50 rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label-sm">홈</span>
+</a>
+<a class="flex items-center gap-4 p-4 text-on-surface-variant hover:bg-surface-variant/50 rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">calendar_month</span>
+<span class="font-label-sm">일정</span>
+</a>
+<a class="flex items-center gap-4 p-4 bg-secondary-container text-on-secondary-container rounded-lg font-bold transition-all" href="#">
+<span class="material-symbols-outlined">restaurant</span>
+<span class="font-label-sm">맛집</span>
+</a>
+<a class="flex items-center gap-4 p-4 text-on-surface-variant hover:bg-surface-variant/50 rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">map</span>
+<span class="font-label-sm">명소</span>
+</a>
+<a class="flex items-center gap-4 p-4 text-on-surface-variant hover:bg-surface-variant/50 rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">info</span>
+<span class="font-label-sm">팁</span>
+</a>
+</div>
+<div class="mt-auto pt-8 space-y-1">
+<a class="flex items-center gap-4 p-4 text-on-surface-variant hover:bg-surface-variant/50 rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-sm">설정</span>
+</a>
+<a class="flex items-center gap-4 p-4 text-on-surface-variant hover:bg-surface-variant/50 rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="font-label-sm">고객센터</span>
+</a>
+</div>
+</aside>
+<!-- Overlay for SideNav -->
+<div class="fixed inset-0 bg-black/40 z-50 hidden transition-opacity" id="overlay" onclick="toggleSideNav()"></div>
+<!-- Mobile Navigation Bar -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 glass-nav bg-white/70 border-t border-outline-variant/10 z-40 pb-safe">
+<div class="flex justify-around items-center h-16">
+<button class="flex flex-col items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined">home</span>
+<span class="text-[10px]">홈</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">restaurant</span>
+<span class="text-[10px] font-bold">맛집</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-on-surface-variant" onclick="toggleSideNav()">
+<span class="material-symbols-outlined">menu</span>
+<span class="text-[10px]">메뉴</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined">map</span>
+<span class="text-[10px]">지도</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined">person</span>
+<span class="text-[10px]">마이</span>
+</button>
+</div>
+</nav>
+<!-- Footer -->
+<footer class="w-full py-12 mt-auto bg-surface-container-highest dark:bg-inverse-surface border-t border-outline-variant/20">
+<div class="flex flex-col items-center justify-center space-y-6 px-margin-desktop max-w-container-max mx-auto">
+<div class="font-display-lg text-body-lg font-bold text-primary">시드니 여행 가이드</div>
+<div class="flex space-x-8">
+<a class="text-on-surface-variant dark:text-on-tertiary-container hover:text-secondary transition-opacity font-label-sm" href="#">이용약관</a>
+<a class="text-on-surface-variant dark:text-on-tertiary-container hover:text-secondary transition-opacity font-label-sm" href="#">개인정보처리방침</a>
+<a class="text-on-surface-variant dark:text-on-tertiary-container hover:text-secondary transition-opacity font-label-sm" href="#">문의하기</a>
+</div>
+<p class="text-on-surface-variant dark:text-inverse-on-surface font-body-md opacity-70">© 2024 시드니 여행 가이드. All rights reserved.</p>
+</div>
+</footer>
+<script>
+        function toggleSideNav() {
+            const sideNav = document.getElementById('side-nav');
+            const overlay = document.getElementById('overlay');
+            const isOpen = sideNav.classList.contains('translate-x-0');
+            
+            if (isOpen) {
+                sideNav.classList.remove('translate-x-0');
+                sideNav.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            } else {
+                sideNav.classList.add('translate-x-0');
+                sideNav.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            }
+        }
+
+        // Add subtle animation to cards on scroll
+        const observerOptions = {
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('opacity-100', 'translate-y-0');
+                    entry.target.classList.remove('opacity-0', 'translate-y-10');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.floating-card').forEach(card => {
+            card.classList.add('opacity-0', 'translate-y-10', 'transition-all', 'duration-700');
+            observer.observe(card);
+        });
+    </script>
+</body></html>

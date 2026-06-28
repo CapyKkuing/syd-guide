@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+
+<html lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&amp;family=Inter:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-fixed": "#ffdea8",
+                    "primary-container": "#005b94",
+                    "on-tertiary": "#ffffff",
+                    "tertiary-fixed-dim": "#c9c6c1",
+                    "on-primary": "#ffffff",
+                    "on-secondary": "#ffffff",
+                    "inverse-on-surface": "#f0f0f3",
+                    "inverse-primary": "#9acbff",
+                    "on-background": "#1a1c1e",
+                    "secondary": "#7c5800",
+                    "surface-bright": "#f9f9fc",
+                    "on-secondary-container": "#6b4b00",
+                    "on-tertiary-fixed": "#1c1c18",
+                    "surface-container-high": "#e8e8ea",
+                    "tertiary-fixed": "#e5e2dc",
+                    "error": "#ba1a1a",
+                    "primary-fixed": "#d0e4ff",
+                    "on-secondary-fixed-variant": "#5e4200",
+                    "on-surface": "#1a1c1e",
+                    "on-tertiary-fixed-variant": "#474743",
+                    "surface-container-highest": "#e2e2e5",
+                    "on-surface-variant": "#414750",
+                    "on-primary-fixed": "#001d34",
+                    "on-error": "#ffffff",
+                    "tertiary-container": "#595853",
+                    "on-primary-fixed-variant": "#004a79",
+                    "surface-container-low": "#f3f3f6",
+                    "surface-variant": "#e2e2e5",
+                    "on-tertiary-container": "#d0cec8",
+                    "secondary-fixed-dim": "#ffba20",
+                    "secondary-container": "#feb700",
+                    "on-primary-container": "#a9d2ff",
+                    "outline": "#717881",
+                    "tertiary": "#41413d",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-tint": "#13629b",
+                    "inverse-surface": "#2f3133",
+                    "surface-dim": "#dadadc",
+                    "outline-variant": "#c1c7d1",
+                    "error-container": "#ffdad6",
+                    "primary-fixed-dim": "#9acbff",
+                    "on-secondary-fixed": "#271900",
+                    "surface-container": "#eeeef0",
+                    "surface": "#f9f9fc",
+                    "on-error-container": "#93000a",
+                    "background": "#f9f9fc",
+                    "primary": "#00436f"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "gutter": "24px",
+                    "base": "8px",
+                    "margin-desktop": "40px",
+                    "margin-mobile": "16px",
+                    "container-max": "1280px"
+            },
+            "fontFamily": {
+                    "body-lg": ["Inter"],
+                    "display-lg-mobile": ["Montserrat"],
+                    "label-sm": ["Inter"],
+                    "body-md": ["Inter"],
+                    "headline-md": ["Montserrat"],
+                    "display-lg": ["Montserrat"]
+            },
+            "fontSize": {
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "display-lg-mobile": ["32px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                    "label-sm": ["14px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { background-color: #F9F6F0; } /* Opera Cream Base */
+        .glass-nav { backdrop-filter: blur(12px); }
+        .timeline-line { background: repeating-linear-gradient(to bottom, #00436f 0, #00436f 4px, transparent 4px, transparent 8px); }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    </style>
+</head>
+<body class="font-body-md text-on-surface antialiased">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-surface/80 dark:bg-surface-dim/80 backdrop-blur-md shadow-sm border-b border-outline-variant/10">
+<div class="flex justify-between items-center h-16 px-margin-desktop max-w-container-max mx-auto">
+<div class="font-display-lg text-headline-md font-bold text-primary dark:text-primary-fixed-dim">시드니 가이드</div>
+<div class="hidden md:flex items-center space-x-8">
+<a class="text-on-surface-variant dark:text-on-tertiary-container hover:text-primary transition-colors font-body-md" href="#">홈</a>
+<a class="text-primary dark:text-primary-fixed-dim font-bold border-b-2 border-secondary font-body-md" href="#">일정</a>
+<a class="text-on-surface-variant dark:text-on-tertiary-container hover:text-primary transition-colors font-body-md" href="#">맛집</a>
+<a class="text-on-surface-variant dark:text-on-tertiary-container hover:text-primary transition-colors font-body-md" href="#">명소</a>
+<a class="text-on-surface-variant dark:text-on-tertiary-container hover:text-primary transition-colors font-body-md" href="#">팁</a>
+</div>
+<div class="flex items-center space-x-4">
+<button class="material-symbols-outlined text-on-surface-variant p-2 hover:bg-secondary-container/10 rounded-full transition-all">search</button>
+</div>
+</div>
+</nav>
+<!-- SideNavBar (Hidden on Mobile) -->
+<aside class="hidden lg:flex flex-col p-base space-y-4 h-screen w-64 fixed left-0 top-0 bg-surface-container-low dark:bg-surface-container-highest shadow-md z-40 pt-20">
+<div class="px-4 py-2">
+<div class="flex items-center space-x-3 mb-6">
+<img alt="사용자 프로필" class="w-10 h-10 rounded-full object-cover border-2 border-primary" data-alt="A professional close-up portrait of a cheerful person against a soft-focus urban background. The lighting is warm and natural, capturing a vibrant and friendly expression. The overall style is clean and modern, matching a premium travel application aesthetic with soft shadows and high-key brightness." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCvTKnIuPvHTHYLxAbOp0kqCheAPNMD-BLTpT0KZMy_LEBvU7ngPt_JBBAHDYkoUt8iJ_5Gb4RyD6uHXNbx-j79QJu6OOyHUio4OHdWtui3Jy1BfF9TAADHhH69oCMfRP8gLoNZrqw6qZcDv_T8AMaVG-TkKHLEqKpKG4M6baWNFEy_ybHe63hErlN0e6889pL8FtXEslUn1oVIArdQeh3QpOE0yGV2_f5DF4Aivj5wdY9XOQLgSftiPrs_e8ad9Cf33h2Pnm0R8z8"/>
+<div>
+<p class="font-headline-md text-label-sm text-primary">시드니 여행</p>
+<p class="text-on-surface-variant text-[12px]">10월 7일 - 15일</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 space-y-1 px-2">
+<a class="flex items-center space-x-3 p-3 text-on-surface-variant dark:text-on-tertiary-container hover:bg-surface-variant/50 rounded-lg transition-all group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">home</span>
+<span class="font-label-sm">홈</span>
+</a>
+<a class="flex items-center space-x-3 p-3 bg-secondary-container text-on-secondary-container rounded-lg font-bold transition-all" href="#">
+<span class="material-symbols-outlined">calendar_month</span>
+<span class="font-label-sm">일정</span>
+</a>
+<a class="flex items-center space-x-3 p-3 text-on-surface-variant dark:text-on-tertiary-container hover:bg-surface-variant/50 rounded-lg transition-all group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">restaurant</span>
+<span class="font-label-sm">맛집</span>
+</a>
+<a class="flex items-center space-x-3 p-3 text-on-surface-variant dark:text-on-tertiary-container hover:bg-surface-variant/50 rounded-lg transition-all group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">map</span>
+<span class="font-label-sm">명소</span>
+</a>
+<a class="flex items-center space-x-3 p-3 text-on-surface-variant dark:text-on-tertiary-container hover:bg-surface-variant/50 rounded-lg transition-all group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">info</span>
+<span class="font-label-sm">팁</span>
+</a>
+</nav>
+<div class="px-2 pt-4 border-t border-outline-variant/20">
+<button class="w-full flex items-center justify-center space-x-2 bg-primary text-white p-3 rounded-lg hover:scale-105 active:scale-95 transition-all">
+<span class="material-symbols-outlined">map</span>
+<span class="font-label-sm font-bold">지도 보기</span>
+</button>
+</div>
+<footer class="mt-auto space-y-1 px-2 pb-4">
+<a class="flex items-center space-x-3 p-3 text-on-surface-variant hover:bg-surface-variant/50 rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-sm">설정</span>
+</a>
+<a class="flex items-center space-x-3 p-3 text-on-surface-variant hover:bg-surface-variant/50 rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="font-label-sm">고객센터</span>
+</a>
+</footer>
+</aside>
+<!-- Main Content -->
+<main class="lg:ml-64 pt-24 pb-16 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<header class="mb-12">
+<h1 class="font-display-lg text-primary mb-2">여행 일정</h1>
+<p class="text-on-surface-variant font-body-lg">시드니에서의 9일간의 완벽한 모험</p>
+</header>
+<!-- Timeline / Itinerary Content -->
+<div class="relative">
+<!-- Timeline Vertical Line -->
+<div class="absolute left-4 md:left-1/2 top-0 bottom-0 w-0.5 timeline-line hidden md:block opacity-30 transform -translate-x-1/2"></div>
+<!-- Day 1: Arrival & Circular Quay -->
+<div class="relative mb-16 flex flex-col md:flex-row items-center justify-between w-full">
+<div class="w-full md:w-[45%] order-2 md:order-1">
+<div class="bg-white p-6 rounded-xl shadow-sm border border-primary/10 hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between mb-4">
+<span class="bg-secondary-fixed text-on-secondary-fixed px-3 py-1 rounded-full text-label-sm">10월 7일</span>
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+<h3 class="font-headline-md text-primary mb-4">도착 및 서큘러 키 탐방</h3>
+<ul class="space-y-4">
+<li class="flex gap-4">
+<span class="material-symbols-outlined text-primary shrink-0">flight_land</span>
+<div>
+<p class="font-bold">시드니 공항 도착</p>
+<p class="text-on-surface-variant text-sm">오전 9:00 | 공항 철도(T8) 이용</p>
+</div>
+</li>
+<li class="flex gap-4">
+<span class="material-symbols-outlined text-primary shrink-0">location_on</span>
+<div>
+<p class="font-bold">서큘러 키 &amp; 오페라 하우스</p>
+<p class="text-on-surface-variant text-sm">오후 2:00 | 가이드 투어 및 아이코닉한 사진 촬영</p>
+</div>
+</li>
+</ul>
+</div>
+</div>
+<div class="hidden md:flex absolute left-1/2 -translate-x-1/2 w-10 h-10 bg-primary rounded-full items-center justify-center text-white z-10 shadow-lg">1</div>
+<div class="w-full md:w-[45%] mb-4 md:mb-0 order-1 md:order-2">
+<img alt="시드니 오페라 하우스" class="rounded-2xl w-full h-48 object-cover shadow-lg" data-alt="A majestic wide shot of the Sydney Opera House at sunset, featuring the iconic white sails glowing under a golden sky. The deep blue waters of the harbor reflect the warm light, while small ferries glide past. The photographic style is high-contrast and vibrant, emphasizing the structural elegance and the atmospheric coastal mood of Sydney." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBdwDYMbzwYlIFpNj9q8h_RN1SrXG-o5mT_Cb8X8nXwLwizAnPedCcycK9Klv0mvmqUzrbNvVJeQJma5VXEXiffMo0qGIixnOj2r0cDSuf6t2Rdna7SDXb6_yKwC0jIoQ5ezX797-wyTgARfV5-LQYIjxegNmqF0Tkz8StAXzxCiL50Hi4iXu1tRB5_0gMSbPSgokM60NlWrdSRkPXeOIZYoj51-Gk7N0U8Y21isAsvcCzwkjJDSpYSja3NxIl6SdsTkr5LSqM8IjY"/>
+</div>
+</div>
+<!-- Day 2: Darling Harbour -->
+<div class="relative mb-16 flex flex-col md:flex-row items-center justify-between w-full">
+<div class="w-full md:w-[45%] mb-4 md:mb-0 order-1">
+<img alt="달링 하버" class="rounded-2xl w-full h-48 object-cover shadow-lg" data-alt="A vibrant night scene of Darling Harbour, with colorful city lights reflecting in the shimmering water. The foreground shows a clean, modern promenade with people walking and outdoor dining areas. The lighting is festive and bright, highlighting the energetic nightlife and the contemporary architectural surroundings of the harbor." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAWkwDLtGQS4g7vXZcnRRQHSIdDTxZAIHaQxibtiONPj45m0be26i_lzjoMydXKq8Js4QycKVg9i0NXpiRjjcgtQI2NfvMNUh0lXoY__G-ojwejmsRBWcjqhpHHLj_Ij0DBJEgRSAunda1PUJQYzB5Tl-uBzP26C56G08oj2gtTL9v-mlvRG_nUAYK2oN3iDsYqjpQtqPmtw5P6wpv0OsH-AU3RD5RVvFXd-Eb5Uhoh-um-d6vw9FZ_J-YwYKMrU4CD9g4ydUCWTIQ"/>
+</div>
+<div class="hidden md:flex absolute left-1/2 -translate-x-1/2 w-10 h-10 bg-primary-container rounded-full items-center justify-center text-white z-10 shadow-lg">2</div>
+<div class="w-full md:w-[45%] order-2">
+<div class="bg-white p-6 rounded-xl shadow-sm border border-primary/10 hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between mb-4">
+<span class="bg-secondary-fixed text-on-secondary-fixed px-3 py-1 rounded-full text-label-sm">10월 8일</span>
+</div>
+<h3 class="font-headline-md text-primary mb-4">도심의 활기, 달링 하버</h3>
+<ul class="space-y-4">
+<li class="flex gap-4">
+<span class="material-symbols-outlined text-primary shrink-0">pets</span>
+<div>
+<p class="font-bold">와일드 라이프 시드니 동물원</p>
+<p class="text-on-surface-variant text-sm">오전 10:30 | 캥거루와 코알라 만나기</p>
+</div>
+</li>
+<li class="flex gap-4">
+<span class="material-symbols-outlined text-primary shrink-0">directions_boat</span>
+<div>
+<p class="font-bold">시드니 하버 크루즈</p>
+<p class="text-on-surface-variant text-sm">오후 6:00 | 디너와 함께 즐기는 야경</p>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<!-- Day 3: Bondi Beach -->
+<div class="relative mb-16 flex flex-col md:flex-row items-center justify-between w-full">
+<div class="w-full md:w-[45%] order-2 md:order-1">
+<div class="bg-white p-6 rounded-xl shadow-sm border border-primary/10 hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between mb-4">
+<span class="bg-secondary-fixed text-on-secondary-fixed px-3 py-1 rounded-full text-label-sm">10월 9일</span>
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+<h3 class="font-headline-md text-primary mb-4">본다이 비치 해안가</h3>
+<ul class="space-y-4">
+<li class="flex gap-4">
+<span class="material-symbols-outlined text-primary shrink-0">surfing</span>
+<div>
+<p class="font-bold">본다이 비치 서핑 레슨</p>
+<p class="text-on-surface-variant text-sm">오전 08:30 | 초보자 환영 강습</p>
+</div>
+</li>
+<li class="flex gap-4">
+<span class="material-symbols-outlined text-primary shrink-0">hiking</span>
+<div>
+<p class="font-bold">쿠지 코스탈 워크</p>
+<p class="text-on-surface-variant text-sm">오후 2:00 | 해안 절벽을 따라 걷는 산책로</p>
+</div>
+</li>
+<li class="flex gap-4">
+<span class="material-symbols-outlined text-primary shrink-0">directions_bus</span>
+<div>
+<p class="font-bold">교통 안내</p>
+<p class="text-on-surface-variant text-sm">333번 버스 | 본다이 정션에서 환승</p>
+</div>
+</li>
+</ul>
+</div>
+</div>
+<div class="hidden md:flex absolute left-1/2 -translate-x-1/2 w-10 h-10 bg-primary rounded-full items-center justify-center text-white z-10 shadow-lg">3</div>
+<div class="w-full md:w-[45%] mb-4 md:mb-0 order-1 md:order-2">
+<img alt="본다이 아이스버그 수영장" class="rounded-2xl w-full h-48 object-cover shadow-lg" data-alt="An aerial shot of the Bondi Icebergs pool, where sparkling turquoise pool water meets the deep sapphire waves of the Pacific Ocean. White sea foam crashes against the concrete edges of the pool. The scene is bright and airy with a crisp coastal aesthetic, capturing the refreshing energy of a summer morning in Sydney." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxbjFg3vlmi3NTXADpVBEI2whk4sfJ1iORapvyYydjq--oU7xYEbQ_QYxmCmyfk2NtoBRQFiMv0iYdkpeRiRWR1FVbSyMC9PSYEfMTM90aqj7QIVVJIp77eOwlxXhgStjws4VY7YctcysYmI6d6bj2booC2jg5P4wfKlWXAH7w8ZXdoQd9S7My39Qc8-jnoUbDkRT6F0GCIXocPzyD6hEsogtq9djXrFABAMUsxHa-zXBrONmYl7-l8HOg_FqOHXiywGZGwmc9bgw"/>
+</div>
+</div>
+<!-- Compressed Days 4-8 Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+<!-- Day 4 -->
+<div class="bg-white p-6 rounded-xl border border-primary/5 shadow-sm hover:scale-[1.02] transition-transform">
+<p class="text-secondary font-bold text-sm mb-2">10월 10일</p>
+<h4 class="font-bold text-primary mb-3">블루마운틴 국립공원</h4>
+<p class="text-sm text-on-surface-variant mb-4">세 자매 봉과 시닉 월드 체험. 카툼바 행 기차 이용.</p>
+<span class="inline-flex items-center gap-1 text-[12px] bg-surface-container px-2 py-1 rounded">
+<span class="material-symbols-outlined text-[16px]">train</span> 전철 2시간
+                    </span>
+</div>
+<!-- Day 5 -->
+<div class="bg-white p-6 rounded-xl border border-primary/5 shadow-sm hover:scale-[1.02] transition-transform">
+<p class="text-secondary font-bold text-sm mb-2">10월 11일</p>
+<h4 class="font-bold text-primary mb-3">맨리 비치 &amp; 노스 헤드</h4>
+<p class="text-sm text-on-surface-variant mb-4">맨리 페리를 타고 즐기는 하버 뷰. 저녁은 코르소 거리 맛집 탐방.</p>
+<span class="inline-flex items-center gap-1 text-[12px] bg-surface-container px-2 py-1 rounded">
+<span class="material-symbols-outlined text-[16px]">directions_boat</span> 페리 30분
+                    </span>
+</div>
+<!-- Day 6 -->
+<div class="bg-white p-6 rounded-xl border border-primary/5 shadow-sm hover:scale-[1.02] transition-transform">
+<p class="text-secondary font-bold text-sm mb-2">10월 12일</p>
+<h4 class="font-bold text-primary mb-3">타롱가 동물원</h4>
+<p class="text-sm text-on-surface-variant mb-4">도시를 배경으로 야생 동물을 관찰하는 세계에서 가장 아름다운 동물원.</p>
+<span class="inline-flex items-center gap-1 text-[12px] bg-surface-container px-2 py-1 rounded">
+<span class="material-symbols-outlined text-[16px]">cable</span> 스카이사파리
+                    </span>
+</div>
+<!-- Day 7 -->
+<div class="bg-white p-6 rounded-xl border border-primary/5 shadow-sm hover:scale-[1.02] transition-transform">
+<p class="text-secondary font-bold text-sm mb-2">10월 13일</p>
+<h4 class="font-bold text-primary mb-3">아트 갤러리 &amp; 하이드 파크</h4>
+<p class="text-sm text-on-surface-variant mb-4">시드니 현대 미술관(MCA) 및 하이드 파크에서의 여유로운 피크닉.</p>
+<span class="inline-flex items-center gap-1 text-[12px] bg-surface-container px-2 py-1 rounded">
+<span class="material-symbols-outlined text-[16px]">falling</span> 도보 이동
+                    </span>
+</div>
+<!-- Day 8 -->
+<div class="bg-white p-6 rounded-xl border border-primary/5 shadow-sm hover:scale-[1.02] transition-transform">
+<p class="text-secondary font-bold text-sm mb-2">10월 14일</p>
+<h4 class="font-bold text-primary mb-3">더 록스 마켓 &amp; 쇼핑</h4>
+<p class="text-sm text-on-surface-variant mb-4">역사적인 록스 지구의 주말 마켓과 퀸 빅토리아 빌딩 쇼핑.</p>
+<span class="inline-flex items-center gap-1 text-[12px] bg-surface-container px-2 py-1 rounded">
+<span class="material-symbols-outlined text-[16px]">shopping_bag</span> 기념품 구매
+                    </span>
+</div>
+</div>
+<!-- Day 9: Departure -->
+<div class="relative flex flex-col md:flex-row items-center justify-between w-full">
+<div class="w-full md:w-[45%] mb-4 md:mb-0">
+<img alt="시드니 도심 전경" class="rounded-2xl w-full h-48 object-cover shadow-lg" data-alt="A clean, minimalist interior shot of a modern airport terminal lounge with expansive glass walls looking out towards the Sydney skyline. The lighting is soft and even, creating a serene and organized atmosphere. The design emphasizes luxury travel with sleek furniture and a neutral color palette of whites and soft greys." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCpiI2-vPNg4LdmxVVDiIYhS5T4wjqhbIM9UhEKXpMMIOPqvrEWqhGOHwTA19xYowbz_v2K9Il4wuaIxnPKySIy5VEGuyXD0XTxEI8jtysZZRjkm-ZKIZ9KPZwKpWgHAVDhZuULBfMEsEB0M2fJ4UszrUEIRU8FurbwgJ0l0yfRfqRVskhdenLRRria8tCL8bIk2O-nYfx_kyq5WNNLauyZf3TR1zvGBBvnY723k5d2WvkhvXQ-FEzqfg4m32Etg6597ShRhmdj28Y"/>
+</div>
+<div class="hidden md:flex absolute left-1/2 -translate-x-1/2 w-10 h-10 bg-primary-container rounded-full items-center justify-center text-white z-10 shadow-lg">9</div>
+<div class="w-full md:w-[45%]">
+<div class="bg-white p-6 rounded-xl shadow-sm border border-primary/10 hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between mb-4">
+<span class="bg-secondary-fixed text-on-secondary-fixed px-3 py-1 rounded-full text-label-sm">10월 15일</span>
+</div>
+<h3 class="font-headline-md text-primary mb-4">여행 마무리 및 출국</h3>
+<ul class="space-y-4">
+<li class="flex gap-4">
+<span class="material-symbols-outlined text-primary shrink-0">local_cafe</span>
+<div>
+<p class="font-bold">굿바이 브런치</p>
+<p class="text-on-surface-variant text-sm">오전 09:00 | 현지 카페에서 마지막 플랫 화이트</p>
+</div>
+</li>
+<li class="flex gap-4">
+<span class="material-symbols-outlined text-primary shrink-0">flight_takeoff</span>
+<div>
+<p class="font-bold">공항 이동</p>
+<p class="text-on-surface-variant text-sm">오후 1:00 | 시드니 국제공항 출발</p>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-highest dark:bg-inverse-surface w-full py-8 mt-auto border-t border-outline-variant/20">
+<div class="flex flex-col items-center justify-center space-y-4 px-margin-desktop">
+<div class="font-display-lg text-body-lg font-bold text-primary">시드니 여행 가이드</div>
+<div class="flex space-x-6">
+<a class="text-on-surface-variant dark:text-on-tertiary-container hover:text-secondary transition-opacity duration-200 text-label-sm" href="#">이용약관</a>
+<a class="text-on-surface-variant dark:text-on-tertiary-container hover:text-secondary transition-opacity duration-200 text-label-sm" href="#">개인정보처리방침</a>
+<a class="text-on-surface-variant dark:text-on-tertiary-container hover:text-secondary transition-opacity duration-200 text-label-sm" href="#">문의하기</a>
+</div>
+<p class="text-on-surface-variant dark:text-inverse-on-surface font-label-sm">© 2024 시드니 여행 가이드. All rights reserved.</p>
+</div>
+</footer>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 glass-nav bg-white/70 border-t border-outline-variant/10 px-6 py-3 flex justify-between items-center z-50">
+<button class="flex flex-col items-center text-on-surface-variant">
+<span class="material-symbols-outlined">home</span>
+<span class="text-[10px] mt-1">홈</span>
+</button>
+<button class="flex flex-col items-center text-primary font-bold">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">calendar_month</span>
+<span class="text-[10px] mt-1">일정</span>
+</button>
+<button class="flex flex-col items-center text-on-surface-variant">
+<span class="material-symbols-outlined">restaurant</span>
+<span class="text-[10px] mt-1">맛집</span>
+</button>
+<button class="flex flex-col items-center text-on-surface-variant">
+<span class="material-symbols-outlined">map</span>
+<span class="text-[10px] mt-1">명소</span>
+</button>
+</nav>
+<script>
+        // Simple intersection observer for reveal effects
+        const observerOptions = {
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('opacity-100', 'translate-y-0');
+                    entry.target.classList.remove('opacity-0', 'translate-y-10');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.bg-white.p-6.rounded-xl').forEach(card => {
+            card.classList.add('transition-all', 'duration-700', 'opacity-0', 'translate-y-10');
+            observer.observe(card);
+        });
+    </script>
+</body></html>

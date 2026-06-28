@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>시드니 8일 일정</title>
+  <meta name="description" content="시드니 8일 여행 일정. 일자별 타임라인, 사진 포인트, 식사와 카페 동선을 한눈에 확인.">
+  <link rel="stylesheet" href="assets/site.css">
+  <style>
+    .schedule-page .hero {
+      padding: 34px 28px 24px;
+    }
+
+    .schedule-page .hero-layout {
+      grid-template-columns: minmax(0, 1.08fr) minmax(280px, 0.92fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    .schedule-page .hero-copy {
+      display: grid;
+      gap: 16px;
+    }
+
+    .schedule-page .hero h1 {
+      max-width: 10ch;
+      font-size: clamp(2.4rem, 5vw, 4.8rem);
+      line-height: 0.96;
+      letter-spacing: -0.05em;
+    }
+
+    .schedule-page .hero p {
+      max-width: 62ch;
+      color: var(--muted);
+      font-size: 1.02rem;
+    }
+
+    .schedule-page .hero-meta span {
+      background: color-mix(in oklab, var(--surface), var(--bg) 30%);
+      color: var(--fg);
+      border-color: var(--border);
+    }
+
+    .schedule-page .hero-panel {
+      display: grid;
+      gap: 12px;
+    }
+
+    .schedule-page .cover-card {
+      position: relative;
+      overflow: hidden;
+      min-height: 100%;
+      border: 1px solid var(--border);
+      border-radius: 26px;
+      background: var(--surface);
+      box-shadow: var(--elev-raised);
+    }
+
+    .schedule-page .cover-card img {
+      width: 100%;
+      min-height: 240px;
+      max-height: 360px;
+      object-fit: cover;
+    }
+
+    .schedule-page .cover-note {
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: color-mix(in oklab, var(--surface), var(--bg) 10%);
+      border: 1px solid color-mix(in oklab, var(--border), white 20%);
+    }
+
+    .schedule-page .cover-card .cover-note {
+      margin: 14px 16px 16px;
+    }
+
+    .schedule-page .cover-note strong,
+    .schedule-page .cover-note p {
+      display: block;
+      margin: 0;
+    }
+
+    .schedule-page .cover-note p {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .schedule-page .section {
+      margin-top: 24px;
+      padding: 24px;
+      border: 1px solid color-mix(in oklab, var(--border), white 12%);
+      border-radius: 24px;
+      background: color-mix(in oklab, var(--surface), #f8f8f8 10%);
+      box-shadow: var(--elev-raised);
+    }
+
+    .schedule-page .section h2 {
+      margin: 0 0 14px;
+      font-size: clamp(1.5rem, 2.8vw, 2.35rem);
+      letter-spacing: -0.03em;
+    }
+
+    .schedule-page .intro-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .schedule-page .intro-card {
+      padding: 16px;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .schedule-page .intro-card strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 15px;
+    }
+
+    .schedule-page .intro-card p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .schedule-page .timeline-layout {
+      display: grid;
+      gap: 18px;
+    }
+
+    .schedule-page .day-card {
+      margin: 0;
+    }
+
+    .schedule-page .timeline {
+      display: grid;
+      gap: 12px;
+    }
+
+    .schedule-page .timeline-item {
+      display: grid;
+      grid-template-columns: 74px minmax(0, 1fr);
+      gap: 14px;
+      padding: 14px 0;
+      border-bottom: 1px solid color-mix(in oklab, var(--border), white 6%);
+    }
+
+    .schedule-page .timeline-item:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .schedule-page .timeline-time {
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 800;
+      color: color-mix(in oklab, var(--accent), black 18%);
+      text-transform: uppercase;
+      letter-spacing: 0;
+      padding-top: 2px;
+    }
+
+    .schedule-page .timeline-item strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .schedule-page .timeline-item p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .schedule-page .day-link-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .schedule-page .day-link-row .button {
+      min-width: 140px;
+    }
+
+    @media (max-width: 1080px) {
+      .schedule-page .hero-layout,
+      .schedule-page .intro-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .schedule-page .hero {
+        padding: 28px 20px 24px;
+      }
+
+      .schedule-page .section {
+        padding: 20px;
+      }
+
+      .schedule-page .timeline-item {
+        grid-template-columns: 1fr;
+      }
+
+      .schedule-page .timeline-time {
+        padding-top: 0;
+      }
+    }
+  </style>
+</head>
+<body class="schedule-page">
+  <header class="site-header">
+    <div class="nav-wrap">
+      <a class="brand" href="index.html">시드니 8일 여행</a>
+      <nav class="nav-links" aria-label="상단 메뉴">
+        <a data-page="index.html" href="index.html">홈</a>
+        <a data-page="schedule.html" href="schedule.html">일정</a>
+        <a data-page="booking.html" href="booking.html">예약·입장료</a>
+        <a data-page="food.html" href="food.html">맛집</a>
+        <a data-page="cafe.html" href="cafe.html">카페</a>
+        <a data-page="tips.html" href="tips.html">여행팁</a>
+        <a data-page="currency.html" href="currency.html">환율계산기</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <div class="hero-layout">
+        <div class="hero-copy">
+          <h1>일정</h1>
+          <p>현지 10/8~10/15. 무리한 이동을 줄이고, 사진·식사·휴식 시간을 확보한 코스.</p>
+          <div class="hero-actions">
+            <a class="button primary" href="progress.html">진행상황</a>
+            <a class="button" href="food.html">맛집</a>
+            <a class="button" href="cafe.html">카페</a>
+          </div>
+        </div>
+        <aside class="hero-panel">
+          <div class="cover-card">
+            <img src="images/central_station.jpg" alt="시드니 센트럴 스테이션" loading="eager" decoding="async">
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <div class="timeline-layout">
+      <article class="day-card">
+        <div class="day-head"><h2>Day 1 · 10/8 수</h2><span>도착·시차 적응</span></div>
+        <div class="stop-list">
+          <div class="timeline-item"><div class="timeline-time">09:00</div><div><strong>시드니 공항 도착</strong><p>입국 후 교통 결제 준비. 공항철도 또는 택시 이동.</p></div></div>
+          <div class="timeline-item"><div class="timeline-time">11:30</div><div><strong>숙소 이동·점심</strong><p>짐 보관 후 가벼운 식사. 첫날은 멀리 이동하지 않음.</p></div></div>
+          <div class="timeline-item"><div class="timeline-time">14:00</div><div><strong>QVB·타운홀 산책</strong><p>실내 쇼핑 아케이드라 비가 와도 무난.</p></div></div>
+          <div class="timeline-item"><div class="timeline-time">15:30</div><div><strong>카페 휴식</strong><p>시차 적응용 짧은 휴식. 커피는 오후 늦게 과하게 마시지 않기.</p></div></div>
+          <div class="timeline-item"><div class="timeline-time">18:00</div><div><strong>달링하버 저녁 산책</strong><p>야경 보고 이른 귀가.</p></div></div>
+        </div>
+      </article>
+
+      <article class="day-card">
+        <div class="day-head"><h2>Day 2 · 10/9 목</h2><span>오페라하우스 외관·하버</span></div>
+        <div class="stop-list">
+          <div class="timeline-item"><div class="timeline-time">09:30</div><div><strong>오페라하우스 외관</strong><p>내부 투어 제외. 계단, 하버 방향 사진 중심.</p></div></div>
+          <div class="timeline-item"><div class="timeline-time">11:00</div><div><strong>로열 보태닉 가든</strong><p>Mrs Macquarie's Chair 방향으로 하버 전망.</p></div></div>
+          <div class="timeline-item"><div class="timeline-time">12:30</div><div><strong>CBD 점심</strong><p>Mr Wong, Mamak 등 근처 후보.</p></div></div>
+          <div class="timeline-item"><div class="timeline-time">15:00</div><div><strong>하버 브리지·서큘러키</strong><p>다리 위 산책 또는 록스 전망 포인트.</p></div></div>
+          <div class="timeline-item"><div class="timeline-time">18:00</div><div><strong>더 록스 저녁</strong><p>예약 필요한 식당은 하루 전 확인.</p></div></div>
+        </div>
+      </article>
+
+      <article class="day-card">
+        <div class="day-head"><h2>Day 3 · 10/10 금</h2><span>타롱가·맨리</span></div>
+        <div class="stop-list">
+          <div class="timeline-item"><div class="timeline-time">09:00</div><div><strong>페리 이동</strong><p>서큘러키에서 페리. 바람 강하면 얇은 겉옷.</p></div></div>
+          <div class="timeline-item"><div class="timeline-time">10:00</div><div><strong>타롱가 동물원</strong><p>온라인 티켓과 페리 연계권은 출발 전 재확인.</p></div></div>
+          <div class="timeline-item"><div class="timeline-time">15:00</div><div><strong>맨리 비치</strong><p>해변 산책 후 간단한 저녁.</p></div></div>
+        </div>
+      </article>
+
+      <article class="day-card">
+        <div class="day-head"><h2>Day 4 · 10/11 토</h2><span>본다이 해안</span></div>
+        <div class="stop-list">
+          <div class="timeline-item"><div class="timeline-time">09:30</div><div><strong>본다이 브런치</strong><p>Speedos, Bills Bondi 등 후보.</p></div></div>
+          <div class="timeline-item"><div class="timeline-time">11:00</div><div><strong>본다이 비치</strong><p>햇빛 강함. 선크림 필수.</p></div></div>
+          <div class="timeline-item"><div class="timeline-time">12:30</div><div><strong>Bondi Icebergs</strong><p>사진 포인트. 식사는 예약/대기 상황 확인.</p></div></div>
+          <div class="timeline-item"><div class="timeline-time">14:00</div><div><strong>Bondi to Coogee 일부 산책</strong><p>전 구간이 부담되면 Bronte까지만.</p></div></div>
+        </div>
+      </article>
+
+      <article class="day-card">
+        <div class="day-head"><h2>Day 5 · 10/12 일</h2><span>블루마운틴</span></div>
+        <div class="stop-list">
+          <div class="timeline-item"><div class="timeline-time">07:30</div><div><strong>센트럴 출발</strong><p>기차 또는 투어. 긴 이동일이라 간식 준비.</p></div></div>
+          <div class="timeline-item"><div class="timeline-time">10:30</div><div><strong>Echo Point·Three Sisters</strong><p>날씨가 흐리면 전망이 제한될 수 있음.</p></div></div>
+          <div class="timeline-item"><div class="timeline-time">12:30</div><div><strong>Scenic World</strong><p>입장료·운영시간은 booking 페이지에서 확인.</p></div></div>
+          <div class="timeline-item"><div class="timeline-time">18:30</div><div><strong>시드니 복귀</strong><p>저녁은 숙소 근처로 가볍게.</p></div></div>
+        </div>
+      </article>
+
+      <article class="day-card">
+        <div class="day-head"><h2>Day 6 · 10/13 월</h2><span>달링하버·전망·쇼핑</span></div>
+        <div class="stop-list">
+          <div class="timeline-item"><div class="timeline-time">10:00</div><div><strong>시드니 피쉬 마켓</strong><p>새 시장 기준 점심 후보. 개별 매장 시간은 다를 수 있음.</p></div></div>
+          <div class="timeline-item"><div class="timeline-time">13:00</div><div><strong>달링하버</strong><p>실내외 동선이 쉬운 날.</p></div></div>
+          <div class="timeline-item"><div class="timeline-time">16:00</div><div><strong>시드니 타워</strong><p>일몰 시간대 예약 선호. 가격 최신 정보는 공식 확인.</p></div></div>
+        </div>
+      </article>
+
+      <article class="day-card">
+        <div class="day-head"><h2>Day 7 · 10/14 화</h2><span>고래관람·더 록스</span></div>
+        <div class="stop-list">
+          <div class="timeline-item"><div class="timeline-time">오전</div><div><strong>고래관람 투어</strong><p>10월은 시즌 후반. 운항 여부와 취소 규정 확인.</p></div></div>
+          <div class="timeline-item"><div class="timeline-time">14:30</div><div><strong>MCA·카페 휴식</strong><p>날씨가 나쁘면 실내 일정으로 전환.</p></div></div>
+          <div class="timeline-item"><div class="timeline-time">18:00</div><div><strong>더 록스 저녁</strong><p>마지막 전날이라 예약 식당 추천.</p></div></div>
+        </div>
+      </article>
+
+      <article class="day-card">
+        <div class="day-head"><h2>Day 8 · 10/15 수</h2><span>마지막 날·출국</span></div>
+        <div class="stop-list">
+          <div class="timeline-item"><div class="timeline-time">09:30</div><div><strong>카페·가벼운 쇼핑</strong><p>짐 보관 위치 먼저 확정.</p></div></div>
+          <div class="timeline-item"><div class="timeline-time">12:00</div><div><strong>실내 일정</strong><p>비 오면 NSW 미술관, QVB, 쇼핑몰 위주.</p></div></div>
+          <div class="timeline-item"><div class="timeline-time">18:00</div><div><strong>공항 이동</strong><p>21:45 출발. 여유 있게 공항 도착.</p></div></div>
+        </div>
+      </article>
+    </div>
+  </main>
+
+  <nav class="quick-nav" aria-label="빠른 메뉴">
+    <a data-page="index.html" href="index.html">홈</a>
+    <a data-page="food.html" href="food.html">맛집</a>
+    <a data-page="cafe.html" href="cafe.html">카페</a>
+    <a data-page="tips.html" href="tips.html">팁</a>
+    <a data-page="currency.html" href="currency.html">환율</a>
+  </nav>
+
+  <script src="assets/app.js"></script>
+</body>
+</html>
