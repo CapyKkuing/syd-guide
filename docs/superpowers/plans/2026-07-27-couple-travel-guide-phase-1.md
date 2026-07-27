@@ -1182,7 +1182,7 @@ git commit -m "feat: enforce admin and device sessions"
 - Consumes: `requireOwner`, `randomToken`, `hashToken`
 - Produces: `POST /api/admin/invites`, `GET /api/admin/devices`, `DELETE /api/admin/devices/:id`, `POST /api/pair/claim`
 
-- [ ] **Step 1: 초대 만료·재사용 실패 test 작성**
+- [x] **Step 1: 초대 만료·재사용 실패 test 작성**
 
 ```ts
 it("accepts a fresh invite once and rejects replay", async () => {
@@ -1206,7 +1206,7 @@ Run: `npm run test:worker -- test/worker/pairing.test.ts`
 
 Expected: FAIL because routes do not exist.
 
-- [ ] **Step 2: pairing service 구현**
+- [x] **Step 2: pairing service 구현**
 
 `issueInvite`는 `new URL("/pair", env.PARTNER_ORIGIN)`에 token query를 붙인 URL과 token을 응답하고 D1에는 hash만 넣는다.
 
@@ -1220,7 +1220,7 @@ export interface IssuedInvite {
 
 `claimInvite`는 hash로 row를 찾고 만료·사용 여부를 확인한 뒤 하나의 D1 batch에서 `used_at` conditional update와 `device_sessions` insert를 실행한다. `device_sessions.invite_id UNIQUE` 위반도 `410 INVITE_ALREADY_USED`로 정규화한다. 성공 후 token query를 포함하지 않은 `/library`로 이동할 수 있게 `{ redirectTo: "/library" }`를 반환한다.
 
-- [ ] **Step 3: 관리자·파트너 UI 구현**
+- [x] **Step 3: 관리자·파트너 UI 구현**
 
 `InvitePanel`은 `qrcode.toDataURL(invite.url, { width: 240, margin: 1 })`로 QR을 만들고 같은 URL의 복사 버튼, 남은 시간을 초 단위로 표시한다.
 
@@ -1228,7 +1228,7 @@ export interface IssuedInvite {
 
 `DeviceList`는 기기명, 마지막 사용, 만료일, 해제 상태만 보여준다. 현재 세션 원문은 표시하지 않는다.
 
-- [ ] **Step 4: pairing 검증**
+- [x] **Step 4: pairing 검증**
 
 Run:
 
@@ -1240,7 +1240,7 @@ npm run typecheck
 
 Expected: QR와 링크가 같은 token을 사용하고 만료·재사용·해제가 모두 PASS.
 
-- [ ] **Step 5: Task 검증 통과 후 자동 checkpoint commit**
+- [x] **Step 5: Task 검증 통과 후 자동 checkpoint commit**
 
 ```bash
 git add worker/services/pairing.ts worker/routes/pairing.ts worker/db/sessions.ts worker/app.ts src/features/auth src/app/router.tsx test/worker/pairing.test.ts

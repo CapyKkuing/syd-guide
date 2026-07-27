@@ -26,7 +26,7 @@ const pages = {
   }
 } as const;
 
-export function PreviewPage({ page }: { page: Page }) {
+export function PreviewPage({ page }: { page: Exclude<Page, "pair"> }) {
   const content = pages[page];
 
   return (

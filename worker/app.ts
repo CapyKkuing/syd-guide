@@ -7,7 +7,9 @@ import { requireSameOrigin } from "./auth/origin";
 import { AuthError } from "./auth/principal";
 import type { AppEnv } from "./env";
 import { apiError } from "./http/errors";
+import { registerPairingRoutes } from "./routes/pairing";
 import { registerSessionRoutes } from "./routes/session";
+import { PairingError } from "./services/pairing";
 
 export function createApp(overrides: Partial<AppDependencies> = {}) {
   const app = new Hono<AppEnv>();
@@ -16,12 +18,16 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
   app.use("/api/*", requireSameOrigin);
   app.get("/api/health", (c) => c.json({ ok: true }));
   registerSessionRoutes(app, dependencies);
+  registerPairingRoutes(app, dependencies);
   app.all("/api/*", (c) =>
     apiError(c, 404, "NOT_FOUND", "API route not found")
   );
   app.all("*", (c) => c.env.ASSETS.fetch(c.req.raw));
   app.onError((error, c) => {
     if (error instanceof AuthError) {
+      return apiError(c, error.status, error.code, error.message);
+    }
+    if (error instanceof PairingError) {
       return apiError(c, error.status, error.code, error.message);
     }
     throw error;
