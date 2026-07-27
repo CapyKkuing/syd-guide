@@ -1047,7 +1047,7 @@ git commit -m "feat: add worker and D1 foundation"
 - Consumes: `Env`, `Principal`, `members`, `device_sessions`
 - Produces: `createApp(deps?)`, `requirePrincipal(c): Promise<Principal>`, `requireOwner(c)`, `POST /api/session/logout`, `GET /api/session`
 
-- [ ] **Step 1: 실패하는 인증 경계 테스트 작성**
+- [x] **Step 1: 실패하는 인증 경계 테스트 작성**
 
 ```ts
 it("rejects partner API without a device cookie", async () => {
@@ -1081,7 +1081,7 @@ Run: `npm run test:worker -- test/worker/auth.test.ts`
 
 Expected: FAIL with missing auth middleware.
 
-- [ ] **Step 2: crypto와 쿠키 구현**
+- [x] **Step 2: crypto와 쿠키 구현**
 
 ```ts
 export function randomToken(): string {
@@ -1105,7 +1105,7 @@ export async function hashToken(token: string): Promise<string> {
 
 Cookie 이름은 `couple_session`으로 고정한다. 발급 문자열은 `Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=7776000`, 삭제 문자열은 같은 속성과 `Max-Age=0`을 쓴다.
 
-- [ ] **Step 3: Access 검증과 principal 선택 구현**
+- [x] **Step 3: Access 검증과 principal 선택 구현**
 
 ```ts
 export interface AccessClaims {
@@ -1142,7 +1142,7 @@ type SessionErrorCode =
 
 모든 `POST`, `PATCH`, `PUT`, `DELETE`는 `Origin === new URL(request.url).origin`이 아니면 `403 ORIGIN_REJECTED`를 반환한다.
 
-- [ ] **Step 4: 인증 테스트와 보안 grep**
+- [x] **Step 4: 인증 테스트와 보안 grep**
 
 Run:
 
@@ -1154,7 +1154,7 @@ rg -n "console\\.(log|debug)|ADMIN_EMAIL|couple_session" worker src
 
 Expected: auth tests PASS. 로그에 token·email·cookie 출력이 없다.
 
-- [ ] **Step 5: Task 검증 통과 후 자동 checkpoint commit**
+- [x] **Step 5: Task 검증 통과 후 자동 checkpoint commit**
 
 ```bash
 git add worker/auth worker/routes/session.ts worker/app.ts test/worker/auth.test.ts
