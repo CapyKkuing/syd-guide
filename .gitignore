@@ -2,6 +2,7 @@
 .codex/
 .codegraph/
 .od-skills/
+.worktrees/
 .chrome-mobile-check*/
 server*.log
 *.err.log
