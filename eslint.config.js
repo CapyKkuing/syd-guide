@@ -10,10 +10,28 @@ export default [
       "assets/**",
       "dist/**",
       "docs/**",
+      ".tmp/**",
+      ".wrangler/**",
       "node_modules/**",
       "public/**",
       "stitch_sydney_travel_guidebook_extracted/**"
     ]
+  },
+  {
+    files: ["worker/**/*.ts", "test/**/*.ts", "vitest.worker.config.ts"],
+    languageOptions: {
+      ecmaVersion: 2024,
+      globals: { ...globals.node, ...globals.worker },
+      parser: tseslint.parser,
+      parserOptions: { sourceType: "module" }
+    },
+    plugins: { "@typescript-eslint": tseslint.plugin },
+    rules: {
+      ...js.configs.recommended.rules,
+      ...tseslint.configs.recommended.rules,
+      "no-undef": "off",
+      "no-unused-vars": "off"
+    }
   },
   {
     files: ["src/**/*.{ts,tsx}", "vite.config.ts", "vitest.config.ts"],

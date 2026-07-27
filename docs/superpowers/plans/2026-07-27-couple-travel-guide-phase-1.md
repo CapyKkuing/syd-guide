@@ -564,7 +564,6 @@ git commit -m "feat: scaffold couple travel PWA"
 **Files:**
 - Create: `wrangler.jsonc`
 - Create: `wrangler.admin.jsonc`
-- Create: `vitest.config.ts`
 - Create: `vitest.worker.config.ts`
 - Create: `worker/index.ts`
 - Create: `worker/app.ts`
@@ -575,21 +574,29 @@ git commit -m "feat: scaffold couple travel PWA"
 - Create: `migrations/0001_initial.sql`
 - Create: `migrations/0002_legacy_sydney_marker.sql`
 - Create: `test/worker/apply-migrations.ts`
+- Create: `test/worker/bindings.d.ts`
 - Create: `test/worker/health.test.ts`
+- Modify: `package.json`
+- Modify: `package-lock.json`
+- Modify: `eslint.config.js`
+- Modify: `tsconfig.worker.json`
 - Modify: `vite.config.ts`
+- Modify: `vitest.config.ts`
 
 **Interfaces:**
 - Consumes: `App` build와 Global Constraints
 - Produces: `Env`, `AppEnv`, `createApp()`, D1 tables, entity types와 `TripSnapshot`
 
-- [ ] **Step 1: 실패하는 Worker health test 작성**
+- [x] **Step 1: 실패하는 Worker health test 작성**
 
 ```ts
-import { SELF } from "cloudflare:test";
+import { exports } from "cloudflare:workers";
 import { expect, it } from "vitest";
 
 it("serves API health before static assets", async () => {
-  const response = await SELF.fetch("https://example.test/api/health");
+  const response = await exports.default.fetch(
+    new Request("https://example.test/api/health"),
+  );
   expect(response.status).toBe(200);
   await expect(response.json()).resolves.toEqual({ ok: true });
 });
@@ -599,7 +606,11 @@ Run: `npm run test:worker -- test/worker/health.test.ts`
 
 Expected: FAIL because Worker entry and test config do not exist.
 
-- [ ] **Step 2: Worker app과 오류 형식 구현**
+- [x] **Step 2: Worker app과 오류 형식 구현**
+
+```bash
+npm install -D @cloudflare/workers-types
+```
 
 `wrangler.jsonc`:
 
@@ -665,12 +676,12 @@ Expected: FAIL because Worker entry and test config do not exist.
 
 `database_id: "local"`은 실제 배포를 막는 local 전용 값이다. Task 13의 승인된 D1 생성 뒤에만 실제 UUID로 교체한다.
 
-이 Task에서 `vite.config.ts`의 `react()` 바로 뒤에 Cloudflare plugin을 추가한다.
+이 Task에서 `vite.config.ts`의 `react()` 바로 뒤에 Cloudflare plugin을 추가한다. 임시 GitHub Pages build에서는 Worker plugin을 제외한다.
 
 ```ts
 import { cloudflare } from "@cloudflare/vite-plugin";
 
-cloudflare(),
+...(mode === "github-pages" ? [] : [cloudflare()]),
 ```
 
 `worker/env.ts`:
@@ -701,10 +712,14 @@ export type AppEnv = {
 ```ts
 import { Hono } from "hono";
 import type { AppEnv } from "./env";
+import { apiError } from "./http/errors";
 
 export function createApp() {
   const app = new Hono<AppEnv>();
   app.get("/api/health", (c) => c.json({ ok: true }));
+  app.all("/api/*", (c) =>
+    apiError(c, 404, "NOT_FOUND", "API route not found"),
+  );
   app.all("*", (c) => c.env.ASSETS.fetch(c.req.raw));
   return app;
 }
@@ -727,44 +742,33 @@ export default {
 
 `worker/http/errors.ts`는 `{ error: { code, message, details? } }`만 반환하는 `apiError(c, status, code, message, details?)`를 export한다.
 
-`vitest.config.ts`:
-
-```ts
-import react from "@vitejs/plugin-react";
-import { defineConfig } from "vitest/config";
-
-export default defineConfig({
-  plugins: [react()],
-  test: {
-    environment: "jsdom",
-    setupFiles: ["./src/test/setup.ts"],
-    restoreMocks: true,
-  },
-});
-```
+`vitest.config.ts`의 `test.include`는 `src/**/*.test.{ts,tsx}`로 제한해 Worker suite와 분리한다.
 
 `vitest.worker.config.ts`:
 
 ```ts
 import path from "node:path";
 import {
-  defineWorkersConfig,
+  cloudflareTest,
   readD1Migrations,
-} from "@cloudflare/vitest-pool-workers/config";
+} from "@cloudflare/vitest-pool-workers";
+import { defineConfig } from "vitest/config";
 
-const migrations = await readD1Migrations(path.resolve("migrations"));
-
-export default defineWorkersConfig({
-  test: {
-    setupFiles: ["./test/worker/apply-migrations.ts"],
-    poolOptions: {
-      workers: {
-        wrangler: { configPath: "./wrangler.jsonc" },
-        miniflare: {
-          bindings: { TEST_MIGRATIONS: migrations },
+export default defineConfig({
+  plugins: [
+    cloudflareTest(async () => ({
+      wrangler: { configPath: "./wrangler.jsonc" },
+      miniflare: {
+        bindings: {
+          TEST_MIGRATIONS: await readD1Migrations(path.resolve("migrations")),
         },
       },
-    },
+    })),
+  ],
+  test: {
+    include: ["test/worker/**/*.test.ts"],
+    restoreMocks: true,
+    setupFiles: ["./test/worker/apply-migrations.ts"],
   },
 });
 ```
@@ -772,21 +776,18 @@ export default defineWorkersConfig({
 `test/worker/apply-migrations.ts`:
 
 ```ts
-import { applyD1Migrations, env } from "cloudflare:test";
+import { applyD1Migrations } from "cloudflare:test";
+import { env } from "cloudflare:workers";
 import { beforeAll } from "vitest";
-
-declare module "cloudflare:test" {
-  interface ProvidedEnv {
-    TEST_MIGRATIONS: D1Migration[];
-  }
-}
 
 beforeAll(async () => {
   await applyD1Migrations(env.DB, env.TEST_MIGRATIONS);
 });
 ```
 
-- [ ] **Step 3: D1 schema 작성**
+`test/worker/bindings.d.ts`에서 `Cloudflare.Env`에 Worker `Env`와 `TEST_MIGRATIONS`를 병합하고 `Cloudflare.GlobalProps.mainModule`을 `worker/index.ts`로 지정한다.
+
+- [x] **Step 3: D1 schema 작성**
 
 `migrations/0001_initial.sql`에는 다음 table과 index를 만든다.
 
@@ -1006,23 +1007,23 @@ CREATE TABLE data_imports (
 );
 ```
 
-- [ ] **Step 4: Worker foundation 검증**
+- [x] **Step 4: Worker foundation 검증**
 
 Run:
 
 ```bash
 npm run typecheck
 npm run test:worker -- test/worker/health.test.ts
-npx wrangler d1 migrations apply couple-travel-guide-local --local
+npx wrangler d1 migrations apply couple-travel-guide-local --config wrangler.jsonc --local
 npm run build
 ```
 
-Expected: 모두 exit 0. local D1에 15개 table이 존재한다.
+Expected: 모두 exit 0. local D1에 제품 table 15개가 존재한다.
 
-- [ ] **Step 5: Task 검증 통과 후 자동 checkpoint commit**
+- [x] **Step 5: Task 검증 통과 후 자동 checkpoint commit**
 
 ```bash
-git add wrangler*.jsonc vite*.config.ts worker src/shared migrations test/worker
+git add package*.json eslint.config.js tsconfig.worker.json wrangler*.jsonc vite*.config.ts worker src/shared migrations test/worker
 git commit -m "feat: add worker and D1 foundation"
 ```
 

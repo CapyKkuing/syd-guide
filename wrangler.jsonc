@@ -1,0 +1,24 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "couple-travel-guide-local",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-07-27",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "couple-travel-guide-local",
+      "database_id": "local"
+    }
+  ],
+  "vars": {
+    "SURFACE": "partner",
+    "APP_ORIGIN": "http://localhost:5173",
+    "DEV_AUTH": "enabled"
+  }
+}
