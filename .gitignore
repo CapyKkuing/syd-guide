@@ -3,6 +3,13 @@
 .codegraph/
 .od-skills/
 .worktrees/
+node_modules/
+dist/
+.wrangler/
+.dev.vars*
+playwright-report/
+test-results/
+.tmp/
 .chrome-mobile-check*/
 server*.log
 *.err.log

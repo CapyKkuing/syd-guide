@@ -320,6 +320,7 @@ export interface VersionConflict<K extends EntityKind = EntityKind> {
 - Create: `tsconfig.app.json`
 - Create: `tsconfig.worker.json`
 - Create: `vite.config.ts`
+- Create: `vitest.config.ts`
 - Create: `eslint.config.js`
 - Create: `src/main.tsx`
 - Create: `src/app/App.tsx`
@@ -329,6 +330,7 @@ export interface VersionConflict<K extends EntityKind = EntityKind> {
 - Create: `src/styles/tokens.css`
 - Create: `src/styles/base.css`
 - Create: `src/styles/components.css`
+- Create: `src/styles/navigation.css`
 - Create: `src/test/setup.ts`
 - Create: `src/app/AppShell.test.tsx`
 - Create: `scripts/make-pwa-icons.mjs`
@@ -343,7 +345,7 @@ export interface VersionConflict<K extends EntityKind = EntityKind> {
 - Consumes: 기존 정사각형 로고 `stitch_sydney_travel_guidebook_extracted/stitch_sydney_travel_guidebook/sydney_travel_guide_logo/screen.png`
 - Produces: `App`, `AppShell`, `/library` 기본 route, 설치 가능한 manifest와 service worker
 
-- [ ] **Step 1: package와 test shell 작성**
+- [x] **Step 1: package와 test shell 작성**
 
 `package.json` scripts는 다음 이름을 고정한다.
 
@@ -351,6 +353,7 @@ export interface VersionConflict<K extends EntityKind = EntityKind> {
 {
   "scripts": {
     "dev": "vite",
+    "preview": "vite preview",
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b --pretty false",
     "lint": "eslint . --max-warnings 0",
@@ -366,8 +369,8 @@ export interface VersionConflict<K extends EntityKind = EntityKind> {
 설치 명령:
 
 ```bash
-npm install react react-dom react-router-dom hono zod idb jose qrcode maplibre-gl
-npm install -D typescript vite @vitejs/plugin-react @cloudflare/vite-plugin wrangler vite-plugin-pwa vitest @cloudflare/vitest-pool-workers @testing-library/react @testing-library/user-event @testing-library/jest-dom jsdom fake-indexeddb eslint @eslint/js typescript-eslint eslint-plugin-react-hooks eslint-plugin-react-refresh @playwright/test sharp cheerio @types/react @types/react-dom @types/qrcode
+npm install react react-dom hono zod idb jose qrcode maplibre-gl
+npm install -D typescript vite @vitejs/plugin-react @cloudflare/vite-plugin wrangler vite-plugin-pwa vitest @cloudflare/vitest-pool-workers @testing-library/react @testing-library/user-event @testing-library/jest-dom jsdom fake-indexeddb eslint @eslint/js globals typescript-eslint eslint-plugin-react-hooks eslint-plugin-react-refresh @playwright/test sharp cheerio @types/react @types/react-dom @types/qrcode
 ```
 
 `.gitignore`에 다음 local 산출물만 추가한다.
@@ -382,18 +385,15 @@ test-results/
 .tmp/
 ```
 
-- [ ] **Step 2: 실패하는 앱 shell 테스트 작성**
+- [x] **Step 2: 실패하는 앱 shell 테스트 작성**
 
 ```tsx
 import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
 import { AppShell } from "./AppShell";
 
 it("shows the product name and mobile navigation", () => {
   render(
-    <MemoryRouter>
-      <AppShell><p>화면</p></AppShell>
-    </MemoryRouter>,
+    <AppShell currentPage="library"><p>화면</p></AppShell>,
   );
 
   expect(screen.getByText("둘만의 여행 가이드북")).toBeVisible();
@@ -406,7 +406,7 @@ Run: `npm test -- src/app/AppShell.test.tsx`
 
 Expected: FAIL because `AppShell` does not exist.
 
-- [ ] **Step 3: 최소 shell과 디자인 token 구현**
+- [x] **Step 3: 최소 shell과 디자인 token 구현**
 
 `src/styles/tokens.css`:
 
@@ -446,21 +446,26 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 
-export default defineConfig({
-  plugins: [
-    react(),
-    VitePWA({
+export default defineConfig(({ mode }) => {
+  const base = mode === "github-pages" ? "/syd-guide/" : "/";
+
+  return {
+    base,
+    plugins: [
+      react(),
+      VitePWA({
       registerType: "autoUpdate",
       manifest: {
         name: "둘만의 여행 가이드북",
         short_name: "여행 가이드",
         display: "standalone",
-        start_url: "/library",
+        start_url: base,
+        scope: base,
         background_color: "#f7f3ea",
         theme_color: "#0b6b67",
         icons: [
-          { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
-          { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png" }
+          { src: `${base}icons/icon-192.png`, sizes: "192x192", type: "image/png" },
+          { src: `${base}icons/icon-512.png`, sizes: "512x512", type: "image/png" }
         ]
       },
       workbox: {
@@ -472,8 +477,9 @@ export default defineConfig({
           }
         ]
       }
-    })
-  ]
+      })
+    ]
+  };
 });
 ```
 
@@ -516,7 +522,7 @@ steps:
   - name: Install dependencies
     run: npm ci
   - name: Build
-    run: npm run build
+    run: npm run build -- --mode github-pages
   - name: Configure Pages
     uses: actions/configure-pages@v5
     with:
@@ -530,7 +536,7 @@ steps:
     uses: actions/deploy-pages@v4
 ```
 
-- [ ] **Step 4: shell 검증**
+- [x] **Step 4: shell 검증**
 
 Run:
 
@@ -544,10 +550,10 @@ npm run build
 
 Expected: 모두 exit 0. `dist/manifest.webmanifest`, 두 icon, service worker가 존재한다.
 
-- [ ] **Step 5: Task 검증 통과 후 자동 checkpoint commit**
+- [x] **Step 5: Task 검증 통과 후 자동 checkpoint commit**
 
 ```bash
-git add package.json package-lock.json tsconfig*.json vite.config.ts eslint.config.js index.html .gitignore .github/workflows/deploy-pages.yml src public scripts/make-pwa-icons.mjs
+git add package.json package-lock.json tsconfig*.json vite.config.ts vitest.config.ts eslint.config.js index.html .gitignore .github/workflows/deploy-pages.yml src public scripts/make-pwa-icons.mjs docs/superpowers/plans/2026-07-27-couple-travel-guide-phase-1.md
 git commit -m "feat: scaffold couple travel PWA"
 ```
 
