@@ -169,7 +169,7 @@ function toolGroups(): ToolGroupView[] {
       title: "Travel Essentials",
       items: [
         { id: "bookings", label: "예약·바우처", description: "예약 정보를 한곳에서 확인합니다.", status: "available" },
-        { id: "exchange", label: "환율", description: "환율 정보는 준비 중입니다.", status: "preview" },
+        { id: "exchange", label: "환율", description: "AUD와 KRW를 직접 환산합니다.", status: "available" },
         { id: "transport", label: "교통", description: "교통 안내는 준비 중입니다.", status: "preview" },
         { id: "emergency", label: "비상 연락처", description: "비상 연락처는 준비 중입니다.", status: "preview" }
       ]
@@ -190,7 +190,7 @@ function toolGroups(): ToolGroupView[] {
         { id: "checklist", label: "체크리스트", description: "함께 또는 개인 준비물을 관리합니다.", status: "available" },
         { id: "notes", label: "여행 메모", description: "공유 또는 개인 메모를 관리합니다.", status: "available" },
         { id: "tips", label: "주의사항", description: "여행 주의사항은 준비 중입니다.", status: "preview" },
-        { id: "ai-connect", label: "AI 앱 연결", description: "AI 앱 연결은 준비 중입니다.", status: "preview" },
+        { id: "ai-connect", label: "AI 앱 연결", description: "민감정보를 제외한 질문을 만들고 선택한 AI를 엽니다.", status: "available" },
         { id: "partner-connect", label: "파트너 연결", description: "파트너 연결은 준비 중입니다.", status: "preview" },
         { id: "devices", label: "연결 기기 관리", description: "연결한 기기를 관리합니다.", status: "available" },
         { id: "theme", label: "테마", description: "화면 테마를 선택합니다.", status: "available" },

@@ -201,10 +201,10 @@ describe("TodayPage", () => {
     const lightBoundary = tokenValue("light", "today-boundary");
     const darkBoundary = tokenValue("dark", "today-boundary");
 
-    expect(contrastRatio(lightBoundary, "#FFFFFF")).toBeGreaterThanOrEqual(3);
-    expect(contrastRatio(lightBoundary, "#F6F7F8")).toBeGreaterThanOrEqual(3);
-    expect(contrastRatio(darkBoundary, "#0F1B26")).toBeGreaterThanOrEqual(3);
-    expect(contrastRatio(darkBoundary, "#081018")).toBeGreaterThanOrEqual(3);
+    expect(contrastRatio(lightBoundary, "#FFFDF7")).toBeGreaterThanOrEqual(3);
+    expect(contrastRatio(lightBoundary, "#F4F2EA")).toBeGreaterThanOrEqual(3);
+    expect(contrastRatio(darkBoundary, "#151F19")).toBeGreaterThanOrEqual(3);
+    expect(contrastRatio(darkBoundary, "#0E1511")).toBeGreaterThanOrEqual(3);
   });
 });
 

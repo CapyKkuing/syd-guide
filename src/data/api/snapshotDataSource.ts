@@ -1,6 +1,8 @@
 import type { SessionPrincipal } from "../../features/auth/api";
 import type { TripSnapshot } from "../../shared/api";
 import type { ApiClient } from "../../services/api/client";
+import { ApiClientError } from "../../services/api/errors";
+import type { SnapshotStore } from "../../services/offline/snapshotStore";
 import type {
   MapPreviewViewModel,
   MutableTravelGuideDataSource,
@@ -25,15 +27,23 @@ export class SnapshotTravelGuideDataSource implements MutableTravelGuideDataSour
   private readonly client: Pick<ApiClient, "getTripSnapshot">;
   private readonly principalLoader: () => Promise<SessionPrincipal>;
   private readonly clock: () => Date;
+  private readonly snapshots?: SnapshotStore;
+  private readonly onSessionInvalid: () => void | Promise<void>;
 
   constructor(
     client: Pick<ApiClient, "getTripSnapshot">,
     principalLoader: () => Promise<SessionPrincipal>,
-    clock: () => Date = () => new Date()
+    clock: () => Date = () => new Date(),
+    offline: {
+      snapshots: SnapshotStore;
+      onSessionInvalid?: () => void | Promise<void>;
+    } | undefined = undefined
   ) {
     this.client = client;
     this.principalLoader = principalLoader;
     this.clock = clock;
+    this.snapshots = offline?.snapshots;
+    this.onSessionInvalid = offline?.onSessionInvalid ?? (() => undefined);
   }
 
   async listTrips(): Promise<TripSummaryViewModel[]> {
@@ -78,11 +88,42 @@ export class SnapshotTravelGuideDataSource implements MutableTravelGuideDataSour
 
   private async load(tripId: string): Promise<TripWorkspace | null> {
     const cached = this.cache.get(tripId);
-    const [result, principal] = await Promise.all([
-      this.client.getTripSnapshot(tripId, cached?.etag ?? undefined),
-      this.principalLoader()
-    ]);
-    const snapshot = result.notModified ? cached?.snapshot ?? null : result.snapshot;
+    const durable = await this.snapshots?.get(tripId);
+    const principal = await this.loadPrincipal();
+    let result;
+    try {
+      result = await this.client.getTripSnapshot(
+        tripId,
+        cached?.etag ?? durable?.etag ?? undefined
+      );
+    } catch (error) {
+      if (error instanceof ApiClientError && error.status === 401) {
+        await Promise.all([
+          this.snapshots?.clear(),
+          this.snapshots?.clearPrincipal()
+        ]);
+        await this.onSessionInvalid();
+        throw error;
+      }
+      if (!canUseOfflineSnapshot(error)) throw error;
+      const snapshot = cached?.snapshot ?? durable?.snapshot;
+      if (!snapshot) {
+        throw new Error(
+          "오프라인 저장 정보가 없습니다. 온라인에서 여행을 한 번 열어 주세요.",
+          { cause: error }
+        );
+      }
+      const workspace = mapSnapshotToWorkspace(snapshot, principal, this.clock());
+      this.cache.set(tripId, {
+        snapshot,
+        etag: cached?.etag ?? durable?.etag ?? null,
+        workspace
+      });
+      return workspace;
+    }
+    const snapshot = result.notModified
+      ? cached?.snapshot ?? durable?.snapshot ?? null
+      : result.snapshot;
     if (!snapshot) {
       if (result.notModified) throw new Error("저장된 여행 snapshot이 없습니다.");
       this.cache.set(tripId, {
@@ -92,12 +133,36 @@ export class SnapshotTravelGuideDataSource implements MutableTravelGuideDataSour
       });
       return null;
     }
-    const workspace = mapSnapshotToWorkspace(snapshot, principal, this.clock());
+    const now = this.clock();
+    const workspace = mapSnapshotToWorkspace(snapshot, principal, now);
     this.cache.set(tripId, {
       snapshot,
       etag: result.etag,
       workspace
     });
+    await this.snapshots?.put({
+      tripId,
+      snapshot,
+      etag: result.etag,
+      savedAt: now.toISOString()
+    });
     return workspace;
   }
+
+  private async loadPrincipal(): Promise<SessionPrincipal> {
+    try {
+      const principal = await this.principalLoader();
+      await this.snapshots?.savePrincipal(principal);
+      return principal;
+    } catch (error) {
+      const principal = await this.snapshots?.getPrincipal();
+      if (principal) return principal;
+      throw error;
+    }
+  }
+}
+
+function canUseOfflineSnapshot(error: unknown): boolean {
+  return error instanceof TypeError
+    || (error instanceof ApiClientError && error.status === 503);
 }

@@ -5,6 +5,7 @@ import type {
   MutationRequest,
   MutationSuccess
 } from "../../shared/mutations";
+import type { OutboxStore } from "../offline/outboxStore";
 
 export interface MutationTransport {
   // ESLint's base rule does not recognize TypeScript interface arguments.
@@ -15,6 +16,23 @@ export interface MutationTransport {
 export interface TripMutationController {
   // eslint-disable-next-line no-unused-vars
   submit<K extends EntityKind>(entity: K, action: MutationRequest<K>["action"], entityId: string, baseVersion: number | null, payload: MutationPayloadMap[K] | null): Promise<MutationSuccess>;
+}
+
+export function createOutboxMutationTransport(
+  outbox: Pick<OutboxStore, "enqueue">,
+  clock: () => Date = () => new Date()
+): MutationTransport {
+  return {
+    async mutate<K extends MutationRequest>(tripId: string, mutation: K) {
+      await outbox.enqueue(tripId, mutation, clock().toISOString());
+      return {
+        entity: mutation.entity,
+        entityId: mutation.entityId,
+        version: mutation.baseVersion ?? 0,
+        syncVersion: -1
+      };
+    }
+  };
 }
 
 export function createTripMutationController({

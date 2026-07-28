@@ -5,8 +5,10 @@ import { OfflineBanner } from "../../components/OfflineBanner";
 import type { ToolItemView, ToolsViewModel, TripWorkspace } from "../../data/contracts";
 import type { TripMutationController } from "../../services/mutations/controller";
 import { ActivityPanel } from "./activity/ActivityPanel";
+import { AiLauncher } from "./ai/AiLauncher";
 import { BookingsPanel } from "./bookings/BookingsPanel";
 import { ChecklistPanel } from "./checklist/ChecklistPanel";
+import { CurrencyTool } from "./currency/CurrencyTool";
 import { NotesPanel } from "./notes/NotesPanel";
 import { SearchPanel } from "./search/SearchPanel";
 
@@ -18,18 +20,20 @@ interface ToolsPageProps {
   workspace?: TripWorkspace;
 }
 
-const approvedDeepLinks = new Set(["bookings", "checklist", "notes", "search", "activity", "devices", "emergency"]);
+const approvedDeepLinks = new Set(["bookings", "exchange", "checklist", "notes", "search", "activity", "ai-connect", "devices", "emergency"]);
 
 function ToolCard({
   controller,
   deviceManagement,
   item,
-  tools
+  tools,
+  workspace
 }: {
   controller?: TripMutationController;
   deviceManagement: ReactNode;
   item: ToolItemView;
   tools: ToolsViewModel;
+  workspace?: TripWorkspace;
 }) {
   const id = approvedDeepLinks.has(item.id) ? item.id : undefined;
 
@@ -59,6 +63,26 @@ function ToolCard({
         <div className="tool-card__heading"><h3>{item.label}</h3></div>
         <p>{item.description}</p>
         <NotesPanel controller={controller} notes={tools.notes} tripId={tools.tripId} viewerMemberId={tools.viewerMemberId} />
+      </article>
+    );
+  }
+
+  if (item.id === "exchange") {
+    return (
+      <article className="tool-card tool-card--wide" id="exchange">
+        <div className="tool-card__heading"><h3>{item.label}</h3></div>
+        <p>{item.description}</p>
+        <CurrencyTool />
+      </article>
+    );
+  }
+
+  if (item.id === "ai-connect" && workspace) {
+    return (
+      <article className="tool-card tool-card--wide" id="ai-connect">
+        <div className="tool-card__heading"><h3>{item.label}</h3></div>
+        <p>{item.description}</p>
+        <AiLauncher workspace={workspace} />
       </article>
     );
   }
@@ -155,6 +179,7 @@ export function ToolsPage({
                   item={item}
                   key={item.id}
                   tools={tools}
+                  workspace={workspace}
                 />
               ))}
             </div>

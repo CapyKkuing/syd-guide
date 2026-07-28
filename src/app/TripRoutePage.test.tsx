@@ -6,6 +6,7 @@ import type { TravelGuideDataSource } from "../data/contracts";
 import { FixtureTravelGuideDataSource } from "../data/fixture/fixtureDataSource";
 import { TripRoutePage } from "./TripRoutePage";
 import { App } from "./App";
+import type { SyncRuntime } from "../services/sync/SyncProvider";
 
 const fixture = new FixtureTravelGuideDataSource(() => new Date("2026-07-28T00:00:00.000Z"));
 
@@ -222,5 +223,52 @@ describe("TripRoutePage", () => {
     await waitFor(() => expect(getToday).toHaveBeenCalledTimes(2));
     expect(getSchedule).toHaveBeenCalledTimes(2);
     expect(invalidateTrip).toHaveBeenCalledWith("sydney-2026");
+  });
+
+  it("mounts trip sync around the existing tools UI", async () => {
+    const dataSource = {
+      ...sourceWith({}),
+      invalidateTrip: vi.fn()
+    };
+    const runtime: SyncRuntime = {
+      engine: {
+        flush: vi.fn()
+          .mockResolvedValueOnce({
+            sent: 1,
+            conflict: false,
+            sessionInvalid: false
+          })
+          .mockResolvedValue({
+            sent: 0,
+            conflict: false,
+            sessionInvalid: false
+          }),
+        keepMine: vi.fn(),
+        useLatest: vi.fn()
+      },
+      outbox: {
+        counts: vi.fn().mockResolvedValue({ queued: 2, conflicts: 0 }),
+        listForTrip: vi.fn().mockResolvedValue([]),
+        subscribe: vi.fn().mockImplementation(() => () => undefined)
+      }
+    };
+
+    render(
+      <ThemeProvider>
+        <TripRoutePage
+          activeTab="tools"
+          dataSource={dataSource}
+          syncRuntime={runtime}
+          tripId="sydney-2026"
+        />
+      </ThemeProvider>
+    );
+
+    expect(await screen.findByRole("heading", { name: "Travel Essentials" })).toBeVisible();
+    await waitFor(() => expect(runtime.engine.flush).toHaveBeenCalledWith("sydney-2026"));
+    expect(await screen.findByText("대기 2건")).toBeVisible();
+    await waitFor(() =>
+      expect(screen.getByText(/마지막 동기화/)).not.toHaveTextContent("없음")
+    );
   });
 });

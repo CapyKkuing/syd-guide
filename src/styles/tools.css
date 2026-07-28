@@ -129,7 +129,8 @@
 .tool-inline-form label,
 .tool-editor label,
 .tool-filter,
-.tool-search-controls label {
+.tool-search-controls label,
+.ai-launcher > label {
   display: grid;
   gap: var(--space-1);
   color: var(--text);
@@ -144,7 +145,8 @@
 .tool-editor textarea,
 .tool-filter select,
 .tool-search-controls input,
-.tool-search-controls select {
+.tool-search-controls select,
+.ai-launcher textarea {
   min-height: 44px;
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--today-boundary);
@@ -155,8 +157,36 @@
 }
 
 .tool-inline-form textarea,
-.tool-editor textarea {
+.tool-editor textarea,
+.ai-launcher textarea {
   min-height: 88px;
+}
+
+.ai-launcher textarea {
+  resize: vertical;
+}
+
+.tool-privacy-note,
+.currency-tool__time {
+  color: var(--text-2);
+  font-size: var(--text-sm);
+}
+
+.currency-tool__result {
+  display: block;
+  padding: var(--space-3);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: var(--text-xl);
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+}
+
+.ai-launcher .primary-button,
+.currency-tool .secondary-button {
+  justify-self: start;
 }
 
 .tool-entity-list,
@@ -241,6 +271,10 @@
   .tools-overview,
   .tool-search-controls {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .currency-tool .tool-search-controls {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 

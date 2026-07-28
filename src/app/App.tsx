@@ -12,12 +12,23 @@ import { SnapshotTravelGuideDataSource } from "../data/api/snapshotDataSource";
 import { getPrincipal } from "../features/auth/api";
 import { LibraryShell } from "../layouts/LibraryShell";
 import { LibraryPage } from "../pages/library/LibraryPage";
-import { navigateToLibrary, useRoute } from "./router";
+import {
+  navigate,
+  navigateToLibrary,
+  pathForPair,
+  useRoute
+} from "./router";
 import { ThemeProvider } from "./theme/ThemeProvider";
+import { AstryxThemeBridge } from "./theme/AstryxThemeBridge";
 import { TripRoutePage } from "./TripRoutePage";
 import { TripSwitcherFocusProvider } from "./TripSwitcherFocus";
 import { useEffect, useMemo } from "react";
 import { apiClient } from "../services/api/client";
+import { openTravelDatabase, type TravelDatabase } from "../services/offline/database";
+import { OutboxStore } from "../services/offline/outboxStore";
+import { SnapshotStore } from "../services/offline/snapshotStore";
+import { createOutboxMutationTransport } from "../services/mutations/controller";
+import { SyncEngine } from "../services/sync/syncEngine";
 
 interface AppProps {
   pairToken?: string | null;
@@ -25,10 +36,37 @@ interface AppProps {
   tripLibraryClient?: TripLibraryClient;
 }
 
+let databasePromise: Promise<TravelDatabase> | null = null;
+const database = () => {
+  databasePromise ??= openTravelDatabase();
+  return databasePromise;
+};
+const snapshotStore = new SnapshotStore(database);
+const outboxStore = new OutboxStore(database);
+const clearOfflineSession = async () => {
+  await Promise.all([
+    outboxStore.clear(),
+    snapshotStore.clear(),
+    snapshotStore.clearPrincipal()
+  ]);
+  navigate(pathForPair(), true);
+};
 const snapshotTravelGuideDataSource = new SnapshotTravelGuideDataSource(
   apiClient,
-  getPrincipal
+  getPrincipal,
+  () => new Date(),
+  { snapshots: snapshotStore, onSessionInvalid: clearOfflineSession }
 );
+const outboxMutationTransport = createOutboxMutationTransport(outboxStore);
+const syncRuntime = {
+  outbox: outboxStore,
+  engine: new SyncEngine({
+    outbox: outboxStore,
+    snapshots: snapshotStore,
+    transport: apiClient,
+    onSessionInvalid: () => navigate(pathForPair(), true)
+  })
+};
 
 function RootRedirect() {
   useEffect(() => navigateToLibrary(), []);
@@ -44,9 +82,11 @@ function RootRedirect() {
 export function App(props: AppProps) {
   return (
     <ThemeProvider>
-      <TripSwitcherFocusProvider>
-        <AppContent {...props} />
-      </TripSwitcherFocusProvider>
+      <AstryxThemeBridge>
+        <TripSwitcherFocusProvider>
+          <AppContent {...props} />
+        </TripSwitcherFocusProvider>
+      </AstryxThemeBridge>
     </ThemeProvider>
   );
 }
@@ -88,7 +128,8 @@ function AppContent({
     return (
       <TripRoutePage
         dataSource={dataSource}
-        mutationTransport={isFixturePreview ? undefined : apiClient}
+        mutationTransport={isFixturePreview ? undefined : outboxMutationTransport}
+        syncRuntime={isFixturePreview ? undefined : syncRuntime}
         tripId={route.tripId}
         activeTab={route.tab}
       />

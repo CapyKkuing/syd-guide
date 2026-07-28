@@ -1,6 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
-import type { MutationPayloadMap } from "../../shared/mutations";
-import { createTripMutationController } from "./controller";
+import type {
+  MutationPayloadMap,
+  MutationRequest
+} from "../../shared/mutations";
+import {
+  createOutboxMutationTransport,
+  createTripMutationController
+} from "./controller";
 
 const payload: MutationPayloadMap["schedule_item"] = {
   tripDayId: "day-one",
@@ -18,6 +24,36 @@ const payload: MutationPayloadMap["schedule_item"] = {
 };
 
 describe("createTripMutationController", () => {
+  it("persists the controller idempotency key before acknowledging an offline mutation", async () => {
+    const enqueue = vi.fn().mockResolvedValue(undefined);
+    const transport = createOutboxMutationTransport(
+      { enqueue },
+      () => new Date("2026-07-28T12:00:00.000Z")
+    );
+    const mutation: MutationRequest<"schedule_item"> = {
+      idempotencyKey: "stable-offline-key",
+      entity: "schedule_item",
+      action: "create",
+      entityId: "schedule-new",
+      baseVersion: null,
+      payload
+    };
+
+    const result = await transport.mutate("trip-one", mutation);
+
+    expect(enqueue).toHaveBeenCalledWith(
+      "trip-one",
+      mutation,
+      "2026-07-28T12:00:00.000Z"
+    );
+    expect(result).toEqual({
+      entity: "schedule_item",
+      entityId: "schedule-new",
+      version: 0,
+      syncVersion: -1
+    });
+  });
+
   it("creates one idempotent schedule mutation then reloads", async () => {
     const transport = {
       mutate: vi.fn().mockResolvedValue({

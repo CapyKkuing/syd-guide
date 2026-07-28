@@ -1,3 +1,4 @@
+import { Badge, Card, ProgressBar } from "@astryxdesign/core";
 import { AppLink } from "../../components/AppLink";
 import { Icon } from "../../components/Icon";
 import type { TodayViewModel } from "../../data/contracts";
@@ -19,30 +20,54 @@ function CardHeading({ icon, title, id }: { icon: Parameters<typeof Icon>[0]["na
 
 export function WeatherCard({ weather }: Pick<TodayCardProps, "weather">) {
   return (
-    <section className="today-card" aria-labelledby="weather-card-title">
+    <Card
+      aria-labelledby="weather-card-title"
+      className="today-card"
+      data-motion-stack="true"
+      elevation="low"
+      padding={5}
+      role="region"
+      variant="green"
+    >
       <div className="today-card__heading">
         <Icon name="weather" />
         <h3 id="weather-card-title">날씨</h3>
-        <span className="chip">샘플</span>
+        <Badge className="today-card__badge" label="샘플" variant="neutral" />
       </div>
       <p className="today-card__value">{weather.temperatureC}°C · {weather.condition}</p>
       <p className="today-card__detail">{weather.location} · UV {weather.uvIndex}</p>
-    </section>
+    </Card>
   );
 }
 
 export function MovementCard({ nextMovement }: Pick<TodayCardProps, "nextMovement">) {
   if (!nextMovement) {
     return (
-      <section className="today-card" aria-labelledby="movement-card-title">
+      <Card
+        aria-labelledby="movement-card-title"
+        className="today-card"
+        data-motion-stack="true"
+        elevation="low"
+        padding={5}
+        role="region"
+        variant="cyan"
+      >
         <CardHeading icon="movement" title="다음 이동" id="movement-card-title" />
         <p className="today-card__detail">다음 이동 정보가 아직 없습니다.</p>
-      </section>
+      </Card>
     );
   }
 
   return (
-    <section className="today-card" aria-labelledby="movement-card-title">
+    <Card
+      aria-labelledby="movement-card-title"
+      className="today-card"
+      data-motion-stack="true"
+      elevation="low"
+      padding={5}
+      role="region"
+      variant="cyan"
+    >
       <div className="today-card__heading">
         <Icon name="movement" />
         <h3 id="movement-card-title">다음 이동</h3>
@@ -54,13 +79,21 @@ export function MovementCard({ nextMovement }: Pick<TodayCardProps, "nextMovemen
       {isSafeExternalHttpsUrl(nextMovement.mapUrl) ? (
         <a className="today-card__link" href={nextMovement.mapUrl} target="_blank" rel="noreferrer noopener">길찾기</a>
       ) : null}
-    </section>
+    </Card>
   );
 }
 
 export function BookingCard({ booking, tripId }: Pick<TodayCardProps, "booking" | "tripId">) {
   return (
-    <section className="today-card" aria-labelledby="booking-card-title">
+    <Card
+      aria-labelledby="booking-card-title"
+      className="today-card"
+      data-motion-stack="true"
+      elevation="low"
+      padding={5}
+      role="region"
+      variant="orange"
+    >
       <div className="today-card__heading">
         <Icon name="booking" />
         <h3 id="booking-card-title">예약</h3>
@@ -73,7 +106,7 @@ export function BookingCard({ booking, tripId }: Pick<TodayCardProps, "booking" 
           <AppLink className="today-card__link" href={`${pathForTrip(tripId, "tools")}#bookings`}>예약 상세</AppLink>
         </>
       ) : <p className="today-card__detail">예약 정보를 아직 받지 못했습니다.</p>}
-    </section>
+    </Card>
   );
 }
 
@@ -83,18 +116,31 @@ export function BudgetCard({ budget }: Pick<TodayCardProps, "budget">) {
     : 0;
 
   return (
-    <section className="today-card" aria-labelledby="budget-card-title">
+    <Card
+      aria-labelledby="budget-card-title"
+      className="today-card"
+      data-motion-stack="true"
+      elevation="low"
+      padding={5}
+      role="region"
+      variant="muted"
+    >
       <div className="today-card__heading">
         <Icon name="budget" />
         <h3 id="budget-card-title">예산</h3>
-        <span className="chip">샘플</span>
+        <Badge className="today-card__badge" label="샘플" variant="neutral" />
       </div>
       <p className="today-card__value">A${budget.spentAud.toLocaleString("en-AU")} / A${budget.limitAud.toLocaleString("en-AU")}</p>
       <p className="today-card__detail">{percentage}% 사용</p>
-      <div className="today-budget-progress" aria-label="예산 사용률" aria-valuemin={0} aria-valuemax={100} aria-valuenow={percentage} role="progressbar">
-        <span style={{ width: `${percentage}%` }} />
-      </div>
-    </section>
+      <ProgressBar
+        className="today-budget-progress"
+        isLabelHidden
+        label="예산 사용률"
+        max={100}
+        value={percentage}
+        variant={percentage >= 90 ? "warning" : "accent"}
+      />
+    </Card>
   );
 }
 

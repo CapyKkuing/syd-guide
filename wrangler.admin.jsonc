@@ -1,10 +1,10 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "couple-travel-guide-admin-local",
+  "name": "couple-travel-guide-admin",
   "main": "worker/index.ts",
   "compatibility_date": "2026-07-27",
   "assets": {
-    "directory": "./dist",
+    "directory": "./dist/client",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
     "run_worker_first": ["/api/*"]
@@ -12,15 +12,16 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "couple-travel-guide-local",
-      "database_id": "local"
+      "database_name": "couple-travel-guide",
+      "database_id": "cc16ae0a-1449-448e-bc13-a8d5cf1df0fd"
     }
   ],
   "vars": {
     "SURFACE": "admin",
-    "APP_ORIGIN": "http://localhost:5173",
-    "PARTNER_ORIGIN": "http://localhost:5173",
-    "DEV_AUTH": "enabled"
+    "APP_ORIGIN": "https://couple-travel-guide-admin.yeonuunim521.workers.dev",
+    "PARTNER_ORIGIN": "https://couple-travel-guide.yeonuunim521.workers.dev",
+    "ACCESS_TEAM_DOMAIN": "yeonjun-lab.cloudflareaccess.com",
+    "ACCESS_AUD": "67f4e87140de3d5043283a194d4cf5ce1a89f70aa1133f50c58b6d40d472ab6c"
   },
   "triggers": {
     "crons": ["17 3 * * *"]
