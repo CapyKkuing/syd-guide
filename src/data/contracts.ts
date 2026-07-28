@@ -1,3 +1,14 @@
+import type {
+  ActivityLog,
+  Booking,
+  CheckItem,
+  Note,
+  PlaceCategory,
+  PlaceStatus,
+  PublicMember,
+  VoteChoice
+} from "../shared/entities";
+
 export type TripPhase = "upcoming" | "active" | "completed";
 export type ScheduleKind =
   | "movement"
@@ -27,6 +38,7 @@ export interface TripContextViewModel {
   localDate: string;
   dayLabel: string;
   viewer: {
+    memberId: string;
     displayName: string;
     role: "owner" | "partner";
   };
@@ -48,6 +60,8 @@ export interface ScheduleItemView {
   travelMode: "walk" | "transit" | "drive" | "ferry" | null;
   travelNote: string | null;
   bookingStatus: "confirmed" | "pending" | null;
+  bookingProvider: string | null;
+  updatedAt: string;
   position: number;
   isFixed: boolean;
   isDone: boolean;
@@ -87,6 +101,7 @@ export interface TodayViewModel {
     mapUrl: string | null;
   } | null;
   booking: {
+    provider: string;
     place: string;
     time: string;
     type: string;
@@ -106,14 +121,26 @@ export interface TodayViewModel {
 
 export interface MapPlaceView {
   id: string;
+  version: number;
   name: string;
-  category: "restaurant" | "cafe" | "attraction" | "lodging" | "transport";
-  status: "saved" | "maybe" | "visited";
-  dayDate: string;
-  x: number | null;
-  y: number | null;
+  category: PlaceCategory;
+  status: PlaceStatus;
+  dayDate: string | null;
+  latitude: number | null;
+  longitude: number | null;
   address: string;
+  description: string;
   mapUrl: string | null;
+  sourceUrl: string | null;
+  imageUrl: string | null;
+  savedBy: string | null;
+  updatedAt: string;
+  votes: Array<{
+    id: string;
+    version: number;
+    memberId: string;
+    choice: VoteChoice;
+  }>;
 }
 
 export interface ScheduleViewModel {
@@ -139,7 +166,21 @@ export interface ToolGroupView {
 
 export interface ToolsViewModel {
   groups: ToolGroupView[];
+  tripId: string;
+  timeZone: string;
+  viewerMemberId: string;
+  members: PublicMember[];
+  places: Array<{ id: string; name: string }>;
+  bookings: BookingView[];
+  checkItems: CheckItemView[];
+  notes: NoteView[];
+  activity: ActivityView[];
 }
+
+export type BookingView = Booking;
+export type CheckItemView = CheckItem;
+export type NoteView = Note;
+export type ActivityView = Pick<ActivityLog, "id" | "action" | "summary" | "createdAt">;
 
 export interface TripWorkspace {
   context: TripContextViewModel;

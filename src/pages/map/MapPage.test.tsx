@@ -1,9 +1,21 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { MapPlaceView } from "../../data/contracts";
 import { createSampleDataSource } from "../../test/travelSamples";
 import { MapPage } from "./MapPage";
+
+vi.mock("maplibre-gl", () => ({
+  Map: class {
+    addControl() {}
+    remove() {}
+  },
+  Marker: class {
+    setLngLat() { return this; }
+    addTo() { return this; }
+  },
+  NavigationControl: class {}
+}));
 
 async function getMapFixtures(tripId = "sydney-2026") {
   const dataSource = createSampleDataSource(
@@ -67,15 +79,14 @@ describe("MapPage", () => {
     expect(screen.getByRole("button", { name: /Sydney Opera House, 관광, 저장/ })).toBeVisible();
   });
 
-  it("shows a labelled static preview and an always-present semantic list fallback", async () => {
+  it("shows an online map shell and an always-present semantic list fallback", async () => {
     const { places, days } = await getMapFixtures();
     render(<MapPage places={places} days={days} />);
 
-    const preview = screen.getByRole("img", { name: "선택한 장소의 정적 경로 미리보기" });
-    expect(preview).toHaveAttribute("preserveAspectRatio", "none");
-    expect(preview.parentElement).toHaveClass("map-preview");
+    expect(screen.getByLabelText("온라인 지도")).toBeVisible();
     expect(screen.getByRole("list", { name: "장소 목록" })).toBeVisible();
     expect(screen.getByText("4개 장소")).toBeVisible();
+    await waitFor(() => expect(screen.queryByText("온라인 지도를 불러오는 중입니다.")).not.toBeInTheDocument());
   });
 
   it("keeps a coordinate-less place in the list without inventing a marker", async () => {
@@ -86,8 +97,8 @@ describe("MapPage", () => {
       ...firstPlace,
       id: "coordinate-less",
       name: "좌표 없는 장소",
-      x: null,
-      y: null
+      latitude: null,
+      longitude: null
     };
 
     render(<MapPage places={[coordinateLess]} days={days} />);
@@ -110,19 +121,10 @@ describe("MapPage", () => {
     expect(screen.queryByText("조건에 맞는 장소가 없습니다")).not.toBeInTheDocument();
   });
 
-  it("opens the same read-only sheet from a marker and a place card, then returns focus", async () => {
+  it("opens the place sheet from a semantic card, then returns focus", async () => {
     const user = userEvent.setup();
     const { places, days } = await getMapFixtures();
     render(<MapPage places={places} days={days} />);
-
-    const marker = screen.getByRole("button", { name: "Sydney Opera House 상세 보기" });
-    await user.click(marker);
-    const dialog = screen.getByRole("dialog", { name: "장소 상세" });
-    expect(within(dialog).getByText("Sydney Opera House")).toBeVisible();
-    expect(within(dialog).getByRole("link", { name: "Google 지도 열기" })).toHaveAttribute("href", expect.stringMatching(/^https:/));
-
-    await user.click(within(dialog).getByRole("button", { name: "닫기" }));
-    expect(marker).toHaveFocus();
 
     const card = screen.getByRole("button", { name: /Sydney Opera House, 관광, 저장/ });
     await user.click(card);
@@ -148,49 +150,40 @@ describe("MapPage", () => {
     expect(within(screen.getByRole("dialog", { name: "장소 상세" })).queryByRole("link", { name: "Google 지도 열기" })).not.toBeInTheDocument();
   });
 
-  it("keeps marker percentages finite and within the static preview bounds for invalid coordinates", async () => {
+  it("keeps invalid-coordinate places available in the semantic list", async () => {
     const { places, days } = await getMapFixtures();
     const firstPlace = places.at(0);
     if (!firstPlace) throw new Error("fixture place missing");
     const invalidPlaces: MapPlaceView[] = [
-      { ...firstPlace, id: "outside-low", name: "Outside low", x: -10, y: -2 },
-      { ...firstPlace, id: "outside-high", name: "Outside high", x: Number.POSITIVE_INFINITY, y: Number.NaN }
+      { ...firstPlace, id: "outside-low", name: "Outside low", latitude: Number.NaN, longitude: 151 },
+      { ...firstPlace, id: "outside-high", name: "Outside high", latitude: -33, longitude: Number.POSITIVE_INFINITY }
     ];
     render(<MapPage places={invalidPlaces} days={days} />);
 
-    const lowMarker = screen.getByRole("button", { name: "Outside low 상세 보기" });
-    const highMarker = screen.getByRole("button", { name: "Outside high 상세 보기" });
-    expect(lowMarker).toHaveStyle({ left: "0%", top: "0%" });
-    expect(highMarker).toHaveStyle({ left: "0%", top: "0%" });
+    expect(screen.getByRole("button", { name: /Outside low,/ })).toBeVisible();
+    expect(screen.getByRole("button", { name: /Outside high,/ })).toBeVisible();
   });
 
-  it("gives duplicate-name markers distinct hidden descriptions without changing their required names", async () => {
+  it("keeps duplicate-name place cards distinct and opens the correct place", async () => {
     const user = userEvent.setup();
     const { places, days } = await getMapFixtures();
     const firstPlace = places.at(0);
     if (!firstPlace) throw new Error("fixture place missing");
     const duplicates: MapPlaceView[] = [
-      { ...firstPlace, id: "duplicate-one", name: "Same name", address: "First address", x: 10, y: 10 },
-      { ...firstPlace, id: "duplicate-two", name: "Same name", address: "Second address", x: 90, y: 65 }
+      { ...firstPlace, id: "duplicate-one", name: "Same name", address: "First address", latitude: -33.8, longitude: 151.1 },
+      { ...firstPlace, id: "duplicate-two", name: "Same name", address: "Second address", latitude: -33.9, longitude: 151.2 }
     ];
     render(<MapPage places={duplicates} days={days} />);
 
-    const markers = screen.getAllByRole("button", { name: "Same name 상세 보기" });
-    expect(markers).toHaveLength(2);
-    expect(markers[0]).toHaveAccessibleName("Same name 상세 보기");
-    expect(markers[1]).toHaveAccessibleName("Same name 상세 보기");
-    expect(markers[0]).toHaveAccessibleDescription("숙소 · 방문 · First address");
-    expect(markers[1]).toHaveAccessibleDescription("숙소 · 방문 · Second address");
-    expect(markers[0]).toHaveAttribute("aria-describedby", expect.stringMatching(/^map-marker-description-/));
-    expect(markers[0]).not.toHaveAttribute("aria-describedby", markers[1]?.getAttribute("aria-describedby"));
-
-    await user.click(markers[0]!);
+    const firstCard = screen.getByRole("button", { name: /Same name, 숙소, 방문, First address/ });
+    const secondCard = screen.getByRole("button", { name: /Same name, 숙소, 방문, Second address/ });
+    await user.click(firstCard);
     expect(within(screen.getByRole("dialog", { name: "장소 상세" })).getByText("First address")).toBeVisible();
     await user.click(screen.getByRole("button", { name: "닫기" }));
-    await user.click(markers[1]!);
+    await user.click(secondCard);
     expect(within(screen.getByRole("dialog", { name: "장소 상세" })).getByText("Second address")).toBeVisible();
 
-    expect(screen.getByRole("button", { name: /Same name, 숙소, 방문, First address/ })).toBeVisible();
-    expect(screen.getByRole("button", { name: /Same name, 숙소, 방문, Second address/ })).toBeVisible();
+    expect(firstCard).toBeVisible();
+    expect(secondCard).toBeVisible();
   });
 });

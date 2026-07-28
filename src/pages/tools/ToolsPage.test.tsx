@@ -91,7 +91,16 @@ describe("ToolsPage", () => {
         id: "planning",
         title: "Planning & Settings",
         items: [{ id: "devices", label: "연결 기기 관리", description: "설명", status: "available" }]
-      }]
+      }],
+      tripId: "sydney-2026",
+      timeZone: "Australia/Sydney",
+      viewerMemberId: "owner",
+      members: [],
+      places: [],
+      bookings: [],
+      checkItems: [],
+      notes: [],
+      activity: []
     };
     render(<ThemeProvider><ToolsPage tools={tools} deviceManagement={<p>관리</p>} /></ThemeProvider>);
     expect(document.querySelectorAll("#devices")).toHaveLength(1);

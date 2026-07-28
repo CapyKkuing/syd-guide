@@ -116,7 +116,7 @@ describe("TripRoutePage", () => {
     renderTripRoute(fixture, "tools");
 
     expect(await screen.findByRole("heading", { name: "Travel Essentials" })).toBeVisible();
-    expect(await screen.findByRole("button", { name: "초대 만들기" })).toBeVisible();
+    expect(await screen.findByText("읽기 전용 미리보기에서는 기기를 관리할 수 없습니다.")).toBeVisible();
   });
 
   it.each([

@@ -1,6 +1,9 @@
-import { useMemo, useState, type CSSProperties } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { MapPlaceView, ScheduleDayView } from "../../data/contracts";
+import type { TripMutationController } from "../../services/mutations/controller";
+import { MapCanvas, type MapLoader } from "./MapCanvas";
 import { MapPlaceSheet } from "./MapPlaceSheet";
+import { PlaceEditorDialog } from "./PlaceEditorDialog";
 
 type CategoryFilter = "all" | MapPlaceView["category"];
 type StatusFilter = "all" | MapPlaceView["status"];
@@ -35,27 +38,25 @@ const statusLabels: Record<MapPlaceView["status"], string> = {
   visited: "방문"
 };
 
-function bounded(value: number, maximum: number): number {
-  return Number.isFinite(value) ? Math.min(Math.max(value, 0), maximum) : 0;
-}
-
-function markerStyle(place: MapPlaceView): CSSProperties {
-  return {
-    left: `${bounded(place.x ?? 0, 100)}%`,
-    top: `${bounded(place.y ?? 0, 70) / 0.7}%`
-  };
-}
-
-function markerDescriptionId(placeId: string): string {
-  return `map-marker-description-${encodeURIComponent(placeId)}`;
-}
-
-export function MapPage({ places, days }: { places: MapPlaceView[]; days: ScheduleDayView[] }) {
+export function MapPage({
+  days,
+  mapLoader,
+  mutationController,
+  places,
+  viewerMemberId = ""
+}: {
+  days: ScheduleDayView[];
+  mapLoader?: MapLoader;
+  mutationController?: TripMutationController;
+  places: MapPlaceView[];
+  viewerMemberId?: string;
+}) {
   const [search, setSearch] = useState("");
   const [dayDate, setDayDate] = useState("all");
   const [category, setCategory] = useState<CategoryFilter>("all");
   const [status, setStatus] = useState<StatusFilter>("all");
   const [selectedPlace, setSelectedPlace] = useState<MapPlaceView | null>(null);
+  const [editingPlace, setEditingPlace] = useState<MapPlaceView | null | undefined>();
   const [returnFocusTo, setReturnFocusTo] = useState<HTMLElement | null>(null);
 
   const filteredPlaces = useMemo(() => {
@@ -69,25 +70,32 @@ export function MapPage({ places, days }: { places: MapPlaceView[]; days: Schedu
   }, [category, dayDate, places, search, status]);
 
   const dates = Array.from(new Set(days.map((day) => day.date)));
-  const markerPlaces = filteredPlaces.filter(
-    (place) => place.x !== null && place.y !== null
-  );
   const resetFilters = () => {
     setSearch("");
     setDayDate("all");
     setCategory("all");
     setStatus("all");
   };
-  const openPlace = (place: MapPlaceView, opener: HTMLElement) => {
+  const openPlace = useCallback(({ place, opener }: { place: MapPlaceView; opener: HTMLElement }) => {
     setReturnFocusTo(opener);
     setSelectedPlace(place);
-  };
+  }, []);
 
   return (
     <section className="map-page" aria-labelledby="map-title">
       <header className="map-page__header">
-        <h1 id="map-title">지도</h1>
-        <p>저장한 장소를 조건에 맞게 확인합니다.</p>
+        <div>
+          <h1 id="map-title">지도</h1>
+          <p>저장한 장소를 조건에 맞게 확인합니다.</p>
+        </div>
+        <button
+          className="primary-button"
+          disabled={!mutationController}
+          onClick={() => setEditingPlace(null)}
+          type="button"
+        >
+          장소 추가
+        </button>
       </header>
 
       <div className="map-filters">
@@ -115,26 +123,13 @@ export function MapPage({ places, days }: { places: MapPlaceView[]; days: Schedu
       <p aria-live="polite" className="map-result-count">{filteredPlaces.length}개 장소</p>
 
       <div className="map-page__content">
-        <div className="map-preview" aria-label="정적 지도 미리보기">
-          <svg aria-label="선택한 장소의 정적 경로 미리보기" preserveAspectRatio="none" role="img" viewBox="0 0 100 70">
-            <title>선택한 장소의 정적 경로 미리보기</title>
-            <path className="map-preview__grid" d="M0 14H100M0 28H100M0 42H100M0 56H100M20 0V70M40 0V70M60 0V70M80 0V70" />
-            {markerPlaces.length > 1 ? <polyline className="map-preview__route" points={markerPlaces.map((place) => `${bounded(place.x ?? 0, 100)},${bounded(place.y ?? 0, 70)}`).join(" ")} /> : null}
-          </svg>
-          {markerPlaces.map((place) => (
-            <button aria-describedby={markerDescriptionId(place.id)} aria-label={`${place.name} 상세 보기`} className="map-marker" key={place.id} onClick={(event) => openPlace(place, event.currentTarget)} style={markerStyle(place)} type="button">
-              <span aria-hidden="true">{place.name.slice(0, 1)}</span>
-              <span className="map-marker__description" id={markerDescriptionId(place.id)}>{categoryLabels[place.category]} · {statusLabels[place.status]} · {place.address}</span>
-            </button>
-          ))}
-        </div>
-
+        <MapCanvas loader={mapLoader} onOpenPlace={openPlace} places={filteredPlaces} />
         <section className="map-place-list-section" aria-labelledby="map-list-title">
           <h2 id="map-list-title">장소 목록</h2>
           <ol aria-label="장소 목록" className="map-place-list">
             {filteredPlaces.map((place) => (
               <li key={place.id}>
-                <button aria-label={`${place.name}, ${categoryLabels[place.category]}, ${statusLabels[place.status]}, ${place.address}`} className="map-place-card" onClick={(event) => openPlace(place, event.currentTarget)} type="button">
+                <button aria-label={`${place.name}, ${categoryLabels[place.category]}, ${statusLabels[place.status]}, ${place.address}`} className="map-place-card" onClick={(event) => openPlace({ place, opener: event.currentTarget })} type="button">
                   <strong>{place.name}</strong>
                   <span>{categoryLabels[place.category]} · {statusLabels[place.status]}</span>
                   <span>{place.address}</span>
@@ -151,7 +146,27 @@ export function MapPage({ places, days }: { places: MapPlaceView[]; days: Schedu
         </section>
       </div>
 
-      {selectedPlace ? <MapPlaceSheet onClose={() => setSelectedPlace(null)} place={selectedPlace} returnFocusTo={returnFocusTo} /> : null}
+      {selectedPlace ? (
+        <MapPlaceSheet
+          controller={mutationController}
+          onClose={() => setSelectedPlace(null)}
+          onEdit={() => {
+            setEditingPlace(selectedPlace);
+            setSelectedPlace(null);
+          }}
+          place={selectedPlace}
+          returnFocusTo={returnFocusTo}
+          viewerMemberId={viewerMemberId}
+        />
+      ) : null}
+      {editingPlace !== undefined && mutationController ? (
+        <PlaceEditorDialog
+          controller={mutationController}
+          onClose={() => setEditingPlace(undefined)}
+          place={editingPlace}
+          viewerMemberId={viewerMemberId}
+        />
+      ) : null}
     </section>
   );
 }

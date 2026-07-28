@@ -68,6 +68,7 @@ export function BookingCard({ booking, tripId }: Pick<TodayCardProps, "booking" 
       {booking ? (
         <>
           <p className="today-card__value">{booking.place}</p>
+          <p className="today-card__detail">예약처: {booking.provider}</p>
           <p className="today-card__detail"><time>{booking.time}</time> · {booking.type} · {booking.status === "confirmed" ? "확정" : "확인 필요"}</p>
           <AppLink className="today-card__link" href={`${pathForTrip(tripId, "tools")}#bookings`}>예약 상세</AppLink>
         </>

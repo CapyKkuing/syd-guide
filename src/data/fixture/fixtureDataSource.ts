@@ -148,6 +148,8 @@ function makeScheduleItem(
     tripDayId: `preview-${date}`,
     placeId: null,
     bookingId: null,
+    bookingProvider: null,
+    updatedAt: `${date}T${startsAt}:00`,
     startsAt: `${date}T${startsAt}:00`,
     endsAt: endsAt ? `${date}T${endsAt}:00` : null,
     title,
@@ -166,7 +168,7 @@ function toolGroups(): ToolGroupView[] {
       id: "essentials",
       title: "Travel Essentials",
       items: [
-        { id: "bookings", label: "예약·바우처", description: "예약 정보를 한곳에서 확인합니다.", status: "preview" },
+        { id: "bookings", label: "예약·바우처", description: "예약 정보를 한곳에서 확인합니다.", status: "available" },
         { id: "exchange", label: "환율", description: "환율 정보는 준비 중입니다.", status: "preview" },
         { id: "transport", label: "교통", description: "교통 안내는 준비 중입니다.", status: "preview" },
         { id: "emergency", label: "비상 연락처", description: "비상 연락처는 준비 중입니다.", status: "preview" }
@@ -185,8 +187,8 @@ function toolGroups(): ToolGroupView[] {
       id: "planning",
       title: "Planning & Settings",
       items: [
-        { id: "checklist", label: "체크리스트", description: "체크리스트는 준비 중입니다.", status: "preview" },
-        { id: "notes", label: "여행 메모", description: "여행 메모는 준비 중입니다.", status: "preview" },
+        { id: "checklist", label: "체크리스트", description: "함께 또는 개인 준비물을 관리합니다.", status: "available" },
+        { id: "notes", label: "여행 메모", description: "공유 또는 개인 메모를 관리합니다.", status: "available" },
         { id: "tips", label: "주의사항", description: "여행 주의사항은 준비 중입니다.", status: "preview" },
         { id: "ai-connect", label: "AI 앱 연결", description: "AI 앱 연결은 준비 중입니다.", status: "preview" },
         { id: "partner-connect", label: "파트너 연결", description: "파트너 연결은 준비 중입니다.", status: "preview" },
@@ -217,7 +219,7 @@ export class FixtureTravelGuideDataSource implements TravelGuideDataSource {
       trips: this.trips(),
       localDate: local.date,
       dayLabel: dayLabel(local.date, trip.timeZone),
-      viewer: { displayName: "민지", role: "owner" },
+      viewer: { memberId: "preview-owner", displayName: "민지", role: "owner" },
       partnerStatus: "connected"
     };
   }
@@ -261,7 +263,7 @@ export class FixtureTravelGuideDataSource implements TravelGuideDataSource {
         headline: "첫날 미리보기",
         dDay: daysBetween(local.date, trip.startDate),
         nextMovement: null,
-        booking: { place: "Icebergs Dining Room", time: "19:00", type: "디너 예약", status: "confirmed" },
+        booking: { provider: "Icebergs Dining Room", place: "Icebergs Dining Room", time: "19:00", type: "디너 예약", status: "confirmed" },
         schedule: phaseToday.items,
         summary: null
       };
@@ -296,7 +298,7 @@ export class FixtureTravelGuideDataSource implements TravelGuideDataSource {
         routeSummary: "Light rail L2와 도보 약 28분",
         mapUrl: "https://www.google.com/maps/dir/Meriton+Suites+Sussex+Street/Sydney+Opera+House"
       },
-      booking: { place: "Quay", time: "19:30", type: "디너 예약", status: "confirmed" },
+      booking: { provider: "Quay", place: "Quay", time: "19:30", type: "디너 예약", status: "confirmed" },
       schedule: phaseToday.items,
       summary: null
     };
@@ -321,55 +323,95 @@ export class FixtureTravelGuideDataSource implements TravelGuideDataSource {
       places: [
         {
           id: "meriton-sussex-street",
+          version: 1,
           name: "Meriton Sussex Street",
           category: "lodging",
           status: "visited",
           dayDate: firstDay.date,
-          x: 31,
-          y: 52,
+          latitude: -33.8723,
+          longitude: 151.2035,
           address: "234 Sussex St, Sydney NSW 2000",
-          mapUrl: "https://www.google.com/maps/search/?api=1&query=Meriton+Suites+Sussex+Street"
+          description: "숙소",
+          mapUrl: "https://www.google.com/maps/search/?api=1&query=Meriton+Suites+Sussex+Street",
+          sourceUrl: null,
+          imageUrl: null,
+          savedBy: "preview-owner",
+          updatedAt: `${firstDay.date}T09:00:00`,
+          votes: []
         },
         {
           id: "sydney-opera-house",
+          version: 1,
           name: "Sydney Opera House",
           category: "attraction",
           status: "saved",
           dayDate: secondDay.date,
-          x: 65,
-          y: 28,
+          latitude: -33.8568,
+          longitude: 151.2153,
           address: "Bennelong Point, Sydney NSW 2000",
-          mapUrl: "https://www.google.com/maps/search/?api=1&query=Sydney+Opera+House"
+          description: "하버 명소",
+          mapUrl: "https://www.google.com/maps/search/?api=1&query=Sydney+Opera+House",
+          sourceUrl: null,
+          imageUrl: null,
+          savedBy: "preview-owner",
+          updatedAt: `${secondDay.date}T09:00:00`,
+          votes: []
         },
         {
           id: "sample-coffee",
+          version: 1,
           name: "Sample Coffee",
           category: "cafe",
           status: "maybe",
           dayDate: thirdDay.date,
-          x: 42,
-          y: 63,
+          latitude: -33.885,
+          longitude: 151.173,
           address: "1/1a Larkin St, Camperdown NSW 2050",
-          mapUrl: "https://www.google.com/maps/search/?api=1&query=Sample+Coffee+Sydney"
+          description: "카페",
+          mapUrl: "https://www.google.com/maps/search/?api=1&query=Sample+Coffee+Sydney",
+          sourceUrl: null,
+          imageUrl: null,
+          savedBy: "preview-owner",
+          updatedAt: `${thirdDay.date}T09:00:00`,
+          votes: []
         },
         {
           id: "quay",
+          version: 1,
           name: "Quay",
           category: "restaurant",
           status: "saved",
           dayDate: secondDay.date,
-          x: 61,
-          y: 38,
+          latitude: -33.8585,
+          longitude: 151.209,
           address: "Upper Level, Overseas Passenger Terminal, The Rocks NSW 2000",
-          mapUrl: "https://www.google.com/maps/search/?api=1&query=Quay+Sydney"
+          description: "레스토랑",
+          mapUrl: "https://www.google.com/maps/search/?api=1&query=Quay+Sydney",
+          sourceUrl: null,
+          imageUrl: null,
+          savedBy: "preview-owner",
+          updatedAt: `${secondDay.date}T18:00:00`,
+          votes: []
         }
       ]
     };
   }
 
   async getTools(tripId: string): Promise<ToolsViewModel | null> {
-    if (!this.tripById(tripId)) return null;
-    return { groups: toolGroups() };
+    const trip = this.tripById(tripId);
+    if (!trip) return null;
+    return {
+      groups: toolGroups(),
+      tripId,
+      timeZone: trip.timeZone,
+      viewerMemberId: "preview-owner",
+      members: [{ id: "preview-owner", role: "owner", displayName: "민지" }],
+      places: [],
+      bookings: [],
+      checkItems: [],
+      notes: [],
+      activity: []
+    };
   }
 
   private trips(): TripSummaryViewModel[] {

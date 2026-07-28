@@ -41,6 +41,11 @@
   gap: var(--space-8);
 }
 
+.tools-overview {
+  display: grid;
+  gap: var(--space-4);
+}
+
 .tools-group {
   display: grid;
   gap: var(--space-3);
@@ -75,6 +80,10 @@
   border-color: var(--today-boundary);
 }
 
+.tool-card--wide {
+  grid-column: 1 / -1;
+}
+
 .tool-card__heading {
   display: flex;
   align-items: center;
@@ -98,6 +107,141 @@
 
 .tool-card__slot {
   margin-top: var(--space-2);
+}
+
+.tool-panel,
+.tool-editor,
+.tool-inline-form {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.tool-panel {
+  margin-top: var(--space-2);
+}
+
+.tool-inline-form {
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+
+.tool-inline-form label,
+.tool-editor label,
+.tool-filter,
+.tool-search-controls label {
+  display: grid;
+  gap: var(--space-1);
+  color: var(--text);
+  font-weight: 700;
+}
+
+.tool-inline-form input,
+.tool-inline-form select,
+.tool-inline-form textarea,
+.tool-editor input,
+.tool-editor select,
+.tool-editor textarea,
+.tool-filter select,
+.tool-search-controls input,
+.tool-search-controls select {
+  min-height: 44px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--today-boundary);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+.tool-inline-form textarea,
+.tool-editor textarea {
+  min-height: 88px;
+}
+
+.tool-entity-list,
+.tool-search-results,
+.activity-list {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tool-entity-list > li,
+.tool-search-results a,
+.activity-list > li {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+}
+
+.tool-entity-list h4,
+.tool-entity-list p,
+.activity-list p,
+.tool-card--wide h2 {
+  margin: 0;
+}
+
+.tool-link-row,
+.tool-editor__actions,
+.tool-editor__confirm,
+.reservation-code {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.reservation-code output {
+  font-family: ui-monospace, monospace;
+  font-weight: 800;
+}
+
+.tool-editor {
+  padding-top: var(--space-5);
+}
+
+.tool-editor__check {
+  display: flex !important;
+  align-items: center;
+}
+
+.tool-editor__check input {
+  min-height: 0;
+}
+
+.tool-editor__actions {
+  justify-content: flex-end;
+}
+
+.tool-search-controls {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.tool-search-results a {
+  text-decoration: none;
+}
+
+.tool-search-results a:hover {
+  background: var(--surface-2);
+}
+
+.tool-search-results small,
+.activity-list time {
+  color: var(--text-2);
+}
+
+@media (min-width: 761px) {
+  .tools-overview,
+  .tool-search-controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .tool-card .theme-control {

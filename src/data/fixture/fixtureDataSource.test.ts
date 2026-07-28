@@ -153,7 +153,7 @@ describe("FixtureTravelGuideDataSource", () => {
       {
         id: "essentials",
         items: [
-          { label: "예약·바우처", status: "preview" },
+          { label: "예약·바우처", status: "available" },
           { label: "환율", status: "preview" },
           { label: "교통", status: "preview" },
           { label: "비상 연락처", status: "preview" }
@@ -170,8 +170,8 @@ describe("FixtureTravelGuideDataSource", () => {
       {
         id: "planning",
         items: [
-          { label: "체크리스트", status: "preview" },
-          { label: "여행 메모", status: "preview" },
+          { label: "체크리스트", status: "available" },
+          { label: "여행 메모", status: "available" },
           { label: "주의사항", status: "preview" },
           { label: "AI 앱 연결", status: "preview" },
           { label: "파트너 연결", status: "preview" },

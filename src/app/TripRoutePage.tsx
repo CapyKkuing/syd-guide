@@ -68,7 +68,12 @@ export function TripRoutePage({
           <TodayPage trip={workspace.data.context.trip} today={workspace.data.today} />
         </section>
       ) : activeTab === "map" ? (
-        <MapPage days={workspace.data.schedule.days} places={workspace.data.mapPreview.places} />
+        <MapPage
+          days={workspace.data.schedule.days}
+          mutationController={mutationController}
+          places={workspace.data.mapPreview.places}
+          viewerMemberId={workspace.data.context.viewer.memberId}
+        />
       ) : activeTab === "schedule" ? (
         <SchedulePage
           days={workspace.data.schedule.days}
@@ -77,7 +82,15 @@ export function TripRoutePage({
           tripId={tripId}
         />
       ) : (
-        <ToolsPage tools={workspace.data.tools} deviceManagement={<PairingManager />} />
+        <ToolsPage
+          deviceManagement={mutationTransport
+            ? <PairingManager />
+            : <p>읽기 전용 미리보기에서는 기기를 관리할 수 없습니다.</p>}
+          mutationController={mutationController}
+          reload={workspace.reload}
+          tools={workspace.data.tools}
+          workspace={workspace.data}
+        />
       )}
     </TripShell>
   );

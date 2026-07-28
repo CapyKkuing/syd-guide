@@ -15,7 +15,7 @@ const toolGroups: ToolGroupView[] = [
     id: "essentials",
     title: "Travel Essentials",
     items: [
-      { id: "bookings", label: "예약·바우처", description: "예약 정보를 한곳에서 확인합니다.", status: "preview" },
+      { id: "bookings", label: "예약·바우처", description: "예약 정보를 한곳에서 확인합니다.", status: "available" },
       { id: "exchange", label: "환율", description: "환율 정보는 준비 중입니다.", status: "preview" },
       { id: "transport", label: "교통", description: "교통 안내는 준비 중입니다.", status: "preview" },
       { id: "emergency", label: "비상 연락처", description: "비상 연락처는 준비 중입니다.", status: "preview" }
@@ -34,8 +34,8 @@ const toolGroups: ToolGroupView[] = [
     id: "planning",
     title: "Planning & Settings",
     items: [
-      { id: "checklist", label: "체크리스트", description: "체크리스트는 준비 중입니다.", status: "preview" },
-      { id: "notes", label: "여행 메모", description: "여행 메모는 준비 중입니다.", status: "preview" },
+      { id: "checklist", label: "체크리스트", description: "함께 또는 개인 준비물을 관리합니다.", status: "available" },
+      { id: "notes", label: "여행 메모", description: "공유 또는 개인 메모를 관리합니다.", status: "available" },
       { id: "tips", label: "주의사항", description: "여행 주의사항은 준비 중입니다.", status: "preview" },
       { id: "ai-connect", label: "AI 앱 연결", description: "AI 앱 연결은 준비 중입니다.", status: "preview" },
       { id: "partner-connect", label: "파트너 연결", description: "파트너 연결은 준비 중입니다.", status: "preview" },
@@ -90,6 +90,7 @@ export function mapSnapshotToWorkspace(
       localDate,
       dayLabel: todayDay?.dayLabel ?? "DAY 01",
       viewer: {
+        memberId: principal.memberId,
         displayName: viewer?.displayName ?? "여행자",
         role: principal.role
       },
@@ -124,7 +125,23 @@ export function mapSnapshotToWorkspace(
       } : null
     },
     mapPreview: { places: mapPlaces(snapshot) },
-    tools: { groups: toolGroups }
+    tools: {
+      groups: toolGroups,
+      tripId: snapshot.trip.id,
+      timeZone: snapshot.trip.timeZone,
+      viewerMemberId: principal.memberId,
+      members: snapshot.members,
+      places: snapshot.places.map((place) => ({ id: place.id, name: place.name })),
+      bookings: snapshot.bookings,
+      checkItems: snapshot.checkItems,
+      notes: snapshot.notes,
+      activity: snapshot.activity.slice(0, 100).map((entry) => ({
+        id: entry.id,
+        action: entry.action,
+        summary: entry.summary,
+        createdAt: entry.createdAt
+      }))
+    }
   };
 }
 
@@ -178,6 +195,8 @@ function mapScheduleItem(
     travelMode,
     travelNote: item.travelNote || null,
     bookingStatus: booking ? booking.paymentStatus === "unpaid" ? "pending" : "confirmed" : null,
+    bookingProvider: booking?.provider ?? null,
+    updatedAt: item.updatedAt,
     position: item.position,
     isFixed: item.isFixed,
     isDone: item.isDone,
@@ -186,26 +205,33 @@ function mapScheduleItem(
 }
 
 function mapPlaces(snapshot: TripSnapshot): MapPlaceView[] {
-  const located = snapshot.places.filter(validCoordinates);
-  const latitudes = located.map((place) => place.latitude!);
-  const longitudes = located.map((place) => place.longitude!);
-  const minLat = Math.min(...latitudes);
-  const maxLat = Math.max(...latitudes);
-  const minLng = Math.min(...longitudes);
-  const maxLng = Math.max(...longitudes);
   return snapshot.places.map((place) => {
     const item = snapshot.scheduleItems.find((candidate) => candidate.placeId === place.id);
     const day = item ? snapshot.days.find((candidate) => candidate.id === item.tripDayId) : undefined;
     return {
       id: place.id,
+      version: place.version,
       name: place.name,
       category: place.category,
       status: place.status,
-      dayDate: day?.dayDate ?? snapshot.trip.startDate,
-      x: validCoordinates(place) ? scale(place.longitude!, minLng, maxLng, 100) : null,
-      y: validCoordinates(place) ? scale(maxLat - place.latitude!, 0, maxLat - minLat, 70) : null,
+      dayDate: day?.dayDate ?? null,
+      latitude: validCoordinates(place) ? place.latitude : null,
+      longitude: validCoordinates(place) ? place.longitude : null,
       address: place.address ?? "",
-      mapUrl: place.mapUrl
+      description: place.description,
+      mapUrl: place.mapUrl,
+      sourceUrl: place.sourceUrl,
+      imageUrl: place.imageUrl,
+      savedBy: place.savedBy,
+      updatedAt: place.updatedAt,
+      votes: snapshot.votes
+        .filter((vote) => vote.targetType === "place" && vote.targetId === place.id)
+        .map((vote) => ({
+          id: vote.id,
+          version: vote.version,
+          memberId: vote.memberId,
+          choice: vote.choice
+        }))
     };
   });
 }
@@ -222,6 +248,7 @@ function mapTodayBooking(booking: Booking, places: Map<string, Place>) {
     transport: "교통", restaurant: "레스토랑", other: "기타"
   };
   return {
+    provider: booking.provider,
     place: (booking.placeId ? places.get(booking.placeId)?.name : null) ?? booking.provider,
     time: timeOf(booking.startsAt),
     type: labels[booking.bookingType],
@@ -248,10 +275,6 @@ function validCoordinates(place: Place): boolean {
   return place.latitude !== null && place.longitude !== null
     && Number.isFinite(place.latitude) && Number.isFinite(place.longitude)
     && Math.abs(place.latitude) <= 90 && Math.abs(place.longitude) <= 180;
-}
-
-function scale(value: number, minimum: number, maximum: number, size: number): number {
-  return maximum === minimum ? size / 2 : Math.round(((value - minimum) / (maximum - minimum)) * size);
 }
 
 function timeOf(value: string): string {

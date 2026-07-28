@@ -38,8 +38,9 @@ function movementDetail(item: ScheduleItemView): string {
 }
 
 function bookingDetail(item: ScheduleItemView): string {
-  if (item.bookingStatus === "confirmed") return "예약 확정";
-  if (item.bookingStatus === "pending") return "예약 확인 필요";
+  const provider = item.bookingProvider ? `${item.bookingProvider} · ` : "";
+  if (item.bookingStatus === "confirmed") return `${provider}예약 확정`;
+  if (item.bookingStatus === "pending") return `${provider}예약 확인 필요`;
   return "예약 정보 없음";
 }
 

@@ -1,11 +1,16 @@
 import { BottomSheet } from "../../components/BottomSheet";
 import type { MapPlaceView } from "../../data/contracts";
+import type { TripMutationController } from "../../services/mutations/controller";
 import { isSafeGoogleMapsUrl } from "../../shared/externalUrls";
+import { PlaceVoteControl } from "./PlaceVoteControl";
 
 export interface MapPlaceSheetProps {
   place: MapPlaceView;
   onClose: () => void;
+  onEdit: () => void;
   returnFocusTo: HTMLElement | null;
+  controller?: TripMutationController;
+  viewerMemberId: string;
 }
 
 const categoryLabels: Record<MapPlaceView["category"], string> = {
@@ -22,7 +27,19 @@ const statusLabels: Record<MapPlaceView["status"], string> = {
   visited: "방문"
 };
 
-export function MapPlaceSheet({ place, onClose, returnFocusTo }: MapPlaceSheetProps) {
+export function MapPlaceSheet({
+  controller,
+  onClose,
+  onEdit,
+  place,
+  returnFocusTo,
+  viewerMemberId
+}: MapPlaceSheetProps) {
+  const voteTotals = {
+    must: place.votes.filter((vote) => vote.choice === "must").length,
+    okay: place.votes.filter((vote) => vote.choice === "okay").length,
+    skip: place.votes.filter((vote) => vote.choice === "skip").length
+  };
   return (
     <BottomSheet ariaLabel="장소 상세" onClose={onClose} returnFocusTo={returnFocusTo}>
       <div className="map-place-sheet">
@@ -31,12 +48,16 @@ export function MapPlaceSheet({ place, onClose, returnFocusTo }: MapPlaceSheetPr
           <div><dt>분류</dt><dd>{categoryLabels[place.category]}</dd></div>
           <div><dt>상태</dt><dd>{statusLabels[place.status]}</dd></div>
           <div><dt>주소</dt><dd>{place.address}</dd></div>
+          {place.description ? <div><dt>설명</dt><dd>{place.description}</dd></div> : null}
         </dl>
+        <p>투표: 꼭 가요 {voteTotals.must} · 괜찮아요 {voteTotals.okay} · 건너뛰기 {voteTotals.skip}</p>
+        <PlaceVoteControl controller={controller} place={place} viewerMemberId={viewerMemberId} />
         {isSafeGoogleMapsUrl(place.mapUrl) ? (
           <a className="map-place-sheet__map-link" href={place.mapUrl} rel="noreferrer noopener" target="_blank">
             Google 지도 열기
           </a>
         ) : null}
+        {controller ? <button className="secondary-button" onClick={onEdit} type="button">장소 수정</button> : null}
       </div>
     </BottomSheet>
   );

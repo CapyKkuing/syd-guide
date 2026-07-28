@@ -17,6 +17,7 @@ describe("mapSnapshotToWorkspace", () => {
     expect(workspace.context.trip.phase).toBe("active");
     expect(workspace.context.localDate).toBe("2026-09-10");
     expect(workspace.context.viewer).toEqual({
+      memberId: "owner",
       displayName: "연준",
       role: "owner"
     });
@@ -63,6 +64,7 @@ describe("mapSnapshotToWorkspace", () => {
       mode: "transit"
     });
     expect(workspace.today.booking).toEqual({
+      provider: "Quay",
       place: "Quay",
       time: "20:00",
       type: "레스토랑",
@@ -96,7 +98,7 @@ describe("mapSnapshotToWorkspace", () => {
     });
   });
 
-  it("normalizes valid coordinates and keeps coordinate-less places out of markers only", () => {
+  it("keeps real coordinates and coordinate-less places in the semantic map list", () => {
     const workspace = mapSnapshotToWorkspace(
       createTripSnapshot(),
       { memberId: "owner", role: "owner" },
@@ -106,8 +108,8 @@ describe("mapSnapshotToWorkspace", () => {
     const bondi = workspace.mapPreview.places.find((place) => place.id === "place-bondi");
     const quay = workspace.mapPreview.places.find((place) => place.id === "place-dinner");
 
-    expect(opera).toMatchObject({ x: 0, y: 0 });
-    expect(bondi).toMatchObject({ x: 100, y: 70 });
-    expect(quay).toMatchObject({ x: null, y: null });
+    expect(opera).toMatchObject({ latitude: -33.8568, longitude: 151.2153 });
+    expect(bondi).toMatchObject({ latitude: -33.8915, longitude: 151.2767 });
+    expect(quay).toMatchObject({ latitude: null, longitude: null });
   });
 });
