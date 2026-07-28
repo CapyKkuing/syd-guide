@@ -9,7 +9,9 @@ import type { AppEnv } from "./env";
 import { apiError } from "./http/errors";
 import { registerPairingRoutes } from "./routes/pairing";
 import { registerSessionRoutes } from "./routes/session";
+import { registerSyncRoutes, SyncError } from "./routes/sync";
 import { registerTripRoutes, TripError } from "./routes/trips";
+import { MutationError } from "./services/mutations";
 import { PairingError } from "./services/pairing";
 
 export function createApp(overrides: Partial<AppDependencies> = {}) {
@@ -21,6 +23,7 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
   registerSessionRoutes(app, dependencies);
   registerPairingRoutes(app, dependencies);
   registerTripRoutes(app, dependencies);
+  registerSyncRoutes(app, dependencies);
   app.all("/api/*", (c) =>
     apiError(c, 404, "NOT_FOUND", "API route not found")
   );
@@ -33,6 +36,15 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
       return apiError(c, error.status, error.code, error.message);
     }
     if (error instanceof TripError) {
+      return apiError(
+        c,
+        error.status,
+        error.code,
+        error.message,
+        error.details
+      );
+    }
+    if (error instanceof MutationError || error instanceof SyncError) {
       return apiError(
         c,
         error.status,
