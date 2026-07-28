@@ -1,5 +1,7 @@
 # Trip Control UI Task 4.5 Implementation Plan
 
+> **2026-07-28 상태: 완료 (`c47f67f`).** 아래 미체크 항목은 승인 당시 실행 명세를 보존한 것이며 재실행 대상이 아니다. 현재 후속 작업은 `2026-07-28-couple-travel-guide-continuation.md`를 따른다.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 기존 Task 1~4의 인증·기기 연결 기능을 보존하면서 `둘만의 여행 가이드북`을 승인된 Trip Control 디자인의 여행 서재와 여행 내부 4개 화면으로 교체한다.

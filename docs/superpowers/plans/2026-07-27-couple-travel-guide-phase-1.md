@@ -1,5 +1,7 @@
 # Couple Travel Guide Phase 1 Implementation Plan
 
+> **2026-07-28 진행 상태:** Task 1~6 완료. Task 4.5 UI 재설계로 실제 화면 경로가 바뀌었으므로 아래 Task 7~13의 구현 경로는 실행하지 말고 `2026-07-28-couple-travel-guide-continuation.md`를 기준으로 이어서 작업한다.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 기존 시드니 정적 가이드를 보존하면서 두 사람이 설치·공동 편집·오프라인 동기화할 수 있는 Cloudflare 무료 구성의 여행 PWA를 만든다.
@@ -1270,7 +1272,7 @@ git commit -m "feat: add one-time device pairing"
 - Consumes: `Principal`, `trips`, `trip_members`
 - Produces: `GET /api/trips?view=active|trash`, `POST /api/trips`, `PATCH/DELETE /api/trips/:id`, `POST /api/trips/:id/restore`, scheduled purge
 
-- [ ] **Step 1: 역할·삭제·복구 test 작성**
+- [x] **Step 1: 역할·삭제·복구 test 작성**
 
 ```ts
 it.each(["owner", "partner"] as const)(
@@ -1293,7 +1295,7 @@ Run: `npm run test:worker -- test/worker/trips.test.ts`
 
 Expected: FAIL because trip repository is absent.
 
-- [ ] **Step 2: trip API 구현**
+- [x] **Step 2: trip API 구현**
 
 Create payload:
 
@@ -1348,11 +1350,11 @@ export default {
 } satisfies ExportedHandler<Env>;
 ```
 
-- [ ] **Step 3: 여행 서재 UI 구현**
+- [x] **Step 3: 여행 서재 UI 구현**
 
 서재는 예정·여행 중·완료 group, 수정 시간 정렬, 빈 상태, 생성 form을 제공한다. form의 destination 선택은 대표 IANA 시간대를 함께 채우고 사용자가 바꿀 수 있게 한다. 휴지통은 남은 일수와 자동 삭제 날짜를 표시하고 복구 버튼을 제공한다. delete 클릭은 여행 제목을 포함한 확인 dialog를 거친다.
 
-- [ ] **Step 4: trip 검증**
+- [x] **Step 4: trip 검증**
 
 Run:
 
@@ -1365,7 +1367,7 @@ npm run lint
 
 Expected: 두 role CRUD, 30일 경계, membership 거부, UI dialog가 모두 PASS.
 
-- [ ] **Step 5: Task 검증 통과 후 자동 checkpoint commit**
+- [x] **Step 5: Task 검증 통과 후 자동 checkpoint commit**
 
 ```bash
 git add worker/db/trips.ts worker/routes/trips.ts worker/services/purge.ts worker/app.ts worker/index.ts src/features/trips src/app/router.tsx test/worker/trips.test.ts
@@ -1391,7 +1393,7 @@ git commit -m "feat: add shared trip library"
 - Consumes: `TripSnapshot`, `MutationRequest`, 모든 mutable table
 - Produces: `GET /api/trips/:id/snapshot`, `POST /api/trips/:id/mutations`, `ApiClient`
 
-- [ ] **Step 1: 멱등성과 충돌 test 작성**
+- [x] **Step 1: 멱등성과 충돌 test 작성**
 
 ```ts
 it("returns the first result for a repeated idempotency key", async () => {
@@ -1421,7 +1423,7 @@ Run: `npm run test:worker -- test/worker/sync.test.ts`
 
 Expected: FAIL because sync routes do not exist.
 
-- [ ] **Step 2: entity registry와 Zod union 구현**
+- [x] **Step 2: entity registry와 Zod union 구현**
 
 `src/shared/mutations.ts`는 다음 `MutationPayloadMap`을 먼저 선언하고, Shared Interfaces의 `MutationRequest`, `MutationSuccess`, `VersionConflict`를 그 아래에 선언한다.
 
@@ -1513,7 +1515,7 @@ export interface MutationPayloadMap {
 - 날짜·시간: timezone offset가 포함된 ISO 8601
 - personal check의 `ownerMemberId`와 personal note의 `authorMemberId`: client 값을 버리고 principal member ID 사용
 
-- [ ] **Step 3: snapshot과 mutation service 구현**
+- [x] **Step 3: snapshot과 mutation service 구현**
 
 Snapshot 응답 ETag는 `"trip-${trip.id}-${trip.syncVersion}"`다. 같은 `If-None-Match`면 `304`를 반환한다. 응답은 `Cache-Control: private, must-revalidate`로 두고 Activity는 최근 100건만 포함한다.
 
@@ -1532,7 +1534,7 @@ Mutation 순서:
 
 D1가 Free quota 또는 platform limit 오류를 반환하면 raw 오류 문자열을 노출하지 않고 `503 D1_UNAVAILABLE`과 `무료 한도 또는 일시적인 저장소 오류로 요청을 처리하지 못했습니다.`를 반환한다.
 
-- [ ] **Step 4: sync API 검증**
+- [x] **Step 4: sync API 검증**
 
 Run:
 
@@ -1544,7 +1546,7 @@ npm run lint
 
 Expected: 304, 멱등 재전송, stale 409, 권한 거부, activity masking이 모두 PASS.
 
-- [ ] **Step 5: Task 검증 통과 후 자동 checkpoint commit**
+- [x] **Step 5: Task 검증 통과 후 자동 checkpoint commit**
 
 ```bash
 git add worker/db/snapshot.ts worker/db/entity-registry.ts worker/services/mutations.ts worker/routes/sync.ts worker/app.ts src/shared/mutations.ts src/services/api test/worker/sync.test.ts

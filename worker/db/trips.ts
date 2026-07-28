@@ -11,7 +11,7 @@ export interface TripInput {
   coverImageUrl: string | null;
 }
 
-type TripRow = {
+export type TripRow = {
   id: string;
   title: string;
   destination: string;
@@ -52,7 +52,7 @@ export type TripMutationResult =
       current?: Trip;
     };
 
-function toTrip(row: TripRow): Trip {
+export function toTrip(row: TripRow): Trip {
   return {
     id: row.id,
     title: row.title,
@@ -71,6 +71,18 @@ function toTrip(row: TripRow): Trip {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
+}
+
+export function findTripForMemberStatement(
+  env: Env,
+  tripId: string,
+  memberId: string
+): D1PreparedStatement {
+  return env.DB.prepare(
+    `SELECT t.* FROM trips t
+     INNER JOIN trip_members tm ON tm.trip_id = t.id
+     WHERE t.id = ? AND tm.member_id = ?`
+  ).bind(tripId, memberId);
 }
 
 export async function listTripsForMember(
@@ -110,12 +122,7 @@ export async function findTripForMember(
   tripId: string,
   memberId: string
 ): Promise<Trip | null> {
-  const row = await env.DB.prepare(
-    `SELECT t.* FROM trips t
-     INNER JOIN trip_members tm ON tm.trip_id = t.id
-     WHERE t.id = ? AND tm.member_id = ?`
-  )
-    .bind(tripId, memberId)
+  const row = await findTripForMemberStatement(env, tripId, memberId)
     .first<TripRow>();
   return row ? toTrip(row) : null;
 }
