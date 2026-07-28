@@ -35,6 +35,10 @@ export interface TripContextViewModel {
 
 export interface ScheduleItemView {
   id: string;
+  version: number;
+  tripDayId: string;
+  placeId: string | null;
+  bookingId: string | null;
   startsAt: string;
   endsAt: string | null;
   title: string;
@@ -44,11 +48,15 @@ export interface ScheduleItemView {
   travelMode: "walk" | "transit" | "drive" | "ferry" | null;
   travelNote: string | null;
   bookingStatus: "confirmed" | "pending" | null;
+  position: number;
+  isFixed: boolean;
   isDone: boolean;
   mapUrl: string | null;
 }
 
 export interface ScheduleDayView {
+  id: string;
+  position: number;
   date: string;
   dayLabel: string;
   headline: string;
@@ -102,8 +110,8 @@ export interface MapPlaceView {
   category: "restaurant" | "cafe" | "attraction" | "lodging" | "transport";
   status: "saved" | "maybe" | "visited";
   dayDate: string;
-  x: number;
-  y: number;
+  x: number | null;
+  y: number | null;
   address: string;
   mapUrl: string | null;
 }
@@ -155,3 +163,14 @@ export interface TravelGuideDataSource {
   // eslint-disable-next-line no-unused-vars
   getTools(tripId: string): Promise<ToolsViewModel | null>;
 }
+
+export interface MutableTravelGuideDataSource extends TravelGuideDataSource {
+  // eslint-disable-next-line no-unused-vars
+  invalidateTrip(tripId: string): void;
+}
+
+export type TripWorkspaceResource =
+  | { status: "loading"; reload: () => void }
+  | { status: "ready"; data: TripWorkspace; reload: () => void }
+  | { status: "empty"; retry: () => void; reload: () => void }
+  | { status: "error"; message: string; retry: () => void; reload: () => void };

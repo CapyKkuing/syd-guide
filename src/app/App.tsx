@@ -8,6 +8,8 @@ import {
 import { StatusPanel } from "../components/StatusPanel";
 import type { TravelGuideDataSource } from "../data/contracts";
 import { fixtureTravelGuideDataSource } from "../data/fixture/fixtureDataSource";
+import { SnapshotTravelGuideDataSource } from "../data/api/snapshotDataSource";
+import { getPrincipal } from "../features/auth/api";
 import { LibraryShell } from "../layouts/LibraryShell";
 import { LibraryPage } from "../pages/library/LibraryPage";
 import { navigateToLibrary, useRoute } from "./router";
@@ -15,12 +17,18 @@ import { ThemeProvider } from "./theme/ThemeProvider";
 import { TripRoutePage } from "./TripRoutePage";
 import { TripSwitcherFocusProvider } from "./TripSwitcherFocus";
 import { useEffect, useMemo } from "react";
+import { apiClient } from "../services/api/client";
 
 interface AppProps {
   pairToken?: string | null;
   dataSource?: TravelGuideDataSource;
   tripLibraryClient?: TripLibraryClient;
 }
+
+const snapshotTravelGuideDataSource = new SnapshotTravelGuideDataSource(
+  apiClient,
+  getPrincipal
+);
 
 function RootRedirect() {
   useEffect(() => navigateToLibrary(), []);
@@ -48,7 +56,13 @@ function AppContent({
   dataSource: suppliedDataSource,
   tripLibraryClient
 }: AppProps) {
-  const dataSource = suppliedDataSource ?? fixtureTravelGuideDataSource;
+  const isFixturePreview =
+    suppliedDataSource !== undefined || import.meta.env.MODE === "github-pages";
+  const dataSource = suppliedDataSource ?? (
+    isFixturePreview
+      ? fixtureTravelGuideDataSource
+      : snapshotTravelGuideDataSource
+  );
   const libraryClient = useMemo(() => {
     if (tripLibraryClient) return tripLibraryClient;
     if (suppliedDataSource || import.meta.env.MODE === "github-pages") {
@@ -71,7 +85,14 @@ function AppContent({
     );
   }
   if (route.name === "trip") {
-    return <TripRoutePage dataSource={dataSource} tripId={route.tripId} activeTab={route.tab} />;
+    return (
+      <TripRoutePage
+        dataSource={dataSource}
+        mutationTransport={isFixturePreview ? undefined : apiClient}
+        tripId={route.tripId}
+        activeTab={route.tab}
+      />
+    );
   }
 
   return (

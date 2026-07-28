@@ -78,6 +78,25 @@ describe("MapPage", () => {
     expect(screen.getByText("4개 장소")).toBeVisible();
   });
 
+  it("keeps a coordinate-less place in the list without inventing a marker", async () => {
+    const { places, days } = await getMapFixtures();
+    const firstPlace = places.at(0);
+    if (!firstPlace) throw new Error("fixture place missing");
+    const coordinateLess: MapPlaceView = {
+      ...firstPlace,
+      id: "coordinate-less",
+      name: "좌표 없는 장소",
+      x: null,
+      y: null
+    };
+
+    render(<MapPage places={[coordinateLess]} days={days} />);
+
+    expect(screen.getByRole("button", { name: /좌표 없는 장소, 숙소, 방문/ })).toBeVisible();
+    expect(screen.queryByRole("button", { name: "좌표 없는 장소 상세 보기" }))
+      .not.toBeInTheDocument();
+  });
+
   it("resets an empty filtered result", async () => {
     const user = userEvent.setup();
     const { places, days } = await getMapFixtures();

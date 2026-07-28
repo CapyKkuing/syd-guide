@@ -1,6 +1,8 @@
 import { useState } from "react";
 import type { ScheduleDayView, ScheduleItemView } from "../../data/contracts";
 import { ScheduleDetailSheet } from "./ScheduleDetailSheet";
+import type { TripMutationController } from "../../services/mutations/controller";
+import { ScheduleEditorDialog } from "./ScheduleEditorDialog";
 
 const kindLabels: Record<ScheduleItemView["kind"], string> = {
   movement: "이동",
@@ -14,10 +16,23 @@ function timeOf(value: string): string {
   return value.slice(11, 16);
 }
 
-export function SchedulePage({ days }: { days: ScheduleDayView[] }) {
+export interface SchedulePageProps {
+  tripId?: string;
+  timeZone?: string;
+  days: ScheduleDayView[];
+  mutationController?: TripMutationController;
+}
+
+export function SchedulePage({
+  days,
+  tripId = "preview",
+  timeZone = "UTC",
+  mutationController
+}: SchedulePageProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [selectedItem, setSelectedItem] = useState<ScheduleItemView | null>(null);
   const [returnFocusTo, setReturnFocusTo] = useState<HTMLElement | null>(null);
+  const [editorItem, setEditorItem] = useState<ScheduleItemView | null | undefined>(undefined);
   const day = days[selectedIndex] ?? null;
 
   if (!day) {
@@ -28,8 +43,21 @@ export function SchedulePage({ days }: { days: ScheduleDayView[] }) {
   const nextItemId = items.find((item) => !item.isDone)?.id;
 
   return (
-    <section className="schedule-page" aria-labelledby="schedule-title">
-      <h1 id="schedule-title">일정</h1>
+    <section className="schedule-page" aria-labelledby="schedule-title" data-trip-id={tripId}>
+      <header className="schedule-page__header">
+        <h1 id="schedule-title">일정</h1>
+        <button
+          className="primary-button"
+          disabled={!mutationController}
+          onClick={() => setEditorItem(null)}
+          type="button"
+        >
+          일정 추가
+        </button>
+      </header>
+      {!mutationController ? (
+        <p className="schedule-readonly">미리보기에서는 일정을 편집할 수 없습니다.</p>
+      ) : null}
       <div aria-label="날짜 선택" className="schedule-day-selector">
         {days.map((candidate, index) => (
           <button
@@ -79,7 +107,20 @@ export function SchedulePage({ days }: { days: ScheduleDayView[] }) {
         <ScheduleDetailSheet
           item={selectedItem}
           onClose={() => setSelectedItem(null)}
+          onEdit={mutationController ? () => {
+            setEditorItem(selectedItem);
+            setSelectedItem(null);
+          } : undefined}
           returnFocusTo={returnFocusTo}
+        />
+      ) : null}
+      {editorItem !== undefined && mutationController ? (
+        <ScheduleEditorDialog
+          day={day}
+          item={editorItem}
+          mutationController={mutationController}
+          onClose={() => setEditorItem(undefined)}
+          timeZone={timeZone}
         />
       ) : null}
     </section>

@@ -1,7 +1,8 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ScheduleDayView } from "../../data/contracts";
+import type { TripMutationController } from "../../services/mutations/controller";
 import { createSampleDataSource } from "../../test/travelSamples";
 import { SchedulePage } from "./SchedulePage";
 
@@ -19,6 +20,20 @@ afterEach(() => {
 });
 
 describe("SchedulePage", () => {
+  it("keeps fixture preview read-only with a visible reason", async () => {
+    const days = await getScheduleDays();
+    render(
+      <SchedulePage
+        days={days}
+        tripId="sydney-2026"
+        timeZone="Australia/Sydney"
+      />
+    );
+
+    expect(screen.getByRole("button", { name: "일정 추가" })).toBeDisabled();
+    expect(screen.getByText("미리보기에서는 일정을 편집할 수 없습니다.")).toBeVisible();
+  });
+
   it("switches fixture schedule dates and announces the selected summary", async () => {
     const days = await getScheduleDays();
     render(<SchedulePage days={days} />);
@@ -119,5 +134,54 @@ describe("SchedulePage", () => {
     await userEvent.click(screen.getByRole("button", { name: /호텔 체크인/ }));
     expect(within(screen.getByRole("dialog", { name: "일정 상세" }))
       .queryByRole("link", { name: "지도에서 열기" })).not.toBeInTheDocument();
+  });
+
+  it("opens the editor for the selected item and submits its current version", async () => {
+    const days = await getScheduleDays();
+    const selected = days[1]!.items[0]!;
+    const editableDays: ScheduleDayView[] = days.map((day, dayIndex) => ({
+      ...day,
+      id: `day-${dayIndex + 1}`,
+      position: dayIndex + 1,
+      items: day.items.map((item, itemIndex) => ({
+        ...item,
+        version: itemIndex + 1,
+        tripDayId: `day-${dayIndex + 1}`,
+        placeId: null,
+        bookingId: null,
+        position: itemIndex + 1,
+        isFixed: false
+      }))
+    }));
+    const submit = vi.fn().mockResolvedValue({
+      entity: "schedule_item",
+      entityId: selected.id,
+      version: 2,
+      syncVersion: 8
+    });
+    const mutationController: TripMutationController = { submit };
+    render(
+      <SchedulePage
+        days={editableDays}
+        tripId="sydney-2026"
+        timeZone="Australia/Sydney"
+        mutationController={mutationController}
+      />
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: /DAY 02/ }));
+    await userEvent.click(screen.getByRole("button", { name: /오페라 하우스 가이드 투어/ }));
+    await userEvent.click(screen.getByRole("button", { name: "일정 수정" }));
+    await userEvent.clear(screen.getByLabelText("일정 제목"));
+    await userEvent.type(screen.getByLabelText("일정 제목"), "오페라 하우스 투어");
+    await userEvent.click(screen.getByRole("button", { name: "저장" }));
+
+    expect(submit).toHaveBeenCalledWith(
+      "schedule_item",
+      "update",
+      selected.id,
+      1,
+      expect.objectContaining({ title: "오페라 하우스 투어" })
+    );
   });
 });

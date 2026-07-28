@@ -20,7 +20,14 @@ function TripResourceProbe({
   tripId: string;
 }) {
   const result = useTripWorkspace(dataSource, tripId);
-  if (result.status === "ready") return <span>{`ready:${result.data.context.trip.id}`}</span>;
+  if (result.status === "ready") {
+    return (
+      <>
+        <span>{`ready:${result.data.context.trip.id}`}</span>
+        <button onClick={result.reload}>reload</button>
+      </>
+    );
+  }
   if (result.status === "error" || result.status === "empty") {
     return <button onClick={result.retry}>{result.status}</button>;
   }
@@ -157,6 +164,21 @@ describe("travel data resources", () => {
 
     expect(await screen.findByText("ready:sydney-2026")).toBeVisible();
     expect(getToday).toHaveBeenCalledTimes(2);
+  });
+
+  it("invalidates a mutable source and reloads the same workspace", async () => {
+    const fixture = new FixtureTravelGuideDataSource(
+      () => new Date("2026-07-28T00:00:00.000Z")
+    );
+    const invalidateTrip = vi.fn();
+    const dataSource = Object.assign(fixture, { invalidateTrip });
+    render(<TripResourceProbe dataSource={dataSource} tripId="sydney-2026" />);
+
+    await screen.findByText("ready:sydney-2026");
+    await act(async () => screen.getByRole("button", { name: "reload" }).click());
+
+    expect(invalidateTrip).toHaveBeenCalledWith("sydney-2026");
+    expect(await screen.findByText("ready:sydney-2026")).toBeVisible();
   });
 
   it("keeps the newer trip ready when a prior tripId request settles late", async () => {

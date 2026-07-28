@@ -5,22 +5,42 @@ import { StatusPanel } from "../components/StatusPanel";
 import { navigateToLibrary, type TripTab } from "./router";
 import { useTripSwitcherFocus } from "./TripSwitcherFocus";
 import { useEffect } from "react";
+import { useMemo } from "react";
 import { TodayPage } from "../pages/today/TodayPage";
 import { SchedulePage } from "../pages/schedule/SchedulePage";
 import { MapPage } from "../pages/map/MapPage";
 import { ToolsPage } from "../pages/tools/ToolsPage";
 import { PairingManager } from "../features/auth/PairingManager";
+import type { MutableTravelGuideDataSource } from "../data/contracts";
+import {
+  createTripMutationController,
+  type MutationTransport
+} from "../services/mutations/controller";
 
 export function TripRoutePage({
   dataSource,
+  mutationTransport,
   tripId,
   activeTab
 }: {
   dataSource: TravelGuideDataSource;
+  mutationTransport?: MutationTransport;
   tripId: string;
   activeTab: TripTab;
 }) {
   const workspace = useTripWorkspace(dataSource, tripId);
+  const mutableDataSource = isMutableDataSource(dataSource) ? dataSource : null;
+  const mutationController = useMemo(
+    () => mutableDataSource && mutationTransport
+      ? createTripMutationController({
+        tripId,
+        transport: mutationTransport,
+        dataSource: mutableDataSource,
+        reload: workspace.reload
+      })
+      : undefined,
+    [mutableDataSource, mutationTransport, tripId, workspace.reload]
+  );
   const { intentTripId, clearFocusRestoration } = useTripSwitcherFocus();
 
   useEffect(() => {
@@ -50,10 +70,22 @@ export function TripRoutePage({
       ) : activeTab === "map" ? (
         <MapPage days={workspace.data.schedule.days} places={workspace.data.mapPreview.places} />
       ) : activeTab === "schedule" ? (
-        <SchedulePage days={workspace.data.schedule.days} />
+        <SchedulePage
+          days={workspace.data.schedule.days}
+          mutationController={mutationController}
+          timeZone={workspace.data.context.trip.timeZone}
+          tripId={tripId}
+        />
       ) : (
         <ToolsPage tools={workspace.data.tools} deviceManagement={<PairingManager />} />
       )}
     </TripShell>
   );
+}
+
+function isMutableDataSource(
+  dataSource: TravelGuideDataSource
+): dataSource is MutableTravelGuideDataSource {
+  return "invalidateTrip" in dataSource
+    && typeof dataSource.invalidateTrip === "function";
 }

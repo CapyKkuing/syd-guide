@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import type {
+  MutableTravelGuideDataSource,
   TravelGuideDataSource,
   TripSummaryViewModel,
-  TripWorkspace
+  TripWorkspace,
+  TripWorkspaceResource
 } from "./contracts";
 
 export type Loadable<T> =
@@ -56,14 +58,15 @@ export function useTravelLibrary(
 export function useTripWorkspace(
   dataSource: TravelGuideDataSource,
   tripId: string
-): Loadable<TripWorkspace> {
+): TripWorkspaceResource {
   const [retryGeneration, setRetryGeneration] = useState(0);
   const [resource, setResource] = useState(() => ({
     dataSource,
     tripId,
     value: { status: "loading" } as Loadable<TripWorkspace>
   }));
-  const retry = useCallback(() => {
+  const reload = useCallback(() => {
+    if (isMutableDataSource(dataSource)) dataSource.invalidateTrip(tripId);
     setResource({ dataSource, tripId, value: { status: "loading" } });
     setRetryGeneration((generation) => generation + 1);
   }, [dataSource, tripId]);
@@ -80,7 +83,7 @@ export function useTripWorkspace(
       .then(([context, today, schedule, mapPreview, tools]) => {
         if (cancelled) return;
         if (!context || !today || !schedule || !mapPreview || !tools) {
-          setResource({ dataSource, tripId, value: { status: "empty", retry } });
+          setResource({ dataSource, tripId, value: { status: "empty", retry: reload } });
           return;
         }
         setResource({
@@ -91,16 +94,24 @@ export function useTripWorkspace(
       })
       .catch((error: unknown) => {
         if (!cancelled) {
-          setResource({ dataSource, tripId, value: { status: "error", message: errorMessage(error), retry } });
+          setResource({ dataSource, tripId, value: { status: "error", message: errorMessage(error), retry: reload } });
         }
       });
 
     return () => {
       cancelled = true;
     };
-  }, [dataSource, retry, retryGeneration, tripId]);
+  }, [dataSource, reload, retryGeneration, tripId]);
 
-  return resource.dataSource === dataSource && resource.tripId === tripId
+  const value = resource.dataSource === dataSource && resource.tripId === tripId
     ? resource.value
     : { status: "loading" };
+  return { ...value, reload } as TripWorkspaceResource;
+}
+
+function isMutableDataSource(
+  dataSource: TravelGuideDataSource
+): dataSource is MutableTravelGuideDataSource {
+  return "invalidateTrip" in dataSource
+    && typeof dataSource.invalidateTrip === "function";
 }

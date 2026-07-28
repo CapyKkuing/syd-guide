@@ -13,6 +13,19 @@ export interface SnapshotResult {
 
 type Fetcher = typeof fetch;
 
+function requestHeaders(baseUrl: string, json = false): Headers {
+  const headers = new Headers();
+  if (json) headers.set("Content-Type", "application/json");
+  const hostname = new URL(baseUrl).hostname;
+  if (hostname === "localhost" || hostname === "127.0.0.1") {
+    const principal = localStorage.getItem("couple_dev_principal") === "partner"
+      ? "partner"
+      : "owner";
+    headers.set("X-Dev-Principal", principal);
+  }
+  return headers;
+}
+
 export class ApiClient {
   private readonly fetcher: Fetcher;
   private readonly baseUrl: string;
@@ -21,7 +34,7 @@ export class ApiClient {
     fetcher: Fetcher = fetch,
     baseUrl = window.location.origin
   ) {
-    this.fetcher = fetcher;
+    this.fetcher = fetcher.bind(globalThis);
     this.baseUrl = baseUrl;
   }
 
@@ -33,7 +46,7 @@ export class ApiClient {
     tripId: string,
     etag?: string
   ): Promise<SnapshotResult> {
-    const headers = new Headers();
+    const headers = requestHeaders(this.baseUrl);
     if (etag) headers.set("If-None-Match", etag);
     const response = await this.fetcher(
       this.url(`/api/trips/${encodeURIComponent(tripId)}/snapshot`),
@@ -63,7 +76,7 @@ export class ApiClient {
       {
         method: "POST",
         credentials: "same-origin",
-        headers: { "Content-Type": "application/json" },
+        headers: requestHeaders(this.baseUrl, true),
         body: JSON.stringify(mutation),
       }
     );

@@ -41,8 +41,8 @@ function bounded(value: number, maximum: number): number {
 
 function markerStyle(place: MapPlaceView): CSSProperties {
   return {
-    left: `${bounded(place.x, 100)}%`,
-    top: `${bounded(place.y, 70) / 0.7}%`
+    left: `${bounded(place.x ?? 0, 100)}%`,
+    top: `${bounded(place.y ?? 0, 70) / 0.7}%`
   };
 }
 
@@ -69,6 +69,9 @@ export function MapPage({ places, days }: { places: MapPlaceView[]; days: Schedu
   }, [category, dayDate, places, search, status]);
 
   const dates = Array.from(new Set(days.map((day) => day.date)));
+  const markerPlaces = filteredPlaces.filter(
+    (place) => place.x !== null && place.y !== null
+  );
   const resetFilters = () => {
     setSearch("");
     setDayDate("all");
@@ -116,9 +119,9 @@ export function MapPage({ places, days }: { places: MapPlaceView[]; days: Schedu
           <svg aria-label="선택한 장소의 정적 경로 미리보기" preserveAspectRatio="none" role="img" viewBox="0 0 100 70">
             <title>선택한 장소의 정적 경로 미리보기</title>
             <path className="map-preview__grid" d="M0 14H100M0 28H100M0 42H100M0 56H100M20 0V70M40 0V70M60 0V70M80 0V70" />
-            {filteredPlaces.length > 1 ? <polyline className="map-preview__route" points={filteredPlaces.map((place) => `${bounded(place.x, 100)},${bounded(place.y, 70)}`).join(" ")} /> : null}
+            {markerPlaces.length > 1 ? <polyline className="map-preview__route" points={markerPlaces.map((place) => `${bounded(place.x ?? 0, 100)},${bounded(place.y ?? 0, 70)}`).join(" ")} /> : null}
           </svg>
-          {filteredPlaces.map((place) => (
+          {markerPlaces.map((place) => (
             <button aria-describedby={markerDescriptionId(place.id)} aria-label={`${place.name} 상세 보기`} className="map-marker" key={place.id} onClick={(event) => openPlace(place, event.currentTarget)} style={markerStyle(place)} type="button">
               <span aria-hidden="true">{place.name.slice(0, 1)}</span>
               <span className="map-marker__description" id={markerDescriptionId(place.id)}>{categoryLabels[place.category]} · {statusLabels[place.status]} · {place.address}</span>

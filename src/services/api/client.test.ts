@@ -22,6 +22,48 @@ function captured(value: Request | null): Request {
 }
 
 describe("ApiClient", () => {
+  it("calls a browser fetcher with the global receiver", async () => {
+    let receiver: unknown;
+    const receiverAwareFetcher = {
+      fetch() {
+        receiver = this;
+        return Promise.resolve(Response.json({}));
+      },
+    };
+    const client = new ApiClient(
+      receiverAwareFetcher.fetch,
+      "http://localhost"
+    );
+
+    await client.getTripSnapshot("trip-one");
+
+    expect(receiver).toBe(globalThis);
+  });
+
+  it("sends the selected local development principal to snapshot and mutation requests", async () => {
+    window.localStorage.setItem("couple_dev_principal", "partner");
+    const received: Request[] = [];
+    const client = new ApiClient(async (input, init) => {
+      received.push(new Request(input, init));
+      if (String(input).endsWith("/snapshot")) {
+        return Response.json({});
+      }
+      return Response.json({
+        entity: "vote",
+        entityId: "vote-one",
+        version: 1,
+        syncVersion: 8
+      });
+    }, "http://localhost");
+
+    await client.getTripSnapshot("trip-one");
+    await client.mutate("trip-one", mutation);
+
+    expect(received.map((request) => request.headers.get("X-Dev-Principal")))
+      .toEqual(["partner", "partner"]);
+    window.localStorage.removeItem("couple_dev_principal");
+  });
+
   it("returns a typed not-modified snapshot result and sends its ETag", async () => {
     let received: Request | null = null;
     const client = new ApiClient(

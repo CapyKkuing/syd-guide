@@ -186,4 +186,41 @@ describe("TripRoutePage", () => {
     expect(await screen.findByRole("heading", { name: "도착 후 하버 산책" })).toBeVisible();
     expect(screen.getByRole("button", { name: /호텔 체크인/ })).toBeVisible();
   });
+
+  it("reloads Today and Schedule together after a live schedule mutation", async () => {
+    const getToday = vi.fn(fixture.getToday.bind(fixture));
+    const getSchedule = vi.fn(fixture.getSchedule.bind(fixture));
+    const invalidateTrip = vi.fn();
+    const dataSource = {
+      ...sourceWith({ getToday, getSchedule }),
+      invalidateTrip
+    };
+    const mutationTransport = {
+      mutate: vi.fn().mockResolvedValue({
+        entity: "schedule_item",
+        entityId: "schedule-new",
+        version: 1,
+        syncVersion: 8
+      })
+    };
+    render(
+      <ThemeProvider>
+        <TripRoutePage
+          activeTab="schedule"
+          dataSource={dataSource}
+          mutationTransport={mutationTransport}
+          tripId="sydney-2026"
+        />
+      </ThemeProvider>
+    );
+
+    await userEvent.click(await screen.findByRole("button", { name: "일정 추가" }));
+    await userEvent.type(screen.getByLabelText("일정 제목"), "새 일정");
+    await userEvent.type(screen.getByLabelText("시작 시간"), "18:00");
+    await userEvent.click(screen.getByRole("button", { name: "저장" }));
+
+    await waitFor(() => expect(getToday).toHaveBeenCalledTimes(2));
+    expect(getSchedule).toHaveBeenCalledTimes(2);
+    expect(invalidateTrip).toHaveBeenCalledWith("sydney-2026");
+  });
 });

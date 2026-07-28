@@ -6,6 +6,7 @@ export interface ScheduleDetailSheetProps {
   item: ScheduleItemView;
   onClose: () => void;
   returnFocusTo: HTMLElement | null;
+  onEdit?: () => void;
 }
 
 const kindLabels: Record<ScheduleItemView["kind"], string> = {
@@ -42,7 +43,7 @@ function bookingDetail(item: ScheduleItemView): string {
   return "예약 정보 없음";
 }
 
-export function ScheduleDetailSheet({ item, onClose, returnFocusTo }: ScheduleDetailSheetProps) {
+export function ScheduleDetailSheet({ item, onClose, onEdit, returnFocusTo }: ScheduleDetailSheetProps) {
   return (
     <BottomSheet ariaLabel="일정 상세" onClose={onClose} returnFocusTo={returnFocusTo}>
       <div className="schedule-detail">
@@ -74,6 +75,11 @@ export function ScheduleDetailSheet({ item, onClose, returnFocusTo }: ScheduleDe
           <a className="schedule-detail__map-link" href={item.mapUrl} rel="noreferrer noopener" target="_blank">
             지도에서 열기
           </a>
+        ) : null}
+        {onEdit ? (
+          <button className="secondary-button" onClick={onEdit} type="button">
+            일정 수정
+          </button>
         ) : null}
       </div>
     </BottomSheet>

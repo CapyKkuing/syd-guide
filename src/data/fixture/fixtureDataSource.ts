@@ -144,12 +144,18 @@ function makeScheduleItem(
 ): ScheduleItemView {
   return {
     id,
+    version: 1,
+    tripDayId: `preview-${date}`,
+    placeId: null,
+    bookingId: null,
     startsAt: `${date}T${startsAt}:00`,
     endsAt: endsAt ? `${date}T${endsAt}:00` : null,
     title,
     place,
     description,
     kind,
+    position: 0,
+    isFixed: false,
     ...options
   };
 }
@@ -396,6 +402,8 @@ export class FixtureTravelGuideDataSource implements TravelGuideDataSource {
     return {
       days: [
         {
+          id: `preview-${firstDate}`,
+          position: 1,
           date: firstDate,
           dayLabel: "DAY 01",
           headline: "도착 후 하버 산책",
@@ -425,6 +433,8 @@ export class FixtureTravelGuideDataSource implements TravelGuideDataSource {
           ]
         },
         {
+          id: `preview-${secondDate}`,
+          position: 2,
           date: secondDate,
           dayLabel: "DAY 02",
           headline: "오페라 하우스와 더 록스",
@@ -454,6 +464,8 @@ export class FixtureTravelGuideDataSource implements TravelGuideDataSource {
           ]
         },
         {
+          id: `preview-${thirdDate}`,
+          position: 3,
           date: thirdDate,
           dayLabel: "DAY 03",
           headline: "카페와 본다이 해변",
