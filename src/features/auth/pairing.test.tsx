@@ -1,7 +1,7 @@
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { consumePairTokenFromUrl, usePage } from "../../app/router";
+import { consumePairTokenFromUrl, navigate, useRoute } from "../../app/router";
 import { DeviceList } from "./DeviceList";
 import { InvitePanel } from "./InvitePanel";
 import { PairDevicePage } from "./PairDevicePage";
@@ -11,7 +11,9 @@ const qr = vi.hoisted(() => ({ toDataURL: vi.fn() }));
 vi.mock("qrcode", () => ({ default: qr }));
 
 function RouteProbe() {
-  return <span>현재 화면: {usePage()}</span>;
+  const route = useRoute();
+  if (route.name !== "trip") return <span>{route.name}</span>;
+  return <span>{`${route.name}/${route.tripId}/${route.tab}`}</span>;
 }
 
 afterEach(() => {
@@ -67,6 +69,32 @@ describe("device pairing UI", () => {
     );
   });
 
+  it.each([
+    ["/pair?token=canonical", "/", "canonical", "/pair"],
+    ["/pair/?token=trailing", "/", "trailing", "/pair"],
+    ["/syd-guide/pair?token=based", "/syd-guide/", "based", "/syd-guide/pair"],
+    ["/syd-guide/pair/?token=based-trailing", "/syd-guide/", "based-trailing", "/syd-guide/pair"]
+  ])("consumes and scrubs a token from %s", (url, base, expectedToken, canonicalPath) => {
+    window.history.replaceState(null, "", `${url}&return=%2Flibrary#secret`);
+
+    expect(consumePairTokenFromUrl(base)).toBe(expectedToken);
+    expect(window.location.pathname).toBe(canonicalPath);
+    expect(window.location.search).toBe("");
+    expect(window.location.hash).toBe("");
+  });
+
+  it.each([
+    ["/library?token=keep-me", "/"],
+    ["/pairing?token=keep-me", "/"],
+    ["/syd-guide/library?token=keep-me", "/syd-guide/"],
+    ["/other/pair?token=keep-me", "/syd-guide/"]
+  ])("does not consume a token from non-pair path %s", (url, base) => {
+    window.history.replaceState(null, "", url);
+
+    expect(consumePairTokenFromUrl(base)).toBeNull();
+    expect(window.location.pathname + window.location.search).toBe(url);
+  });
+
   it("shows device status without rendering stored secrets", async () => {
     vi.stubGlobal(
       "fetch",
@@ -106,13 +134,10 @@ describe("device pairing UI", () => {
     expect(screen.queryByRole("button", { name: "초대 만들기" })).not.toBeInTheDocument();
   });
 
-  it("keeps hash tabs working after the pair redirect", () => {
+  it("keeps path navigation working after the pair redirect", () => {
     window.history.replaceState(null, "", "/library");
     render(<RouteProbe />);
-    act(() => {
-      window.location.hash = "#/more";
-      window.dispatchEvent(new HashChangeEvent("hashchange"));
-    });
-    expect(screen.getByText("현재 화면: more")).toBeVisible();
+    act(() => navigate("/trip/sydney-2026/tools"));
+    expect(screen.getByText("trip/sydney-2026/tools")).toBeVisible();
   });
 });

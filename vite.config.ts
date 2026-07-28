@@ -1,7 +1,29 @@
 import { cloudflare } from "@cloudflare/vite-plugin";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
+import type { Plugin } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
+
+function pagesSpaFallback(): Plugin {
+  return {
+    name: "pages-spa-fallback",
+    apply: "build",
+    generateBundle: {
+      order: "post",
+      handler(_options, bundle) {
+        const index = bundle["index.html"];
+        if (!index || index.type !== "asset") {
+          this.error("GitHub Pages fallback requires the built index.html asset");
+        }
+        this.emitFile({
+          type: "asset",
+          fileName: "404.html",
+          source: index.source
+        });
+      }
+    }
+  };
+}
 
 export default defineConfig(({ mode }) => {
   const base = mode === "github-pages" ? "/syd-guide/" : "/";
@@ -20,8 +42,8 @@ export default defineConfig(({ mode }) => {
           display: "standalone",
           start_url: base,
           scope: base,
-          background_color: "#f7f3ea",
-          theme_color: "#0b6b67",
+          background_color: "#F6F7F8",
+          theme_color: "#0C7892",
           icons: [
             {
               src: `${base}icons/icon-192.png`,
@@ -44,7 +66,8 @@ export default defineConfig(({ mode }) => {
             }
           ]
         }
-      })
+      }),
+      ...(mode === "github-pages" ? [pagesSpaFallback()] : [])
     ]
   };
 });

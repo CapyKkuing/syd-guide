@@ -1,0 +1,119 @@
+.tools-page {
+  display: grid;
+  gap: var(--space-8);
+  max-width: 980px;
+  padding-bottom: var(--space-10);
+}
+
+.tools-page__header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.tools-page__header h1,
+.tools-page__header p,
+.tools-group h2,
+.tool-card h3,
+.tool-card p {
+  margin: 0;
+}
+
+.tools-page__header h1 {
+  font-size: var(--text-3xl);
+  line-height: 1.1;
+}
+
+.tools-page__header p,
+.tool-card p {
+  color: var(--text-2);
+}
+
+.tools-page__icon {
+  width: 28px;
+  height: 28px;
+  margin-top: 6px;
+  color: var(--accent);
+}
+
+.tools-groups {
+  display: grid;
+  gap: var(--space-8);
+}
+
+.tools-group {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.tools-group h2 {
+  color: var(--text);
+  font-size: var(--text-lg);
+}
+
+.tools-group__items {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+  gap: var(--space-3);
+}
+
+.tool-card {
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+  min-height: 132px;
+  padding: var(--space-4);
+  scroll-margin-top: var(--space-6);
+  border: 1px solid var(--today-boundary);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.tool-card--management {
+  grid-column: span 1;
+  border-color: var(--today-boundary);
+}
+
+.tool-card__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.tool-card h3 {
+  font-size: var(--text-md);
+}
+
+.tool-status {
+  flex: none;
+  padding: 2px var(--space-2);
+  border: 1px solid var(--today-boundary);
+  border-radius: var(--radius-sm);
+  color: var(--text-2);
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+
+.tool-card__slot {
+  margin-top: var(--space-2);
+}
+
+.tool-card .theme-control {
+  margin-top: var(--space-2);
+}
+
+.tool-card .offline-banner {
+  position: static;
+  width: auto;
+  max-width: none;
+  margin: var(--space-2) 0 0;
+}
+
+@media (min-width: 761px) {
+  .tool-card--management:has(.pair-grid),
+  .tool-card--management:has(.admin-note) {
+    grid-column: 1 / -1;
+  }
+}

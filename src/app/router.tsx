@@ -1,51 +1,109 @@
-import { useSyncExternalStore } from "react";
+import { useMemo, useSyncExternalStore } from "react";
+import {
+  APP_BASE_URL,
+  pathForApp,
+  stripAppBase
+} from "./basePath";
 
-export type Page =
-  | "library"
-  | "today"
-  | "schedule"
-  | "places"
-  | "more"
-  | "pair";
+export type TripTab = "today" | "schedule" | "map" | "tools";
 
-function currentPage(): Page {
-  if (window.location.pathname === "/pair") return "pair";
-  const page = window.location.hash.slice(2);
+export type Route =
+  | { name: "root" }
+  | { name: "library" }
+  | { name: "trip"; tripId: string; tab: TripTab }
+  | { name: "pair" }
+  | { name: "not-found" };
 
-  switch (page) {
-    case "today":
-    case "schedule":
-    case "places":
-    case "more":
-      return page;
-    default:
-      return "library";
+export function parseRoute(pathname: string, baseUrl = APP_BASE_URL): Route {
+  const appPath = stripAppBase(pathname, baseUrl);
+  if (appPath === null) return { name: "not-found" };
+  if (appPath === "/") return { name: "root" };
+  if (/^\/library\/?$/.test(appPath)) return { name: "library" };
+  if (/^\/pair\/?$/.test(appPath)) return { name: "pair" };
+
+  const match = /^\/trip\/([^/]+)\/(today|schedule|map|tools)\/?$/.exec(appPath);
+  if (!match) return { name: "not-found" };
+
+  const encodedTripId = match[1];
+  const tab = match[2];
+  if (!encodedTripId || !tab) return { name: "not-found" };
+
+  try {
+    return {
+      name: "trip",
+      tripId: decodeURIComponent(encodedTripId),
+      tab: tab as TripTab,
+    };
+  } catch {
+    return { name: "not-found" };
   }
 }
 
-export function usePage(): Page {
-  return useSyncExternalStore<Page>(
-    (notify) => {
-      window.addEventListener("hashchange", notify);
-      window.addEventListener("popstate", notify);
-      return () => {
-        window.removeEventListener("hashchange", notify);
-        window.removeEventListener("popstate", notify);
-      };
-    },
-    currentPage,
-    () => "library"
-  );
+export function pathForLibrary(baseUrl = APP_BASE_URL): string {
+  return pathForApp("/library", baseUrl);
 }
 
-export function consumePairTokenFromUrl() {
-  if (window.location.pathname !== "/pair") return null;
+export function pathForPair(baseUrl = APP_BASE_URL): string {
+  return pathForApp("/pair", baseUrl);
+}
+
+export function pathForTrip(
+  tripId: string,
+  tab: TripTab,
+  baseUrl = APP_BASE_URL
+): string {
+  return pathForApp(`/trip/${encodeURIComponent(tripId)}/${tab}`, baseUrl);
+}
+
+function scrollToHashTarget(path: string): void {
+  const hashIndex = path.indexOf("#");
+  if (hashIndex < 0) return;
+
+  const hash = path.slice(hashIndex + 1);
+  if (!hash) return;
+
+  requestAnimationFrame(() => {
+    let id: string;
+    try {
+      id = decodeURIComponent(hash);
+    } catch {
+      return;
+    }
+    document.getElementById(id)?.scrollIntoView({ block: "start" });
+  });
+}
+
+export function navigate(path: string, replace = false, baseUrl = APP_BASE_URL): void {
+  if (!path.startsWith("/") || path.startsWith("//")) {
+    throw new TypeError("navigate requires a root-relative app path");
+  }
+  const appPath = pathForApp(path, baseUrl);
+  window.history[replace ? "replaceState" : "pushState"](null, "", appPath);
+  window.dispatchEvent(new PopStateEvent("popstate"));
+  scrollToHashTarget(appPath);
+}
+
+function subscribe(notify: () => void): () => void {
+  window.addEventListener("popstate", notify);
+  return () => window.removeEventListener("popstate", notify);
+}
+
+function getPathname(): string {
+  return window.location.pathname;
+}
+
+export function useRoute(): Route {
+  const pathname = useSyncExternalStore(subscribe, getPathname, () => "/");
+  return useMemo(() => parseRoute(pathname), [pathname]);
+}
+
+export function consumePairTokenFromUrl(baseUrl = APP_BASE_URL): string | null {
+  if (parseRoute(window.location.pathname, baseUrl).name !== "pair") return null;
   const token = new URL(window.location.href).searchParams.get("token");
-  window.history.replaceState(null, "", "/pair");
+  window.history.replaceState(null, "", pathForPair(baseUrl));
   return token;
 }
 
-export function navigateToLibrary() {
-  window.history.replaceState(null, "", "/library");
-  window.dispatchEvent(new PopStateEvent("popstate"));
+export function navigateToLibrary(): void {
+  navigate(pathForLibrary(), true);
 }

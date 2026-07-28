@@ -27,13 +27,13 @@ export function PairingManager() {
   }, []);
 
   if (!principal) {
-    return <p className="form-status" role="status">{status}</p>;
+    return <p className="form-status pairing-status" role="status">{status}</p>;
   }
   if (principal.role !== "owner") {
     return (
-      <section className="pair-card admin-note">
+      <section className="pair-card admin-note" aria-labelledby="device-management-note-title">
         <p className="eyebrow">DEVICE PRIVACY</p>
-        <h2>기기 관리는 관리자 전용</h2>
+        <h2 id="device-management-note-title">기기 관리는 관리자 전용</h2>
         <p>연결된 기기와 새 초대는 관리자 화면에서만 관리할 수 있어요.</p>
       </section>
     );

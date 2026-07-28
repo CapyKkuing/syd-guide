@@ -1,27 +1,25 @@
 .pair-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 20px;
+  gap: var(--space-4);
   max-width: 880px;
-  margin: 32px auto 0;
+  margin: var(--space-5) 0 0;
 }
 
 .pair-page {
   display: grid;
   min-height: 100vh;
-  padding: 24px;
+  padding: var(--space-6);
   place-items: center;
-  background:
-    radial-gradient(circle at 80% 15%, rgba(220, 106, 76, 0.16), transparent 22rem),
-    linear-gradient(135deg, var(--paper), var(--paper-deep));
+  background: var(--bg);
 }
 
 .pair-card {
-  padding: 24px;
-  border: 1px solid rgba(11, 107, 103, 0.2);
-  border-radius: var(--radius-md);
-  background: rgba(255, 253, 248, 0.82);
-  box-shadow: var(--shadow);
+  padding: var(--space-5);
+  border: 1px solid var(--today-boundary);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
 }
 
 .pair-card--claim {
@@ -29,58 +27,70 @@
   padding: clamp(28px, 7vw, 56px);
 }
 
+.pair-page__claim {
+  border-color: var(--today-boundary);
+}
+
+.pair-card .eyebrow {
+  margin: 0 0 var(--space-2);
+  color: var(--text-3);
+  font-size: var(--text-xs);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
 .admin-note {
   max-width: 580px;
-  margin: 32px auto 0;
+  margin: var(--space-5) 0 0;
 }
 
 .pair-card h1 {
-  font-size: clamp(2.4rem, 8vw, 4.6rem);
+  font-size: clamp(2.4rem, 8vw, 4rem);
 }
 
 .pair-card h2 {
-  margin: 0 0 10px;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 1.8rem;
-  font-weight: 500;
+  margin: 0 0 var(--space-2);
+  color: var(--text);
+  font-size: var(--text-xl);
+  font-weight: 700;
 }
 
 .pair-card > p:not(.eyebrow, .form-status) {
-  color: var(--ink-soft);
-  line-height: 1.65;
+  color: var(--text-2);
+  line-height: 1.6;
 }
 
 .pair-card form,
 .invite-result {
   display: grid;
-  gap: 14px;
-  margin-top: 22px;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
 }
 
 .invite-result img {
   width: min(240px, 100%);
   height: auto;
-  padding: 8px;
+  padding: var(--space-2);
   border-radius: var(--radius-sm);
-  background: white;
+  background: #fff;
 }
 
 .pair-card label {
   display: grid;
-  gap: 7px;
-  color: var(--ink-soft);
-  font-size: 0.82rem;
+  gap: var(--space-2);
+  color: var(--text-2);
+  font-size: var(--text-sm);
   font-weight: 700;
 }
 
 .pair-card input {
   width: 100%;
-  min-height: 46px;
-  padding: 0 13px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--white);
-  color: var(--ink);
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--today-boundary);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
   font: inherit;
 }
 
@@ -88,47 +98,42 @@
 .secondary-button,
 .text-button {
   min-height: 44px;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-weight: 750;
 }
 
 .primary-button {
-  padding: 0 18px;
-  border: 0;
-  background: var(--teal);
-  color: var(--white);
+  padding: 0 var(--space-4);
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: var(--text-on-accent);
 }
 
 .secondary-button {
-  padding: 0 18px;
-  border: 1px solid var(--teal);
-  background: transparent;
-  color: var(--teal);
+  padding: 0 var(--space-4);
+  border: 1px solid var(--today-boundary);
+  background: var(--surface);
+  color: var(--text);
 }
 
 .text-button {
-  padding: 0 12px;
-  border: 0;
-  background: transparent;
-  color: var(--coral);
-}
-
-button:disabled {
-  cursor: wait;
-  opacity: 0.58;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--today-boundary);
+  background: var(--surface);
+  color: var(--danger-text);
 }
 
 .form-status {
   margin: 14px 0 0;
-  color: var(--coral);
-  font-size: 0.88rem;
+  color: var(--danger-text);
+  font-size: var(--text-sm);
 }
 
 .device-list {
   display: grid;
-  gap: 10px;
-  margin: 20px 0 0;
+  gap: var(--space-2);
+  margin: var(--space-5) 0 0;
   padding: 0;
   list-style: none;
 }
@@ -137,23 +142,23 @@ button:disabled {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 14px 0;
-  border-top: 1px solid var(--line);
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--today-boundary);
 }
 
 .device-list div {
   display: grid;
-  gap: 3px;
+  gap: var(--space-1);
 }
 
 .device-list span {
-  color: var(--ink-soft);
-  font-size: 0.76rem;
+  color: var(--text-2);
+  font-size: var(--text-xs);
 }
 
 .revoked-label {
-  color: var(--coral) !important;
+  color: var(--danger-text) !important;
   font-weight: 750;
 }
 

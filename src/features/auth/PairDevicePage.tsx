@@ -24,7 +24,7 @@ export function PairDevicePage({ token }: { token: string | null }) {
 
   return (
     <main className="pair-page">
-      <section className="pair-card pair-card--claim" aria-labelledby="pair-title">
+      <section className="pair-card pair-card--claim pair-page__claim" aria-labelledby="pair-title">
         <p className="eyebrow">JOIN OUR JOURNEY</p>
         <h1 id="pair-title">둘만의 여행에 연결</h1>
         {!token ? (
