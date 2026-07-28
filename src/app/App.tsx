@@ -1,4 +1,10 @@
 import { PairDevicePage } from "../features/auth/PairDevicePage";
+import { PairingManager } from "../features/auth/PairingManager";
+import {
+  apiTripLibraryClient,
+  createFixturePreviewTripLibraryClient,
+  type TripLibraryClient
+} from "../features/trips/api";
 import { StatusPanel } from "../components/StatusPanel";
 import type { TravelGuideDataSource } from "../data/contracts";
 import { fixtureTravelGuideDataSource } from "../data/fixture/fixtureDataSource";
@@ -8,11 +14,12 @@ import { navigateToLibrary, useRoute } from "./router";
 import { ThemeProvider } from "./theme/ThemeProvider";
 import { TripRoutePage } from "./TripRoutePage";
 import { TripSwitcherFocusProvider } from "./TripSwitcherFocus";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 
 interface AppProps {
   pairToken?: string | null;
   dataSource?: TravelGuideDataSource;
+  tripLibraryClient?: TripLibraryClient;
 }
 
 function RootRedirect() {
@@ -38,8 +45,17 @@ export function App(props: AppProps) {
 
 function AppContent({
   pairToken = null,
-  dataSource = fixtureTravelGuideDataSource
+  dataSource: suppliedDataSource,
+  tripLibraryClient
 }: AppProps) {
+  const dataSource = suppliedDataSource ?? fixtureTravelGuideDataSource;
+  const libraryClient = useMemo(() => {
+    if (tripLibraryClient) return tripLibraryClient;
+    if (suppliedDataSource || import.meta.env.MODE === "github-pages") {
+      return createFixturePreviewTripLibraryClient(dataSource);
+    }
+    return apiTripLibraryClient;
+  }, [dataSource, suppliedDataSource, tripLibraryClient]);
   const route = useRoute();
 
   if (route.name === "root") return <RootRedirect />;
@@ -47,7 +63,10 @@ function AppContent({
   if (route.name === "library") {
     return (
       <LibraryShell>
-        <LibraryPage dataSource={dataSource} />
+        <LibraryPage
+          client={libraryClient}
+          deviceManagement={<PairingManager />}
+        />
       </LibraryShell>
     );
   }

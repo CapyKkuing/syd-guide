@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { fixtureTravelGuideDataSource } from "../data/fixture/fixtureDataSource";
+import { createFixturePreviewTripLibraryClient } from "../features/trips/api";
 import { App } from "./App";
 
 vi.mock("../features/auth/PairingManager", () => ({
@@ -20,6 +21,22 @@ describe("App routing", () => {
     expect(await screen.findByRole("heading", { name: "여행 서재" })).toBeVisible();
     expect(window.location.pathname).toBe("/library");
     expect(screen.queryByRole("navigation", { name: "여행 메뉴" })).not.toBeInTheDocument();
+  });
+
+  it("opens account device management directly from the library", async () => {
+    window.history.replaceState(null, "", "/library");
+    const preview = createFixturePreviewTripLibraryClient(fixtureTravelGuideDataSource);
+    render(
+      <App
+        tripLibraryClient={{ ...preview, readOnlyReason: undefined }}
+      />
+    );
+
+    await userEvent.click(await screen.findByRole("button", { name: "연결 기기" }));
+
+    expect(screen.getByRole("dialog", { name: "연결 기기 관리" }))
+      .toHaveTextContent("기기 관리 테스트");
+    expect(window.location.pathname).toBe("/library");
   });
 
   it("renders all four trip routes in the TripShell", async () => {
@@ -45,6 +62,8 @@ describe("App routing", () => {
     render(<App dataSource={fixtureTravelGuideDataSource} />);
 
     expect(await screen.findByText("여행을 찾을 수 없습니다")).toBeVisible();
+    expect(screen.getByText(/새 여행의 내부 데이터는 다음 단계에서 연결됩니다/))
+      .toBeVisible();
     expect(screen.getByRole("button", { name: "여행 서재로 이동" })).toBeVisible();
   });
 

@@ -1,11 +1,19 @@
-import { useState } from "react";
-import { pathForTrip } from "../../app/router";
-import { AppLink } from "../../components/AppLink";
+import { useState, type ReactNode } from "react";
 import { StatusPanel } from "../../components/StatusPanel";
-import type { TravelGuideDataSource, TripPhase, TripSummaryViewModel } from "../../data/contracts";
-import { useTravelLibrary } from "../../data/useTravelData";
+import {
+  ApiRequestError,
+  type TripLibraryClient
+} from "../../features/trips/api";
+import {
+  LibraryDialogs,
+  type LibraryDialogState
+} from "../../features/trips/LibraryDialogs";
+import { LibrarySkeleton } from "../../features/trips/LibrarySkeleton";
+import { TripCard } from "../../features/trips/TripCard";
+import { useTripLibrary } from "../../features/trips/useTripLibrary";
+import type { TripStatus } from "../../shared/entities";
 
-type LibraryFilter = "all" | TripPhase;
+type LibraryFilter = "all" | TripStatus;
 
 const filters: Array<{ value: LibraryFilter; label: string }> = [
   { value: "all", label: "전체" },
@@ -14,98 +22,102 @@ const filters: Array<{ value: LibraryFilter; label: string }> = [
   { value: "completed", label: "완료" }
 ];
 
-const phaseLabels: Record<TripPhase, string> = {
-  upcoming: "예정",
-  active: "여행 중",
-  completed: "완료"
-};
+const groups: Array<{ status: TripStatus; label: string; regionLabel: string }> = [
+  { status: "active", label: "여행 중", regionLabel: "여행 중 여행" },
+  { status: "upcoming", label: "예정", regionLabel: "예정 여행" },
+  { status: "completed", label: "완료", regionLabel: "완료 여행" }
+];
 
-function formatDateRange(startDate: string, endDate: string): string {
-  const formatter = new Intl.DateTimeFormat("ko-KR", { month: "long", day: "numeric" });
-  return `${formatter.format(new Date(`${startDate}T12:00:00`))} ~ ${formatter.format(
-    new Date(`${endDate}T12:00:00`)
-  )}`;
+function sessionRecovery(error: ApiRequestError) {
+  const partnerCodes = new Set([
+    "SESSION_REQUIRED",
+    "SESSION_EXPIRED",
+    "SESSION_REVOKED"
+  ]);
+  if (partnerCodes.has(error.code)) {
+    return {
+      title: "기기 연결이 필요합니다",
+      description: "관리자에게 새 연결 링크를 요청해 이 기기를 다시 연결해 주세요."
+    };
+  }
+  if (error.code === "ACCESS_REQUIRED" || error.code === "ACCESS_INVALID") {
+    return {
+      title: "관리자 로그인이 필요합니다",
+      description: "관리자 호스트에서 Cloudflare Access 로그인을 다시 진행해 주세요."
+    };
+  }
+  return null;
 }
 
-function formatUpdatedAt(updatedAt: string): string {
-  const date = new Date(updatedAt);
-  if (Number.isNaN(date.getTime())) return "최근 수정 정보 없음";
-  return `${new Intl.DateTimeFormat("ko-KR", { month: "long", day: "numeric" }).format(date)} 수정`;
-}
-
-function LibrarySkeleton() {
-  return (
-    <section className="library-grid" aria-busy="true" aria-label="여행을 불러오는 중">
-      {Array.from({ length: 3 }, (_, index) => (
-        <div key={index} className="library-card library-card--skeleton">
-          <div className="library-card__cover" />
-          <div className="library-card__body">
-            <span />
-            <span />
-            <span />
-          </div>
-        </div>
-      ))}
-    </section>
-  );
-}
-
-function TripCard({ trip }: { trip: TripSummaryViewModel }) {
-  return (
-    <article className="library-card">
-      <AppLink className="library-card__link" href={pathForTrip(trip.id, "today")}>
-        <img className="library-card__cover" src={trip.coverImageUrl} alt="" />
-        <div className="library-card__body">
-          <p className="library-card__destination">{trip.country} · {trip.destination}</p>
-          <h2>{trip.title}</h2>
-          <p className="library-card__dates"><time>{formatDateRange(trip.startDate, trip.endDate)}</time></p>
-          <dl className="library-card__details">
-            <div><dt>여행자</dt><dd>{trip.travelerCount}명</dd></div>
-            <div><dt>상태</dt><dd><span className={`chip chip--${trip.phase}`}>{phaseLabels[trip.phase]}</span></dd></div>
-            <div><dt>예약</dt><dd>{trip.bookingCount}건</dd></div>
-          </dl>
-          <p className="library-card__updated"><time>{formatUpdatedAt(trip.updatedAt)}</time></p>
-        </div>
-      </AppLink>
-    </article>
-  );
-}
-
-export function LibraryPage({ dataSource }: { dataSource: TravelGuideDataSource }) {
-  const library = useTravelLibrary(dataSource);
+export function LibraryPage({
+  client,
+  deviceManagement,
+  now = () => new Date()
+}: {
+  client: TripLibraryClient;
+  deviceManagement?: ReactNode;
+  now?: () => Date;
+}) {
+  const library = useTripLibrary(client);
   const [filter, setFilter] = useState<LibraryFilter>("all");
+  const [dialog, setDialog] = useState<LibraryDialogState>(null);
 
-  if (library.status === "loading") return <LibrarySkeleton />;
+  const closeDialog = () => {
+    library.clearMutationError();
+    setDialog(null);
+  };
 
-  if (library.status === "empty") {
-    return (
-      <section className="library-page">
+  if (library.active.status === "loading" && library.active.trips.length === 0) {
+    return <LibrarySkeleton />;
+  }
+
+  if (library.active.status === "error") {
+    const recovery = sessionRecovery(library.active.error);
+    if (recovery) {
+      return (
         <StatusPanel
-          kind="empty"
-          title="저장된 여행이 없습니다"
-          description="여행 목록을 다시 불러오거나 실제 여행 만들기 연결을 기다려 주세요."
-          action={{ label: "다시 불러오기", onClick: library.retry }}
+          kind="session-expired"
+          title={recovery.title}
+          description={recovery.description}
+          action={{ label: "다시 확인", onClick: library.retryActive }}
         />
-        <CreateTripNotice />
-      </section>
+      );
+    }
+    return (
+      <StatusPanel
+        kind="error"
+        title="여행을 불러오지 못했습니다"
+        description={library.active.error.message}
+        action={{ label: "다시 시도", onClick: library.retryActive }}
+      />
     );
   }
 
-  if (library.status === "error") {
-    return (
-      <section className="library-page">
-        <StatusPanel
-          kind="error"
-          title="여행을 불러오지 못했습니다"
-          description={library.message}
-          action={{ label: "다시 시도", onClick: library.retry }}
-        />
-      </section>
-    );
-  }
-
-  const visibleTrips = library.data.filter((trip) => filter === "all" || trip.phase === filter);
-  const firstTrip = library.data[0];
+  const visibleTrips = library.active.trips.filter(
+    (trip) => filter === "all" || trip.status === filter
+  );
+  const sortedGroups = groups.map((group) => ({
+    ...group,
+    trips: visibleTrips
+      .filter((trip) => trip.status === group.status)
+      .sort((left, right) =>
+        right.updatedAt.localeCompare(left.updatedAt) || left.id.localeCompare(right.id)
+      )
+  })).filter((group) => group.trips.length > 0);
+  const hasUpcomingGroup = sortedGroups.some((group) => group.status === "upcoming");
+  const createCard = (
+    <button
+      type="button"
+      className="library-create-card"
+      disabled={Boolean(library.readOnlyReason)}
+      title={library.readOnlyReason}
+      onClick={(event) =>
+        setDialog({ kind: "create", opener: event.currentTarget })}
+    >
+      <strong>새 여행 만들기</strong>
+      <span>날짜와 여행지를 추가하세요.</span>
+    </button>
+  );
 
   return (
     <section className="library-page" aria-labelledby="library-title">
@@ -116,14 +128,45 @@ export function LibraryPage({ dataSource }: { dataSource: TravelGuideDataSource 
           <p>둘이 함께 만든 여행을 필요한 순간에 바로 꺼내 보세요.</p>
         </div>
         <div className="library-page__actions">
-          {firstTrip ? (
-            <AppLink className="secondary-button" href={`${pathForTrip(firstTrip.id, "tools")}#devices`}>
-              연결 기기
-            </AppLink>
-          ) : null}
-          <CreateTripNotice />
+          <button
+            type="button"
+            className="secondary-button"
+            disabled={Boolean(library.readOnlyReason)}
+            title={library.readOnlyReason}
+            onClick={(event) =>
+              !library.readOnlyReason
+                ? setDialog({ kind: "devices", opener: event.currentTarget })
+                : undefined}
+          >
+            연결 기기
+          </button>
+          <button
+            type="button"
+            className="secondary-button"
+            disabled={Boolean(library.readOnlyReason)}
+            title={library.readOnlyReason}
+            onClick={(event) => {
+              library.loadTrash();
+              setDialog({ kind: "trash", opener: event.currentTarget });
+            }}
+          >
+            휴지통
+          </button>
+          <button
+            type="button"
+            className="primary-button"
+            disabled={Boolean(library.readOnlyReason)}
+            title={library.readOnlyReason}
+            onClick={(event) => setDialog({ kind: "create", opener: event.currentTarget })}
+          >
+            새 여행 만들기
+          </button>
         </div>
       </div>
+
+      {library.readOnlyReason ? (
+        <p className="library-preview-notice" role="note">{library.readOnlyReason}</p>
+      ) : null}
 
       <div className="library-filters" role="group" aria-label="여행 상태 필터">
         {filters.map((item) => (
@@ -139,26 +182,70 @@ export function LibraryPage({ dataSource }: { dataSource: TravelGuideDataSource 
         ))}
       </div>
 
-      {visibleTrips.length ? (
-        <div className="library-grid">
-          {visibleTrips.map((trip) => <TripCard key={trip.id} trip={trip} />)}
+      {sortedGroups.length > 0 ? (
+        <div className="library-groups">
+          {sortedGroups.map((group) => (
+            <section
+              key={group.status}
+              className="library-group"
+              aria-label={group.regionLabel}
+            >
+              <div className="library-group__heading">
+                <h2>{group.label}</h2>
+                <span>{group.trips.length}개</span>
+              </div>
+              <div className="library-grid">
+                {group.trips.map((trip) => (
+                  <TripCard
+                    key={trip.id}
+                    trip={trip}
+                    readOnlyReason={library.readOnlyReason}
+                    onEdit={(selected, opener) =>
+                      setDialog({ kind: "edit", trip: selected, opener })}
+                    onTrash={(selected, opener) =>
+                      setDialog({ kind: "confirm-trash", trip: selected, opener })}
+                  />
+                ))}
+                {group.status === "upcoming" ? (
+                  createCard
+                ) : null}
+              </div>
+            </section>
+          ))}
+          {!hasUpcomingGroup ? (
+            <div className="library-grid library-grid--create">
+              {createCard}
+            </div>
+          ) : null}
+        </div>
+      ) : library.active.trips.length === 0 ? (
+        <div className="library-empty">
+          <StatusPanel
+            kind="empty"
+            title="저장된 여행이 없습니다"
+            description="첫 여행을 만들어 둘만의 계획을 시작하세요."
+            action={{ label: "다시 불러오기", onClick: library.retryActive }}
+          />
+          {createCard}
         </div>
       ) : (
-        <StatusPanel
-          kind="empty"
-          title="이 상태의 여행이 없습니다"
-          description="다른 상태를 선택해 보세요."
-        />
+        <div className="library-empty">
+          <StatusPanel
+            kind="empty"
+            title="이 상태의 여행이 없습니다"
+            description="다른 상태를 선택해 보세요."
+          />
+          {createCard}
+        </div>
       )}
-    </section>
-  );
-}
 
-function CreateTripNotice() {
-  return (
-    <div className="create-trip-notice">
-      <button className="primary-button" type="button" disabled>새 여행 만들기</button>
-      <p>실제 여행 만들기는 Task 5에서 연결됩니다</p>
-    </div>
+      <LibraryDialogs
+        dialog={dialog}
+        library={library}
+        deviceManagement={deviceManagement}
+        now={now()}
+        onClose={closeDialog}
+      />
+    </section>
   );
 }

@@ -37,7 +37,7 @@ export function TripRoutePage({
     return <StatusPanel kind="error" title="여행 정보를 불러오지 못했습니다" description={workspace.message} action={{ label: "다시 시도", onClick: workspace.retry }} />;
   }
   if (workspace.status === "empty") {
-    return <StatusPanel kind="not-found" title="여행을 찾을 수 없습니다" description="여행 서재에서 다른 여행을 선택해 주세요." action={{ label: "여행 서재로 이동", onClick: navigateToLibrary }} />;
+    return <StatusPanel kind="not-found" title="여행을 찾을 수 없습니다" description="새 여행의 내부 데이터는 다음 단계에서 연결됩니다. 기존 여행이라면 여행 서재에서 다시 선택해 주세요." action={{ label: "여행 서재로 이동", onClick: navigateToLibrary }} />;
   }
 
   return (

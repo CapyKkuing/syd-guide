@@ -3,6 +3,7 @@ import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { TravelGuideDataSource, TripSummaryViewModel } from "../../data/contracts";
+import { createFixturePreviewTripLibraryClient } from "../../features/trips/api";
 import { sampleDataSource } from "../../test/travelSamples";
 import { LibraryPage } from "./LibraryPage";
 
@@ -32,9 +33,13 @@ function sourceWithListTrips(
   };
 }
 
+function previewClient(dataSource: TravelGuideDataSource = sampleDataSource) {
+  return createFixturePreviewTripLibraryClient(dataSource);
+}
+
 describe("LibraryPage", () => {
   it("shows practical trip cards without trip navigation", async () => {
-    render(<LibraryPage dataSource={sampleDataSource} />);
+    render(<LibraryPage client={previewClient()} />);
 
     expect(await screen.findByRole("heading", { name: "여행 서재" })).toBeVisible();
     expect(screen.getByRole("link", { name: /시드니 여행/ }))
@@ -43,7 +48,7 @@ describe("LibraryPage", () => {
   });
 
   it("filters trips by status", async () => {
-    render(<LibraryPage dataSource={sampleDataSource} />);
+    render(<LibraryPage client={previewClient()} />);
 
     await userEvent.click(await screen.findByRole("button", { name: "예정" }));
 
@@ -52,7 +57,7 @@ describe("LibraryPage", () => {
   });
 
   it("keeps every filter a 44px touch target", async () => {
-    render(<LibraryPage dataSource={sampleDataSource} />);
+    render(<LibraryPage client={previewClient()} />);
 
     const upcomingFilter = await screen.findByRole("button", { name: "예정" });
 
@@ -65,17 +70,18 @@ describe("LibraryPage", () => {
     const dataSource = sourceWithListTrips(
       () => new Promise<TripSummaryViewModel[]>((resolve) => { resolveTrips = resolve; })
     );
-    render(<LibraryPage dataSource={dataSource} />);
+    render(<LibraryPage client={previewClient(dataSource)} />);
 
     const loading = screen.getByLabelText("여행을 불러오는 중");
     expect(loading).toHaveAttribute("aria-busy", "true");
     expect(loading).toHaveTextContent(/^$/);
-    expect(screen.queryByRole("link", { name: "연결 기기" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "연결 기기" })).not.toBeInTheDocument();
 
+    await act(async () => Promise.resolve());
     await act(async () => resolveTrips(await sampleDataSource.listTrips()));
 
-    expect(await screen.findByRole("link", { name: "연결 기기" }))
-      .toHaveAttribute("href", "/trip/sydney-2026/tools#devices");
+    expect(await screen.findByRole("button", { name: "연결 기기" })).toBeDisabled();
+    expect(screen.queryByRole("link", { name: "연결 기기" })).not.toBeInTheDocument();
   });
 
   it("offers an empty-state retry beside the disabled create-trip explanation", async () => {
@@ -83,11 +89,11 @@ describe("LibraryPage", () => {
     const listTrips = vi.fn()
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce(trips);
-    render(<LibraryPage dataSource={sourceWithListTrips(listTrips)} />);
+    render(<LibraryPage client={previewClient(sourceWithListTrips(listTrips))} />);
 
     expect(await screen.findByRole("heading", { name: "저장된 여행이 없습니다" })).toBeVisible();
     expect(screen.getByRole("button", { name: "새 여행 만들기" })).toBeDisabled();
-    expect(screen.getByText("실제 여행 만들기는 Task 5에서 연결됩니다")).toBeVisible();
+    expect(screen.getByText(/GitHub Pages 미리보기에서는 여행을 조회만/)).toBeVisible();
 
     await userEvent.click(screen.getByRole("button", { name: "다시 불러오기" }));
 
@@ -100,7 +106,7 @@ describe("LibraryPage", () => {
     const listTrips = vi.fn()
       .mockRejectedValueOnce(new Error("네트워크 연결을 확인해 주세요."))
       .mockResolvedValueOnce(trips);
-    render(<LibraryPage dataSource={sourceWithListTrips(listTrips)} />);
+    render(<LibraryPage client={previewClient(sourceWithListTrips(listTrips))} />);
 
     expect(await screen.findByRole("alert")).toHaveTextContent("네트워크 연결을 확인해 주세요.");
 
