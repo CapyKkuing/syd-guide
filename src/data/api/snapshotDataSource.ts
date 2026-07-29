@@ -14,6 +14,7 @@ import type {
   TripWorkspace
 } from "../contracts";
 import { mapSnapshotToWorkspace } from "./snapshotMappers";
+import type { TripMedia, TripMediaStorage } from "../../shared/media";
 
 type CacheEntry = {
   snapshot: TripSnapshot | null;
@@ -74,6 +75,14 @@ export class SnapshotTravelGuideDataSource implements MutableTravelGuideDataSour
 
   async getTools(tripId: string): Promise<ToolsViewModel | null> {
     return (await this.workspace(tripId))?.tools ?? null;
+  }
+
+  async getMedia(tripId: string): Promise<TripMedia[]> {
+    return (await this.workspace(tripId))?.media ?? [];
+  }
+
+  async getMediaStorage(tripId: string): Promise<TripMediaStorage | null> {
+    return (await this.workspace(tripId))?.mediaStorage ?? null;
   }
 
   private workspace(tripId: string): Promise<TripWorkspace | null> {

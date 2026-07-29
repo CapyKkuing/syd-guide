@@ -11,6 +11,7 @@ import type {
   TripDay,
   Vote
 } from "./entities";
+import type { TripMedia, TripMediaStorage } from "./media";
 
 export interface ApiErrorBody {
   error: {
@@ -32,5 +33,7 @@ export interface TripSnapshot {
   notes: Note[];
   votes: Vote[];
   activity: ActivityLog[];
+  media?: TripMedia[];
+  mediaStorage?: TripMediaStorage | null;
   syncVersion: number;
 }

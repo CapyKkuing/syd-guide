@@ -59,10 +59,17 @@ export default defineConfig(({ mode }) => {
         },
         workbox: {
           globPatterns: ["**/*.{js,css,html,png,svg,woff2}"],
+          globIgnores: ["**/transformers.web-*.js"],
           runtimeCaching: [
             {
               urlPattern: ({ url }) => url.pathname.startsWith("/api/"),
               handler: "NetworkOnly"
+            },
+            {
+              urlPattern: ({ url }) =>
+                /\/assets\/transformers\.web-[^/]+\.js$/.test(url.pathname),
+              handler: "CacheFirst",
+              options: { cacheName: "on-device-ai-runtime" }
             }
           ]
         }

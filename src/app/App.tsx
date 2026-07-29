@@ -29,6 +29,9 @@ import { OutboxStore } from "../services/offline/outboxStore";
 import { SnapshotStore } from "../services/offline/snapshotStore";
 import { createOutboxMutationTransport } from "../services/mutations/controller";
 import { SyncEngine } from "../services/sync/syncEngine";
+import { mediaApiClient } from "../services/media/api";
+import { GoogleDriveProvider } from "../services/media/googleDriveProvider";
+import { MediaThumbnailStore } from "../services/offline/mediaThumbnailStore";
 
 interface AppProps {
   pairToken?: string | null;
@@ -43,6 +46,8 @@ const database = () => {
 };
 const snapshotStore = new SnapshotStore(database);
 const outboxStore = new OutboxStore(database);
+const mediaThumbnailStore = new MediaThumbnailStore(database);
+const googleDriveProvider = new GoogleDriveProvider();
 const clearOfflineSession = async () => {
   await Promise.all([
     outboxStore.clear(),
@@ -132,6 +137,9 @@ function AppContent({
         syncRuntime={isFixturePreview ? undefined : syncRuntime}
         tripId={route.tripId}
         activeTab={route.tab}
+        mediaApi={isFixturePreview ? undefined : mediaApiClient}
+        mediaProvider={isFixturePreview ? undefined : googleDriveProvider}
+        mediaThumbnailStore={isFixturePreview ? undefined : mediaThumbnailStore}
       />
     );
   }

@@ -10,6 +10,7 @@ import type {
   VoteChoice
 } from "../shared/entities";
 import type { ExperiencePhase } from "../domain/tripPhase";
+import type { TripMedia, TripMediaStorage } from "../shared/media";
 
 export type TripPhase = "upcoming" | "active" | "completed";
 export type ScheduleKind =
@@ -195,6 +196,8 @@ export interface TripWorkspace {
   schedule: ScheduleViewModel;
   mapPreview: MapPreviewViewModel;
   tools: ToolsViewModel;
+  media: TripMedia[];
+  mediaStorage: TripMediaStorage | null;
 }
 
 export interface TravelGuideDataSource {
@@ -210,6 +213,10 @@ export interface TravelGuideDataSource {
   getMapPreview(tripId: string): Promise<MapPreviewViewModel | null>;
   // eslint-disable-next-line no-unused-vars
   getTools(tripId: string): Promise<ToolsViewModel | null>;
+  // eslint-disable-next-line no-unused-vars
+  getMedia?(tripId: string): Promise<TripMedia[]>;
+  // eslint-disable-next-line no-unused-vars
+  getMediaStorage?(tripId: string): Promise<TripMediaStorage | null>;
 }
 
 export interface MutableTravelGuideDataSource extends TravelGuideDataSource {

@@ -10,6 +10,7 @@ export interface Env {
   ACCESS_TEAM_DOMAIN?: string;
   ACCESS_AUD?: string;
   DEV_AUTH?: "enabled";
+  GOOGLE_DRIVE_CLIENT_ID?: string;
 }
 
 export type AppEnv = {

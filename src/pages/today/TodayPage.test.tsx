@@ -106,6 +106,6 @@ describe("TodayPage", () => {
 
     expect(screen.getByRole("img", { name: "Blue Mountains 여행 대표 사진" }))
       .toHaveAttribute("src", "/images/blue_mountains.jpg");
-    expect(screen.getByText("사진 업로드 후 AI가 대표 사진을 추천합니다.")).toBeVisible();
+    expect(screen.getByText("사진을 올리면 기기 내 AI가 대표사진 후보를 추천합니다.")).toBeVisible();
   });
 });

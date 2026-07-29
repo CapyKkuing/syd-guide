@@ -79,6 +79,102 @@
   object-fit: cover;
 }
 
+.representative-photo {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.representative-photo__figure {
+  margin: 0;
+}
+
+.representative-photo__figure figcaption,
+.representative-photo__message {
+  margin: var(--space-2) 0 0;
+  color: var(--text);
+  font-size: var(--text-sm);
+}
+
+.representative-photo__controls,
+.representative-photo__actions {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.representative-photo__actions .text-button {
+  min-height: 44px;
+  align-items: center;
+  color: var(--accent-strong);
+  font-weight: 800;
+}
+
+.photo-upload {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.photo-upload.is-disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.photo-upload input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.representative-photo__candidates {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.photo-candidate {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border: 1px solid var(--today-boundary);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+}
+
+.photo-candidate.is-selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.photo-candidate img,
+.photo-candidate__placeholder {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+}
+
+.photo-candidate__placeholder {
+  display: grid;
+  place-items: center;
+  padding: var(--space-3);
+  background: var(--surface-3);
+  color: var(--text-2);
+  text-align: center;
+}
+
+.photo-candidate p {
+  margin: 0;
+  font-weight: 800;
+}
+
 .today-dashboard {
   display: grid;
   gap: var(--space-4);
@@ -260,6 +356,15 @@
   .today-hero--completed {
     grid-template-columns: minmax(0, 1fr) minmax(240px, 0.7fr);
     align-items: center;
+  }
+
+  .representative-photo__actions,
+  .representative-photo__candidates {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .representative-photo__candidates {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .today-quick-tools > div {

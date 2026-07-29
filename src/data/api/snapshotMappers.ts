@@ -146,7 +146,9 @@ export function mapSnapshotToWorkspace(
         summary: entry.summary,
         createdAt: entry.createdAt
       }))
-    }
+    },
+    media: snapshot.media ?? [],
+    mediaStorage: snapshot.mediaStorage ?? null
   };
 }
 

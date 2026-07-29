@@ -1,5 +1,6 @@
 import type { TripSnapshot } from "../../src/shared/api";
 import type { ActivityLog, PublicMember } from "../../src/shared/entities";
+import type { TripMedia, TripMediaStorage } from "../../src/shared/media";
 import type { Env } from "../env";
 import { entityRegistry } from "./entity-registry";
 import {
@@ -7,6 +8,7 @@ import {
   toTrip,
   type TripRow,
 } from "./trips";
+import { toTripMedia, toTripMediaStorage } from "./media";
 
 type Row = Record<string, unknown>;
 
@@ -144,6 +146,16 @@ export async function loadTripSnapshot(
       memberId,
       memberId
     ),
+    statement(
+      env,
+      "SELECT * FROM trip_media WHERE trip_id = ? ORDER BY created_at DESC, id",
+      tripId
+    ),
+    statement(
+      env,
+      "SELECT * FROM trip_media_storage WHERE trip_id = ?",
+      tripId
+    ),
   ]);
   const tripRow = results[0]?.results[0] as TripRow | undefined;
   if (!tripRow) return null;
@@ -160,6 +172,8 @@ export async function loadTripSnapshot(
     noteRows,
     voteRows,
     activityRows,
+    mediaRows,
+    mediaStorageRows,
   ] = results.map((result) => result.results);
 
   return {
@@ -176,6 +190,10 @@ export async function loadTripSnapshot(
     notes: noteRows.map((row) => entityRegistry.note.parse(row)),
     votes: voteRows.map((row) => entityRegistry.vote.parse(row)),
     activity: activityRows.map(activity),
+    media: mediaRows.map((row) => toTripMedia(row)) as TripMedia[],
+    mediaStorage: mediaStorageRows[0]
+      ? toTripMediaStorage(mediaStorageRows[0]) as TripMediaStorage
+      : null,
     syncVersion: trip.syncVersion,
   } as TripSnapshot;
 }

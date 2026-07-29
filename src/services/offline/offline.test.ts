@@ -6,6 +6,7 @@ import { openTravelDatabase, type TravelDatabase } from "./database";
 import { OutboxStore } from "./outboxStore";
 import { SettingsStore } from "./settingsStore";
 import { SnapshotStore } from "./snapshotStore";
+import { MediaThumbnailStore } from "./mediaThumbnailStore";
 
 const databases: TravelDatabase[] = [];
 const names: string[] = [];
@@ -18,7 +19,8 @@ async function createStores() {
   return {
     outbox: new OutboxStore(database),
     settings: new SettingsStore(database),
-    snapshots: new SnapshotStore(database)
+    snapshots: new SnapshotStore(database),
+    thumbnails: new MediaThumbnailStore(database)
   };
 }
 
@@ -62,6 +64,17 @@ describe("offline IndexedDB stores", () => {
       etag: "\"trip-trip-one-7\"",
       savedAt: "2026-07-28T12:00:00.000Z"
     });
+  });
+
+  it("caches a representative thumbnail without storing a Drive token", async () => {
+    const { thumbnails } = await createStores();
+    const blob = new Blob(["thumbnail"], { type: "image/webp" });
+
+    await thumbnails.save("media-one", "trip-one", blob);
+
+    const cached = await thumbnails.get("media-one");
+    expect(cached?.type).toBe("image/webp");
+    expect(await cached?.text()).toBe("thumbnail");
   });
 
   it("stores only the minimum offline principal identity", async () => {

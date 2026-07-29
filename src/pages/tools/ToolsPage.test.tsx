@@ -19,7 +19,15 @@ async function getWorkspace(): Promise<TripWorkspace> {
   if (!context || !today || !schedule || !mapPreview || !tools) {
     throw new Error("sample workspace missing");
   }
-  return { context, today, schedule, mapPreview, tools };
+  return {
+    context,
+    today,
+    schedule,
+    mapPreview,
+    tools,
+    media: [],
+    mediaStorage: null,
+  };
 }
 
 async function renderToolsPage() {

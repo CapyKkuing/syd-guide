@@ -78,9 +78,11 @@ export function useTripWorkspace(
       dataSource.getToday(tripId),
       dataSource.getSchedule(tripId),
       dataSource.getMapPreview(tripId),
-      dataSource.getTools(tripId)
+      dataSource.getTools(tripId),
+      dataSource.getMedia?.(tripId) ?? Promise.resolve([]),
+      dataSource.getMediaStorage?.(tripId) ?? Promise.resolve(null)
     ])
-      .then(([context, today, schedule, mapPreview, tools]) => {
+      .then(([context, today, schedule, mapPreview, tools, media, mediaStorage]) => {
         if (cancelled) return;
         if (!context || !today || !schedule || !mapPreview || !tools) {
           setResource({ dataSource, tripId, value: { status: "empty", retry: reload } });
@@ -89,7 +91,10 @@ export function useTripWorkspace(
         setResource({
           dataSource,
           tripId,
-          value: { status: "ready", data: { context, today, schedule, mapPreview, tools } }
+          value: {
+            status: "ready",
+            data: { context, today, schedule, mapPreview, tools, media, mediaStorage }
+          }
         });
       })
       .catch((error: unknown) => {

@@ -2,13 +2,21 @@ import { pathForTrip } from "../../app/router";
 import { AppLink } from "../../components/AppLink";
 import { ExpensePanel } from "./ExpensePanel";
 import type { TodayHomeProps } from "./todayHomeTypes";
+import { RepresentativePhotoPanel } from "../../features/memories/RepresentativePhotoPanel";
 
 export function AfterTripHome({
   members,
+  media = [],
+  mediaApi,
+  mediaProvider,
+  mediaStorage = null,
+  mediaThumbnailStore,
   mutationController,
+  onMediaChanged = () => undefined,
   today,
   trip,
   viewerMemberId,
+  viewerRole = "owner",
 }: TodayHomeProps) {
   return (
     <div className="today-page today-home today-home--after">
@@ -22,12 +30,17 @@ export function AfterTripHome({
             : "여행 기록을 정리하는 중입니다."}</p>
           <AppLink className="primary-button today-hero__action" href={pathForTrip(trip.id, "schedule")}>여행 다시 보기</AppLink>
         </div>
-        <figure className="today-hero__visual">
-          <img className="today-hero__cover" src={trip.coverImageUrl} alt={`${trip.destination} 여행 대표 사진`} />
-          <figcaption>{trip.representativeMediaId
-            ? "여행 사진 중 AI 추천 대표 사진"
-            : "사진 업로드 후 AI가 대표 사진을 추천합니다."}</figcaption>
-        </figure>
+        <RepresentativePhotoPanel
+          key={`${trip.id}:${trip.updatedAt}`}
+          api={mediaApi}
+          media={media}
+          onChanged={onMediaChanged}
+          provider={mediaProvider}
+          storage={mediaStorage}
+          thumbnailStore={mediaThumbnailStore}
+          trip={trip}
+          viewerRole={viewerRole}
+        />
       </section>
 
       <section className={today.unsettledExpenseCount ? "settlement-card is-pending" : "settlement-card"} aria-labelledby="settlement-title">

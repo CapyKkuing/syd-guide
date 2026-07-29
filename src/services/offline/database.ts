@@ -26,6 +26,14 @@ export interface SettingRecord {
   value: unknown;
 }
 
+export interface MediaThumbnailRecord {
+  mediaId: string;
+  tripId: string;
+  bytes: ArrayBuffer;
+  mimeType: string;
+  cachedAt: string;
+}
+
 interface TravelDatabaseSchema extends DBSchema {
   snapshots: {
     key: string;
@@ -39,6 +47,11 @@ interface TravelDatabaseSchema extends DBSchema {
   settings: {
     key: string;
     value: SettingRecord;
+  };
+  mediaThumbnails: {
+    key: string;
+    value: MediaThumbnailRecord;
+    indexes: { "by-trip": string };
   };
 }
 
@@ -57,14 +70,26 @@ export function resolveTravelDatabase(
 export function openTravelDatabase(
   name = "couple-travel-guide"
 ): Promise<TravelDatabase> {
-  return openDB<TravelDatabaseSchema>(name, 1, {
+  return openDB<TravelDatabaseSchema>(name, 2, {
     upgrade(database) {
-      database.createObjectStore("snapshots", { keyPath: "tripId" });
-      const outbox = database.createObjectStore("outbox", {
-        keyPath: "idempotencyKey"
-      });
-      outbox.createIndex("by-trip-created", ["tripId", "createdAt"]);
-      database.createObjectStore("settings", { keyPath: "key" });
+      if (!database.objectStoreNames.contains("snapshots")) {
+        database.createObjectStore("snapshots", { keyPath: "tripId" });
+      }
+      if (!database.objectStoreNames.contains("outbox")) {
+        const outbox = database.createObjectStore("outbox", {
+          keyPath: "idempotencyKey"
+        });
+        outbox.createIndex("by-trip-created", ["tripId", "createdAt"]);
+      }
+      if (!database.objectStoreNames.contains("settings")) {
+        database.createObjectStore("settings", { keyPath: "key" });
+      }
+      if (!database.objectStoreNames.contains("mediaThumbnails")) {
+        const thumbnails = database.createObjectStore("mediaThumbnails", {
+          keyPath: "mediaId"
+        });
+        thumbnails.createIndex("by-trip", "tripId");
+      }
     }
   });
 }

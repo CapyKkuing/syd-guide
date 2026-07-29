@@ -19,17 +19,26 @@ import {
   SyncProvider,
   type SyncRuntime
 } from "../services/sync/SyncProvider";
+import type { MediaApi } from "../services/media/api";
+import type { MediaStorageProviderClient } from "../services/media/provider";
+import type { MediaThumbnailStore } from "../services/offline/mediaThumbnailStore";
 
 export function TripRoutePage({
   dataSource,
   mutationTransport,
   syncRuntime,
+  mediaApi,
+  mediaProvider,
+  mediaThumbnailStore,
   tripId,
   activeTab
 }: {
   dataSource: TravelGuideDataSource;
   mutationTransport?: MutationTransport;
   syncRuntime?: SyncRuntime;
+  mediaApi?: MediaApi;
+  mediaProvider?: MediaStorageProviderClient;
+  mediaThumbnailStore?: MediaThumbnailStore;
   tripId: string;
   activeTab: TripTab;
 }) {
@@ -71,11 +80,18 @@ export function TripRoutePage({
             <TodayPage
               bookings={workspace.data.tools.bookings}
               checkItems={workspace.data.tools.checkItems}
+              media={workspace.data.media}
+              mediaApi={mediaApi}
+              mediaProvider={mediaProvider}
+              mediaStorage={workspace.data.mediaStorage}
+              mediaThumbnailStore={mediaThumbnailStore}
               members={workspace.data.tools.members}
               mutationController={mutationController}
+              onMediaChanged={workspace.reload}
               today={workspace.data.today}
               trip={workspace.data.context.trip}
               viewerMemberId={workspace.data.context.viewer.memberId}
+              viewerRole={workspace.data.context.viewer.role}
             />
           </section>
         ) : activeTab === "map" ? (
