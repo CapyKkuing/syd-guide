@@ -7,6 +7,8 @@ import {
   navigate,
   parseRoute,
   pathForLibrary,
+  pathForMemories,
+  pathForMemoryPlayer,
   pathForPair,
   pathForTrip,
   useRoute
@@ -39,6 +41,16 @@ describe("path routing", () => {
     ["/trip/sydney-2026/schedule", { name: "trip", tripId: "sydney-2026", tab: "schedule" }],
     ["/trip/sydney-2026/map", { name: "trip", tripId: "sydney-2026", tab: "map" }],
     ["/trip/sydney-2026/tools", { name: "trip", tripId: "sydney-2026", tab: "tools" }],
+    ["/trip/sydney-2026/memories", {
+      name: "memories",
+      tripId: "sydney-2026",
+      view: "editor"
+    }],
+    ["/trip/sydney-2026/memories/play", {
+      name: "memories",
+      tripId: "sydney-2026",
+      view: "player"
+    }],
     ["/pair", { name: "pair" }],
   ])("parses %s", (pathname, expected) => {
     expect(parseRoute(pathname)).toEqual(expected);
@@ -73,6 +85,15 @@ describe("path routing", () => {
       tripId: "시드니 / 2026",
       tab: "tools",
     });
+  });
+
+  it("builds memory editor and player paths with encoded trip IDs", () => {
+    expect(pathForMemories("시드니 / 2026")).toBe(
+      "/trip/%EC%8B%9C%EB%93%9C%EB%8B%88%20%2F%202026/memories"
+    );
+    expect(pathForMemoryPlayer("시드니 / 2026")).toBe(
+      "/trip/%EC%8B%9C%EB%93%9C%EB%8B%88%20%2F%202026/memories/play"
+    );
   });
 
   it.each([

@@ -17,6 +17,7 @@ import "./styles/schedule.css";
 import "./styles/map.css";
 import "./styles/tools.css";
 import "./styles/editorial.css";
+import "./features/memories/player/reel-player.css";
 
 const pairToken = consumePairTokenFromUrl();
 createRoot(document.getElementById("root")!).render(

@@ -129,14 +129,15 @@ function AppContent({
       </LibraryShell>
     );
   }
-  if (route.name === "trip") {
+  if (route.name === "trip" || route.name === "memories") {
     return (
       <TripRoutePage
         dataSource={dataSource}
         mutationTransport={isFixturePreview ? undefined : outboxMutationTransport}
         syncRuntime={isFixturePreview ? undefined : syncRuntime}
         tripId={route.tripId}
-        activeTab={route.tab}
+        activeTab={route.name === "trip" ? route.tab : "today"}
+        memoryView={route.name === "memories" ? route.view : undefined}
         mediaApi={isFixturePreview ? undefined : mediaApiClient}
         mediaProvider={isFixturePreview ? undefined : googleDriveProvider}
         mediaThumbnailStore={isFixturePreview ? undefined : mediaThumbnailStore}

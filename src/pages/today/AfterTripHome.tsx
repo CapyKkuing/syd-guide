@@ -1,21 +1,13 @@
-import { pathForTrip } from "../../app/router";
+import {
+  pathForMemoryPlayer,
+  pathForTrip,
+} from "../../app/router";
 import { AppLink } from "../../components/AppLink";
 import { ExpensePanel } from "./ExpensePanel";
 import type { TodayHomeProps } from "./todayHomeTypes";
 import { RepresentativePhotoPanel } from "../../features/memories/RepresentativePhotoPanel";
 import { ReelEditor } from "../../features/memories/reel/ReelEditor";
-import { ReelStore } from "../../features/memories/reel/reelStore";
-import {
-  openTravelDatabase,
-  type TravelDatabase,
-} from "../../services/offline/database";
-
-let reelDatabasePromise: Promise<TravelDatabase> | null = null;
-const reelDatabase = () => {
-  reelDatabasePromise ??= openTravelDatabase();
-  return reelDatabasePromise;
-};
-const reelStore = new ReelStore(reelDatabase);
+import { defaultReelStore } from "../../features/memories/reel/reelStore";
 
 export function AfterTripHome({
   members,
@@ -59,10 +51,16 @@ export function AfterTripHome({
       <ReelEditor
         media={media}
         provider={mediaProvider}
-        store={reelStore}
+        store={defaultReelStore}
         thumbnailStore={mediaThumbnailStore}
         tripId={trip.id}
       />
+      <AppLink
+        className="primary-button memory-reel__open-player"
+        href={pathForMemoryPlayer(trip.id)}
+      >
+        세로 화면으로 재생
+      </AppLink>
 
       <section className={today.unsettledExpenseCount ? "settlement-card is-pending" : "settlement-card"} aria-labelledby="settlement-title">
         <p className="today-section-heading__eyebrow">SETTLEMENT</p>

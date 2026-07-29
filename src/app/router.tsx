@@ -11,6 +11,11 @@ export type Route =
   | { name: "root" }
   | { name: "library" }
   | { name: "trip"; tripId: string; tab: TripTab }
+  | {
+      name: "memories";
+      tripId: string;
+      view: "editor" | "player";
+    }
   | { name: "pair" }
   | { name: "not-found" };
 
@@ -20,6 +25,22 @@ export function parseRoute(pathname: string, baseUrl = APP_BASE_URL): Route {
   if (appPath === "/") return { name: "root" };
   if (/^\/library\/?$/.test(appPath)) return { name: "library" };
   if (/^\/pair\/?$/.test(appPath)) return { name: "pair" };
+
+  const memoriesMatch =
+    /^\/trip\/([^/]+)\/memories(?:\/(play))?\/?$/.exec(appPath);
+  if (memoriesMatch) {
+    const encodedTripId = memoriesMatch[1];
+    if (!encodedTripId) return { name: "not-found" };
+    try {
+      return {
+        name: "memories",
+        tripId: decodeURIComponent(encodedTripId),
+        view: memoriesMatch[2] ? "player" : "editor",
+      };
+    } catch {
+      return { name: "not-found" };
+    }
+  }
 
   const match = /^\/trip\/([^/]+)\/(today|schedule|map|tools)\/?$/.exec(appPath);
   if (!match) return { name: "not-found" };
@@ -53,6 +74,26 @@ export function pathForTrip(
   baseUrl = APP_BASE_URL
 ): string {
   return pathForApp(`/trip/${encodeURIComponent(tripId)}/${tab}`, baseUrl);
+}
+
+export function pathForMemories(
+  tripId: string,
+  baseUrl = APP_BASE_URL
+): string {
+  return pathForApp(
+    `/trip/${encodeURIComponent(tripId)}/memories`,
+    baseUrl
+  );
+}
+
+export function pathForMemoryPlayer(
+  tripId: string,
+  baseUrl = APP_BASE_URL
+): string {
+  return pathForApp(
+    `/trip/${encodeURIComponent(tripId)}/memories/play`,
+    baseUrl
+  );
 }
 
 function scrollToHashTarget(path: string): void {

@@ -1,10 +1,25 @@
-import type { TravelGuideDataSource } from "../data/contracts";
+import type {
+  TravelGuideDataSource,
+  TripSummaryViewModel,
+} from "../data/contracts";
 import { useTripWorkspace } from "../data/useTravelData";
 import { TripShell } from "../layouts/TripShell";
 import { StatusPanel } from "../components/StatusPanel";
-import { navigateToLibrary, type TripTab } from "./router";
+import {
+  navigateToLibrary,
+  navigate,
+  pathForMemories,
+  pathForMemoryPlayer,
+  pathForTrip,
+  type TripTab,
+} from "./router";
 import { useTripSwitcherFocus } from "./TripSwitcherFocus";
-import { useEffect, useMemo, type ReactNode } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { TodayPage } from "../pages/today/TodayPage";
 import { SchedulePage } from "../pages/schedule/SchedulePage";
 import { MapPage } from "../pages/map/MapPage";
@@ -22,6 +37,14 @@ import {
 import type { MediaApi } from "../services/media/api";
 import type { MediaStorageProviderClient } from "../services/media/provider";
 import type { MediaThumbnailStore } from "../services/offline/mediaThumbnailStore";
+import { ReelEditor } from "../features/memories/reel/ReelEditor";
+import {
+  defaultReelStore,
+} from "../features/memories/reel/reelStore";
+import type { TravelReel } from "../features/memories/reel/types";
+import { ReelPlayer } from "../features/memories/player/ReelPlayer";
+import { AppLink } from "../components/AppLink";
+import type { TripMedia } from "../shared/media";
 
 export function TripRoutePage({
   dataSource,
@@ -31,7 +54,8 @@ export function TripRoutePage({
   mediaProvider,
   mediaThumbnailStore,
   tripId,
-  activeTab
+  activeTab,
+  memoryView,
 }: {
   dataSource: TravelGuideDataSource;
   mutationTransport?: MutationTransport;
@@ -41,6 +65,7 @@ export function TripRoutePage({
   mediaThumbnailStore?: MediaThumbnailStore;
   tripId: string;
   activeTab: TripTab;
+  memoryView?: "editor" | "player";
 }) {
   const workspace = useTripWorkspace(dataSource, tripId);
   const mutableDataSource = isMutableDataSource(dataSource) ? dataSource : null;
@@ -72,7 +97,15 @@ export function TripRoutePage({
   } else if (workspace.status === "empty") {
     page = <StatusPanel kind="not-found" title="여행을 찾을 수 없습니다" description="새 여행의 내부 데이터는 다음 단계에서 연결됩니다. 기존 여행이라면 여행 서재에서 다시 선택해 주세요." action={{ label: "여행 서재로 이동", onClick: navigateToLibrary }} />;
   } else {
-    page = (
+    page = memoryView ? (
+      <MemoryRoutePage
+        media={workspace.data.media}
+        provider={mediaProvider}
+        thumbnailStore={mediaThumbnailStore}
+        trip={workspace.data.context.trip}
+        view={memoryView}
+      />
+    ) : (
       <TripShell context={workspace.data.context} activeTab={activeTab}>
         {activeTab === "today" ? (
           <section aria-labelledby="trip-today-title">
@@ -133,6 +166,131 @@ export function TripRoutePage({
       {page}
     </SyncProvider>
   ) : page;
+}
+
+function MemoryRoutePage({
+  media,
+  provider,
+  thumbnailStore,
+  trip,
+  view,
+}: {
+  media: TripMedia[];
+  provider?: MediaStorageProviderClient;
+  thumbnailStore?: MediaThumbnailStore;
+  trip: TripSummaryViewModel;
+  view: "editor" | "player";
+}) {
+  if (view === "player") {
+    return (
+      <MemoryPlayerRoute
+        key={trip.id}
+        media={media}
+        provider={provider}
+        thumbnailStore={thumbnailStore}
+        trip={trip}
+      />
+    );
+  }
+
+  return (
+    <main className="memory-route-page">
+      <header className="memory-route-page__header">
+        <div>
+          <p>MEMORY REEL</p>
+          <h1>{trip.title} 사진 릴</h1>
+        </div>
+        <nav aria-label="추억 릴 이동">
+          <AppLink href={pathForTrip(trip.id, "today")}>오늘로 돌아가기</AppLink>
+          <AppLink
+            className="primary-button"
+            href={pathForMemoryPlayer(trip.id)}
+          >
+            세로 화면으로 재생
+          </AppLink>
+        </nav>
+      </header>
+      <ReelEditor
+        media={media}
+        provider={provider}
+        store={defaultReelStore}
+        thumbnailStore={thumbnailStore}
+        tripId={trip.id}
+      />
+    </main>
+  );
+}
+
+function MemoryPlayerRoute({
+  media,
+  provider,
+  thumbnailStore,
+  trip,
+}: {
+  media: TripMedia[];
+  provider?: MediaStorageProviderClient;
+  thumbnailStore?: MediaThumbnailStore;
+  trip: TripSummaryViewModel;
+}) {
+  const [reel, setReel] = useState<TravelReel | null | undefined>(undefined);
+  const [loadFailed, setLoadFailed] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    void defaultReelStore.get(trip.id).then(
+      (saved) => {
+        if (active) setReel(saved);
+      },
+      () => {
+        if (!active) return;
+        setReel(null);
+        setLoadFailed(true);
+      }
+    );
+    return () => {
+      active = false;
+    };
+  }, [trip.id]);
+
+  if (reel === undefined) {
+    return (
+      <StatusPanel
+        kind="loading"
+        title="사진 릴을 불러오는 중"
+        description="기기에 저장된 편집 결과를 확인하고 있습니다."
+      />
+    );
+  }
+  if (!reel?.scenes.length) {
+    return (
+      <StatusPanel
+        kind={loadFailed ? "error" : "not-found"}
+        title={loadFailed ? "사진 릴을 불러오지 못했습니다" : "재생할 사진 릴이 없습니다"}
+        description={
+          loadFailed
+            ? "기기 저장소를 확인한 뒤 다시 시도해 주세요."
+            : "편집 화면에서 사진 릴을 먼저 만들어 주세요."
+        }
+        action={{
+          label: "릴 편집으로 이동",
+          onClick: () => navigate(pathForMemories(trip.id)),
+        }}
+      />
+    );
+  }
+
+  return (
+    <ReelPlayer
+      editHref={pathForMemories(trip.id)}
+      exitHref={pathForTrip(trip.id, "today")}
+      media={media}
+      provider={provider}
+      reel={reel}
+      thumbnailStore={thumbnailStore}
+      tripId={trip.id}
+      tripTitle={trip.title}
+    />
+  );
 }
 
 function isMutableDataSource(

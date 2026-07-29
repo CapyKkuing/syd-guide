@@ -1,6 +1,8 @@
 /* eslint-disable no-unused-vars */
 import {
+  openTravelDatabase,
   resolveTravelDatabase,
+  type TravelDatabase,
   type TravelDatabaseSource,
 } from "../../../services/offline/database";
 import type { TravelReel } from "./types";
@@ -23,3 +25,11 @@ export class ReelStore {
     await database.delete("reels", tripId);
   }
 }
+
+let defaultDatabasePromise: Promise<TravelDatabase> | null = null;
+const defaultDatabase = () => {
+  defaultDatabasePromise ??= openTravelDatabase();
+  return defaultDatabasePromise;
+};
+
+export const defaultReelStore = new ReelStore(defaultDatabase);
