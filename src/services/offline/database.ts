@@ -2,6 +2,7 @@ import { openDB, type DBSchema, type IDBPDatabase } from "idb";
 import type { SessionPrincipal } from "../../features/auth/api";
 import type { TripSnapshot } from "../../shared/api";
 import type { MutationRequest } from "../../shared/mutations";
+import type { TravelReel } from "../../features/memories/reel/types";
 
 export interface SnapshotRecord {
   tripId: string;
@@ -53,6 +54,10 @@ interface TravelDatabaseSchema extends DBSchema {
     value: MediaThumbnailRecord;
     indexes: { "by-trip": string };
   };
+  reels: {
+    key: string;
+    value: TravelReel;
+  };
 }
 
 export type TravelDatabase = IDBPDatabase<TravelDatabaseSchema>;
@@ -70,7 +75,7 @@ export function resolveTravelDatabase(
 export function openTravelDatabase(
   name = "couple-travel-guide"
 ): Promise<TravelDatabase> {
-  return openDB<TravelDatabaseSchema>(name, 2, {
+  return openDB<TravelDatabaseSchema>(name, 3, {
     upgrade(database) {
       if (!database.objectStoreNames.contains("snapshots")) {
         database.createObjectStore("snapshots", { keyPath: "tripId" });
@@ -89,6 +94,9 @@ export function openTravelDatabase(
           keyPath: "mediaId"
         });
         thumbnails.createIndex("by-trip", "tripId");
+      }
+      if (!database.objectStoreNames.contains("reels")) {
+        database.createObjectStore("reels", { keyPath: "tripId" });
       }
     }
   });

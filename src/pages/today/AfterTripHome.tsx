@@ -3,6 +3,19 @@ import { AppLink } from "../../components/AppLink";
 import { ExpensePanel } from "./ExpensePanel";
 import type { TodayHomeProps } from "./todayHomeTypes";
 import { RepresentativePhotoPanel } from "../../features/memories/RepresentativePhotoPanel";
+import { ReelEditor } from "../../features/memories/reel/ReelEditor";
+import { ReelStore } from "../../features/memories/reel/reelStore";
+import {
+  openTravelDatabase,
+  type TravelDatabase,
+} from "../../services/offline/database";
+
+let reelDatabasePromise: Promise<TravelDatabase> | null = null;
+const reelDatabase = () => {
+  reelDatabasePromise ??= openTravelDatabase();
+  return reelDatabasePromise;
+};
+const reelStore = new ReelStore(reelDatabase);
 
 export function AfterTripHome({
   members,
@@ -42,6 +55,14 @@ export function AfterTripHome({
           viewerRole={viewerRole}
         />
       </section>
+
+      <ReelEditor
+        media={media}
+        provider={mediaProvider}
+        store={reelStore}
+        thumbnailStore={mediaThumbnailStore}
+        tripId={trip.id}
+      />
 
       <section className={today.unsettledExpenseCount ? "settlement-card is-pending" : "settlement-card"} aria-labelledby="settlement-title">
         <p className="today-section-heading__eyebrow">SETTLEMENT</p>

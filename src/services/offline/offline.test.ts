@@ -7,6 +7,7 @@ import { OutboxStore } from "./outboxStore";
 import { SettingsStore } from "./settingsStore";
 import { SnapshotStore } from "./snapshotStore";
 import { MediaThumbnailStore } from "./mediaThumbnailStore";
+import { ReelStore } from "../../features/memories/reel/reelStore";
 
 const databases: TravelDatabase[] = [];
 const names: string[] = [];
@@ -20,7 +21,8 @@ async function createStores() {
     outbox: new OutboxStore(database),
     settings: new SettingsStore(database),
     snapshots: new SnapshotStore(database),
-    thumbnails: new MediaThumbnailStore(database)
+    thumbnails: new MediaThumbnailStore(database),
+    reels: new ReelStore(database)
   };
 }
 
@@ -75,6 +77,26 @@ describe("offline IndexedDB stores", () => {
     const cached = await thumbnails.get("media-one");
     expect(cached?.type).toBe("image/webp");
     expect(await cached?.text()).toBe("thumbnail");
+  });
+
+  it("stores reel scene metadata without photo bytes or object URLs", async () => {
+    const { reels } = await createStores();
+    const reel = {
+      tripId: "trip-one",
+      scenes: [{
+        id: "scene-media-one",
+        mediaId: "media-one",
+        durationMs: 3_000
+      }],
+      excludedMediaIds: ["media-two"],
+      durationMs: 3_000,
+      mode: "edited" as const
+    };
+
+    await reels.save(reel);
+
+    expect(await reels.get("trip-one")).toEqual(reel);
+    expect(JSON.stringify(await reels.get("trip-one"))).not.toContain("blob:");
   });
 
   it("stores only the minimum offline principal identity", async () => {
