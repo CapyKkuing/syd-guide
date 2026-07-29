@@ -54,5 +54,5 @@ function PreviewOfflineBanner() {
   }, []);
 
   if (!offline) return null;
-  return <p className="offline-banner" role="status">오프라인 — 저장된 샘플 정보를 표시합니다</p>;
+  return <p className="offline-banner" role="status">오프라인 — 저장된 여행 데이터를 표시합니다</p>;
 }

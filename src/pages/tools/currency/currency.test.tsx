@@ -119,6 +119,7 @@ describe("currency conversion", () => {
 
     expect(await screen.findByLabelText("KRW/AUD 환율")).toHaveValue(905.25);
     expect(screen.getByText(/2026\. 7\. 28\./)).toBeVisible();
+    expect(screen.getByText("저장됨")).toBeVisible();
     expect(request).not.toHaveBeenCalled();
   });
 });

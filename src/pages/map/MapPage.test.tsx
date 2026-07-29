@@ -89,6 +89,23 @@ describe("MapPage", () => {
     await waitFor(() => expect(screen.queryByText("온라인 지도를 불러오는 중입니다.")).not.toBeInTheDocument());
   });
 
+  it("hides the map canvas offline while keeping every saved place available", async () => {
+    const original = Object.getOwnPropertyDescriptor(window.navigator, "onLine");
+    Object.defineProperty(window.navigator, "onLine", { configurable: true, value: false });
+
+    try {
+      const { places, days } = await getMapFixtures();
+      render(<MapPage places={places} days={days} />);
+
+      expect(screen.getByRole("status")).toHaveTextContent("오프라인 — 저장된 장소 목록을 표시합니다");
+      expect(screen.queryByLabelText("온라인 지도")).not.toBeInTheDocument();
+      expect(screen.getByRole("list", { name: "장소 목록" })).toHaveTextContent("Sydney Opera House");
+    } finally {
+      if (original) Object.defineProperty(window.navigator, "onLine", original);
+      else Reflect.deleteProperty(window.navigator, "onLine");
+    }
+  });
+
   it("keeps a coordinate-less place in the list without inventing a marker", async () => {
     const { places, days } = await getMapFixtures();
     const firstPlace = places.at(0);
@@ -134,7 +151,7 @@ describe("MapPage", () => {
     expect(card).toHaveFocus();
   });
 
-  it("does not render a Google map link for an unsafe or non-Google URL", async () => {
+  it("builds Google Maps links instead of trusting a saved map URL", async () => {
     const { places, days } = await getMapFixtures();
     const firstPlace = places.at(0);
     if (!firstPlace) throw new Error("fixture place missing");
@@ -147,7 +164,9 @@ describe("MapPage", () => {
     render(<MapPage places={[unsafePlace]} days={days} />);
 
     await userEvent.click(screen.getByRole("button", { name: /Unsafe place, 숙소, 방문/ }));
-    expect(within(screen.getByRole("dialog", { name: "장소 상세" })).queryByRole("link", { name: "Google 지도 열기" })).not.toBeInTheDocument();
+    const dialog = within(screen.getByRole("dialog", { name: "장소 상세" }));
+    expect(dialog.getByRole("link", { name: "최신 정보 보기" })).toHaveAttribute("href", expect.stringContaining("www.google.com/maps/search"));
+    expect(dialog.getByRole("link", { name: "길찾기" })).toHaveAttribute("href", expect.stringContaining("www.google.com/maps/dir"));
   });
 
   it("keeps invalid-coordinate places available in the semantic list", async () => {

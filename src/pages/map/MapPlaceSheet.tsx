@@ -1,7 +1,7 @@
 import { BottomSheet } from "../../components/BottomSheet";
 import type { MapPlaceView } from "../../data/contracts";
 import type { TripMutationController } from "../../services/mutations/controller";
-import { isSafeGoogleMapsUrl } from "../../shared/externalUrls";
+import { googleMapsDirectionsUrl, googleMapsSearchUrl } from "./googleMapsLinks";
 import { PlaceVoteControl } from "./PlaceVoteControl";
 
 export interface MapPlaceSheetProps {
@@ -35,6 +35,8 @@ export function MapPlaceSheet({
   returnFocusTo,
   viewerMemberId
 }: MapPlaceSheetProps) {
+  const mapsSearchUrl = googleMapsSearchUrl(place);
+  const mapsDirectionsUrl = googleMapsDirectionsUrl(place);
   const voteTotals = {
     must: place.votes.filter((vote) => vote.choice === "must").length,
     okay: place.votes.filter((vote) => vote.choice === "okay").length,
@@ -52,11 +54,10 @@ export function MapPlaceSheet({
         </dl>
         <p>투표: 꼭 가요 {voteTotals.must} · 괜찮아요 {voteTotals.okay} · 건너뛰기 {voteTotals.skip}</p>
         <PlaceVoteControl controller={controller} place={place} viewerMemberId={viewerMemberId} />
-        {isSafeGoogleMapsUrl(place.mapUrl) ? (
-          <a className="map-place-sheet__map-link" href={place.mapUrl} rel="noreferrer noopener" target="_blank">
-            Google 지도 열기
-          </a>
-        ) : null}
+        <div className="map-place-sheet__map-links">
+          <a className="map-place-sheet__map-link" href={mapsSearchUrl} rel="noreferrer noopener" target="_blank">최신 정보 보기</a>
+          <a className="map-place-sheet__map-link" href={mapsDirectionsUrl} rel="noreferrer noopener" target="_blank">길찾기</a>
+        </div>
         {controller ? <button className="secondary-button" onClick={onEdit} type="button">장소 수정</button> : null}
       </div>
     </BottomSheet>

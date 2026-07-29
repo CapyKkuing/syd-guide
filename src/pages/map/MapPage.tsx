@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { MapPlaceView, ScheduleDayView } from "../../data/contracts";
 import type { TripMutationController } from "../../services/mutations/controller";
 import { MapCanvas, type MapLoader } from "./MapCanvas";
@@ -58,6 +58,17 @@ export function MapPage({
   const [selectedPlace, setSelectedPlace] = useState<MapPlaceView | null>(null);
   const [editingPlace, setEditingPlace] = useState<MapPlaceView | null | undefined>();
   const [returnFocusTo, setReturnFocusTo] = useState<HTMLElement | null>(null);
+  const [online, setOnline] = useState(() => window.navigator.onLine);
+
+  useEffect(() => {
+    const updateOnlineStatus = () => setOnline(window.navigator.onLine);
+    window.addEventListener("online", updateOnlineStatus);
+    window.addEventListener("offline", updateOnlineStatus);
+    return () => {
+      window.removeEventListener("online", updateOnlineStatus);
+      window.removeEventListener("offline", updateOnlineStatus);
+    };
+  }, []);
 
   const filteredPlaces = useMemo(() => {
     const normalizedSearch = search.trim().toLocaleLowerCase();
@@ -123,7 +134,11 @@ export function MapPage({
       <p aria-live="polite" className="map-result-count">{filteredPlaces.length}개 장소</p>
 
       <div className="map-page__content">
-        <MapCanvas loader={mapLoader} onOpenPlace={openPlace} places={filteredPlaces} />
+        {online ? (
+          <MapCanvas loader={mapLoader} onOpenPlace={openPlace} places={filteredPlaces} />
+        ) : (
+          <p className="map-offline-status" role="status">오프라인 — 저장된 장소 목록을 표시합니다.</p>
+        )}
         <section className="map-place-list-section" aria-labelledby="map-list-title">
           <h2 id="map-list-title">장소 목록</h2>
           <ol aria-label="장소 목록" className="map-place-list">

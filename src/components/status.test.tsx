@@ -55,7 +55,7 @@ describe("OfflineBanner", () => {
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
 
     act(() => window.dispatchEvent(new Event("offline")));
-    expect(screen.getByRole("status")).toHaveTextContent("오프라인 — 저장된 샘플 정보를 표시합니다");
+    expect(screen.getByRole("status")).toHaveTextContent("오프라인 — 저장된 여행 데이터를 표시합니다");
 
     act(() => window.dispatchEvent(new Event("online")));
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
@@ -67,7 +67,7 @@ describe("OfflineBanner", () => {
 
     try {
       render(<OfflineBanner />);
-      expect(screen.getByRole("status")).toHaveTextContent("오프라인 — 저장된 샘플 정보를 표시합니다");
+      expect(screen.getByRole("status")).toHaveTextContent("오프라인 — 저장된 여행 데이터를 표시합니다");
     } finally {
       if (original) Object.defineProperty(window.navigator, "onLine", original);
       else Reflect.deleteProperty(window.navigator, "onLine");

@@ -3,6 +3,7 @@ import {
   localSettings,
   type SettingsStore
 } from "../../../services/offline/settingsStore";
+import { DataFreshness, type Freshness } from "../../../components/DataFreshness";
 import { convertAudToKrw, convertKrwToAud } from "./convert";
 
 type ConversionDirection = "aud-to-krw" | "krw-to-aud";
@@ -29,7 +30,7 @@ export function CurrencyTool({
     useState<ConversionDirection>("aud-to-krw");
   const [amount, setAmount] = useState("1");
   const [rate, setRate] = useState("");
-  const [fetchedAt, setFetchedAt] = useState<string | null>(null);
+  const [freshness, setFreshness] = useState<Freshness>({ source: "sample", updatedAt: null });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -38,7 +39,7 @@ export function CurrencyTool({
     settings.get<unknown>("currency-latest").then((saved) => {
       if (!active || !isLatestRate(saved)) return;
       setRate(String(saved.rate));
-      setFetchedAt(saved.fetchedAt);
+      setFreshness({ source: "cached", updatedAt: saved.fetchedAt });
     }).catch(() => undefined);
     return () => {
       active = false;
@@ -54,7 +55,7 @@ export function CurrencyTool({
       const latest = parseRateResponse(await response.json());
       await settings.set("currency-latest", latest);
       setRate(String(latest.rate));
-      setFetchedAt(latest.fetchedAt);
+      setFreshness({ source: "live", updatedAt: latest.fetchedAt });
     } catch {
       setError("환율을 불러오지 못했습니다. 입력한 환율을 그대로 사용합니다.");
     } finally {
@@ -96,7 +97,10 @@ export function CurrencyTool({
             step="0.01"
             type="number"
             value={rate}
-            onChange={(event) => setRate(event.target.value)}
+            onChange={(event) => {
+              setRate(event.target.value);
+              setFreshness({ source: "sample", updatedAt: null });
+            }}
           />
         </label>
       </div>
@@ -111,15 +115,8 @@ export function CurrencyTool({
       >
         {loading ? "불러오는 중" : "환율 불러오기"}
       </button>
-      {fetchedAt ? (
-        <p className="currency-tool__time">
-          최근 성공: {formatFetchedAt(fetchedAt)}
-        </p>
-      ) : (
-        <p className="currency-tool__time">
-          환율을 직접 입력하거나 필요할 때만 불러오세요.
-        </p>
-      )}
+      <DataFreshness value={freshness} />
+      {freshness.source === "sample" ? <p className="currency-tool__time">환율을 직접 입력하거나 필요할 때만 불러오세요.</p> : null}
       {error ? <p role="alert">{error}</p> : null}
     </div>
   );
@@ -172,11 +169,4 @@ function isLatestRate(value: unknown): value is LatestCurrencyRate {
     && value.rate > 0
     && typeof value.fetchedAt === "string"
     && !Number.isNaN(new Date(value.fetchedAt).getTime());
-}
-
-function formatFetchedAt(value: string) {
-  return new Intl.DateTimeFormat("ko-KR", {
-    dateStyle: "medium",
-    timeStyle: "short"
-  }).format(new Date(value));
 }

@@ -1,5 +1,6 @@
-import { Badge, Card } from "@astryxdesign/core";
+import { Card } from "@astryxdesign/core";
 import { AppLink } from "../../components/AppLink";
+import { DataFreshness } from "../../components/DataFreshness";
 import { Icon } from "../../components/Icon";
 import type { TodayViewModel } from "../../data/contracts";
 import { isSafeExternalHttpsUrl } from "./todayHelpers";
@@ -32,7 +33,7 @@ export function WeatherCard({ weather }: Pick<TodayCardProps, "weather">) {
       <div className="today-card__heading">
         <Icon name="weather" />
         <h3 id="weather-card-title">날씨</h3>
-        <Badge className="today-card__badge" label="샘플" variant="neutral" />
+        <DataFreshness value={{ source: "sample", updatedAt: null }} />
       </div>
       <p className="today-card__value">{weather.temperatureC}°C · {weather.condition}</p>
       <p className="today-card__detail">{weather.location} · UV {weather.uvIndex}</p>
