@@ -1,4 +1,5 @@
 import type { SessionPrincipal } from "../../features/auth/api";
+import { deriveExperiencePhase } from "../../domain/tripPhase";
 import type { TripSnapshot } from "../../shared/api";
 import type { Booking, Place, ScheduleItem } from "../../shared/entities";
 import type {
@@ -51,7 +52,7 @@ export function mapSnapshotToWorkspace(
   principal: SessionPrincipal,
   now: Date
 ): TripWorkspace {
-  const trip = mapTrip(snapshot);
+  const trip = mapTrip(snapshot, now);
   const localDate = dateInZone(now, trip.timeZone);
   const places = new Map(snapshot.places.map((place) => [place.id, place]));
   const bookings = new Map(snapshot.bookings.map((booking) => [booking.id, booking]));
@@ -145,7 +146,7 @@ export function mapSnapshotToWorkspace(
   };
 }
 
-function mapTrip(snapshot: TripSnapshot): TripSummaryViewModel {
+function mapTrip(snapshot: TripSnapshot, now: Date): TripSummaryViewModel {
   const parts = snapshot.trip.destination.split(",").map((part) => part.trim()).filter(Boolean);
   return {
     id: snapshot.trip.id,
@@ -156,6 +157,11 @@ function mapTrip(snapshot: TripSnapshot): TripSummaryViewModel {
     endDate: snapshot.trip.endDate,
     timeZone: snapshot.trip.timeZone,
     phase: snapshot.trip.status,
+    experiencePhase: deriveExperiencePhase({
+      journeyStartsAt: snapshot.trip.journeyStartsAt,
+      journeyEndsAt: snapshot.trip.journeyEndsAt,
+      fallbackStatus: snapshot.trip.status,
+    }, now),
     coverImageUrl: snapshot.trip.coverImageUrl ?? "",
     travelerCount: snapshot.members.length,
     bookingCount: snapshot.bookings.length,

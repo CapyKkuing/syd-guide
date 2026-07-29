@@ -1,3 +1,5 @@
+import type { FlightDetails } from "./flights";
+
 export type MemberRole = "owner" | "partner";
 export type TripStatus = "upcoming" | "active" | "completed";
 export type PlaceCategory =
@@ -46,6 +48,11 @@ export interface Trip {
   timeZone: string;
   status: TripStatus;
   coverImageUrl: string | null;
+  journeyStartsAt: string | null;
+  journeyEndsAt: string | null;
+  outboundFlight: FlightDetails | null;
+  returnFlight: FlightDetails | null;
+  representativeMediaId: string | null;
   version: number;
   syncVersion: number;
   deletedAt: string | null;

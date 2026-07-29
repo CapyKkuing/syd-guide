@@ -12,7 +12,7 @@ import type {
 } from "../contracts";
 import { pathForAsset } from "../../app/basePath";
 
-type TripDefinition = Omit<TripSummaryViewModel, "startDate" | "endDate" | "phase" | "updatedAt"> & {
+type TripDefinition = Omit<TripSummaryViewModel, "startDate" | "endDate" | "phase" | "experiencePhase" | "updatedAt"> & {
   startOffsetDays: number;
   endOffsetDays: number;
 };
@@ -427,11 +427,13 @@ export class FixtureTravelGuideDataSource implements TravelGuideDataSource {
     const localDate = localDateTime(this.clock(), definition.timeZone).date;
     const startDate = addDays(localDate, definition.startOffsetDays);
     const endDate = addDays(localDate, definition.endOffsetDays);
+    const phase = phaseFor(localDate, startDate, endDate);
     return {
       ...definition,
       startDate,
       endDate,
-      phase: phaseFor(localDate, startDate, endDate),
+      phase,
+      experiencePhase: phase === "upcoming" ? "before" : phase === "completed" ? "after" : "during",
       updatedAt: this.clock().toISOString()
     };
   }

@@ -9,9 +9,54 @@ import { createApp } from "../../worker/app";
 import type { Env } from "../../worker/env";
 import worker from "../../worker/index";
 import type { Trip } from "../../src/shared/entities";
+import type { FlightDetails } from "../../src/shared/flights";
 
 const fixedNow = new Date("2026-07-27T00:00:00.000Z");
 const app = createApp({ now: () => fixedNow });
+
+const outboundFlight = {
+  airline: "대한항공",
+  flightNumber: "KE401",
+  departureAirportName: "인천국제공항",
+  departureIataCode: "ICN",
+  departureTimeZone: "Asia/Seoul",
+  scheduledDepartureAt: "2026-09-09T22:00:00+09:00",
+  estimatedDepartureAt: "2026-09-09T22:20:00+09:00",
+  actualDepartureAt: "2026-09-09T22:30:00+09:00",
+  departureTerminal: "2",
+  departureGate: "252",
+  arrivalAirportName: "시드니 공항",
+  arrivalIataCode: "SYD",
+  arrivalTimeZone: "Australia/Sydney",
+  scheduledArrivalAt: "2026-09-10T09:00:00+10:00",
+  estimatedArrivalAt: null,
+  actualArrivalAt: null,
+  arrivalTerminal: "1",
+  arrivalGate: null,
+  status: "departed",
+} satisfies FlightDetails;
+
+const returnFlight = {
+  airline: "대한항공",
+  flightNumber: "KE402",
+  departureAirportName: "시드니 공항",
+  departureIataCode: "SYD",
+  departureTimeZone: "Australia/Sydney",
+  scheduledDepartureAt: "2026-09-14T09:00:00+10:00",
+  estimatedDepartureAt: null,
+  actualDepartureAt: null,
+  departureTerminal: "1",
+  departureGate: null,
+  arrivalAirportName: "인천국제공항",
+  arrivalIataCode: "ICN",
+  arrivalTimeZone: "Asia/Seoul",
+  scheduledArrivalAt: "2026-09-14T20:00:00+09:00",
+  estimatedArrivalAt: "2026-09-14T20:30:00+09:00",
+  actualArrivalAt: null,
+  arrivalTerminal: "2",
+  arrivalGate: null,
+  status: "delayed",
+} satisfies FlightDetails;
 
 const validTrip = {
   title: "시드니 여행",
@@ -21,6 +66,8 @@ const validTrip = {
   timeZone: "Australia/Sydney",
   status: "upcoming",
   coverImageUrl: "/images/sydney_harbour_bridge.jpg",
+  outboundFlight,
+  returnFlight,
 } as const;
 
 function bindings(surface: Env["SURFACE"]): Env {
@@ -89,6 +136,11 @@ describe("shared trip library API", () => {
         updatedBy: role,
         version: 1,
         syncVersion: 0,
+        journeyStartsAt: outboundFlight.actualDepartureAt,
+        journeyEndsAt: returnFlight.estimatedArrivalAt,
+        outboundFlight,
+        returnFlight,
+        representativeMediaId: null,
         deletedAt: null,
         purgeAfter: null,
       });
@@ -299,6 +351,28 @@ describe("shared trip library API", () => {
     });
   });
 
+  it("clears journey boundaries when a flight is cancelled", async () => {
+    const created = await createTrip();
+    const response = await tripRequest("owner", `/api/trips/${created.id}`, {
+      method: "PATCH",
+      headers: headers("owner", true),
+      body: JSON.stringify({
+        ...validTrip,
+        returnFlight: { ...returnFlight, status: "cancelled" },
+        baseVersion: 1,
+      }),
+    });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      trip: {
+        journeyStartsAt: null,
+        journeyEndsAt: null,
+        returnFlight: { status: "cancelled" },
+      },
+    });
+  });
+
   it("rejects stale writes with the current trip", async () => {
     const created = await createTrip();
     await tripRequest("owner", `/api/trips/${created.id}`, {
@@ -391,6 +465,22 @@ describe("shared trip library API", () => {
     ["backwards dates", { startDate: "2026-09-15", endDate: "2026-09-14" }],
     ["invalid timezone", { timeZone: "Australia/Nowhere" }],
     ["insecure cover URL", { coverImageUrl: "http://example.com/cover.jpg" }],
+    ["invalid airport code", {
+      outboundFlight: { ...outboundFlight, departureIataCode: "IC" },
+    }],
+    ["local flight time", {
+      outboundFlight: {
+        ...outboundFlight,
+        scheduledDepartureAt: "2026-09-09T22:00:00",
+      },
+    }],
+    ["reversed journey boundaries", {
+      returnFlight: {
+        ...returnFlight,
+        scheduledArrivalAt: "2026-09-08T20:00:00+09:00",
+        estimatedArrivalAt: null,
+      },
+    }],
     ["invalid base version", { baseVersion: 0 }],
   ])("rejects %s", async (_name, invalid) => {
     const input = { ...validTrip, ...invalid };

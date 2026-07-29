@@ -217,6 +217,7 @@ describe("travel data resources", () => {
         endDate: "2026-07-29",
         timeZone: "Australia/Sydney",
         phase: "active",
+        experiencePhase: "during",
         coverImageUrl: "/trip.jpg",
         travelerCount: 2,
         bookingCount: 0,

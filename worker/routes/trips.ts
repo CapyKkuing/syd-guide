@@ -1,6 +1,10 @@
 import type { Hono } from "hono";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { z } from "zod";
+import {
+  deriveJourneyBoundaries,
+  flightDetailsSchema,
+} from "../../src/shared/flights";
 import type { AppDependencies } from "../auth/access";
 import { requirePrincipal } from "../auth/principal";
 import {
@@ -60,10 +64,24 @@ const tripInputSchema = z
       .refine(isValidTimeZone, "유효한 IANA 시간대를 입력하세요."),
     status: z.enum(["upcoming", "active", "completed"]),
     coverImageUrl: imageUrlSchema.nullable(),
+    outboundFlight: flightDetailsSchema.nullable().default(null),
+    returnFlight: flightDetailsSchema.nullable().default(null),
   })
   .refine((trip) => trip.endDate >= trip.startDate, {
     message: "종료일은 시작일보다 빠를 수 없습니다.",
     path: ["endDate"],
+  })
+  .refine((trip) => {
+    const boundary = deriveJourneyBoundaries(
+      trip.outboundFlight,
+      trip.returnFlight
+    );
+    return boundary.journeyStartsAt === null
+      || boundary.journeyEndsAt === null
+      || Date.parse(boundary.journeyStartsAt) < Date.parse(boundary.journeyEndsAt);
+  }, {
+    message: "여정 종료시각은 시작시각보다 늦어야 합니다.",
+    path: ["returnFlight", "scheduledArrivalAt"],
   });
 const versionSchema = z.object({
   baseVersion: z.number().int().positive(),

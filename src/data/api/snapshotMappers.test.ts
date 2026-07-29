@@ -7,6 +7,10 @@ const now = new Date("2026-09-10T01:00:00.000Z");
 describe("mapSnapshotToWorkspace", () => {
   it("maps one snapshot into the current four-tab workspace", () => {
     const snapshot = createTripSnapshot();
+    Object.assign(snapshot.trip, {
+      journeyStartsAt: "2026-09-09T23:00:00.000Z",
+      journeyEndsAt: "2026-09-15T00:00:00.000Z",
+    });
     const workspace = mapSnapshotToWorkspace(
       snapshot,
       { memberId: "owner", role: "owner" },
@@ -15,6 +19,7 @@ describe("mapSnapshotToWorkspace", () => {
 
     expect(workspace.context.trip.id).toBe(snapshot.trip.id);
     expect(workspace.context.trip.phase).toBe("active");
+    expect(workspace.context.trip.experiencePhase).toBe("during");
     expect(workspace.context.localDate).toBe("2026-09-10");
     expect(workspace.context.viewer).toEqual({
       memberId: "owner",

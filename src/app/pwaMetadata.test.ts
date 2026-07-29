@@ -32,7 +32,7 @@ describe("PWA metadata", () => {
 
     expect(indexHtml).toContain('<meta name="theme-color" content="#F6F7F8">');
     expect(indexHtml).toContain(
-      '<meta name="description" content="둘만의 여행을 오늘 중심으로 확인하는 개인용 여행 가이드북">'
+      '<meta name="description" content="우리만의 여행 가이드북에서 둘의 여행을 함께 준비하고 기록합니다.">'
     );
     expect(manifestAsset).toMatchObject({
       type: "asset",
@@ -41,6 +41,8 @@ describe("PWA metadata", () => {
 
     const manifest = JSON.parse(String((manifestAsset as { source: string }).source));
     expect(manifest).toMatchObject({
+      name: "우리만의 여행 가이드북",
+      short_name: "여행 가이드",
       background_color: "#F4F2EA",
       theme_color: "#376C4A"
     });

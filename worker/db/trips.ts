@@ -1,4 +1,9 @@
 import type { Principal, Trip, TripStatus } from "../../src/shared/entities";
+import {
+  deriveJourneyBoundaries,
+  flightDetailsSchema,
+  type FlightDetails,
+} from "../../src/shared/flights";
 import type { Env } from "../env";
 
 export interface TripInput {
@@ -9,6 +14,8 @@ export interface TripInput {
   timeZone: string;
   status: TripStatus;
   coverImageUrl: string | null;
+  outboundFlight: FlightDetails | null;
+  returnFlight: FlightDetails | null;
 }
 
 export type TripRow = {
@@ -20,6 +27,11 @@ export type TripRow = {
   time_zone: string;
   status: TripStatus;
   cover_image_url: string | null;
+  journey_starts_at: string | null;
+  journey_ends_at: string | null;
+  outbound_flight_json: string | null;
+  return_flight_json: string | null;
+  representative_media_id: string | null;
   version: number;
   sync_version: number;
   deleted_at: string | null;
@@ -62,6 +74,11 @@ export function toTrip(row: TripRow): Trip {
     timeZone: row.time_zone,
     status: row.status,
     coverImageUrl: row.cover_image_url,
+    journeyStartsAt: row.journey_starts_at,
+    journeyEndsAt: row.journey_ends_at,
+    outboundFlight: parseFlight(row.outbound_flight_json),
+    returnFlight: parseFlight(row.return_flight_json),
+    representativeMediaId: row.representative_media_id,
     version: row.version,
     syncVersion: row.sync_version,
     deletedAt: row.deleted_at,
@@ -71,6 +88,14 @@ export function toTrip(row: TripRow): Trip {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
+}
+
+function parseFlight(value: string | null): FlightDetails | null {
+  return value === null ? null : flightDetailsSchema.parse(JSON.parse(value));
+}
+
+function encodeFlight(value: FlightDetails | null): string | null {
+  return value === null ? null : JSON.stringify(value);
 }
 
 export function findTripForMemberStatement(
@@ -135,13 +160,18 @@ export async function createTrip(
 ): Promise<Trip> {
   const id = crypto.randomUUID();
   const timestamp = now.toISOString();
+  const boundary = deriveJourneyBoundaries(
+    input.outboundFlight,
+    input.returnFlight
+  );
   await env.DB.batch([
     env.DB.prepare(
       `INSERT INTO trips (
         id, title, destination, start_date, end_date, time_zone, status,
-        cover_image_url, version, sync_version, deleted_at, purge_after,
-        created_by, updated_by, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 0, NULL, NULL, ?, ?, ?, ?)`
+        cover_image_url, journey_starts_at, journey_ends_at, outbound_flight_json,
+        return_flight_json, representative_media_id, version, sync_version,
+        deleted_at, purge_after, created_by, updated_by, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, 1, 0, NULL, NULL, ?, ?, ?, ?)`
     ).bind(
       id,
       input.title,
@@ -151,6 +181,10 @@ export async function createTrip(
       input.timeZone,
       input.status,
       input.coverImageUrl,
+      boundary.journeyStartsAt,
+      boundary.journeyEndsAt,
+      encodeFlight(input.outboundFlight),
+      encodeFlight(input.returnFlight),
       principal.memberId,
       principal.memberId,
       timestamp,
@@ -193,10 +227,15 @@ export async function updateTrip(
   if (current.deletedAt) {
     return { ok: false, reason: "invalid-state", current };
   }
+  const derivedBoundary = deriveJourneyBoundaries(
+    input.outboundFlight,
+    input.returnFlight
+  );
   const updated = await env.DB.prepare(
     `UPDATE trips SET
       title = ?, destination = ?, start_date = ?, end_date = ?, time_zone = ?,
-      status = ?, cover_image_url = ?, version = version + 1,
+      status = ?, cover_image_url = ?, journey_starts_at = ?, journey_ends_at = ?,
+      outbound_flight_json = ?, return_flight_json = ?, version = version + 1,
       updated_by = ?, updated_at = ?
      WHERE id = ? AND version = ? AND deleted_at IS NULL
        AND EXISTS (
@@ -213,6 +252,10 @@ export async function updateTrip(
       input.timeZone,
       input.status,
       input.coverImageUrl,
+      derivedBoundary.journeyStartsAt,
+      derivedBoundary.journeyEndsAt,
+      encodeFlight(input.outboundFlight),
+      encodeFlight(input.returnFlight),
       principal.memberId,
       now.toISOString(),
       tripId,

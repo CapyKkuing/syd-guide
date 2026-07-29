@@ -320,6 +320,9 @@
 
 .trip-form__heading h2,
 .trip-form__heading p,
+.trip-form__section-heading h3,
+.trip-form__section-heading p,
+.trip-form__flight h4,
 .trash-panel h2,
 .trash-panel p,
 .trip-delete-confirmation h2,
@@ -353,6 +356,42 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-3);
+}
+
+.trip-form__row--three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.trip-form__section-heading {
+  display: grid;
+  gap: var(--space-2);
+  padding-top: var(--space-2);
+}
+
+.trip-form__section-heading p {
+  color: var(--text-2);
+  font-size: var(--text-sm);
+}
+
+.trip-form__flight {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+  margin: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+
+.trip-form__flight legend {
+  padding: 0 var(--space-2);
+  color: var(--text);
+  font-weight: 800;
+}
+
+.trip-form__flight-actions {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .trip-form__actions {

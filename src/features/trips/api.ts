@@ -1,6 +1,11 @@
 import { z } from "zod";
 import type { TravelGuideDataSource } from "../../data/contracts";
 import type { Trip, TripStatus } from "../../shared/entities";
+import {
+  deriveJourneyBoundaries,
+  flightDetailsSchema,
+  type FlightDetails,
+} from "../../shared/flights";
 
 export interface TripLibrarySummary extends Trip {
   country: string | null;
@@ -17,6 +22,8 @@ export interface TripInput {
   timeZone: string;
   status: TripStatus;
   coverImageUrl: string | null;
+  outboundFlight: FlightDetails | null;
+  returnFlight: FlightDetails | null;
 }
 
 export interface TripLibraryClient {
@@ -204,10 +211,23 @@ export const tripInputSchema = z.object({
   endDate: z.iso.date(),
   timeZone: z.string().refine(validTimeZone, "유효한 IANA 시간대를 입력하세요."),
   status: z.enum(["upcoming", "active", "completed"]),
-  coverImageUrl: coverImageSchema.nullable()
+  coverImageUrl: coverImageSchema.nullable(),
+  outboundFlight: flightDetailsSchema.nullable(),
+  returnFlight: flightDetailsSchema.nullable()
 }).refine((trip) => trip.endDate >= trip.startDate, {
   message: "종료일은 시작일보다 빠를 수 없습니다.",
   path: ["endDate"]
+}).refine((trip) => {
+  const boundary = deriveJourneyBoundaries(
+    trip.outboundFlight,
+    trip.returnFlight
+  );
+  return boundary.journeyStartsAt === null
+    || boundary.journeyEndsAt === null
+    || Date.parse(boundary.journeyStartsAt) < Date.parse(boundary.journeyEndsAt);
+}, {
+  message: "여정 종료시각은 시작시각보다 늦어야 합니다.",
+  path: ["returnFlight", "scheduledArrivalAt"]
 });
 
 function readOnlyError(reason: string): never {
@@ -235,6 +255,11 @@ export function createFixturePreviewTripLibraryClient(
           timeZone: trip.timeZone,
           status: trip.phase,
           coverImageUrl: trip.coverImageUrl,
+          journeyStartsAt: null,
+          journeyEndsAt: null,
+          outboundFlight: null,
+          returnFlight: null,
+          representativeMediaId: null,
           version: 1,
           syncVersion: 0,
           deletedAt: null,

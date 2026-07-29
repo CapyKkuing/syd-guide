@@ -5,6 +5,15 @@ import {
   type TripInput,
   type TripLibrarySummary
 } from "./api";
+import {
+  FlightFields,
+} from "./FlightFields";
+import {
+  emptyFlightDraft,
+  flightDetailsToDraft,
+  flightDraftToDetails,
+  type FlightDraft
+} from "./flightDraft";
 
 const destinationPresets: Record<string, string> = {
   Sydney: "Australia/Sydney",
@@ -15,7 +24,12 @@ const destinationPresets: Record<string, string> = {
   "New York": "America/New_York"
 };
 
-function initialInput(trip?: TripLibrarySummary): TripInput {
+type TripFormState = Omit<TripInput, "outboundFlight" | "returnFlight"> & {
+  outboundFlight: FlightDraft | null;
+  returnFlight: FlightDraft | null;
+};
+
+function initialInput(trip?: TripLibrarySummary): TripFormState {
   return trip ? {
     title: trip.title,
     destination: trip.destination,
@@ -23,7 +37,13 @@ function initialInput(trip?: TripLibrarySummary): TripInput {
     endDate: trip.endDate,
     timeZone: trip.timeZone,
     status: trip.status,
-    coverImageUrl: trip.coverImageUrl
+    coverImageUrl: trip.coverImageUrl,
+    outboundFlight: trip.outboundFlight
+      ? flightDetailsToDraft(trip.outboundFlight)
+      : null,
+    returnFlight: trip.returnFlight
+      ? flightDetailsToDraft(trip.returnFlight)
+      : null
   } : {
     title: "",
     destination: "",
@@ -31,7 +51,9 @@ function initialInput(trip?: TripLibrarySummary): TripInput {
     endDate: "",
     timeZone: "",
     status: "upcoming",
-    coverImageUrl: null
+    coverImageUrl: null,
+    outboundFlight: null,
+    returnFlight: null
   };
 }
 
@@ -59,7 +81,24 @@ export function TripForm({
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (submitting) return;
-    const parsed = tripInputSchema.safeParse(input);
+    let candidate: TripInput;
+    try {
+      candidate = {
+        ...input,
+        outboundFlight: input.outboundFlight
+          ? flightDraftToDetails(input.outboundFlight)
+          : null,
+        returnFlight: input.returnFlight
+          ? flightDraftToDetails(input.returnFlight)
+          : null
+      };
+    } catch (caught) {
+      setValidationError(
+        caught instanceof Error ? caught.message : "항공편 입력값을 확인해 주세요."
+      );
+      return;
+    }
+    const parsed = tripInputSchema.safeParse(candidate);
     if (!parsed.success) {
       setValidationError(parsed.error.issues[0]?.message ?? "입력값을 확인해 주세요.");
       return;
@@ -165,6 +204,62 @@ export function TripForm({
             <option value="completed">완료</option>
           </select>
         </label>
+        <div className="trip-form__section-heading">
+          <h3>항공편</h3>
+          <p>
+            실제 시각이 있으면 실제, 없으면 예상, 예정 순서로 여행 시작·종료를 계산합니다.
+          </p>
+        </div>
+        {input.outboundFlight ? (
+          <FlightFields
+            label="출국편"
+            value={input.outboundFlight}
+            onChange={(outboundFlight) => setInput((current) => ({
+              ...current,
+              outboundFlight
+            }))}
+            onRemove={() => setInput((current) => ({
+              ...current,
+              outboundFlight: null
+            }))}
+          />
+        ) : (
+          <button
+            className="secondary-button"
+            type="button"
+            onClick={() => setInput((current) => ({
+              ...current,
+              outboundFlight: emptyFlightDraft()
+            }))}
+          >
+            출국편 입력
+          </button>
+        )}
+        {input.returnFlight ? (
+          <FlightFields
+            label="귀국편"
+            value={input.returnFlight}
+            onChange={(returnFlight) => setInput((current) => ({
+              ...current,
+              returnFlight
+            }))}
+            onRemove={() => setInput((current) => ({
+              ...current,
+              returnFlight: null
+            }))}
+          />
+        ) : (
+          <button
+            className="secondary-button"
+            type="button"
+            onClick={() => setInput((current) => ({
+              ...current,
+              returnFlight: emptyFlightDraft()
+            }))}
+          >
+            귀국편 입력
+          </button>
+        )}
         <label>
           대표 이미지 주소
           <input

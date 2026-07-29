@@ -8,6 +8,7 @@ import type {
   PublicMember,
   VoteChoice
 } from "../shared/entities";
+import type { ExperiencePhase } from "../domain/tripPhase";
 
 export type TripPhase = "upcoming" | "active" | "completed";
 export type ScheduleKind =
@@ -26,6 +27,7 @@ export interface TripSummaryViewModel {
   endDate: string;
   timeZone: string;
   phase: TripPhase;
+  experiencePhase: ExperiencePhase;
   coverImageUrl: string;
   travelerCount: number;
   bookingCount: number;
