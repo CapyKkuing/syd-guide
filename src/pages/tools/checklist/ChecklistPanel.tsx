@@ -21,6 +21,7 @@ export function ChecklistPanel({
   const [title, setTitle] = useState("");
   const [quantity, setQuantity] = useState("1");
   const [memo, setMemo] = useState("");
+  const [requirementKind, setRequirementKind] = useState<CheckItemView["requirementKind"]>(null);
   const [assigneeMemberId, setAssigneeMemberId] = useState("");
   const [error, setError] = useState("");
   const visibleItems = useMemo(
@@ -39,6 +40,7 @@ export function ChecklistPanel({
         title: title.trim(),
         quantity: Math.max(1, Number(quantity) || 1),
         memo: memo.trim(),
+        requirementKind,
         isDone: false,
         position: Math.max(0, ...items.map((item) => item.position)) + 1
       });
@@ -58,6 +60,7 @@ export function ChecklistPanel({
       title: item.title,
       quantity: item.quantity,
       memo: item.memo,
+      requirementKind: item.requirementKind,
       isDone,
       position: item.position
     });
@@ -78,6 +81,9 @@ export function ChecklistPanel({
         <label><span>수량</span><input disabled={!controller} min="1" type="number" value={quantity} onChange={(event) => setQuantity(event.target.value)} /></label>
         <label><span>담당자</span><select disabled={!controller} value={assigneeMemberId} onChange={(event) => setAssigneeMemberId(event.target.value)}>
           <option value="">미정</option>{members.map((member) => <option key={member.id} value={member.id}>{member.displayName}</option>)}
+        </select></label>
+        <label><span>필수 준비 구분</span><select disabled={!controller} value={requirementKind ?? ""} onChange={(event) => setRequirementKind(event.target.value ? event.target.value as NonNullable<CheckItemView["requirementKind"]> : null)}>
+          <option value="">일반</option><option value="passport">여권</option><option value="essential">필수 준비물</option>
         </select></label>
         <label><span>메모</span><input disabled={!controller} value={memo} onChange={(event) => setMemo(event.target.value)} /></label>
         <button className="primary-button" disabled={!controller} type="submit">추가</button>

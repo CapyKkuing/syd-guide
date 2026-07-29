@@ -29,6 +29,7 @@ export function BookingEditorDialog({
   const [documentUrl, setDocumentUrl] = useState(booking?.documentUrl ?? "");
   const [memo, setMemo] = useState(booking?.memo ?? "");
   const [isFixed, setIsFixed] = useState(booking?.isFixed ?? false);
+  const [isRequired, setIsRequired] = useState(booking?.isRequired ?? false);
   const [confirmation, setConfirmation] = useState<"none" | "delete" | "fixed">("none");
   const [error, setError] = useState("");
 
@@ -45,7 +46,8 @@ export function BookingEditorDialog({
       externalUrl: safeUrl(externalUrl),
       documentUrl: safeUrl(documentUrl),
       memo: memo.trim(),
-      isFixed
+      isFixed,
+      isRequired
     };
     try {
       await controller.submit("booking", booking ? "update" : "create", booking?.id ?? crypto.randomUUID(), booking?.version ?? null, payload);
@@ -87,6 +89,7 @@ export function BookingEditorDialog({
         <label><span>문서 주소</span><input type="url" value={documentUrl} onChange={(event) => setDocumentUrl(event.target.value)} /></label>
         <label><span>메모</span><textarea value={memo} onChange={(event) => setMemo(event.target.value)} /></label>
         <label className="tool-editor__check"><input checked={isFixed} onChange={(event) => setIsFixed(event.target.checked)} type="checkbox" />고정 예약</label>
+        <label className="tool-editor__check"><input checked={isRequired} onChange={(event) => setIsRequired(event.target.checked)} type="checkbox" />필수 예약</label>
         {error ? <p role="alert">{error}</p> : null}
         {confirmation === "delete" ? <div className="tool-editor__confirm"><p>{booking?.provider} 예약을 삭제할까요?</p><button onClick={() => booking?.isFixed ? setConfirmation("fixed") : void remove()} type="button">삭제 확인</button></div> : null}
         {confirmation === "fixed" ? <div className="tool-editor__confirm"><p>고정 예약입니다. 그래도 삭제할까요?</p><button onClick={() => void remove()} type="button">고정 예약 삭제</button></div> : null}

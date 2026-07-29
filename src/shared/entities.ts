@@ -16,6 +16,7 @@ export type EntityKind =
   | "place"
   | "booking"
   | "check_item"
+  | "expense"
   | "note"
   | "vote";
 
@@ -117,6 +118,7 @@ export interface Booking extends VersionedEntity {
   documentUrl: string | null;
   memo: string;
   isFixed: boolean;
+  isRequired: boolean;
 }
 
 export interface CheckItem extends VersionedEntity {
@@ -126,8 +128,29 @@ export interface CheckItem extends VersionedEntity {
   title: string;
   quantity: number;
   memo: string;
+  requirementKind: "passport" | "essential" | null;
   isDone: boolean;
   position: number;
+}
+
+export interface Expense extends VersionedEntity {
+  phase: "pretrip" | "travel";
+  category:
+    | "flight"
+    | "lodging"
+    | "reservation"
+    | "food"
+    | "transport"
+    | "shopping"
+    | "activity"
+    | "other";
+  title: string;
+  amountMinor: number;
+  currency: string;
+  spentOn: string;
+  paidByMemberId: string;
+  isSettled: boolean;
+  memo: string;
 }
 
 export interface Note extends VersionedEntity {
@@ -163,6 +186,7 @@ export interface EntityMap {
   place: Place;
   booking: Booking;
   check_item: CheckItem;
+  expense: Expense;
   note: Note;
   vote: Vote;
 }

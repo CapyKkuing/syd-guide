@@ -1,0 +1,53 @@
+import { pathForTrip } from "../../app/router";
+import { AppLink } from "../../components/AppLink";
+import { ExpensePanel } from "./ExpensePanel";
+import type { TodayHomeProps } from "./todayHomeTypes";
+
+export function AfterTripHome({
+  members,
+  mutationController,
+  today,
+  trip,
+  viewerMemberId,
+}: TodayHomeProps) {
+  return (
+    <div className="today-page today-home today-home--after">
+      <section className="today-hero today-hero--completed" aria-labelledby="today-hero-title">
+        <div className="today-hero__copy">
+          <p className="today-hero__eyebrow">귀국 후</p>
+          <h2 id="today-hero-title">여행을 다시 봅니다</h2>
+          <p className="today-hero__summary">{trip.startDate} — {trip.endDate}</p>
+          <p className="today-hero__detail">{today.summary
+            ? `방문 장소 ${today.summary.visitedPlaceCount}곳 · 완료 일정 ${today.summary.completedItemCount}개`
+            : "여행 기록을 정리하는 중입니다."}</p>
+          <AppLink className="primary-button today-hero__action" href={pathForTrip(trip.id, "schedule")}>여행 다시 보기</AppLink>
+        </div>
+        <figure className="today-hero__visual">
+          <img className="today-hero__cover" src={trip.coverImageUrl} alt={`${trip.destination} 여행 대표 사진`} />
+          <figcaption>{trip.representativeMediaId
+            ? "여행 사진 중 AI 추천 대표 사진"
+            : "사진 업로드 후 AI가 대표 사진을 추천합니다."}</figcaption>
+        </figure>
+      </section>
+
+      <section className={today.unsettledExpenseCount ? "settlement-card is-pending" : "settlement-card"} aria-labelledby="settlement-title">
+        <p className="today-section-heading__eyebrow">SETTLEMENT</p>
+        <h2 id="settlement-title">{today.unsettledExpenseCount
+          ? `정산 미완료 ${today.unsettledExpenseCount}건`
+          : "정산 완료"}</h2>
+        <p>{today.unsettledExpenseCount
+          ? "비용 목록에서 완료된 항목을 정산 완료로 바꿔 주세요."
+          : "기록한 모든 비용의 정산이 끝났습니다."}</p>
+      </section>
+
+      <ExpensePanel
+        controller={mutationController}
+        expenses={today.expenses}
+        localDate={today.localDate}
+        members={members}
+        mode="after"
+        viewerMemberId={viewerMemberId}
+      />
+    </div>
+  );
+}

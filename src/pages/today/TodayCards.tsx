@@ -1,11 +1,11 @@
-import { Badge, Card, ProgressBar } from "@astryxdesign/core";
+import { Badge, Card } from "@astryxdesign/core";
 import { AppLink } from "../../components/AppLink";
 import { Icon } from "../../components/Icon";
 import type { TodayViewModel } from "../../data/contracts";
 import { isSafeExternalHttpsUrl } from "./todayHelpers";
 import { pathForTrip } from "../../app/router";
 
-type TodayCardProps = Pick<TodayViewModel, "weather" | "nextMovement" | "booking" | "budget"> & {
+type TodayCardProps = Pick<TodayViewModel, "weather" | "nextMovement" | "booking"> & {
   tripId: string;
 };
 
@@ -106,40 +106,6 @@ export function BookingCard({ booking, tripId }: Pick<TodayCardProps, "booking" 
           <AppLink className="today-card__link" href={`${pathForTrip(tripId, "tools")}#bookings`}>예약 상세</AppLink>
         </>
       ) : <p className="today-card__detail">예약 정보를 아직 받지 못했습니다.</p>}
-    </Card>
-  );
-}
-
-export function BudgetCard({ budget }: Pick<TodayCardProps, "budget">) {
-  const percentage = budget.limitAud > 0
-    ? Math.min(100, Math.round((budget.spentAud / budget.limitAud) * 100))
-    : 0;
-
-  return (
-    <Card
-      aria-labelledby="budget-card-title"
-      className="today-card"
-      data-motion-stack="true"
-      elevation="low"
-      padding={5}
-      role="region"
-      variant="muted"
-    >
-      <div className="today-card__heading">
-        <Icon name="budget" />
-        <h3 id="budget-card-title">예산</h3>
-        <Badge className="today-card__badge" label="샘플" variant="neutral" />
-      </div>
-      <p className="today-card__value">A${budget.spentAud.toLocaleString("en-AU")} / A${budget.limitAud.toLocaleString("en-AU")}</p>
-      <p className="today-card__detail">{percentage}% 사용</p>
-      <ProgressBar
-        className="today-budget-progress"
-        isLabelHidden
-        label="예산 사용률"
-        max={100}
-        value={percentage}
-        variant={percentage >= 90 ? "warning" : "accent"}
-      />
     </Card>
   );
 }

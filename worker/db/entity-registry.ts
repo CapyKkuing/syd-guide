@@ -116,7 +116,7 @@ export const entityRegistry = {
     columns: [
       "place_id", "booking_type", "provider", "starts_at", "ends_at",
       "reservation_code", "payment_status", "external_url", "document_url",
-      "memo", "is_fixed",
+      "memo", "is_fixed", "is_required",
     ],
     payloadSchema: entitySchemas.booking,
     values: (raw) => {
@@ -125,6 +125,7 @@ export const entityRegistry = {
         value.placeId, value.bookingType, value.provider, value.startsAt,
         value.endsAt, value.reservationCode, value.paymentStatus,
         value.externalUrl, value.documentUrl, value.memo, Number(value.isFixed),
+        Number(value.isRequired),
       ];
     },
     parse: (row) => ({
@@ -141,13 +142,14 @@ export const entityRegistry = {
       documentUrl: row.document_url === null ? null : String(row.document_url),
       memo: String(row.memo),
       isFixed: bool(row.is_fixed),
+      isRequired: bool(row.is_required),
     }),
   },
   check_item: {
     table: "check_items",
     columns: [
       "scope", "owner_member_id", "assignee_member_id", "title", "quantity",
-      "memo", "is_done", "position",
+      "memo", "requirement_kind", "is_done", "position",
     ],
     payloadSchema: entitySchemas.check_item,
     values: (raw, principal) => {
@@ -156,7 +158,7 @@ export const entityRegistry = {
         value.scope,
         value.scope === "personal" ? principal.memberId : value.ownerMemberId,
         value.assigneeMemberId, value.title, value.quantity, value.memo,
-        Number(value.isDone), value.position,
+        value.requirementKind, Number(value.isDone), value.position,
       ];
     },
     parse: (row) => ({
@@ -169,8 +171,38 @@ export const entityRegistry = {
       title: String(row.title),
       quantity: Number(row.quantity),
       memo: String(row.memo),
+      requirementKind: row.requirement_kind === null
+        ? null
+        : row.requirement_kind as EntityMap["check_item"]["requirementKind"],
       isDone: bool(row.is_done),
       position: Number(row.position),
+    }),
+  },
+  expense: {
+    table: "expenses",
+    columns: [
+      "phase", "category", "title", "amount_minor", "currency", "spent_on",
+      "paid_by_member_id", "is_settled", "memo",
+    ],
+    payloadSchema: entitySchemas.expense,
+    values: (raw) => {
+      const value = raw as MutationPayloadMap["expense"];
+      return [
+        value.phase, value.category, value.title, value.amountMinor, value.currency,
+        value.spentOn, value.paidByMemberId, Number(value.isSettled), value.memo,
+      ];
+    },
+    parse: (row) => ({
+      ...base(row),
+      phase: row.phase as EntityMap["expense"]["phase"],
+      category: row.category as EntityMap["expense"]["category"],
+      title: String(row.title),
+      amountMinor: Number(row.amount_minor),
+      currency: String(row.currency),
+      spentOn: String(row.spent_on),
+      paidByMemberId: String(row.paid_by_member_id),
+      isSettled: bool(row.is_settled),
+      memo: String(row.memo),
     }),
   },
   note: {

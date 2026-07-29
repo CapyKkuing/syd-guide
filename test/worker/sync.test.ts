@@ -435,6 +435,7 @@ describe("versioned trip sync API", () => {
         title: "Private item",
         quantity: 1,
         memo: "",
+        requirementKind: null,
         isDone: false,
         position: 0,
       },
@@ -615,6 +616,7 @@ describe("versioned trip sync API", () => {
           documentUrl: "https://example.com/document",
           memo: "private booking memo",
           isFixed: true,
+          isRequired: true,
         },
       },
       {
@@ -651,8 +653,27 @@ describe("versioned trip sync API", () => {
           title: "Passport",
           quantity: 2,
           memo: "",
+          requirementKind: "passport",
           isDone: false,
           position: 0,
+        },
+      },
+      {
+        idempotencyKey: "expense-create",
+        entity: "expense",
+        action: "create",
+        entityId: "expense-one",
+        baseVersion: null,
+        payload: {
+          phase: "pretrip",
+          category: "flight",
+          title: "Flights",
+          amountMinor: 1_200_000,
+          currency: "KRW",
+          spentOn: "2026-09-01",
+          paidByMemberId: "owner",
+          isSettled: false,
+          memo: "",
         },
       },
       {
@@ -699,9 +720,10 @@ describe("versioned trip sync API", () => {
       places: [{ id: "place-dependency", version: 1 }],
       bookings: [{ id: "booking-one", version: 1 }],
       checkItems: [{ id: "check-one", version: 1 }],
+      expenses: [{ id: "expense-one", version: 1 }],
       notes: [{ id: "note-one", version: 1 }],
       votes: [{ id: "vote-one", version: 1 }],
-      syncVersion: 7,
+      syncVersion: 8,
     });
   });
 
@@ -843,6 +865,7 @@ describe("versioned trip sync API", () => {
           documentUrl: null,
           memo: "",
           isFixed: true,
+          isRequired: false,
         },
       },
       {
@@ -860,6 +883,7 @@ describe("versioned trip sync API", () => {
           documentUrl: null,
           memo: "",
           isFixed: true,
+          isRequired: false,
         },
       },
       {
@@ -882,6 +906,7 @@ describe("versioned trip sync API", () => {
           title: "Check",
           quantity: 1,
           memo: "",
+          requirementKind: null,
           isDone: false,
           position: 0,
         },
@@ -896,6 +921,7 @@ describe("versioned trip sync API", () => {
           title: "Check",
           quantity: 1,
           memo: "",
+          requirementKind: null,
           isDone: false,
           position: 0,
         },
@@ -910,6 +936,7 @@ describe("versioned trip sync API", () => {
           title: "Check",
           quantity: 1,
           memo: "",
+          requirementKind: null,
           isDone: false,
           position: 0,
         },
@@ -924,8 +951,24 @@ describe("versioned trip sync API", () => {
           title: "Check",
           quantity: 1,
           memo: "",
+          requirementKind: null,
           isDone: false,
           position: 0,
+        },
+      },
+      {
+        name: "expense-payer-missing",
+        entity: "expense",
+        payload: {
+          phase: "travel",
+          category: "food",
+          title: "Dinner",
+          amountMinor: 8_500,
+          currency: "AUD",
+          spentOn: "2026-09-10",
+          paidByMemberId: "missing",
+          isSettled: false,
+          memo: "",
         },
       },
       {
@@ -1105,6 +1148,7 @@ describe("versioned trip sync API", () => {
         documentUrl: "https://example.com/private-document",
         memo: "SECRET MEMO",
         isFixed: true,
+        isRequired: true,
       },
     };
     expect((await postMutation(trip.id, booking)).status).toBe(200);

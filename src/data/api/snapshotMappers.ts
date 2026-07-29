@@ -70,15 +70,15 @@ export function mapSnapshotToWorkspace(
       .sort((left, right) => left.position - right.position || left.id.localeCompare(right.id))
       .map((item) => mapScheduleItem(item, day.dayDate, places, bookings))
   }));
-  const todayDay = selectTodayDay(scheduleDays, trip.phase, localDate);
+  const todayDay = selectTodayDay(scheduleDays, trip.experiencePhase, localDate);
   const todayItems = todayDay?.items ?? [];
   const viewer = snapshot.members.find((member) => member.id === principal.memberId);
-  const nextMovement = trip.phase === "completed"
+  const nextMovement = trip.experiencePhase === "after"
     ? null
     : todayItems.find((item) =>
       item.kind === "movement" && new Date(item.startsAt).getTime() > now.getTime()
     ) ?? null;
-  const nextBooking = trip.phase === "completed"
+  const nextBooking = trip.experiencePhase === "after"
     ? null
     : [...snapshot.bookings]
       .filter((booking) => new Date(booking.startsAt).getTime() > now.getTime())
@@ -102,11 +102,12 @@ export function mapSnapshotToWorkspace(
     schedule: { days: scheduleDays },
     today: {
       phase: trip.phase,
+      experiencePhase: trip.experiencePhase,
       localDate: todayDay?.date ?? localDate,
       dayLabel: koreanDate(todayDay?.date ?? localDate),
-      greeting: trip.phase === "upcoming" ? "여행까지" : trip.phase === "active" ? "NEXT UP" : "여행 완료",
-      headline: trip.phase === "upcoming" ? "첫날 미리보기" : trip.phase === "active" ? "오늘 일정" : "일정 다시 보기",
-      dDay: trip.phase === "upcoming" ? daysBetween(localDate, trip.startDate) : trip.phase === "active" ? 0 : null,
+      greeting: trip.experiencePhase === "before" ? "여행까지" : trip.experiencePhase === "during" ? "NEXT UP" : "여행 완료",
+      headline: trip.experiencePhase === "before" ? "출발 준비" : trip.experiencePhase === "during" ? "오늘 일정" : "여행 기록",
+      dDay: trip.experiencePhase === "before" ? daysBetween(localDate, trip.startDate) : trip.experiencePhase === "during" ? 0 : null,
       weather: { location: trip.destination, condition: "맑음", temperatureC: 21, uvIndex: 5, isSample: true },
       nextMovement: nextMovement ? {
         departureTime: timeOf(nextMovement.startsAt),
@@ -118,9 +119,11 @@ export function mapSnapshotToWorkspace(
         mapUrl: nextMovement.mapUrl
       } : null,
       booking: nextBooking ? mapTodayBooking(nextBooking, places) : null,
-      budget: { spentAud: 385, limitAud: 1_800, isSample: true },
+      expenses: snapshot.expenses,
+      expenseTotals: expenseTotals(snapshot.expenses),
+      unsettledExpenseCount: snapshot.expenses.filter((expense) => !expense.isSettled).length,
       schedule: todayItems,
-      summary: trip.phase === "completed" ? {
+      summary: trip.experiencePhase === "after" ? {
         visitedPlaceCount: snapshot.places.filter((place) => place.status === "visited").length,
         completedItemCount: snapshot.scheduleItems.filter((item) => item.isDone).length
       } : null
@@ -135,6 +138,7 @@ export function mapSnapshotToWorkspace(
       places: snapshot.places.map((place) => ({ id: place.id, name: place.name })),
       bookings: snapshot.bookings,
       checkItems: snapshot.checkItems,
+      expenses: snapshot.expenses,
       notes: snapshot.notes,
       activity: snapshot.activity.slice(0, 100).map((entry) => ({
         id: entry.id,
@@ -165,6 +169,9 @@ function mapTrip(snapshot: TripSnapshot, now: Date): TripSummaryViewModel {
     coverImageUrl: snapshot.trip.coverImageUrl ?? "",
     travelerCount: snapshot.members.length,
     bookingCount: snapshot.bookings.length,
+    hasOutboundFlight: snapshot.trip.outboundFlight !== null,
+    hasReturnFlight: snapshot.trip.returnFlight !== null,
+    representativeMediaId: snapshot.trip.representativeMediaId,
     updatedAt: snapshot.trip.updatedAt
   };
 }
@@ -242,10 +249,20 @@ function mapPlaces(snapshot: TripSnapshot): MapPlaceView[] {
   });
 }
 
-function selectTodayDay(days: ScheduleDayView[], phase: TripSummaryViewModel["phase"], localDate: string) {
-  if (phase === "upcoming") return days[0];
-  if (phase === "completed") return days.at(-1);
+function selectTodayDay(days: ScheduleDayView[], phase: TripSummaryViewModel["experiencePhase"], localDate: string) {
+  if (phase === "before") return days[0];
+  if (phase === "after") return days.at(-1);
   return days.find((day) => day.date === localDate) ?? days[0];
+}
+
+function expenseTotals(expenses: TripSnapshot["expenses"]) {
+  const totals = new Map<string, number>();
+  for (const expense of expenses) {
+    totals.set(expense.currency, (totals.get(expense.currency) ?? 0) + expense.amountMinor);
+  }
+  return [...totals.entries()]
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([currency, amountMinor]) => ({ currency, amountMinor }));
 }
 
 function mapTodayBooking(booking: Booking, places: Map<string, Place>) {

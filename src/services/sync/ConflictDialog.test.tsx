@@ -24,7 +24,8 @@ const conflict: OutboxRecord = {
       externalUrl: null,
       documentUrl: null,
       memo: "PRIVATE-MEMO",
-      isFixed: true
+      isFixed: true,
+      isRequired: true
     }
   },
   state: "conflict",

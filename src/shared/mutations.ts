@@ -58,6 +58,7 @@ export interface MutationPayloadMap {
     documentUrl: string | null;
     memo: string;
     isFixed: boolean;
+    isRequired: boolean;
   };
   check_item: {
     scope: "shared" | "personal";
@@ -66,8 +67,28 @@ export interface MutationPayloadMap {
     title: string;
     quantity: number;
     memo: string;
+    requirementKind: "passport" | "essential" | null;
     isDone: boolean;
     position: number;
+  };
+  expense: {
+    phase: "pretrip" | "travel";
+    category:
+      | "flight"
+      | "lodging"
+      | "reservation"
+      | "food"
+      | "transport"
+      | "shopping"
+      | "activity"
+      | "other";
+    title: string;
+    amountMinor: number;
+    currency: string;
+    spentOn: string;
+    paidByMemberId: string;
+    isSettled: boolean;
+    memo: string;
   };
   note: {
     targetType: "trip" | "schedule_item" | "place" | "booking";

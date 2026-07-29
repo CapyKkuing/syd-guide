@@ -221,6 +221,9 @@ describe("travel data resources", () => {
         coverImageUrl: "/trip.jpg",
         travelerCount: 2,
         bookingCount: 0,
+        hasOutboundFlight: true,
+        hasReturnFlight: true,
+        representativeMediaId: null,
         updatedAt: "2026-07-28T00:00:00.000Z"
       }
     ];

@@ -76,7 +76,8 @@ describe("mapSnapshotToWorkspace", () => {
       status: "confirmed"
     });
     expect(workspace.today.weather.isSample).toBe(true);
-    expect(workspace.today.budget.isSample).toBe(true);
+    expect(workspace.today.expenses).toEqual([]);
+    expect(workspace.today.expenseTotals).toEqual([]);
   });
 
   it("uses the last day and real completion counts for a completed trip", () => {

@@ -32,6 +32,7 @@ const envelopeSchema = z.object({
     "place",
     "booking",
     "check_item",
+    "expense",
     "note",
     "vote",
   ]),

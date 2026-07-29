@@ -123,6 +123,7 @@ describe("ToolsPage", () => {
       places: [],
       bookings: [],
       checkItems: [],
+      expenses: [],
       notes: [],
       activity: []
     };

@@ -417,24 +417,167 @@ body {
   min-height: 48px;
 }
 
+.today-action-section,
+.expense-panel,
+.settlement-card {
+  padding: clamp(24px, 5vw, 48px);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.expense-panel__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.expense-panel__heading h2,
+.settlement-card h2 {
+  font-size: clamp(1.8rem, 4vw, 3.2rem);
+  font-weight: 560;
+  letter-spacing: -0.05em;
+  line-height: 1;
+}
+
+.urgent-gap-list,
+.expense-list {
+  display: grid;
+  gap: 0;
+  margin: 28px 0 0;
+  padding: 0;
+  border-top: 1px solid var(--line);
+  list-style: none;
+}
+
+.urgent-gap-list li,
+.expense-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px 4px;
+  border-bottom: 1px solid var(--line);
+}
+
+.urgent-gap-list p,
+.expense-list p {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+}
+
+.expense-panel__totals {
+  margin-top: 18px;
+  font-size: clamp(1.25rem, 3vw, 2rem);
+  font-weight: 720;
+  letter-spacing: -0.03em;
+}
+
+.expense-list__main {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+
+.expense-list__main strong {
+  margin-top: 5px;
+  font-size: 1.15rem;
+}
+
+.expense-list__main small {
+  margin-top: 4px;
+  color: var(--text-muted);
+}
+
+.expense-settlement {
+  flex: 0 0 auto;
+  min-height: 40px;
+  border: 1px solid var(--warning);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.expense-settlement.is-done {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.today-live-tools {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: var(--surface-2);
+}
+
+.today-dashboard .today-live-tools {
+  min-height: 194px;
+}
+
+.today-home--during .today-dashboard {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+}
+
+.settlement-card {
+  background: var(--accent-soft);
+}
+
+.settlement-card.is-pending {
+  border-color: var(--warning);
+  background: color-mix(in srgb, var(--warning) 10%, var(--surface));
+}
+
+.expense-reminder {
+  display: grid;
+  gap: 18px;
+  padding: 28px 12px 12px;
+}
+
+.expense-reminder h2 {
+  max-width: 15ch;
+  font-size: clamp(2rem, 7vw, 3.8rem);
+  letter-spacing: -0.055em;
+  line-height: 1;
+}
+
+.today-empty-state {
+  margin-top: 24px;
+  color: var(--text-muted);
+}
+
 @supports selector(:has(*)) {
   @media (min-width: 960px) {
-    .today-dashboard:has(> .today-card:nth-child(1):is(:hover, :focus-within)) {
+    .today-home:not(.today-home--during) .today-dashboard:has(> .today-card:nth-child(1):is(:hover, :focus-within)) {
       grid-template-columns: 1.35fr 0.89fr 0.89fr 0.89fr;
     }
 
-    .today-dashboard:has(> .today-card:nth-child(2):is(:hover, :focus-within)) {
+    .today-home:not(.today-home--during) .today-dashboard:has(> .today-card:nth-child(2):is(:hover, :focus-within)) {
       grid-template-columns: 0.89fr 1.35fr 0.89fr 0.89fr;
     }
 
-    .today-dashboard:has(> .today-card:nth-child(3):is(:hover, :focus-within)) {
+    .today-home:not(.today-home--during) .today-dashboard:has(> .today-card:nth-child(3):is(:hover, :focus-within)) {
       grid-template-columns: 0.89fr 0.89fr 1.35fr 0.89fr;
     }
 
-    .today-dashboard:has(> .today-card:nth-child(4):is(:hover, :focus-within)) {
+    .today-home:not(.today-home--during) .today-dashboard:has(> .today-card:nth-child(4):is(:hover, :focus-within)) {
       grid-template-columns: 0.89fr 0.89fr 0.89fr 1.35fr;
     }
   }
+}
+
+.today-home--during .today-dashboard,
+.today-home--during .today-dashboard:has(> .today-card) {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 @keyframes editorial-marquee {
@@ -470,6 +613,10 @@ body {
   .today-schedule,
   .today-quick-tools {
     grid-column: 1 / -1;
+  }
+
+  .today-home--during .today-dashboard {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -516,6 +663,13 @@ body {
 
   .today-section-heading {
     align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .expense-panel__heading,
+  .urgent-gap-list li,
+  .expense-list li {
+    align-items: stretch;
     flex-direction: column;
   }
 

@@ -2,6 +2,7 @@ import type {
   ActivityLog,
   Booking,
   CheckItem,
+  Expense,
   Note,
   PlaceCategory,
   PlaceStatus,
@@ -31,6 +32,9 @@ export interface TripSummaryViewModel {
   coverImageUrl: string;
   travelerCount: number;
   bookingCount: number;
+  hasOutboundFlight: boolean;
+  hasReturnFlight: boolean;
+  representativeMediaId: string | null;
   updatedAt: string;
 }
 
@@ -81,6 +85,7 @@ export interface ScheduleDayView {
 
 export interface TodayViewModel {
   phase: TripPhase;
+  experiencePhase: ExperiencePhase;
   localDate: string;
   dayLabel: string;
   greeting: string;
@@ -109,11 +114,9 @@ export interface TodayViewModel {
     type: string;
     status: "confirmed" | "pending";
   } | null;
-  budget: {
-    spentAud: number;
-    limitAud: number;
-    isSample: true;
-  };
+  expenses: Expense[];
+  expenseTotals: Array<{ currency: string; amountMinor: number }>;
+  unsettledExpenseCount: number;
   schedule: ScheduleItemView[];
   summary: {
     visitedPlaceCount: number;
@@ -175,12 +178,14 @@ export interface ToolsViewModel {
   places: Array<{ id: string; name: string }>;
   bookings: BookingView[];
   checkItems: CheckItemView[];
+  expenses: ExpenseView[];
   notes: NoteView[];
   activity: ActivityView[];
 }
 
 export type BookingView = Booking;
 export type CheckItemView = CheckItem;
+export type ExpenseView = Expense;
 export type NoteView = Note;
 export type ActivityView = Pick<ActivityLog, "id" | "action" | "summary" | "createdAt">;
 

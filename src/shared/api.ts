@@ -2,6 +2,7 @@ import type {
   ActivityLog,
   Booking,
   CheckItem,
+  Expense,
   Note,
   Place,
   PublicMember,
@@ -27,6 +28,7 @@ export interface TripSnapshot {
   places: Place[];
   bookings: Booking[];
   checkItems: CheckItem[];
+  expenses: Expense[];
   notes: Note[];
   votes: Vote[];
   activity: ActivityLog[];

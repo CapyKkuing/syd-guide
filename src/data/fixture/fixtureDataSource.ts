@@ -12,7 +12,10 @@ import type {
 } from "../contracts";
 import { pathForAsset } from "../../app/basePath";
 
-type TripDefinition = Omit<TripSummaryViewModel, "startDate" | "endDate" | "phase" | "experiencePhase" | "updatedAt"> & {
+type TripDefinition = Omit<TripSummaryViewModel,
+  "startDate" | "endDate" | "phase" | "experiencePhase" | "updatedAt"
+  | "hasOutboundFlight" | "hasReturnFlight" | "representativeMediaId"
+> & {
   startOffsetDays: number;
   endOffsetDays: number;
 };
@@ -240,6 +243,7 @@ export class FixtureTravelGuideDataSource implements TravelGuideDataSource {
 
     const common = {
       phase: trip.phase,
+      experiencePhase: trip.experiencePhase,
       localDate: scheduleContextDate,
       dayLabel: dayLabel(scheduleContextDate, trip.timeZone),
       weather: {
@@ -249,11 +253,9 @@ export class FixtureTravelGuideDataSource implements TravelGuideDataSource {
         uvIndex: 5,
         isSample: true as const
       },
-      budget: {
-        spentAud: trip.phase === "completed" ? 1_240 : 385,
-        limitAud: 1_800,
-        isSample: true as const
-      }
+      expenses: [],
+      expenseTotals: [],
+      unsettledExpenseCount: 0
     };
 
     if (trip.phase === "upcoming") {
@@ -409,6 +411,7 @@ export class FixtureTravelGuideDataSource implements TravelGuideDataSource {
       places: [],
       bookings: [],
       checkItems: [],
+      expenses: [],
       notes: [],
       activity: []
     };
@@ -434,6 +437,9 @@ export class FixtureTravelGuideDataSource implements TravelGuideDataSource {
       endDate,
       phase,
       experiencePhase: phase === "upcoming" ? "before" : phase === "completed" ? "after" : "during",
+      hasOutboundFlight: phase !== "upcoming",
+      hasReturnFlight: phase !== "upcoming",
+      representativeMediaId: null,
       updatedAt: this.clock().toISOString()
     };
   }

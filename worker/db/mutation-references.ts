@@ -107,6 +107,11 @@ export function mutationReferenceGuard(
         member(payload.assigneeMemberId, tripId)
       );
     }
+    case "expense":
+      return member(
+        (mutation.payload as MutationPayloadMap["expense"]).paidByMemberId,
+        tripId
+      );
     case "note": {
       const payload = mutation.payload as MutationPayloadMap["note"];
       return noteTarget(

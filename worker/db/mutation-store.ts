@@ -116,6 +116,7 @@ const activityNames: Record<EntityKind, string> = {
   place: "장소",
   booking: "예약",
   check_item: "체크 항목",
+  expense: "비용",
   note: "메모",
   vote: "투표",
 };

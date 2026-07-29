@@ -68,7 +68,15 @@ export function TripRoutePage({
         {activeTab === "today" ? (
           <section aria-labelledby="trip-today-title">
             <h1 id="trip-today-title" className="today-route-title">오늘</h1>
-            <TodayPage trip={workspace.data.context.trip} today={workspace.data.today} />
+            <TodayPage
+              bookings={workspace.data.tools.bookings}
+              checkItems={workspace.data.tools.checkItems}
+              members={workspace.data.tools.members}
+              mutationController={mutationController}
+              today={workspace.data.today}
+              trip={workspace.data.context.trip}
+              viewerMemberId={workspace.data.context.viewer.memberId}
+            />
           </section>
         ) : activeTab === "map" ? (
           <MapPage

@@ -68,6 +68,7 @@ export const entitySchemas = {
     documentUrl: nullableUrl,
     memo: longText,
     isFixed: z.boolean(),
+    isRequired: z.boolean(),
   }),
   check_item: z.object({
     scope: z.enum(["shared", "personal"]),
@@ -76,8 +77,22 @@ export const entitySchemas = {
     title: shortText,
     quantity: z.number().int().min(1).max(99),
     memo: longText,
+    requirementKind: z.enum(["passport", "essential"]).nullable(),
     isDone: z.boolean(),
     position,
+  }),
+  expense: z.object({
+    phase: z.enum(["pretrip", "travel"]),
+    category: z.enum([
+      "flight", "lodging", "reservation", "food", "transport", "shopping", "activity", "other",
+    ]),
+    title: shortText,
+    amountMinor: z.number().int().min(1).max(999_999_999_999),
+    currency: z.string().regex(/^[A-Z]{3}$/),
+    spentOn: z.iso.date(),
+    paidByMemberId: idSchema,
+    isSettled: z.boolean(),
+    memo: longText,
   }),
   note: z.object({
     targetType: z.enum(["trip", "schedule_item", "place", "booking"]),

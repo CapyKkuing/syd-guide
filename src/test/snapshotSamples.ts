@@ -147,10 +147,12 @@ export function createTripSnapshot(): TripSnapshot {
         externalUrl: null,
         documentUrl: null,
         memo: "",
-        isFixed: true
+        isFixed: true,
+        isRequired: true
       })
     ],
     checkItems: [],
+    expenses: [],
     notes: [],
     votes: [],
     activity: [],
