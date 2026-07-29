@@ -11,6 +11,7 @@ import {
 } from "@playwright/test";
 import type { TripSnapshot } from "../../src/shared/api";
 import type { EntityKind, Trip } from "../../src/shared/entities";
+import type { FlightDetails } from "../../src/shared/flights";
 import type { MutationRequest } from "../../src/shared/mutations";
 
 export const BASE_URL = "http://localhost:4173";
@@ -36,6 +37,16 @@ export interface Invite {
 export interface WorkspaceSeed {
   trip: Trip;
   tripDayId: string;
+}
+
+export interface WorkspaceOptions {
+  coverImageUrl?: string | null;
+  endDate?: string;
+  outboundFlight?: FlightDetails | null;
+  returnFlight?: FlightDetails | null;
+  startDate?: string;
+  status?: Trip["status"];
+  timeZone?: string;
 }
 
 export function unique(prefix: string): string {
@@ -90,18 +101,21 @@ export async function createPairedPartner(
 export async function createWorkspace(
   request: APIRequestContext,
   title: string,
-  role: RequestRole = "owner"
+  role: RequestRole = "owner",
+  options: WorkspaceOptions = {},
 ): Promise<WorkspaceSeed> {
   const response = await request.post(`${BASE_URL}/api/trips`, {
     headers: requestHeaders(role, true),
     data: {
       title,
       destination: "Sydney",
-      startDate: "2026-10-08",
-      endDate: "2026-10-15",
-      timeZone: "Australia/Sydney",
-      status: "upcoming",
-      coverImageUrl: null
+      startDate: options.startDate ?? "2026-10-08",
+      endDate: options.endDate ?? "2026-10-15",
+      timeZone: options.timeZone ?? "Australia/Sydney",
+      status: options.status ?? "upcoming",
+      coverImageUrl: options.coverImageUrl ?? "/images/sydney_harbour_bridge.jpg",
+      outboundFlight: options.outboundFlight ?? null,
+      returnFlight: options.returnFlight ?? null,
     }
   });
   expect(response.status()).toBe(201);
@@ -222,7 +236,7 @@ async function runD1(sql: string): Promise<void> {
     wrangler,
     "d1",
     "execute",
-    "couple-travel-guide-local",
+    "couple-travel-guide",
     "--local",
     "--persist-to",
     ".tmp/e2e-state",

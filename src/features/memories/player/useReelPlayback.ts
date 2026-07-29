@@ -86,6 +86,7 @@ export function playbackReducer(
     case "VISIBILITY_PAUSE":
       return {
         ...state,
+        elapsedMs: 0,
         playing: false,
         controlsVisible: true,
       };

@@ -40,7 +40,8 @@ test("three target viewports keep primary routes inside the viewport", async ({
     `/trip/${workspace.trip.id}/today`,
     `/trip/${workspace.trip.id}/schedule`,
     `/trip/${workspace.trip.id}/map`,
-    `/trip/${workspace.trip.id}/tools`
+    `/trip/${workspace.trip.id}/tools`,
+    `/trip/${workspace.trip.id}/memories`
   ]) {
     await page.goto(path);
     await expect(page.locator("main")).toBeVisible();

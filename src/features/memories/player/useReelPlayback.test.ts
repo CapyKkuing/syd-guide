@@ -67,6 +67,10 @@ describe("reel playback state", () => {
 
   it("pauses when the page becomes hidden", () => {
     expect(playbackReducer(playing, { type: "VISIBILITY_PAUSE" }))
-      .toMatchObject({ playing: false, controlsVisible: true });
+      .toMatchObject({
+        elapsedMs: 0,
+        playing: false,
+        controlsVisible: true,
+      });
   });
 });

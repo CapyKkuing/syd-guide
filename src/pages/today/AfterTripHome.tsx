@@ -1,6 +1,6 @@
 import {
+  pathForMemories,
   pathForMemoryPlayer,
-  pathForTrip,
 } from "../../app/router";
 import { AppLink } from "../../components/AppLink";
 import { ExpensePanel } from "./ExpensePanel";
@@ -33,7 +33,12 @@ export function AfterTripHome({
           <p className="today-hero__detail">{today.summary
             ? `방문 장소 ${today.summary.visitedPlaceCount}곳 · 완료 일정 ${today.summary.completedItemCount}개`
             : "여행 기록을 정리하는 중입니다."}</p>
-          <AppLink className="primary-button today-hero__action" href={pathForTrip(trip.id, "schedule")}>여행 다시 보기</AppLink>
+          <AppLink
+            className="primary-button today-hero__action"
+            href={pathForMemories(trip.id)}
+          >
+            여행 기록 보기
+          </AppLink>
         </div>
         <RepresentativePhotoPanel
           key={`${trip.id}:${trip.updatedAt}`}
@@ -59,18 +64,21 @@ export function AfterTripHome({
         className="primary-button memory-reel__open-player"
         href={pathForMemoryPlayer(trip.id)}
       >
-        세로 화면으로 재생
+        다시 여행 보기
       </AppLink>
 
-      <section className={today.unsettledExpenseCount ? "settlement-card is-pending" : "settlement-card"} aria-labelledby="settlement-title">
-        <p className="today-section-heading__eyebrow">SETTLEMENT</p>
-        <h2 id="settlement-title">{today.unsettledExpenseCount
-          ? `정산 미완료 ${today.unsettledExpenseCount}건`
-          : "정산 완료"}</h2>
-        <p>{today.unsettledExpenseCount
-          ? "비용 목록에서 완료된 항목을 정산 완료로 바꿔 주세요."
-          : "기록한 모든 비용의 정산이 끝났습니다."}</p>
-      </section>
+      {today.unsettledExpenseCount ? (
+        <section
+          className="settlement-card is-pending"
+          aria-labelledby="settlement-title"
+        >
+          <p className="today-section-heading__eyebrow">SETTLEMENT</p>
+          <h2 id="settlement-title">
+            정산 미완료 {today.unsettledExpenseCount}건
+          </h2>
+          <p>비용 목록에서 완료된 항목을 정산 완료로 바꿔 주세요.</p>
+        </section>
+      ) : null}
 
       <ExpensePanel
         controller={mutationController}

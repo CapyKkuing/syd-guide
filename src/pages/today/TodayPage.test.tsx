@@ -34,13 +34,34 @@ describe("TodayPage", () => {
   it.each([
     ["bondi-weekend", "D-14", "지금 확인할 준비", "준비 비용"],
     ["sydney-2026", "Sydney의 오늘", "다음 일정", "오늘 지출"],
-    ["blue-mountains-memory", "여행을 다시 봅니다", "정산 완료", "전체 비용"],
   ] as const)("renders the %s experience phase home", async (tripId, hero, section, cost) => {
     render(<TodayPage {...await todayProps(tripId)} />);
 
     expect(screen.getByRole("heading", { name: hero })).toBeVisible();
     expect(screen.getByRole("heading", { name: section })).toBeVisible();
     expect(screen.getByRole("heading", { name: cost })).toBeVisible();
+  });
+
+  it("renders the approved during-trip priority order", async () => {
+    const { container } = render(
+      <TodayPage {...await todayProps("sydney-2026")} />,
+    );
+
+    expect(
+      [...container.querySelectorAll<HTMLElement>("[data-section]")]
+        .map((section) => section.dataset.section),
+    ).toEqual(["schedule", "weather", "map", "nearby"]);
+  });
+
+  it("shows the two after-trip actions and hides completed settlement", async () => {
+    render(<TodayPage {...await todayProps("blue-mountains-memory")} />);
+
+    expect(screen.getByRole("heading", { name: "여행을 다시 봅니다" })).toBeVisible();
+    expect(screen.getByRole("link", { name: "여행 기록 보기" })).toBeVisible();
+    expect(screen.getByRole("link", { name: "다시 여행 보기" })).toBeVisible();
+    expect(screen.queryByRole("heading", { name: "정산 완료" }))
+      .not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "전체 비용" })).toBeVisible();
   });
 
   it("shows at most three urgent gaps in priority order", async () => {

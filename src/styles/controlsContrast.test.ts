@@ -1,10 +1,14 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-const tokenStyles = readFileSync("src/styles/tokens.css", "utf8");
-const toolsStyles = readFileSync("src/styles/tools.css", "utf8");
-const pairingStyles = readFileSync("src/styles/pairing.css", "utf8");
-const componentStyles = readFileSync("src/styles/components.css", "utf8");
+const tokenStyles = readStyles("src/styles/tokens.css");
+const toolsStyles = readStyles("src/styles/tools.css");
+const pairingStyles = readStyles("src/styles/pairing.css");
+const componentStyles = readStyles("src/styles/components.css");
+
+function readStyles(path: string): string {
+  return readFileSync(path, "utf8").replace(/\r\n/g, "\n");
+}
 
 describe("Tools and pairing control contrast", () => {
   it("uses the shared accessible boundary for every changed tool and pairing surface", () => {

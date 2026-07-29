@@ -17,13 +17,13 @@
 
 ## Final approved product experience
 
-- [ ] Task 14: journey phase boundaries and product-name guard
-- [ ] Task 15: phase-aware before/during/after Today home
-- [ ] Task 16: trustworthy live/cached data and map fallback
-- [ ] Task 17: private trip media and representative photo
-- [ ] Task 18: editable 2-minute/3-minute memory reel
-- [ ] Task 19: vertical reel player and licensed music
-- [ ] Task 20: full regression, E2E, and device QA
+- [x] Task 14: manual flights, journey phase boundaries, and product-name guard
+- [x] Task 15: phase-aware before/during/after Today home
+- [x] Task 16: trustworthy live/cached data and map fallback
+- [x] Task 17: private Google Drive trip photos and representative photo
+- [x] Task 18: editable 2-minute/3-minute photo-only memory reel
+- [x] Task 19: silent vertical photo reel player
+- [ ] Task 20: automated regression and E2E complete; installed-device QA after deploy
 
 Current handoff: `CODEX_HANDOFF.md`
 

@@ -24,6 +24,7 @@ export function WeatherCard({ weather }: Pick<TodayCardProps, "weather">) {
     <Card
       aria-labelledby="weather-card-title"
       className="today-card"
+      data-section="weather"
       data-motion-stack="true"
       elevation="low"
       padding={5}

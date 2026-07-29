@@ -54,6 +54,16 @@ test("offline snapshot remains readable and queued edit flushes on reconnect", a
   expect((await responsePromise).ok()).toBe(true);
   await expect.poll(() => outboxCount(page, workspace.trip.id)).toBe(0);
   await expect(page.getByText("오프라인에서 추가한 메모")).toBeVisible();
+
+  const toolsUrl = page.url();
+  await page.close();
+  await context.setOffline(true);
+  const coldPage = await context.newPage();
+  await coldPage.goto(toolsUrl);
+  await expect(coldPage.getByRole("heading", { name: "도구" })).toBeVisible();
+  await expect(coldPage.getByText("온라인에서 저장한 캐시 메모")).toBeVisible();
+  await expect(coldPage.getByText("오프라인에서 추가한 메모")).toBeVisible();
+  await context.setOffline(false);
 });
 
 for (const choice of ["latest", "mine"] as const) {

@@ -75,17 +75,11 @@ export function DuringTripHome({
         </figure>
       </section>
 
-      <div className="today-dashboard" aria-label="오늘 여행 정보">
-        <WeatherCard weather={today.weather} />
-        <MovementCard nextMovement={today.nextMovement} />
-        <section className="today-card today-live-tools" aria-labelledby="today-map-title">
-          <h3 id="today-map-title">현지 이동</h3>
-          <p>지도에서 오늘 장소와 가까운 순서를 확인하세요.</p>
-          <AppLink className="today-card__link" href={pathForTrip(trip.id, "map")}>지도·근처 장소</AppLink>
-        </section>
-      </div>
-
-      <section className="today-action-section" aria-labelledby="next-schedule-title">
+      <section
+        className="today-action-section"
+        data-section="schedule"
+        aria-labelledby="next-schedule-title"
+      >
         <div className="expense-panel__heading">
           <div>
             <p className="today-section-heading__eyebrow">NEXT 3</p>
@@ -104,6 +98,33 @@ export function DuringTripHome({
           </ol>
         ) : <p className="today-empty-state">남은 일정이 없습니다.</p>}
       </section>
+
+      <div className="today-dashboard" aria-label="오늘 여행 정보">
+        <WeatherCard weather={today.weather} />
+        <section
+          className="today-card today-live-tools"
+          data-section="map"
+          aria-labelledby="today-map-title"
+        >
+          <h3 id="today-map-title">지도</h3>
+          <p>오늘 일정과 저장한 장소의 위치를 지도에서 확인하세요.</p>
+          <AppLink className="today-card__link" href={pathForTrip(trip.id, "map")}>
+            지도 보기
+          </AppLink>
+        </section>
+        <section
+          className="today-card today-live-tools"
+          data-section="nearby"
+          aria-labelledby="today-nearby-title"
+        >
+          <h3 id="today-nearby-title">주변 저장 장소</h3>
+          <p>위치 권한이나 연결이 없으면 저장 장소 목록으로 확인합니다.</p>
+          <AppLink className="today-card__link" href={pathForTrip(trip.id, "map")}>
+            저장 장소 보기
+          </AppLink>
+        </section>
+        <MovementCard nextMovement={today.nextMovement} />
+      </div>
 
       <ExpensePanel
         controller={mutationController}

@@ -8,7 +8,8 @@ import { ThemeProvider } from "../app/theme/ThemeProvider";
 import { FixtureTravelGuideDataSource } from "../data/fixture/fixtureDataSource";
 import { TripShell } from "./TripShell";
 
-const layoutStyles = readFileSync("src/styles/layout.css", "utf8");
+const layoutStyles = readFileSync("src/styles/layout.css", "utf8")
+  .replace(/\r\n/g, "\n");
 
 async function renderTripShell(
   activeTab: TripTab,

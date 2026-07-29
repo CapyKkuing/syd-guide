@@ -24,11 +24,11 @@ export default defineConfig({
   },
   webServer: {
     command: "npm run build"
-      + " && npx wrangler d1 migrations apply couple-travel-guide-local"
+      + " && npx wrangler d1 migrations apply couple-travel-guide"
       + " --local --persist-to .tmp/e2e-state --config wrangler.jsonc"
       + " && npx wrangler dev --local --ip 127.0.0.1 --port 4173"
       + " --persist-to .tmp/e2e-state"
-      + " --config dist/couple_travel_guide_local/wrangler.json"
+      + " --config dist/couple_travel_guide/wrangler.json"
       + " --var SURFACE:partner"
       + " --var APP_ORIGIN:http://localhost:4173"
       + " --var PARTNER_ORIGIN:http://localhost:4173"
