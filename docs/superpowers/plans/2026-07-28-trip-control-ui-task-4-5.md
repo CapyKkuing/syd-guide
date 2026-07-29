@@ -4,7 +4,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 기존 Task 1~4의 인증·기기 연결 기능을 보존하면서 `둘만의 여행 가이드북`을 승인된 Trip Control 디자인의 여행 서재와 여행 내부 4개 화면으로 교체한다.
+**Goal:** 기존 Task 1~4의 인증·기기 연결 기능을 보존하면서 `우리만의 여행 가이드북`을 승인된 Trip Control 디자인의 여행 서재와 여행 내부 4개 화면으로 교체한다.
 
 **Architecture:** React 19 단일 페이지 앱의 브라우저 History 라우팅을 유지보수 가능한 경로 모델로 교체하고, `LibraryShell`과 `TripShell`을 분리한다. 화면은 `TravelGuideDataSource`가 제공하는 view model만 사용하며 Task 4.5에서는 비동기 fixture 구현체를 주입한다. Worker·D1·pairing API는 변경하지 않고 기존 React pairing UI만 새 디자인 시스템 안에 배치한다.
 
@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - Node.js 버전은 `>=24`를 유지한다.
-- 제품명은 `둘만의 여행 가이드북`, 여행 내부 디자인 방향명은 `Trip Control`로 유지한다.
+- 제품명은 `우리만의 여행 가이드북`, 여행 내부 디자인 방향명은 `Trip Control`로 유지한다.
 - 확정 경로는 `/library`, `/trip/:tripId/today`, `/trip/:tripId/schedule`, `/trip/:tripId/map`, `/trip/:tripId/tools`, `/pair`다.
 - 여행 서재에는 여행 내부 4탭을 표시하지 않는다.
 - 여행 내부 모바일에는 `오늘·일정·지도·도구` 하단 4탭, 데스크톱에는 같은 항목의 navigation rail을 표시한다.

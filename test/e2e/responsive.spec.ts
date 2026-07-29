@@ -116,7 +116,7 @@ test("PWA manifest and service worker are active", async ({ page }) => {
   const response = await page.request.get(new URL(manifestHref!, page.url()).toString());
   expect(response.ok()).toBe(true);
   await expect(response.json()).resolves.toMatchObject({
-    name: "둘만의 여행 가이드북",
+    name: "우리만의 여행 가이드북",
     display: "standalone",
     start_url: "/"
   });

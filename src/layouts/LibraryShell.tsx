@@ -9,8 +9,8 @@ export function LibraryShell({ children }: { children: ReactNode }) {
     <div className="library-shell">
       <a className="skip-link" href="#main-content">본문으로 건너뛰기</a>
       <header className="library-header">
-        <AppLink className="library-brand" href={pathForLibrary()} aria-label="둘만의 여행 가이드북, 여행 서재">
-          <strong>둘만의 여행 가이드북</strong>
+        <AppLink className="library-brand" href={pathForLibrary()} aria-label="우리만의 여행 가이드북, 여행 서재">
+          <strong>우리만의 여행 가이드북</strong>
         </AppLink>
         <div className="library-header__actions">
           <ThemeControl />

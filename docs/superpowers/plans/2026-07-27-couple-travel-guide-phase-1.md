@@ -398,7 +398,7 @@ it("shows the product name and mobile navigation", () => {
     <AppShell currentPage="library"><p>화면</p></AppShell>,
   );
 
-  expect(screen.getByText("둘만의 여행 가이드북")).toBeVisible();
+  expect(screen.getByText("우리만의 여행 가이드북")).toBeVisible();
   expect(screen.getByRole("navigation", { name: "주요 메뉴" })).toBeVisible();
   expect(screen.getByText("화면")).toBeVisible();
 });
@@ -458,7 +458,7 @@ export default defineConfig(({ mode }) => {
       VitePWA({
       registerType: "autoUpdate",
       manifest: {
-        name: "둘만의 여행 가이드북",
+        name: "우리만의 여행 가이드북",
         short_name: "여행 가이드",
         display: "standalone",
         start_url: base,

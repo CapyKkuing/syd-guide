@@ -7,17 +7,31 @@
 - [x] Task 4.5: Trip Control UI redesign
 - [x] Task 5: shared trip library and trash
 - [x] Task 6: snapshot and idempotent mutation API
-- [ ] Task 7: live snapshot, editable schedule, real Today
-- [ ] Task 8: collaborative places, MapLibre, voting
-- [ ] Task 9: protected bookings
-- [ ] Task 10: checklist, notes, search, activity
-- [ ] Task 11: IndexedDB offline sync and conflicts
-- [ ] Task 12: AI launcher, currency, legacy import
-- [ ] Task 13: E2E, device QA, approved Cloudflare production
+- [x] Task 7: live snapshot, editable schedule, real Today
+- [x] Task 8: collaborative places, MapLibre, voting
+- [x] Task 9: protected bookings
+- [x] Task 10: checklist, notes, search, activity
+- [x] Task 11: IndexedDB offline sync and conflicts
+- [x] Task 12: AI launcher, currency, legacy import
+- [x] Task 13: automated E2E foundation and QA checklist
+
+## Final approved product experience
+
+- [ ] Task 14: journey phase boundaries and product-name guard
+- [ ] Task 15: phase-aware before/during/after Today home
+- [ ] Task 16: trustworthy live/cached data and map fallback
+- [ ] Task 17: private trip media and representative photo
+- [ ] Task 18: editable 2-minute/3-minute memory reel
+- [ ] Task 19: vertical reel player and licensed music
+- [ ] Task 20: full regression, E2E, and device QA
 
 Current handoff: `CODEX_HANDOFF.md`
 
-Current execution plan: `docs/superpowers/plans/2026-07-28-couple-travel-guide-continuation.md`
+Current product spec: `docs/superpowers/specs/2026-07-29-final-product-design.md`
+
+Current execution plan: `docs/superpowers/plans/2026-07-29-final-product-experience.md`
+
+The old Tasks 7–13 continuation plan is implementation history and must not be re-run.
 
 ## Legacy static guide milestone
 

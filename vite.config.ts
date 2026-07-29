@@ -36,7 +36,7 @@ export default defineConfig(({ mode }) => {
       VitePWA({
         registerType: "autoUpdate",
         manifest: {
-          name: "둘만의 여행 가이드북",
+          name: "우리만의 여행 가이드북",
           short_name: "여행 가이드",
           lang: "ko",
           display: "standalone",
