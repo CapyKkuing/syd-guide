@@ -181,10 +181,11 @@ describe("TripRoutePage", () => {
     }
   });
 
-  it("renders the schedule timeline for the schedule route", async () => {
+  it("renders the selected schedule list for the schedule route", async () => {
     renderTripRoute(fixture, "schedule");
 
     expect(await screen.findByRole("heading", { name: "도착 후 하버 산책" })).toBeVisible();
+    await userEvent.click(screen.getByRole("radio", { name: "전체 일정" }));
     expect(screen.getByRole("button", { name: /호텔 체크인/ })).toBeVisible();
   });
 
