@@ -24,7 +24,8 @@ describe("mapSnapshotToWorkspace", () => {
     expect(workspace.context.viewer).toEqual({
       memberId: "owner",
       displayName: "연준",
-      role: "owner"
+      role: "owner",
+      access: "full"
     });
     expect(workspace.context.partnerStatus).toBe("connected");
     expect(workspace.schedule.days.map((day) => day.id)).toEqual([

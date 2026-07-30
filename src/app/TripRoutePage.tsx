@@ -69,8 +69,11 @@ export function TripRoutePage({
 }) {
   const workspace = useTripWorkspace(dataSource, tripId);
   const mutableDataSource = isMutableDataSource(dataSource) ? dataSource : null;
+  const hasVerifiedIdentity =
+    workspace.status === "ready"
+    && workspace.data.context.viewer.access === "full";
   const mutationController = useMemo(
-    () => mutableDataSource && mutationTransport
+    () => hasVerifiedIdentity && mutableDataSource && mutationTransport
       ? createTripMutationController({
         tripId,
         transport: mutationTransport,
@@ -78,7 +81,13 @@ export function TripRoutePage({
         reload: workspace.reload
       })
       : undefined,
-    [mutableDataSource, mutationTransport, tripId, workspace.reload]
+    [
+      hasVerifiedIdentity,
+      mutableDataSource,
+      mutationTransport,
+      tripId,
+      workspace.reload
+    ]
   );
   const { intentTripId, clearFocusRestoration } = useTripSwitcherFocus();
 
@@ -114,7 +123,7 @@ export function TripRoutePage({
               bookings={workspace.data.tools.bookings}
               checkItems={workspace.data.tools.checkItems}
               media={workspace.data.media}
-              mediaApi={mediaApi}
+              mediaApi={hasVerifiedIdentity ? mediaApi : undefined}
               mediaProvider={mediaProvider}
               mediaStorage={workspace.data.mediaStorage}
               mediaThumbnailStore={mediaThumbnailStore}
@@ -143,9 +152,13 @@ export function TripRoutePage({
           />
         ) : (
           <ToolsPage
-            deviceManagement={mutationTransport
+            deviceManagement={mutationTransport && hasVerifiedIdentity
               ? <PairingManager />
-              : <p>읽기 전용 미리보기에서는 기기를 관리할 수 없습니다.</p>}
+              : <p>
+                {workspace.data.context.viewer.access === "offline-readonly"
+                  ? "오프라인 사용자 확인 전에는 기기를 관리할 수 없습니다."
+                  : "읽기 전용 미리보기에서는 기기를 관리할 수 없습니다."}
+              </p>}
             mutationController={mutationController}
             reload={workspace.reload}
             tools={workspace.data.tools}

@@ -81,6 +81,39 @@ describe("SnapshotTravelGuideDataSource", () => {
     expect(today?.schedule).toHaveLength(2);
   });
 
+  it("opens a durable snapshot offline when legacy storage has no principal", async () => {
+    const snapshot = createTripSnapshot();
+    const snapshots = await createSnapshotStore();
+    await snapshots.put({
+      tripId: snapshot.trip.id,
+      snapshot,
+      etag: "\"trip-one-7\"",
+      savedAt: "2026-07-28T12:00:00.000Z"
+    });
+    const source = new SnapshotTravelGuideDataSource(
+      {
+        getTripSnapshot: vi.fn().mockRejectedValue(new TypeError("Failed to fetch"))
+      },
+      async () => {
+        throw new TypeError("Failed to fetch");
+      },
+      () => new Date("2026-09-10T01:00:00.000Z"),
+      { snapshots }
+    );
+
+    const [today, context] = await Promise.all([
+      source.getToday(snapshot.trip.id),
+      source.getTripContext(snapshot.trip.id)
+    ]);
+
+    expect(today?.localDate).toBe("2026-09-10");
+    expect(today?.schedule).toHaveLength(2);
+    expect(context?.viewer).toMatchObject({
+      memberId: "",
+      access: "offline-readonly"
+    });
+  });
+
   it("clears the durable snapshot before reporting a revoked session", async () => {
     const snapshot = createTripSnapshot();
     const snapshots = await createSnapshotStore();

@@ -48,6 +48,7 @@ export interface TripContextViewModel {
     memberId: string;
     displayName: string;
     role: "owner" | "partner";
+    access: "full" | "offline-readonly";
   };
   partnerStatus: "connected" | "not-connected";
 }

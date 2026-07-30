@@ -225,6 +225,42 @@ describe("TripRoutePage", () => {
     expect(invalidateTrip).toHaveBeenCalledWith("sydney-2026");
   });
 
+  it("keeps identity-dependent controls read-only for an offline fallback workspace", async () => {
+    const dataSource = {
+      ...sourceWith({
+        getTripContext: async (tripId) => {
+          const context = await fixture.getTripContext(tripId);
+          return context ? {
+            ...context,
+            viewer: {
+              ...context.viewer,
+              access: "offline-readonly" as const
+            }
+          } : null;
+        }
+      }),
+      invalidateTrip: vi.fn()
+    };
+    const mutationTransport = {
+      mutate: vi.fn()
+    };
+
+    render(
+      <ThemeProvider>
+        <TripRoutePage
+          activeTab="schedule"
+          dataSource={dataSource}
+          mutationTransport={mutationTransport}
+          tripId="sydney-2026"
+        />
+      </ThemeProvider>
+    );
+
+    expect(await screen.findByRole("button", { name: "일정 추가" })).toBeDisabled();
+    expect(screen.getByText("미리보기에서는 일정을 편집할 수 없습니다.")).toBeVisible();
+    expect(mutationTransport.mutate).not.toHaveBeenCalled();
+  });
+
   it("mounts trip sync around the existing tools UI", async () => {
     const dataSource = {
       ...sourceWith({}),

@@ -49,7 +49,7 @@ const toolGroups: ToolGroupView[] = [
 
 export function mapSnapshotToWorkspace(
   snapshot: TripSnapshot,
-  principal: SessionPrincipal,
+  principal: SessionPrincipal | null,
   now: Date
 ): TripWorkspace {
   const trip = mapTrip(snapshot, now);
@@ -72,7 +72,11 @@ export function mapSnapshotToWorkspace(
   }));
   const todayDay = selectTodayDay(scheduleDays, trip.experiencePhase, localDate);
   const todayItems = todayDay?.items ?? [];
-  const viewer = snapshot.members.find((member) => member.id === principal.memberId);
+  const viewer = principal
+    ? snapshot.members.find((member) => member.id === principal.memberId)
+    : undefined;
+  const viewerMemberId = principal?.memberId ?? "";
+  const viewerRole = principal?.role ?? "partner";
   const nextMovement = trip.experiencePhase === "after"
     ? null
     : todayItems.find((item) =>
@@ -91,9 +95,10 @@ export function mapSnapshotToWorkspace(
       localDate,
       dayLabel: todayDay?.dayLabel ?? "DAY 01",
       viewer: {
-        memberId: principal.memberId,
+        memberId: viewerMemberId,
         displayName: viewer?.displayName ?? "여행자",
-        role: principal.role
+        role: viewerRole,
+        access: principal ? "full" : "offline-readonly"
       },
       partnerStatus: snapshot.members.some((member) => member.role === "partner")
         ? "connected"
@@ -133,7 +138,7 @@ export function mapSnapshotToWorkspace(
       groups: toolGroups,
       tripId: snapshot.trip.id,
       timeZone: snapshot.trip.timeZone,
-      viewerMemberId: principal.memberId,
+      viewerMemberId,
       members: snapshot.members,
       places: snapshot.places.map((place) => ({ id: place.id, name: place.name })),
       bookings: snapshot.bookings,

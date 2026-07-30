@@ -222,7 +222,12 @@ export class FixtureTravelGuideDataSource implements TravelGuideDataSource {
       trips: this.trips(),
       localDate: local.date,
       dayLabel: dayLabel(local.date, trip.timeZone),
-      viewer: { memberId: "preview-owner", displayName: "민지", role: "owner" },
+      viewer: {
+        memberId: "preview-owner",
+        displayName: "민지",
+        role: "owner",
+        access: "full"
+      },
       partnerStatus: "connected"
     };
   }

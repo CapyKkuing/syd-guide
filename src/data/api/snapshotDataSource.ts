@@ -98,7 +98,13 @@ export class SnapshotTravelGuideDataSource implements MutableTravelGuideDataSour
   private async load(tripId: string): Promise<TripWorkspace | null> {
     const cached = this.cache.get(tripId);
     const durable = await this.snapshots?.get(tripId);
-    const principal = await this.loadPrincipal();
+    let principal: SessionPrincipal | null = null;
+    let principalError: unknown;
+    try {
+      principal = await this.loadPrincipal();
+    } catch (error) {
+      principalError = error;
+    }
     let result;
     try {
       result = await this.client.getTripSnapshot(
@@ -129,6 +135,9 @@ export class SnapshotTravelGuideDataSource implements MutableTravelGuideDataSour
         workspace
       });
       return workspace;
+    }
+    if (!principal) {
+      throw principalError ?? new Error("사용자 정보를 불러오지 못했습니다.");
     }
     const snapshot = result.notModified
       ? cached?.snapshot ?? durable?.snapshot ?? null
