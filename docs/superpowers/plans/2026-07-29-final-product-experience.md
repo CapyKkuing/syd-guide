@@ -680,7 +680,7 @@ git commit -m "feat: add private memory reel playback"
 - Modify: `test/e2e/responsive.spec.ts`
 - Modify: `test/e2e/offline-conflict.spec.ts`
 - Modify: `docs/qa/phase-1-manual-checklist.md`
-- Modify: `CODEX_HANDOFF.md`
+- Modify: `docs/handoffs/2026-07-30-pwa-offline-cold-start.md`
 - Modify: `TASKS.md`
 
 **Interfaces:**
@@ -737,13 +737,13 @@ Expected: 모든 command exit 0, test failure 0.
 - [ ] **Step 5: 문서·상태 갱신**
 
 - `TASKS.md`의 Task 14~20을 실제 결과대로 갱신한다.
-- `CODEX_HANDOFF.md`에 기준 commit, 남은 blocker, R2·production 승인 필요사항을 기록한다.
+- `docs/handoffs/2026-07-30-pwa-offline-cold-start.md`에 기준 commit, 남은 blocker, R2·production 승인 필요사항을 기록한다.
 - 실기기 QA가 끝나지 않았으면 `완료`라고 쓰지 않고 `자동검증 완료 / 실기기 QA 대기`로 구분한다.
 
 - [ ] **Step 6: commit**
 
 ```bash
-git add test/e2e docs/qa CODEX_HANDOFF.md TASKS.md
+git add test/e2e docs/qa docs/handoffs/2026-07-30-pwa-offline-cold-start.md TASKS.md
 git commit -m "test: verify final travel experience"
 ```
 

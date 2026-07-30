@@ -10,7 +10,7 @@
 
 ## Global Constraints
 
-- 기준 checkout과 완료 이력은 `CODEX_HANDOFF.md`다.
+- 기준 checkout과 완료 이력은 `docs/handoffs/2026-07-30-pwa-offline-cold-start.md`다.
 - 제품 UI 기준은 `docs/superpowers/specs/2026-07-28-trip-control-ui-integration-design.md`와 `DESIGN.md`다.
 - 기능·보안 기준은 `docs/superpowers/specs/2026-07-27-couple-travel-guide-phase-1-design.md`다.
 - 이 문서는 옛 `2026-07-27-couple-travel-guide-phase-1.md`의 Task 7~13 구현 경로를 대체한다.
