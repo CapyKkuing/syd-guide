@@ -33,7 +33,7 @@ afterEach(() => {
 describe("TodayPage", () => {
   it.each([
     ["bondi-weekend", "D-14", "지금 확인할 준비", "준비 비용"],
-    ["sydney-2026", "Sydney의 오늘", "다음 일정", "오늘 지출"],
+    ["sydney-2026", "오늘의 동선", "오늘 일정", "오늘 지출"],
   ] as const)("renders the %s experience phase home", async (tripId, hero, section, cost) => {
     render(<TodayPage {...await todayProps(tripId)} />);
 
@@ -42,15 +42,13 @@ describe("TodayPage", () => {
     expect(screen.getByRole("heading", { name: cost })).toBeVisible();
   });
 
-  it("renders the approved during-trip priority order", async () => {
-    const { container } = render(
-      <TodayPage {...await todayProps("sydney-2026")} />,
-    );
+  it("renders the approved during-trip route board", async () => {
+    render(<TodayPage {...await todayProps("sydney-2026")} />);
 
-    expect(
-      [...container.querySelectorAll<HTMLElement>("[data-section]")]
-        .map((section) => section.dataset.section),
-    ).toEqual(["schedule", "weather", "map", "nearby"]);
+    expect(screen.getByRole("heading", { name: "오늘의 동선" })).toBeVisible();
+    expect(screen.getByRole("link", { name: "오늘 동선 지도 보기" })).toBeVisible();
+    expect(screen.getByRole("heading", { name: "오늘 일정" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "지출 기록" })).toBeVisible();
   });
 
   it("shows the two after-trip actions and hides completed settlement", async () => {

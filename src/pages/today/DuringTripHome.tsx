@@ -1,3 +1,16 @@
+import {
+  Button,
+  Card,
+  ClickableCard,
+  Grid,
+  Heading,
+  HStack,
+  List,
+  ListItem,
+  StatusDot,
+  Text,
+  VStack,
+} from "@astryxdesign/core";
 import { useCallback, useEffect, useState } from "react";
 import { pathForTrip } from "../../app/router";
 import { AppLink } from "../../components/AppLink";
@@ -8,7 +21,6 @@ import {
   selectNextSchedule,
   shouldShowExpenseReminder,
 } from "./homeSelectors";
-import { MovementCard, WeatherCard } from "./TodayCards";
 import type { TodayHomeProps } from "./todayHomeTypes";
 
 export function DuringTripHome({
@@ -19,10 +31,11 @@ export function DuringTripHome({
   viewerMemberId,
 }: TodayHomeProps) {
   const [reminderOpen, setReminderOpen] = useState(() =>
-    shouldOpenReminder(trip.id, today.localDate, today.experiencePhase, trip.timeZone)
+    shouldOpenReminder(trip.id, today.localDate, today.experiencePhase, trip.timeZone),
   );
   const [expenseOpenSignal, setExpenseOpenSignal] = useState(0);
   const schedule = selectNextSchedule(today.schedule, new Date());
+  const nextMovement = today.nextMovement;
 
   const checkReminder = useCallback(() => {
     const dismissed = window.localStorage.getItem(
@@ -59,72 +72,100 @@ export function DuringTripHome({
   }
 
   return (
-    <div className="today-page today-home today-home--during">
-      <section className="today-hero today-hero--active" aria-labelledby="today-hero-title">
-        <div className="today-hero__copy">
-          <p className="today-hero__eyebrow">여행 중 · {today.dayLabel}</p>
-          <h2 id="today-hero-title">{trip.destination}의 오늘</h2>
-          <p className="today-hero__summary">{today.nextMovement
-            ? `${today.nextMovement.departureTime} 다음 이동 · ${today.nextMovement.countdownLabel}`
-            : "다음 이동을 일정에서 확인하세요."}</p>
-          <AppLink className="primary-button today-hero__action" href={pathForTrip(trip.id, "schedule")}>전체 일정</AppLink>
-        </div>
-        <figure className="today-hero__visual">
-          <img className="today-hero__cover" src={trip.coverImageUrl} alt={`${trip.destination} 여행 대표 사진`} />
-          <figcaption>{today.localDate}</figcaption>
-        </figure>
-      </section>
+    <VStack gap={6}>
+      <Card elevation="low" padding={5} variant="muted">
+        <VStack gap={4}>
+          <HStack align="center" justify="between">
+            <VStack gap={1}>
+              <Text color="accent" type="label">여행 중 · {today.dayLabel}</Text>
+              <Heading level={2}>오늘의 동선</Heading>
+            </VStack>
+            <HStack align="center" gap={1}>
+              <StatusDot label="여행 중" variant="accent" />
+              <Text type="supporting">여행 중</Text>
+            </HStack>
+          </HStack>
+          <Card elevation="low" padding={4} variant="teal">
+            <VStack gap={3}>
+              <Text type="label">다음 이동</Text>
+              <Heading level={3}>
+                {nextMovement
+                  ? `${nextMovement.departureTime} · ${nextMovement.destination}`
+                  : "다음 이동을 일정에서 확인하세요"}
+              </Heading>
+              <Text type="supporting">
+                {nextMovement
+                  ? `${nextMovement.countdownLabel} · ${modeLabel(nextMovement.mode)} ${nextMovement.routeSummary}`
+                  : "오늘 일정과 저장한 장소를 먼저 확인해 주세요."}
+              </Text>
+              {!reminderOpen ? (
+                <Button
+                  isDisabled={!mutationController}
+                  label="지출 기록"
+                  onClick={() => setExpenseOpenSignal((value) => value + 1)}
+                  variant="primary"
+                  width="100%"
+                />
+              ) : null}
+            </VStack>
+          </Card>
+        </VStack>
+      </Card>
 
-      <section
-        className="today-action-section"
-        data-section="schedule"
-        aria-labelledby="next-schedule-title"
-      >
-        <div className="expense-panel__heading">
-          <div>
-            <p className="today-section-heading__eyebrow">NEXT 3</p>
-            <h2 id="next-schedule-title">다음 일정</h2>
-          </div>
-          <AppLink href={pathForTrip(trip.id, "schedule")}>전체 보기</AppLink>
-        </div>
-        {schedule.length ? (
-          <ol className="today-schedule__list">
-            {schedule.map((item) => (
-              <li className="today-schedule__item" key={item.id}>
-                <time className="today-schedule__time">{item.startsAt.slice(11, 16)}</time>
-                <div><strong>{item.title}</strong><p>{item.place || item.description}</p></div>
-              </li>
-            ))}
-          </ol>
-        ) : <p className="today-empty-state">남은 일정이 없습니다.</p>}
-      </section>
+      <Grid columns={{ minWidth: 280, max: 2 }} gap={4}>
+        <ClickableCard
+          elevation="low"
+          href={pathForTrip(trip.id, "map")}
+          label="오늘 동선 지도 보기"
+          padding={4}
+          variant="cyan"
+        >
+          <VStack gap={2}>
+            <Text type="label">ROUTE MAP</Text>
+            <Heading level={3}>오늘 동선 지도</Heading>
+            <Text type="supporting">일정 순서와 저장한 장소를 지도에서 확인합니다.</Text>
+          </VStack>
+        </ClickableCard>
+        <Card elevation="low" padding={4} variant="green">
+          <VStack gap={2}>
+            <Text type="label">SYDNEY WEATHER</Text>
+            <Heading level={3}>{today.weather.temperatureC}°C · {today.weather.condition}</Heading>
+            <Text type="supporting">{today.weather.location} · UV {today.weather.uvIndex}</Text>
+          </VStack>
+        </Card>
+      </Grid>
 
-      <div className="today-dashboard" aria-label="오늘 여행 정보">
-        <WeatherCard weather={today.weather} />
-        <section
-          className="today-card today-live-tools"
-          data-section="map"
-          aria-labelledby="today-map-title"
-        >
-          <h3 id="today-map-title">지도</h3>
-          <p>오늘 일정과 저장한 장소의 위치를 지도에서 확인하세요.</p>
-          <AppLink className="today-card__link" href={pathForTrip(trip.id, "map")}>
-            지도 보기
-          </AppLink>
-        </section>
-        <section
-          className="today-card today-live-tools"
-          data-section="nearby"
-          aria-labelledby="today-nearby-title"
-        >
-          <h3 id="today-nearby-title">주변 저장 장소</h3>
-          <p>위치 권한이나 연결이 없으면 저장 장소 목록으로 확인합니다.</p>
-          <AppLink className="today-card__link" href={pathForTrip(trip.id, "map")}>
-            저장 장소 보기
-          </AppLink>
-        </section>
-        <MovementCard nextMovement={today.nextMovement} />
-      </div>
+      <Card elevation="low" padding={5} variant="default">
+        <VStack gap={4}>
+          <HStack align="center" justify="between">
+            <VStack gap={1}>
+              <Text color="accent" type="label">TODAY TIMELINE</Text>
+              <Heading level={2}>오늘 일정</Heading>
+            </VStack>
+            <AppLink href={pathForTrip(trip.id, "schedule")}>전체 보기</AppLink>
+          </HStack>
+          {schedule.length ? (
+            <List density="balanced" hasDividers>
+              {schedule.map((item) => (
+                <ListItem
+                  description={`${item.place || item.description}${item.travelNote ? ` · ${item.travelNote}` : ""}`}
+                  endContent={
+                    item.bookingStatus === "confirmed" ? (
+                      <Text color="accent" type="label">예약 확정</Text>
+                    ) : item.travelMode ? (
+                      <Text type="label">{modeLabel(item.travelMode)}</Text>
+                    ) : undefined
+                  }
+                  href={pathForTrip(trip.id, "schedule")}
+                  key={item.id}
+                  label={item.title}
+                  startContent={<Text hasTabularNumbers type="label">{item.startsAt.slice(11, 16)}</Text>}
+                />
+              ))}
+            </List>
+          ) : <Text color="secondary" type="body">남은 일정이 없습니다.</Text>}
+        </VStack>
+      </Card>
 
       <ExpensePanel
         controller={mutationController}
@@ -139,19 +180,23 @@ export function DuringTripHome({
 
       {reminderOpen ? (
         <BottomSheet ariaLabel="오늘 지출 정리 알림" onClose={() => dismissReminder(false)} returnFocusTo={null}>
-          <div className="expense-reminder">
-            <p className="today-section-heading__eyebrow">21:00 CHECK</p>
-            <h2>오늘 쓴 돈, 잊기 전에 정리할까요?</h2>
-            <p>식비·교통·쇼핑 등 오늘 지출을 지금 기록해 두세요.</p>
-            <div className="tool-editor__actions">
-              <button onClick={() => dismissReminder(false)} type="button">오늘은 닫기</button>
-              <button className="primary-button" onClick={() => dismissReminder(true)} type="button">지출 기록</button>
-            </div>
-          </div>
+          <VStack gap={4}>
+            <Text color="accent" type="label">21:00 CHECK</Text>
+            <Heading level={2}>오늘 쓴 돈, 잊기 전에 정리할까요?</Heading>
+            <Text type="body">식비·교통·쇼핑 등 오늘 지출을 지금 기록해 두세요.</Text>
+            <HStack gap={2} justify="end">
+              <Button label="오늘은 닫기" onClick={() => dismissReminder(false)} variant="secondary" />
+              <Button label="지출 기록" onClick={() => dismissReminder(true)} variant="primary" />
+            </HStack>
+          </VStack>
         </BottomSheet>
       ) : null}
-    </div>
+    </VStack>
   );
+}
+
+function modeLabel(mode: NonNullable<TodayHomeProps["today"]["nextMovement"]>["mode"]): string {
+  return { walk: "도보", transit: "대중교통", drive: "차량", ferry: "페리" }[mode];
 }
 
 function hourInZone(date: Date, timeZone: string): number {

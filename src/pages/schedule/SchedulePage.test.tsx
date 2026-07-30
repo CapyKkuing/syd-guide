@@ -19,6 +19,10 @@ afterEach(() => {
   document.body.style.overflow = "";
 });
 
+async function showFullSchedule() {
+  await userEvent.click(screen.getByRole("radio", { name: "전체 일정" }));
+}
+
 describe("SchedulePage", () => {
   it("keeps fixture preview read-only with a visible reason", async () => {
     const days = await getScheduleDays();
@@ -41,10 +45,23 @@ describe("SchedulePage", () => {
     const secondDay = screen.getByRole("button", { name: /DAY 02/ });
     await userEvent.click(secondDay);
 
-    expect(secondDay).toHaveAttribute("aria-pressed", "true");
+    expect(secondDay).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("heading", { name: days[1]!.headline })).toBeVisible();
-    expect(screen.getByText(days[1]!.date)).toBeVisible();
+    expect(screen.getByText(new RegExp(days[1]!.date))).toBeVisible();
     expect(screen.getByText("2개 일정")).toBeVisible();
+  });
+
+  it("shows the map view first and opens the selected day as a full list", async () => {
+    const days = await getScheduleDays();
+    render(<SchedulePage days={days} />);
+
+    expect(screen.getByRole("radio", { name: "지도 동선" })).toBeChecked();
+    expect(screen.getByText("지도에 표시할 위치가 있는 장소를 일정에 연결해 주세요.")).toBeVisible();
+    expect(screen.queryByRole("button", { name: /호텔 체크인/ })).not.toBeInTheDocument();
+
+    await showFullSchedule();
+
+    expect(screen.getByRole("button", { name: /호텔 체크인/ })).toBeVisible();
   });
 
   it("opens a read-only detail sheet with all schedule fields and restores opener focus on Escape", async () => {
@@ -52,6 +69,7 @@ describe("SchedulePage", () => {
     render(<SchedulePage days={days} />);
 
     await userEvent.click(screen.getByRole("button", { name: /DAY 02/ }));
+    await showFullSchedule();
     const opener = screen.getByRole("button", { name: /오페라 하우스 가이드 투어/ });
     await userEvent.click(opener);
 
@@ -78,6 +96,7 @@ describe("SchedulePage", () => {
     const days = await getScheduleDays();
     render(<SchedulePage days={days} />);
 
+    await showFullSchedule();
     await userEvent.click(screen.getByRole("button", { name: /호텔 체크인/ }));
     const dialog = screen.getByRole("dialog", { name: "일정 상세" });
     fireEvent.mouseDown(dialog);
@@ -94,6 +113,7 @@ describe("SchedulePage", () => {
     render(<SchedulePage days={days} />);
 
     await userEvent.click(screen.getByRole("button", { name: /DAY 02/ }));
+    await showFullSchedule();
     await userEvent.click(screen.getByRole("button", { name: /오페라 하우스 가이드 투어/ }));
     const dialog = screen.getByRole("dialog", { name: "일정 상세" });
     const closeButton = within(dialog).getByRole("button", { name: "닫기" });
@@ -112,6 +132,7 @@ describe("SchedulePage", () => {
     const days = await getScheduleDays();
     document.body.style.overflow = "clip";
     const view = render(<SchedulePage days={days} />);
+    await showFullSchedule();
     const opener = screen.getByRole("button", { name: /호텔 체크인/ });
 
     await userEvent.click(opener);
@@ -131,6 +152,7 @@ describe("SchedulePage", () => {
     }));
     render(<SchedulePage days={unsafeDays} />);
 
+    await showFullSchedule();
     await userEvent.click(screen.getByRole("button", { name: /호텔 체크인/ }));
     expect(within(screen.getByRole("dialog", { name: "일정 상세" }))
       .queryByRole("link", { name: "지도에서 열기" })).not.toBeInTheDocument();
@@ -170,6 +192,7 @@ describe("SchedulePage", () => {
     );
 
     await userEvent.click(screen.getByRole("button", { name: /DAY 02/ }));
+    await showFullSchedule();
     await userEvent.click(screen.getByRole("button", { name: /오페라 하우스 가이드 투어/ }));
     await userEvent.click(screen.getByRole("button", { name: "일정 수정" }));
     await userEvent.clear(screen.getByLabelText("일정 제목"));

@@ -1,7 +1,24 @@
+import {
+  Button,
+  Card,
+  Heading,
+  HStack,
+  List,
+  ListItem,
+  SegmentedControl,
+  SegmentedControlItem,
+  Tab,
+  TabList,
+  Text,
+  VStack,
+} from "@astryxdesign/core";
 import { useState } from "react";
-import type { ScheduleDayView, ScheduleItemView } from "../../data/contracts";
-import { ScheduleDetailSheet } from "./ScheduleDetailSheet";
+import type { MapPlaceView, ScheduleDayView, ScheduleItemView } from "../../data/contracts";
 import type { TripMutationController } from "../../services/mutations/controller";
+import { MapCanvas, type MapLoader, type MapOpenRequest } from "../map/MapCanvas";
+import { MapPlaceSheet } from "../map/MapPlaceSheet";
+import { PlaceEditorDialog } from "../map/PlaceEditorDialog";
+import { ScheduleDetailSheet } from "./ScheduleDetailSheet";
 import { ScheduleEditorDialog } from "./ScheduleEditorDialog";
 
 const kindLabels: Record<ScheduleItemView["kind"], string> = {
@@ -9,8 +26,10 @@ const kindLabels: Record<ScheduleItemView["kind"], string> = {
   meal: "식사",
   attraction: "관광",
   booking: "예약",
-  note: "메모"
+  note: "메모",
 };
+
+type ScheduleView = "map" | "list";
 
 function timeOf(value: string): string {
   return value.slice(11, 16);
@@ -20,88 +39,122 @@ export interface SchedulePageProps {
   tripId?: string;
   timeZone?: string;
   days: ScheduleDayView[];
+  mapLoader?: MapLoader;
   mutationController?: TripMutationController;
+  places?: MapPlaceView[];
+  viewerMemberId?: string;
 }
 
 export function SchedulePage({
   days,
-  tripId = "preview",
+  mapLoader,
+  mutationController,
+  places = [],
   timeZone = "UTC",
-  mutationController
+  viewerMemberId = "",
 }: SchedulePageProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [selectedItem, setSelectedItem] = useState<ScheduleItemView | null>(null);
   const [returnFocusTo, setReturnFocusTo] = useState<HTMLElement | null>(null);
   const [editorItem, setEditorItem] = useState<ScheduleItemView | null | undefined>(undefined);
+  const [selectedPlace, setSelectedPlace] = useState<MapPlaceView | null>(null);
+  const [placeReturnFocusTo, setPlaceReturnFocusTo] = useState<HTMLElement | null>(null);
+  const [editingPlace, setEditingPlace] = useState<MapPlaceView | null | undefined>(undefined);
+  const [view, setView] = useState<ScheduleView>("map");
   const day = days[selectedIndex] ?? null;
 
   if (!day) {
-    return <section className="schedule-page" aria-labelledby="schedule-title"><h1 id="schedule-title">일정</h1><p>표시할 일정이 없습니다.</p></section>;
+    return (
+      <VStack gap={4}>
+        <Heading level={1}>일정</Heading>
+        <Text type="body">표시할 일정이 없습니다.</Text>
+      </VStack>
+    );
   }
 
   const items = [...day.items].sort((left, right) => left.startsAt.localeCompare(right.startsAt));
   const nextItemId = items.find((item) => !item.isDone)?.id;
+  const routePlaceIds = new Set(items.flatMap((item) => item.placeId ? [item.placeId] : []));
+  const routePlaces = places.filter((place) => routePlaceIds.size
+    ? routePlaceIds.has(place.id)
+    : place.dayDate === day.date);
+
+  function openPlace({ place, opener }: MapOpenRequest) {
+    setPlaceReturnFocusTo(opener);
+    setSelectedPlace(place);
+  }
 
   return (
-    <section className="schedule-page" aria-labelledby="schedule-title" data-trip-id={tripId}>
-      <header className="schedule-page__header">
-        <h1 id="schedule-title">일정</h1>
-        <button
-          className="primary-button"
-          disabled={!mutationController}
+    <VStack gap={6}>
+      <HStack align="center" justify="between">
+        <VStack gap={1}>
+          <Text color="accent" type="label">TRIP PLAN</Text>
+          <Heading level={1}>일정</Heading>
+        </VStack>
+        <Button
+          isDisabled={!mutationController}
+          label="일정 추가"
           onClick={() => setEditorItem(null)}
-          type="button"
-        >
-          일정 추가
-        </button>
-      </header>
-      {!mutationController ? (
-        <p className="schedule-readonly">미리보기에서는 일정을 편집할 수 없습니다.</p>
-      ) : null}
-      <div aria-label="날짜 선택" className="schedule-day-selector">
-        {days.map((candidate, index) => (
-          <button
-            key={candidate.date}
-            aria-pressed={index === selectedIndex}
-            className={index === selectedIndex ? "is-selected" : undefined}
-            onClick={() => setSelectedIndex(index)}
-            type="button"
-          >
-            <span>{candidate.dayLabel}</span>
-            <small>{candidate.date}</small>
-          </button>
-        ))}
-      </div>
+          variant="primary"
+        />
+      </HStack>
 
-      <section className="schedule-summary" aria-labelledby="schedule-day-title">
-        <p>{day.dayLabel} · {day.date}</p>
-        <h2 id="schedule-day-title">{day.headline}</h2>
-        <p>{items.length}개 일정</p>
-      </section>
+      {!mutationController ? <Text color="secondary" type="supporting">미리보기에서는 일정을 편집할 수 없습니다.</Text> : null}
 
-      <ol className="schedule-timeline" aria-label={`${day.dayLabel} 일정`}>
-        {items.map((item) => (
-          <li key={item.id} className={`${item.isDone ? "is-done" : ""}${item.id === nextItemId ? " is-next" : ""}`}>
-            <button
-              aria-label={`${timeOf(item.startsAt)} ${item.title}, ${item.isDone ? "완료" : "예정"}`}
-              className="schedule-timeline__card"
-              onClick={(event) => {
-                setReturnFocusTo(event.currentTarget);
-                setSelectedItem(item);
-              }}
-              type="button"
-            >
-              <time>{timeOf(item.startsAt)}</time>
-              <span className="schedule-timeline__content">
-                <strong>{item.title}</strong>
-                <span>{item.place}</span>
-                <span>{item.description}</span>
-                <span className="schedule-timeline__meta">{kindLabels[item.kind]} · {item.isDone ? "완료" : "예정"}</span>
-              </span>
-            </button>
-          </li>
+      <TabList hasDivider layout="fill" onChange={(value) => setSelectedIndex(days.findIndex((candidate) => candidate.date === value))} size="sm" value={day.date}>
+        {days.map((candidate) => (
+          <Tab key={candidate.date} label={candidate.dayLabel} value={candidate.date} />
         ))}
-      </ol>
+      </TabList>
+
+      <SegmentedControl label="일정 보기 방식" layout="fill" onChange={(value) => setView(value === "list" ? "list" : "map")} value={view}>
+        <SegmentedControlItem label="지도 동선" value="map" />
+        <SegmentedControlItem label="전체 일정" value="list" />
+      </SegmentedControl>
+
+      <VStack gap={3}>
+        <HStack align="center" justify="between">
+          <VStack gap={1}>
+            <Text color="accent" type="label">{day.dayLabel} · {day.date}</Text>
+            <Heading level={2}>{day.headline}</Heading>
+          </VStack>
+          <Text hasTabularNumbers type="label">{items.length}개 일정</Text>
+        </HStack>
+
+        {view === "map" ? (
+          <VStack gap={3}>
+            {routePlaces.length ? (
+              <MapCanvas loader={mapLoader} onOpenPlace={openPlace} places={routePlaces} />
+            ) : (
+              <Card padding={4} variant="muted">
+                <Text type="body">지도에 표시할 위치가 있는 장소를 일정에 연결해 주세요.</Text>
+              </Card>
+            )}
+            <Text color="secondary" type="supporting">
+              지도 핀을 누르면 장소 정보와 Google Maps 길찾기를 확인할 수 있습니다.
+            </Text>
+          </VStack>
+        ) : (
+          <List density="spacious" hasDividers>
+            {items.map((item) => (
+              <ListItem
+                description={`${item.place || item.description}${item.travelNote ? ` · ${item.travelNote}` : ""}`}
+                endContent={<Text type="label">{item.bookingStatus === "confirmed" ? "예약 확정" : `${kindLabels[item.kind]} · ${item.isDone ? "완료" : "예정"}`}</Text>}
+                isSelected={item.id === nextItemId}
+                key={item.id}
+                label={item.title}
+                onClick={(event) => {
+                  if (event.currentTarget instanceof HTMLElement) {
+                    setReturnFocusTo(event.currentTarget);
+                  }
+                  setSelectedItem(item);
+                }}
+                startContent={<Text hasTabularNumbers type="label">{timeOf(item.startsAt)}</Text>}
+              />
+            ))}
+          </List>
+        )}
+      </VStack>
 
       {selectedItem ? (
         <ScheduleDetailSheet
@@ -123,6 +176,27 @@ export function SchedulePage({
           timeZone={timeZone}
         />
       ) : null}
-    </section>
+      {selectedPlace ? (
+        <MapPlaceSheet
+          controller={mutationController}
+          onClose={() => setSelectedPlace(null)}
+          onEdit={() => {
+            setEditingPlace(selectedPlace);
+            setSelectedPlace(null);
+          }}
+          place={selectedPlace}
+          returnFocusTo={placeReturnFocusTo}
+          viewerMemberId={viewerMemberId}
+        />
+      ) : null}
+      {editingPlace !== undefined && mutationController ? (
+        <PlaceEditorDialog
+          controller={mutationController}
+          onClose={() => setEditingPlace(undefined)}
+          place={editingPlace}
+          viewerMemberId={viewerMemberId}
+        />
+      ) : null}
+    </VStack>
   );
 }

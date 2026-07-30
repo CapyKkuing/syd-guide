@@ -147,8 +147,10 @@ export function TripRoutePage({
           <SchedulePage
             days={workspace.data.schedule.days}
             mutationController={mutationController}
+            places={workspace.data.mapPreview.places}
             timeZone={workspace.data.context.trip.timeZone}
             tripId={tripId}
+            viewerMemberId={workspace.data.context.viewer.memberId}
           />
         ) : (
           <ToolsPage
