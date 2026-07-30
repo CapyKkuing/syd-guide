@@ -1,5 +1,5 @@
 .trip-navigation {
-  position: fixed;
+  position: static;
   z-index: 20;
   right: 0;
   bottom: 0;
@@ -39,6 +39,7 @@
 
 @media (min-width: 761px) {
   .trip-navigation {
+    position: fixed;
     top: 0;
     right: auto;
     display: grid;

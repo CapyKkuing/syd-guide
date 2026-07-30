@@ -51,7 +51,11 @@
 }
 
 .trip-shell {
+  display: grid;
+  height: 100dvh;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   min-height: 100vh;
+  overflow: hidden;
   background: var(--bg);
 }
 
@@ -208,7 +212,9 @@
 }
 
 .trip-content {
-  padding: var(--space-8) 0 calc(var(--mobile-nav-height) + var(--space-8) + env(safe-area-inset-bottom));
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-8) 0;
 }
 
 .trip-placeholder {
@@ -287,6 +293,12 @@
 }
 
 @media (min-width: 761px) {
+  .trip-shell {
+    display: block;
+    height: auto;
+    overflow: visible;
+  }
+
   .trip-header,
   .trip-content {
     width: auto;
@@ -296,6 +308,8 @@
   }
 
   .trip-content {
+    min-height: auto;
+    overflow-y: visible;
     padding-bottom: var(--space-10);
   }
 }

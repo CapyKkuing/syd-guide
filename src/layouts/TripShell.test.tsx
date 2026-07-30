@@ -10,6 +10,8 @@ import { TripShell } from "./TripShell";
 
 const layoutStyles = readFileSync("src/styles/layout.css", "utf8")
   .replace(/\r\n/g, "\n");
+const navigationStyles = readFileSync("src/styles/navigation.css", "utf8")
+  .replace(/\r\n/g, "\n");
 
 async function renderTripShell(
   activeTab: TripTab,
@@ -124,6 +126,15 @@ describe("TripShell", () => {
     )).toContain("min-height: 44px;");
     expect(ruleFor(layoutStyles, ".trip-switcher-menu__item"))
       .toContain("min-height: 44px;");
+  });
+
+  it("gives mobile navigation its own grid row instead of covering trip content", () => {
+    const desktopNavigation = navigationStyles.split("@media (min-width: 761px)")[1] ?? "";
+
+    expect(ruleFor(layoutStyles, ".trip-shell")).toContain("grid-template-rows: auto minmax(0, 1fr) auto;");
+    expect(layoutStyles).toMatch(/\.trip-content\s*\{[^}]*overflow-y: auto;/);
+    expect(ruleFor(navigationStyles, ".trip-navigation")).toContain("position: static;");
+    expect(ruleFor(desktopNavigation, ".trip-navigation")).toContain("position: fixed;");
   });
 
   it("lists every trip in its switcher and restores trigger focus after Escape", async () => {
