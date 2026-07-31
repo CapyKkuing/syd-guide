@@ -1,10 +1,49 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+import type { BookingView } from "../../../data/contracts";
+import { BookingsPanel } from "./BookingsPanel";
 import { ReservationCode } from "./ReservationCode";
 import { BookingEditorDialog } from "./BookingEditorDialog";
 
+const bookings: BookingView[] = [
+  {
+    id: "flight", tripId: "sydney", version: 1, updatedAt: "2026-07-01T00:00:00", updatedBy: "minji",
+    placeId: null, bookingType: "flight", provider: "대한항공 KE401", startsAt: "2026-07-29T18:05:00",
+    endsAt: null, reservationCode: null, paymentStatus: "paid", externalUrl: null, documentUrl: null,
+    memo: "", isFixed: true, isRequired: true
+  },
+  {
+    id: "tour", tripId: "sydney", version: 1, updatedAt: "2026-07-01T00:00:00", updatedBy: "minji",
+    placeId: null, bookingType: "tour", provider: "오페라하우스 투어", startsAt: "2026-07-31T10:30:00",
+    endsAt: null, reservationCode: null, paymentStatus: "paid", externalUrl: null, documentUrl: null,
+    memo: "", isFixed: true, isRequired: false
+  }
+];
+
 describe("protected bookings", () => {
+  it("highlights the earliest booking before departure and today's booking during travel", () => {
+    const { rerender } = render(
+      <BookingsPanel bookings={bookings} experiencePhase="before" places={[]} timeZone="Australia/Sydney" />
+    );
+
+    expect(screen.getByText("출발 전 확인할 예약")).toBeVisible();
+    expect(screen.getByText("대한항공 KE401")).toBeVisible();
+
+    rerender(
+      <BookingsPanel
+        bookings={bookings}
+        experiencePhase="during"
+        localDate="2026-07-31"
+        places={[]}
+        timeZone="Australia/Sydney"
+      />
+    );
+
+    expect(screen.getByText("지금 확인할 예약")).toBeVisible();
+    expect(screen.getByText("오페라하우스 투어")).toBeVisible();
+  });
+
   it("reveals a reservation code only while pressed", async () => {
     render(<ReservationCode value="ABC12345" />);
     const reveal = screen.getByRole("button", { name: "예약번호 보기" });

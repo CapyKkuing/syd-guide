@@ -209,6 +209,41 @@
   gap: var(--space-3);
 }
 
+.schedule-day-section {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  background: color-mix(in srgb, var(--surface) 92%, var(--accent-soft));
+  box-shadow: var(--shadow-soft);
+}
+
+.schedule-day-section h2 {
+  color: var(--text);
+  font-size: var(--text-xl);
+  letter-spacing: -0.04em;
+}
+
+.schedule-day-section > .astryx-stack {
+  min-width: 0;
+}
+
+.schedule-day-section .astryx-list {
+  gap: var(--space-2);
+}
+
+.schedule-day-section .astryx-item {
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  font-family: inherit;
+}
+
+.schedule-day-section .astryx-item > button {
+  border: 0;
+  border-radius: inherit;
+  background: var(--surface);
+}
+
 .schedule-page__header {
   justify-content: space-between;
 }

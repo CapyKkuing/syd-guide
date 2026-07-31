@@ -112,7 +112,8 @@ export function SchedulePage({
         <SegmentedControlItem label="전체 일정" value="list" />
       </SegmentedControl>
 
-      <VStack gap={3}>
+      <Card className="schedule-day-section" padding={4}>
+        <VStack gap={3}>
         <HStack align="center" justify="between">
           <VStack gap={1}>
             <Text color="accent" type="label">{day.dayLabel} · {day.date}</Text>
@@ -135,7 +136,7 @@ export function SchedulePage({
             </Text>
           </VStack>
         ) : (
-          <List density="spacious" hasDividers>
+          <List density="spacious">
             {items.map((item) => (
               <ListItem
                 description={`${item.place || item.description}${item.travelNote ? ` · ${item.travelNote}` : ""}`}
@@ -154,7 +155,8 @@ export function SchedulePage({
             ))}
           </List>
         )}
-      </VStack>
+        </VStack>
+      </Card>
 
       {selectedItem ? (
         <ScheduleDetailSheet

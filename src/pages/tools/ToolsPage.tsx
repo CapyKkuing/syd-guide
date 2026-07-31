@@ -122,7 +122,14 @@ function ToolCard({
       <article className="tool-card tool-card--wide" id="bookings">
         <div className="tool-card__heading"><h1>{item.label}</h1></div>
         <p>{item.description}</p>
-        <BookingsPanel bookings={tools.bookings} controller={controller} places={tools.places} timeZone={tools.timeZone} />
+        <BookingsPanel
+          bookings={tools.bookings}
+          controller={controller}
+          experiencePhase={workspace?.context.trip.experiencePhase}
+          localDate={workspace?.context.localDate}
+          places={tools.places}
+          timeZone={tools.timeZone}
+        />
       </article>
     );
   }
