@@ -4,6 +4,7 @@ import {
 } from "../../app/router";
 import { AppLink } from "../../components/AppLink";
 import { ExpensePanel } from "./ExpensePanel";
+import { SettlementPanel } from "./SettlementPanel";
 import type { TodayHomeProps } from "./todayHomeTypes";
 import { RepresentativePhotoPanel } from "../../features/memories/RepresentativePhotoPanel";
 import { ReelEditor } from "../../features/memories/reel/ReelEditor";
@@ -67,18 +68,7 @@ export function AfterTripHome({
         다시 여행 보기
       </AppLink>
 
-      {today.unsettledExpenseCount ? (
-        <section
-          className="settlement-card is-pending"
-          aria-labelledby="settlement-title"
-        >
-          <p className="today-section-heading__eyebrow">SETTLEMENT</p>
-          <h2 id="settlement-title">
-            정산 미완료 {today.unsettledExpenseCount}건
-          </h2>
-          <p>비용 목록에서 완료된 항목을 정산 완료로 바꿔 주세요.</p>
-        </section>
-      ) : null}
+      <SettlementPanel controller={mutationController} expenses={today.expenses} members={members} />
 
       <ExpensePanel
         controller={mutationController}

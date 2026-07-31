@@ -59,6 +59,7 @@ export function ExpensePanel({
         spentOn: expense.spentOn,
         paidByMemberId: expense.paidByMemberId,
         expenseScope: expense.expenseScope,
+        personalForMemberId: expense.personalForMemberId,
         paymentMethod: expense.paymentMethod,
         isSettled: !expense.isSettled,
         memo: expense.memo,
@@ -98,7 +99,7 @@ export function ExpensePanel({
               <span>{categoryLabels[expense.category]} · {expense.title}</span>
               <strong>{formatMoney(expense.amountMinor, expense.currency)}</strong>
               <small>
-                {expense.spentOn} · {memberName(members, expense.paidByMemberId)} 결제 · {scopeLabel(expense.expenseScope)} · {paymentMethodLabel(expense.paymentMethod)}
+                {expense.spentOn} · {memberName(members, expense.paidByMemberId)} 결제 · {scopeLabel(expense.expenseScope, expense.personalForMemberId, members)} · {paymentMethodLabel(expense.paymentMethod)}
               </small>
             </button>
             {expense.expenseScope !== "personal" ? (
@@ -153,6 +154,7 @@ function ExpenseEditor({
   const [spentOn, setSpentOn] = useState(expense?.spentOn ?? localDate);
   const [paidByMemberId, setPaidByMemberId] = useState(expense?.paidByMemberId ?? viewerMemberId);
   const [expenseScope, setExpenseScope] = useState<Expense["expenseScope"] | "">(expense?.expenseScope ?? "");
+  const [personalForMemberId, setPersonalForMemberId] = useState(expense?.personalForMemberId ?? "");
   const [paymentMethod, setPaymentMethod] = useState<Expense["paymentMethod"] | "">(expense?.paymentMethod ?? "");
   const [isSettled, setIsSettled] = useState(expense?.isSettled ?? false);
   const [memo, setMemo] = useState(expense?.memo ?? "");
@@ -170,6 +172,10 @@ function ExpenseEditor({
       setError("비용 구분과 결제 수단을 선택해 주세요.");
       return;
     }
+    if (expenseScope === "personal" && !personalForMemberId) {
+      setError("개인 비용 대상을 선택해 주세요.");
+      return;
+    }
     const payload: MutationPayloadMap["expense"] = {
       phase: mode === "before" ? "pretrip" : "travel",
       category,
@@ -179,8 +185,10 @@ function ExpenseEditor({
       spentOn,
       paidByMemberId,
       expenseScope,
+      personalForMemberId: expenseScope === "personal" ? personalForMemberId : null,
       paymentMethod,
-      isSettled: expenseScope === "personal" ? true : isSettled,
+      isSettled: expenseScope === "personal" && personalForMemberId === paidByMemberId
+        ? true : isSettled,
       memo: memo.trim(),
     };
     try {
@@ -226,6 +234,10 @@ function ExpenseEditor({
           <label><input checked={expenseScope === "personal"} name="expense-scope" onChange={() => setExpenseScope("personal")} type="radio" />개인</label>
           <label><input checked={expenseScope === "shared"} name="expense-scope" onChange={() => setExpenseScope("shared")} type="radio" />함께</label>
         </fieldset>
+        {expenseScope === "personal" ? <label><span>개인 비용 대상</span><select required value={personalForMemberId} onChange={(event) => setPersonalForMemberId(event.target.value)}>
+          <option value="">선택해 주세요</option>
+          {members.map((member) => <option key={member.id} value={member.id}>{member.displayName}</option>)}
+        </select></label> : null}
         <fieldset className="expense-editor__choice">
           <legend>결제 수단</legend>
           <label><input checked={paymentMethod === "cash"} name="payment-method" onChange={() => setPaymentMethod("cash")} type="radio" />현금</label>
@@ -281,8 +293,13 @@ function memberName(members: PublicMember[], memberId: string): string {
   return members.find((member) => member.id === memberId)?.displayName ?? "여행자";
 }
 
-function scopeLabel(scope: Expense["expenseScope"]): string {
-  return scope === "personal" ? "개인" : scope === "shared" ? "함께" : "구분 미입력";
+function scopeLabel(
+  scope: Expense["expenseScope"],
+  personalForMemberId: Expense["personalForMemberId"],
+  members: PublicMember[],
+): string {
+  if (scope === "personal") return `${memberName(members, personalForMemberId ?? "")} 개인`;
+  return scope === "shared" ? "함께" : "구분 미입력";
 }
 
 function paymentMethodLabel(paymentMethod: Expense["paymentMethod"]): string {

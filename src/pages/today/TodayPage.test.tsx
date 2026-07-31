@@ -105,6 +105,7 @@ describe("TodayPage", () => {
         currency: "KRW",
         paidByMemberId: "preview-owner",
         expenseScope: "shared",
+        personalForMemberId: null,
         paymentMethod: "card",
         isSettled: false,
       }),
@@ -122,6 +123,7 @@ describe("TodayPage", () => {
     await user.clear(screen.getByLabelText("금액"));
     await user.type(screen.getByLabelText("금액"), "10000");
     await user.click(screen.getByLabelText("개인"));
+    await user.selectOptions(screen.getByLabelText("개인 비용 대상"), "preview-owner");
     await user.click(screen.getByLabelText("현금"));
 
     expect(screen.queryByLabelText("정산 완료")).not.toBeInTheDocument();
@@ -133,7 +135,7 @@ describe("TodayPage", () => {
       "create",
       expect.any(String),
       null,
-      expect.objectContaining({ expenseScope: "personal", paymentMethod: "cash", isSettled: true }),
+      expect.objectContaining({ expenseScope: "personal", personalForMemberId: "preview-owner", paymentMethod: "cash", isSettled: true }),
     );
   });
 

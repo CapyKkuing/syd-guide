@@ -93,6 +93,7 @@ export const entitySchemas = {
     spentOn: z.iso.date(),
     paidByMemberId: idSchema,
     expenseScope: z.enum(["shared", "personal"]).nullable(),
+    personalForMemberId: nullableId,
     paymentMethod: z.enum(["cash", "card"]).nullable(),
     isSettled: z.boolean(),
     memo: longText,

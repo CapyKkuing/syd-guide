@@ -560,6 +560,69 @@ body {
   background: color-mix(in srgb, var(--warning) 10%, var(--surface));
 }
 
+.settlement-panel {
+  padding: clamp(24px, 5vw, 48px);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: var(--accent-soft);
+  box-shadow: var(--shadow-card);
+}
+
+.settlement-panel > h2 {
+  margin: 0;
+  font-size: clamp(1.8rem, 4vw, 3.2rem);
+  font-weight: 560;
+  letter-spacing: -0.05em;
+  line-height: 1;
+}
+
+.settlement-panel__intro {
+  margin: 12px 0 0;
+  color: var(--text-muted);
+}
+
+.settlement-panel__currency {
+  margin-top: 24px;
+  padding: 20px;
+  border-radius: 20px;
+  background: var(--surface);
+}
+
+.settlement-panel__currency > strong {
+  display: block;
+  margin-top: 8px;
+  font-size: clamp(1.25rem, 3vw, 1.8rem);
+  letter-spacing: -0.04em;
+}
+
+.settlement-panel__currency > p {
+  margin: 8px 0 0;
+  color: var(--text-muted);
+}
+
+.settlement-panel__details {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.settlement-panel__details h3 {
+  margin: 0 0 8px;
+  font-size: var(--text-sm);
+}
+
+.settlement-panel__details p {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 8px 0 0;
+}
+
+.settlement-panel__action {
+  width: 100%;
+  margin-top: 22px;
+}
+
 .expense-reminder {
   display: grid;
   gap: 18px;
