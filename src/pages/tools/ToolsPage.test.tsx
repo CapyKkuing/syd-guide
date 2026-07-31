@@ -1,7 +1,8 @@
-import { render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
+import type { ToolRouteId } from "../../app/router";
 import { ThemeProvider } from "../../app/theme/ThemeProvider";
-import type { ToolsViewModel, TripWorkspace } from "../../data/contracts";
+import type { TripWorkspace } from "../../data/contracts";
 import { createSampleDataSource } from "../../test/travelSamples";
 import { ToolsPage } from "./ToolsPage";
 
@@ -30,11 +31,12 @@ async function getWorkspace(): Promise<TripWorkspace> {
   };
 }
 
-async function renderToolsPage() {
+async function renderToolsPage(activeToolId?: ToolRouteId) {
   const workspace = await getWorkspace();
   return render(
     <ThemeProvider>
       <ToolsPage
+        activeToolId={activeToolId}
         tools={workspace.tools}
         workspace={workspace}
         deviceManagement={<p>기기 관리 테스트</p>}
@@ -44,9 +46,16 @@ async function renderToolsPage() {
 }
 
 describe("ToolsPage", () => {
-  it("groups every approved tool into the three approved sections", async () => {
+  it("shows links to every tool without rendering their full panels on the hub", async () => {
     await renderToolsPage();
 
+    expect(screen.getByRole("heading", { name: "도구" })).toBeVisible();
+    for (const link of screen.getAllByRole("link", { name: "예약·바우처 열기" })) {
+      expect(link).toHaveAttribute("href", "/trip/sydney-2026/tools/bookings");
+    }
+    for (const link of screen.getAllByRole("link", { name: "여행 검색 열기" })) {
+      expect(link).toHaveAttribute("href", "/trip/sydney-2026/tools/search");
+    }
     expect(screen.getByRole("heading", { name: "Travel Essentials" })).toBeVisible();
     expect(screen.getByRole("heading", { name: "Places" })).toBeVisible();
     expect(screen.getByRole("heading", { name: "Planning & Settings" })).toBeVisible();
@@ -55,87 +64,55 @@ describe("ToolsPage", () => {
       "체크리스트", "여행 메모", "주의사항", "AI 앱 연결", "파트너 연결",
       "연결 기기 관리", "테마", "오프라인·동기화 상태"
     ]) {
-      expect(screen.getByRole("heading", { name: label })).toBeVisible();
+      expect(screen.getAllByRole("link", { name: `${label} 열기` })[0]).toBeVisible();
     }
+    expect(screen.queryByLabelText("환산 방향")).not.toBeInTheDocument();
+    expect(screen.queryByText("기기 관리 테스트")).not.toBeInTheDocument();
   });
 
-  it("renders only unavailable features as noninteractive preview articles", async () => {
-    await renderToolsPage();
+  it("opens an available tool as a standalone detail page", async () => {
+    await renderToolsPage("exchange");
 
-    const transport = screen.getByText("교통").closest("article");
-    expect(transport).toHaveTextContent("준비 중");
-    expect(transport?.querySelector("button, a, input, select, textarea")).toBeNull();
-  });
-
-  it("reuses the existing cards for interactive currency and AI tools", async () => {
-    await renderToolsPage();
-
-    const exchange = screen.getByRole("heading", { name: "환율" }).closest("article");
-    expect(exchange).not.toHaveTextContent("준비 중");
+    expect(screen.getByRole("link", { name: "← 도구" })).toHaveAttribute(
+      "href",
+      "/trip/sydney-2026/tools"
+    );
+    expect(screen.getByRole("heading", { level: 1, name: "환율" })).toBeVisible();
     expect(screen.getByLabelText("환산 방향")).toBeVisible();
     expect(screen.getByRole("button", { name: "환율 불러오기" })).toBeVisible();
-
-    const ai = screen.getByRole("heading", { name: "AI 앱 연결" }).closest("article");
-    expect(ai).not.toHaveTextContent("준비 중");
-    expect(screen.getByLabelText("AI 공급자")).toBeVisible();
-    expect(screen.getByRole("button", { name: "AI에서 질문하기" })).toBeVisible();
+    expect(screen.queryByRole("heading", { name: "Travel Essentials" })).not.toBeInTheDocument();
   });
 
-  it("renders the bookings, emergency, device-management, theme, and offline status slots", async () => {
+  it("opens an unavailable tool on its own prepared-state page", async () => {
+    await renderToolsPage("transport");
+
+    expect(screen.getByRole("heading", { level: 1, name: "교통" })).toBeVisible();
+    expect(screen.getByText("준비 중")).toBeVisible();
+    expect(screen.getByText("교통 안내는 준비 중입니다.")).toBeVisible();
+  });
+
+  it("renders device management only on the devices route", async () => {
+    await renderToolsPage("devices");
+
+    expect(screen.getByRole("heading", { level: 1, name: "연결 기기 관리" })).toBeVisible();
+    expect(screen.getByText("기기 관리 테스트")).toBeVisible();
+  });
+
+  it("renders search and activity as standalone tools", async () => {
+    const search = await renderToolsPage("search");
+
+    expect(screen.getByRole("heading", { level: 1, name: "여행 검색" })).toBeVisible();
+    expect(screen.getByLabelText("검색어")).toBeVisible();
+
+    search.unmount();
+    await renderToolsPage("activity");
+    expect(screen.getByRole("heading", { level: 1, name: "최근 활동" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "활동 새로고침" })).toBeVisible();
+  });
+
+  it("keeps a preview badge on unavailable tool links", async () => {
     await renderToolsPage();
 
-    expect(document.getElementById("bookings")).toHaveTextContent("예약·바우처");
-    expect(document.getElementById("emergency")).toHaveTextContent("비상 연락처");
-    expect(document.getElementById("devices")).toHaveTextContent("기기 관리 테스트");
-    expect(screen.getByRole("group", { name: "테마" })).toBeVisible();
-    expect(document.querySelector(".offline-banner")).not.toBeInTheDocument();
-  });
-
-  it.each(["#bookings", "#exchange", "#ai-connect", "#devices", "#emergency"])("scrolls the approved %s deep link after mount", async (hash) => {
-    window.history.replaceState(null, "", `/trip/sydney-2026/tools${hash}`);
-    const scrollIntoView = vi.fn();
-    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
-      configurable: true,
-      value: scrollIntoView
-    });
-
-    await renderToolsPage();
-
-    await waitFor(() => expect(scrollIntoView).toHaveBeenCalledWith({ block: "start" }));
-  });
-
-  it("does not scroll unsupported hashes", async () => {
-    window.history.replaceState(null, "", "/trip/sydney-2026/tools#unknown");
-    const scrollIntoView = vi.fn();
-    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
-      configurable: true,
-      value: scrollIntoView
-    });
-
-    await renderToolsPage();
-
-    expect(scrollIntoView).not.toHaveBeenCalled();
-  });
-
-  it("keeps the devices anchor unique when tools are supplied from another source", () => {
-    const tools: ToolsViewModel = {
-      groups: [{
-        id: "planning",
-        title: "Planning & Settings",
-        items: [{ id: "devices", label: "연결 기기 관리", description: "설명", status: "available" }]
-      }],
-      tripId: "sydney-2026",
-      timeZone: "Australia/Sydney",
-      viewerMemberId: "owner",
-      members: [],
-      places: [],
-      bookings: [],
-      checkItems: [],
-      expenses: [],
-      notes: [],
-      activity: []
-    };
-    render(<ThemeProvider><ToolsPage tools={tools} deviceManagement={<p>관리</p>} /></ThemeProvider>);
-    expect(document.querySelectorAll("#devices")).toHaveLength(1);
+    expect(screen.getByRole("link", { name: "교통 열기" })).toHaveTextContent("준비 중");
   });
 });

@@ -7,10 +7,36 @@ import {
 
 export type TripTab = "today" | "schedule" | "map" | "tools";
 
+export const toolRouteIds = [
+  "bookings",
+  "exchange",
+  "transport",
+  "emergency",
+  "restaurants",
+  "cafes",
+  "saved-places",
+  "checklist",
+  "notes",
+  "tips",
+  "ai-connect",
+  "partner-connect",
+  "devices",
+  "theme",
+  "offline-sync",
+  "search",
+  "activity",
+] as const;
+
+export type ToolRouteId = typeof toolRouteIds[number];
+
+function isToolRouteId(value: string): value is ToolRouteId {
+  return (toolRouteIds as readonly string[]).includes(value);
+}
+
 export type Route =
   | { name: "root" }
   | { name: "library" }
-  | { name: "trip"; tripId: string; tab: TripTab }
+  | { name: "trip"; tripId: string; tab: TripTab; toolId?: ToolRouteId }
   | {
       name: "memories";
       tripId: string;
@@ -42,7 +68,23 @@ export function parseRoute(pathname: string, baseUrl = APP_BASE_URL): Route {
     }
   }
 
-  const match = /^\/trip\/([^/]+)\/(today|schedule|map|tools)\/?$/.exec(appPath);
+  const toolsMatch = /^\/trip\/([^/]+)\/tools(?:\/([^/]+))?\/?$/.exec(appPath);
+  if (toolsMatch) {
+    const encodedTripId = toolsMatch[1];
+    const toolId = toolsMatch[2];
+    if (!encodedTripId) return { name: "not-found" };
+
+    try {
+      const tripId = decodeURIComponent(encodedTripId);
+      if (!toolId) return { name: "trip", tripId, tab: "tools" };
+      if (!isToolRouteId(toolId)) return { name: "not-found" };
+      return { name: "trip", tripId, tab: "tools", toolId };
+    } catch {
+      return { name: "not-found" };
+    }
+  }
+
+  const match = /^\/trip\/([^/]+)\/(today|schedule|map)\/?$/.exec(appPath);
   if (!match) return { name: "not-found" };
 
   const encodedTripId = match[1];
@@ -74,6 +116,14 @@ export function pathForTrip(
   baseUrl = APP_BASE_URL
 ): string {
   return pathForApp(`/trip/${encodeURIComponent(tripId)}/${tab}`, baseUrl);
+}
+
+export function pathForTool(
+  tripId: string,
+  toolId: ToolRouteId,
+  baseUrl = APP_BASE_URL
+): string {
+  return pathForApp(`/trip/${encodeURIComponent(tripId)}/tools/${toolId}`, baseUrl);
 }
 
 export function pathForMemories(

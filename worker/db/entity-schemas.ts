@@ -71,6 +71,7 @@ export const entitySchemas = {
     isRequired: z.boolean(),
   }),
   check_item: z.object({
+    phase: z.enum(["pretrip", "travel"]).default("pretrip"),
     scope: z.enum(["shared", "personal"]),
     ownerMemberId: nullableId,
     assigneeMemberId: nullableId,

@@ -137,6 +137,7 @@ function AppContent({
         syncRuntime={isFixturePreview ? undefined : syncRuntime}
         tripId={route.tripId}
         activeTab={route.name === "trip" ? route.tab : "today"}
+        toolId={route.name === "trip" ? route.toolId : undefined}
         memoryView={route.name === "memories" ? route.view : undefined}
         mediaApi={isFixturePreview ? undefined : mediaApiClient}
         mediaProvider={isFixturePreview ? undefined : googleDriveProvider}

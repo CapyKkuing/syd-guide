@@ -11,6 +11,7 @@ import {
   pathForMemories,
   pathForMemoryPlayer,
   pathForTrip,
+  type ToolRouteId,
   type TripTab,
 } from "./router";
 import { useTripSwitcherFocus } from "./TripSwitcherFocus";
@@ -55,6 +56,7 @@ export function TripRoutePage({
   mediaThumbnailStore,
   tripId,
   activeTab,
+  toolId,
   memoryView,
 }: {
   dataSource: TravelGuideDataSource;
@@ -65,6 +67,7 @@ export function TripRoutePage({
   mediaThumbnailStore?: MediaThumbnailStore;
   tripId: string;
   activeTab: TripTab;
+  toolId?: ToolRouteId;
   memoryView?: "editor" | "player";
 }) {
   const workspace = useTripWorkspace(dataSource, tripId);
@@ -97,6 +100,11 @@ export function TripRoutePage({
       clearFocusRestoration();
     }
   }, [clearFocusRestoration, intentTripId, tripId, workspace.status]);
+
+  useEffect(() => {
+    document.scrollingElement?.scrollTo?.({ top: 0, behavior: "auto" });
+    document.getElementById("trip-content")?.scrollTo?.({ top: 0, behavior: "auto" });
+  }, [activeTab, toolId]);
 
   let page: ReactNode;
   if (workspace.status === "loading") {
@@ -154,6 +162,7 @@ export function TripRoutePage({
           />
         ) : (
           <ToolsPage
+            activeToolId={toolId}
             deviceManagement={mutationTransport && hasVerifiedIdentity
               ? <PairingManager />
               : <p>

@@ -37,6 +37,21 @@
   color: var(--accent-strong);
 }
 
+.trip-back-to-top {
+  position: fixed;
+  z-index: 25;
+  right: var(--space-4);
+  bottom: calc(var(--mobile-nav-height) + var(--space-4) + env(safe-area-inset-bottom));
+  border-radius: var(--radius-pill);
+  font: inherit;
+}
+
+.trip-back-to-top__icon {
+  width: 18px;
+  height: 18px;
+  transform: rotate(-90deg);
+}
+
 @media (min-width: 761px) {
   .trip-navigation {
     position: fixed;
@@ -56,5 +71,10 @@
   .trip-navigation__item {
     min-height: 62px;
     gap: var(--space-1);
+  }
+
+  .trip-back-to-top {
+    right: var(--space-6);
+    bottom: var(--space-6);
   }
 }

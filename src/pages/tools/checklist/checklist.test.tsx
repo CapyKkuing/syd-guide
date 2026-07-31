@@ -15,9 +15,11 @@ describe("ChecklistPanel", () => {
       />
     );
 
+    await userEvent.click(screen.getByText("새 체크 항목 추가"));
+    await userEvent.selectOptions(screen.getByLabelText("언제 할 일"), "travel");
     await userEvent.selectOptions(screen.getByLabelText("준비물 범위"), "personal");
     await userEvent.type(screen.getByLabelText("준비물"), "충전기");
-    await userEvent.click(screen.getByRole("button", { name: "추가" }));
+    await userEvent.click(screen.getByRole("button", { name: "체크 항목 추가" }));
 
     expect(submit).toHaveBeenCalledWith(
       "check_item",
@@ -25,6 +27,7 @@ describe("ChecklistPanel", () => {
       expect.any(String),
       null,
       expect.objectContaining({
+        phase: "travel",
         scope: "personal",
         ownerMemberId: "partner",
         title: "충전기"

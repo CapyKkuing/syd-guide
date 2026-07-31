@@ -6,15 +6,13 @@
 }
 
 .tools-page__header {
-  display: flex;
   align-items: flex-start;
-  gap: var(--space-3);
 }
 
 .tools-page__header h1,
 .tools-page__header p,
 .tools-group h2,
-.tool-card h3,
+.tool-card h1,
 .tool-card p {
   margin: 0;
 }
@@ -41,6 +39,53 @@
   gap: var(--space-8);
 }
 
+.tools-launcher {
+  padding: var(--space-4);
+  border: 1px solid var(--today-boundary);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.tools-launcher__label {
+  color: var(--text);
+  font-size: var(--text-sm);
+  font-weight: 800;
+}
+
+.tools-launcher__actions {
+  overflow-x: auto;
+  padding-bottom: var(--space-1);
+}
+
+.tools-quick-action {
+  display: inline-flex;
+  flex: none;
+  min-width: max-content;
+  min-height: calc(var(--space-10) + var(--space-1));
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--today-boundary);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: none;
+}
+
+.tools-quick-action:hover,
+.tools-quick-action:focus-visible {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.activity-refresh-action {
+  flex: none;
+  border-radius: var(--radius-pill);
+  font: inherit;
+}
+
 .tools-overview {
   display: grid;
   gap: var(--space-4);
@@ -49,6 +94,59 @@
 .tools-group {
   display: grid;
   gap: var(--space-3);
+}
+
+.tool-launch-card {
+  display: block;
+  min-height: calc(var(--space-10) * 3);
+  padding: var(--space-4);
+  border: 1px solid var(--today-boundary);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+  box-shadow: var(--shadow-soft);
+}
+
+.tool-launch-card:hover,
+.tool-launch-card:focus-visible {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-card);
+}
+
+.tool-launch-card__heading {
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.tool-launch-card__heading h3 {
+  margin: 0;
+  font-size: var(--text-lg);
+}
+
+.tool-launch-card__action {
+  color: var(--accent-strong);
+  font-weight: 800;
+}
+
+.tools-detail-back {
+  display: inline-flex;
+  width: max-content;
+  min-height: calc(var(--space-10) + var(--space-1));
+  align-items: center;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--today-boundary);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.tools-detail-back:hover,
+.tools-detail-back:focus-visible {
+  border-color: var(--accent);
+  background: var(--accent-soft);
 }
 
 .tools-group h2 {
@@ -68,7 +166,6 @@
   gap: var(--space-2);
   min-height: 132px;
   padding: var(--space-4);
-  scroll-margin-top: var(--space-6);
   border: 1px solid var(--today-boundary);
   border-radius: var(--radius-md);
   background: var(--surface);
@@ -91,7 +188,8 @@
   gap: var(--space-2);
 }
 
-.tool-card h3 {
+.tool-card h1 {
+  margin: 0;
   font-size: var(--text-md);
 }
 
@@ -118,6 +216,266 @@
 
 .tool-panel {
   margin-top: var(--space-2);
+}
+
+.bookings-panel {
+  margin-top: var(--space-2);
+}
+
+.bookings-panel__intro {
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.bookings-panel__intro > :first-child {
+  min-width: 0;
+}
+
+.bookings-panel__intro .astryx-button {
+  flex: none;
+}
+
+.bookings-panel__eyebrow {
+  color: var(--accent-strong);
+}
+
+.booking-list {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.booking-card,
+.booking-empty-state {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--today-boundary);
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
+}
+
+.booking-card__heading {
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.booking-card h4,
+.booking-card p {
+  margin: 0;
+}
+
+.booking-card h4 {
+  color: var(--text);
+  font-size: var(--text-lg);
+}
+
+.booking-card p,
+.booking-empty-state p {
+  color: var(--text-2);
+}
+
+.booking-card__type {
+  flex: none;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+.booking-card__actions {
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.booking-card__actions a {
+  display: inline-flex;
+  min-height: calc(var(--space-8) + var(--space-1));
+  align-items: center;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--today-boundary);
+  border-radius: var(--radius-pill);
+  color: var(--text);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.booking-card__actions a:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.booking-empty-state {
+  background: var(--surface);
+}
+
+.checklist-panel {
+  margin-top: var(--space-2);
+}
+
+.checklist-summary {
+  padding: var(--space-4);
+  border: 1px solid var(--today-boundary);
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
+}
+
+.checklist-summary__heading,
+.checklist-section__heading {
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.checklist-summary__eyebrow {
+  color: var(--accent-strong);
+}
+
+.checklist-progress,
+.checklist-section__count,
+.checklist-status {
+  flex: none;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-pill);
+  font-weight: 800;
+}
+
+.checklist-progress {
+  background: var(--accent);
+  color: var(--text-on-accent);
+}
+
+.checklist-statuses {
+  flex-wrap: wrap;
+}
+
+.checklist-status {
+  border: 1px solid var(--today-boundary);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.checklist-filter {
+  max-width: 320px;
+}
+
+.checklist-section {
+  overflow: hidden;
+  border: 1px solid var(--today-boundary);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.checklist-section__heading {
+  padding: var(--space-4);
+}
+
+.checklist-section__heading h4,
+.checklist-section__heading p {
+  margin: 0;
+}
+
+.checklist-section__heading h4 {
+  color: var(--text);
+  font-size: var(--text-lg);
+}
+
+.checklist-section__heading p,
+.checklist-section__empty {
+  color: var(--text-2);
+}
+
+.checklist-section__count {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+.checklist-list {
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--line-soft);
+  list-style: none;
+}
+
+.checklist-list > li {
+  display: flex;
+  min-height: calc(var(--space-10) + var(--space-6));
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+}
+
+.checklist-list > li + li {
+  border-top: 1px solid var(--line-soft);
+}
+
+.checklist-item__check {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: var(--space-3);
+  cursor: pointer;
+}
+
+.checklist-item__check input {
+  width: calc(var(--space-4) + var(--space-1));
+  height: calc(var(--space-4) + var(--space-1));
+  flex: none;
+  accent-color: var(--accent);
+}
+
+.checklist-item__title {
+  color: var(--text);
+  font-weight: 800;
+}
+
+.checklist-item__meta {
+  color: var(--text-2);
+  font-size: var(--text-sm);
+}
+
+.checklist-list > li.is-done .checklist-item__title {
+  color: var(--text-2);
+  text-decoration: line-through;
+}
+
+.checklist-section__empty {
+  display: block;
+  margin: 0;
+  padding: 0 var(--space-4) var(--space-4);
+}
+
+.checklist-add-panel {
+  border: 1px solid var(--today-boundary);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.checklist-add-panel summary {
+  min-height: calc(var(--space-10) + var(--space-1));
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.checklist-add-panel[open] summary {
+  border-bottom: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.checklist-form {
+  margin: 0;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+.checklist-form > .astryx-button {
+  justify-self: start;
 }
 
 .tool-inline-form {
@@ -268,6 +626,10 @@
 }
 
 @media (min-width: 761px) {
+  .tool-card {
+    scroll-margin-top: calc(var(--space-10) + var(--space-10) + var(--space-10) + var(--space-6));
+  }
+
   .tools-overview,
   .tool-search-controls {
     grid-template-columns: repeat(2, minmax(0, 1fr));

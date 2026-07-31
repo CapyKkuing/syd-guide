@@ -36,6 +36,7 @@ describe("Today home selectors", () => {
     const checkItems: CheckItem[] = [{
       ...base,
       id: "passport",
+      phase: "pretrip",
       scope: "shared",
       ownerMemberId: null,
       assigneeMemberId: "owner",

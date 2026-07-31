@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { AppLink } from "../../../components/AppLink";
 import type { TripWorkspace } from "../../../data/contracts";
 import { searchTrip, type SearchKind } from "./searchTrip";
 
@@ -16,7 +17,7 @@ export function SearchPanel({ workspace }: { workspace: TripWorkspace }) {
   const results = useMemo(() => searchTrip(workspace, query, kind), [kind, query, workspace]);
   return (
     <article className="tool-card tool-card--wide" id="search">
-      <h2>여행 검색</h2>
+      <h1>여행 검색</h1>
       <div className="tool-search-controls">
         <label><span>검색어</span><input minLength={2} type="search" value={query} onChange={(event) => setQuery(event.target.value)} /></label>
         <label><span>검색 종류</span><select value={kind} onChange={(event) => setKind(event.target.value as typeof kind)}>
@@ -25,7 +26,7 @@ export function SearchPanel({ workspace }: { workspace: TripWorkspace }) {
       </div>
       {query.trim().length === 1 ? <p>검색어를 두 글자 이상 입력하세요.</p> : null}
       <ul className="tool-search-results">
-        {results.map((result) => <li key={`${result.kind}-${result.id}`}><a href={result.href}><span>{labels[result.kind]}</span><strong>{result.title}</strong><small>{result.excerpt}</small></a></li>)}
+        {results.map((result) => <li key={`${result.kind}-${result.id}`}><AppLink href={result.href}><span>{labels[result.kind]}</span><strong>{result.title}</strong><small>{result.excerpt}</small></AppLink></li>)}
       </ul>
     </article>
   );

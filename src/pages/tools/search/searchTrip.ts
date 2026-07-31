@@ -1,4 +1,5 @@
 import type { TripWorkspace } from "../../../data/contracts";
+import { pathForTool, pathForTrip } from "../../../app/router";
 
 export type SearchKind = "schedule" | "place" | "booking" | "checklist" | "note";
 export interface SearchResult {
@@ -20,7 +21,7 @@ export function searchTrip(workspace: TripWorkspace, query: string, kind: "all" 
       kind: "schedule" as const,
       title: item.title,
       excerpt: `${item.place} ${item.description}`,
-      href: `/trips/${workspace.context.trip.id}/schedule`,
+      href: pathForTrip(workspace.context.trip.id, "schedule"),
       updatedAt: item.updatedAt || fallback
     }))),
     ...workspace.mapPreview.places.map((place) => ({
@@ -28,7 +29,7 @@ export function searchTrip(workspace: TripWorkspace, query: string, kind: "all" 
       kind: "place" as const,
       title: place.name,
       excerpt: `${place.address} ${place.description}`,
-      href: `/trips/${workspace.context.trip.id}/map`,
+      href: pathForTrip(workspace.context.trip.id, "map"),
       updatedAt: place.updatedAt || fallback
     })),
     ...workspace.tools.bookings.map((booking) => ({
@@ -36,7 +37,7 @@ export function searchTrip(workspace: TripWorkspace, query: string, kind: "all" 
       kind: "booking" as const,
       title: workspace.tools.places.find((place) => place.id === booking.placeId)?.name || booking.provider,
       excerpt: `${booking.provider} ${booking.bookingType} ${booking.memo}`,
-      href: `/trips/${workspace.context.trip.id}/tools#bookings`,
+      href: pathForTool(workspace.context.trip.id, "bookings"),
       updatedAt: booking.updatedAt
     })),
     ...workspace.tools.checkItems.map((item) => ({
@@ -44,7 +45,7 @@ export function searchTrip(workspace: TripWorkspace, query: string, kind: "all" 
       kind: "checklist" as const,
       title: item.title,
       excerpt: item.memo,
-      href: `/trips/${workspace.context.trip.id}/tools#checklist`,
+      href: pathForTool(workspace.context.trip.id, "checklist"),
       updatedAt: item.updatedAt
     })),
     ...workspace.tools.notes.map((note) => ({
@@ -52,7 +53,7 @@ export function searchTrip(workspace: TripWorkspace, query: string, kind: "all" 
       kind: "note" as const,
       title: note.body.slice(0, 60),
       excerpt: note.body,
-      href: `/trips/${workspace.context.trip.id}/tools#notes`,
+      href: pathForTool(workspace.context.trip.id, "notes"),
       updatedAt: note.updatedAt
     }))
   ];

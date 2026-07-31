@@ -137,6 +137,17 @@ describe("TripShell", () => {
     expect(ruleFor(desktopNavigation, ".trip-navigation")).toContain("position: fixed;");
   });
 
+  it("shows a global back-to-top action after the trip content scrolls", async () => {
+    await renderTripShell("today");
+
+    const content = document.getElementById("trip-content");
+    if (!content) throw new Error("trip content missing");
+    Object.defineProperty(content, "scrollTop", { configurable: true, value: 300 });
+    fireEvent.scroll(content);
+
+    expect(screen.getByRole("button", { name: "맨 위로" })).toBeVisible();
+  });
+
   it("lists every trip in its switcher and restores trigger focus after Escape", async () => {
     await renderTripShell("schedule");
 

@@ -1,9 +1,15 @@
 import { useMemo, useState, type FormEvent } from "react";
+import { Button, HStack, Text, VStack } from "@astryxdesign/core";
 import type { CheckItemView } from "../../../data/contracts";
 import type { PublicMember } from "../../../shared/entities";
 import type { TripMutationController } from "../../../services/mutations/controller";
 
 type ScopeFilter = "all" | CheckItemView["scope"];
+
+const phaseSections = [
+  { id: "pretrip", title: "출발 전 준비", description: "여권과 필수 준비물을 출발 전에 확인하세요." },
+  { id: "travel", title: "여행 중 할 일", description: "현지에서 챙기거나 처리할 일을 모아두세요." }
+] as const;
 
 export function ChecklistPanel({
   controller,
@@ -17,6 +23,7 @@ export function ChecklistPanel({
   viewerMemberId: string;
 }) {
   const [filter, setFilter] = useState<ScopeFilter>("all");
+  const [phase, setPhase] = useState<CheckItemView["phase"]>("pretrip");
   const [scope, setScope] = useState<CheckItemView["scope"]>("shared");
   const [title, setTitle] = useState("");
   const [quantity, setQuantity] = useState("1");
@@ -28,12 +35,20 @@ export function ChecklistPanel({
     () => items.filter((item) => filter === "all" || item.scope === filter),
     [filter, items]
   );
+  const memberNames = useMemo(
+    () => new Map(members.map((member) => [member.id, member.displayName])),
+    [members]
+  );
+  const doneCount = items.filter((item) => item.isDone).length;
+  const passportItems = items.filter((item) => item.requirementKind === "passport");
+  const essentialItems = items.filter((item) => item.requirementKind === "essential");
 
   async function create(event: FormEvent) {
     event.preventDefault();
     if (!controller) return;
     try {
       await controller.submit("check_item", "create", crypto.randomUUID(), null, {
+        phase,
         scope,
         ownerMemberId: scope === "personal" ? viewerMemberId : null,
         assigneeMemberId: assigneeMemberId || null,
@@ -54,6 +69,7 @@ export function ChecklistPanel({
   async function update(item: CheckItemView, isDone: boolean) {
     if (!controller) return;
     await controller.submit("check_item", "update", item.id, item.version, {
+      phase: item.phase,
       scope: item.scope,
       ownerMemberId: item.scope === "personal" ? viewerMemberId : null,
       assigneeMemberId: item.assigneeMemberId,
@@ -72,34 +88,86 @@ export function ChecklistPanel({
   }
 
   return (
-    <div className="tool-panel">
-      <form className="tool-inline-form" onSubmit={create}>
-        <label><span>준비물 범위</span><select disabled={!controller} value={scope} onChange={(event) => setScope(event.target.value as CheckItemView["scope"])}>
-          <option value="shared">함께</option><option value="personal">개인</option>
-        </select></label>
-        <label><span>준비물</span><input disabled={!controller} required value={title} onChange={(event) => setTitle(event.target.value)} /></label>
-        <label><span>수량</span><input disabled={!controller} min="1" type="number" value={quantity} onChange={(event) => setQuantity(event.target.value)} /></label>
-        <label><span>담당자</span><select disabled={!controller} value={assigneeMemberId} onChange={(event) => setAssigneeMemberId(event.target.value)}>
-          <option value="">미정</option>{members.map((member) => <option key={member.id} value={member.id}>{member.displayName}</option>)}
-        </select></label>
-        <label><span>필수 준비 구분</span><select disabled={!controller} value={requirementKind ?? ""} onChange={(event) => setRequirementKind(event.target.value ? event.target.value as NonNullable<CheckItemView["requirementKind"]> : null)}>
-          <option value="">일반</option><option value="passport">여권</option><option value="essential">필수 준비물</option>
-        </select></label>
-        <label><span>메모</span><input disabled={!controller} value={memo} onChange={(event) => setMemo(event.target.value)} /></label>
-        <button className="primary-button" disabled={!controller} type="submit">추가</button>
-      </form>
-      <label className="tool-filter"><span>준비물 보기</span><select value={filter} onChange={(event) => setFilter(event.target.value as ScopeFilter)}>
+    <VStack className="checklist-panel" gap={4}>
+      <VStack className="checklist-summary" gap={2}>
+        <HStack className="checklist-summary__heading" gap={2}>
+          <VStack gap={1}>
+            <Text className="checklist-summary__eyebrow" type="label">준비 현황</Text>
+            <Text type="body">완료 {doneCount} / 전체 {items.length}</Text>
+          </VStack>
+          <Text className="checklist-progress" type="label">{items.length ? Math.round(doneCount / items.length * 100) : 0}%</Text>
+        </HStack>
+        <HStack className="checklist-statuses" gap={2}>
+          <Text className="checklist-status" type="label">여권 {statusCopy(passportItems)}</Text>
+          <Text className="checklist-status" type="label">필수 {statusCopy(essentialItems)}</Text>
+        </HStack>
+      </VStack>
+
+      <label className="tool-filter checklist-filter"><span>누구의 항목을 볼까요?</span><select value={filter} onChange={(event) => setFilter(event.target.value as ScopeFilter)}>
         <option value="all">전체</option><option value="shared">함께</option><option value="personal">개인</option>
       </select></label>
       {error ? <p role="alert">{error}</p> : null}
-      <ul className="tool-entity-list">
-        {visibleItems.map((item) => (
-          <li key={item.id}>
-            <label><input checked={item.isDone} disabled={!controller} onChange={(event) => void update(item, event.target.checked)} type="checkbox" /><span>{item.title} × {item.quantity}</span></label>
-            {controller ? <button aria-label={`${item.title} 삭제`} onClick={() => void remove(item)} type="button">삭제</button> : null}
-          </li>
-        ))}
-      </ul>
-    </div>
+
+      <VStack className="checklist-groups" gap={4}>
+        {phaseSections.map((section) => {
+          const sectionItems = visibleItems.filter((item) => item.phase === section.id);
+          const sectionDone = sectionItems.filter((item) => item.isDone).length;
+          return (
+            <section className="checklist-section" key={section.id} aria-labelledby={`checklist-${section.id}`}>
+              <HStack className="checklist-section__heading" gap={2}>
+                <VStack gap={1}>
+                  <h4 id={`checklist-${section.id}`}>{section.title}</h4>
+                  <p>{section.description}</p>
+                </VStack>
+                <Text className="checklist-section__count" type="label">{sectionDone}/{sectionItems.length}</Text>
+              </HStack>
+              {sectionItems.length ? (
+                <ul className="checklist-list">
+                  {sectionItems.map((item) => (
+                    <li className={item.isDone ? "is-done" : undefined} key={item.id}>
+                      <label className="checklist-item__check">
+                        <input checked={item.isDone} disabled={!controller} onChange={(event) => void update(item, event.target.checked)} type="checkbox" />
+                        <VStack gap={1}>
+                          <span className="checklist-item__title">{item.title} × {item.quantity}</span>
+                          <span className="checklist-item__meta">{item.scope === "shared" ? "함께" : "개인"}{item.assigneeMemberId ? ` · ${memberNames.get(item.assigneeMemberId) ?? "담당자"}` : ""}</span>
+                        </VStack>
+                      </label>
+                      {controller ? <Button label={`${item.title} 삭제`} onClick={() => void remove(item)} size="sm" variant="ghost">삭제</Button> : null}
+                    </li>
+                  ))}
+                </ul>
+              ) : <Text className="checklist-section__empty" type="body">아직 등록된 항목이 없어요.</Text>}
+            </section>
+          );
+        })}
+      </VStack>
+
+      <details className="checklist-add-panel">
+        <summary>새 체크 항목 추가</summary>
+        <form className="tool-inline-form checklist-form" onSubmit={create}>
+          <label><span>언제 할 일</span><select disabled={!controller} value={phase} onChange={(event) => setPhase(event.target.value as CheckItemView["phase"])}>
+            <option value="pretrip">출발 전</option><option value="travel">여행 중</option>
+          </select></label>
+          <label><span>준비물 범위</span><select disabled={!controller} value={scope} onChange={(event) => setScope(event.target.value as CheckItemView["scope"])}>
+            <option value="shared">함께</option><option value="personal">개인</option>
+          </select></label>
+          <label><span>준비물</span><input disabled={!controller} required value={title} onChange={(event) => setTitle(event.target.value)} /></label>
+          <label><span>수량</span><input disabled={!controller} min="1" type="number" value={quantity} onChange={(event) => setQuantity(event.target.value)} /></label>
+          <label><span>담당자</span><select disabled={!controller} value={assigneeMemberId} onChange={(event) => setAssigneeMemberId(event.target.value)}>
+            <option value="">미정</option>{members.map((member) => <option key={member.id} value={member.id}>{member.displayName}</option>)}
+          </select></label>
+          <label><span>필수 준비 구분</span><select disabled={!controller} value={requirementKind ?? ""} onChange={(event) => setRequirementKind(event.target.value ? event.target.value as NonNullable<CheckItemView["requirementKind"]> : null)}>
+            <option value="">일반</option><option value="passport">여권</option><option value="essential">필수 준비물</option>
+          </select></label>
+          <label className="checklist-form__memo"><span>메모</span><input disabled={!controller} value={memo} onChange={(event) => setMemo(event.target.value)} /></label>
+          <Button isDisabled={!controller} label="체크 항목 추가" type="submit" variant="primary" />
+        </form>
+      </details>
+    </VStack>
   );
+}
+
+function statusCopy(items: CheckItemView[]): string {
+  if (!items.length) return "미등록";
+  return `${items.filter((item) => item.isDone).length}/${items.length}`;
 }

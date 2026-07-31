@@ -7,6 +7,7 @@ import { FixtureTravelGuideDataSource } from "../data/fixture/fixtureDataSource"
 import { TripRoutePage } from "./TripRoutePage";
 import { App } from "./App";
 import type { SyncRuntime } from "../services/sync/SyncProvider";
+import type { ToolRouteId } from "./router";
 
 const fixture = new FixtureTravelGuideDataSource(() => new Date("2026-07-28T00:00:00.000Z"));
 
@@ -30,10 +31,14 @@ function deferred() {
   return { promise, resolve };
 }
 
-function renderTripRoute(dataSource: TravelGuideDataSource, activeTab: "today" | "schedule" | "map" | "tools") {
+function renderTripRoute(
+  dataSource: TravelGuideDataSource,
+  activeTab: "today" | "schedule" | "map" | "tools",
+  toolId?: ToolRouteId
+) {
   return render(
     <ThemeProvider>
-      <TripRoutePage dataSource={dataSource} tripId="sydney-2026" activeTab={activeTab} />
+      <TripRoutePage dataSource={dataSource} tripId="sydney-2026" activeTab={activeTab} toolId={toolId} />
     </ThemeProvider>
   );
 }
@@ -106,7 +111,7 @@ describe("TripRoutePage", () => {
     expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
   });
 
-  it("integrates the real tools groups and device-management slot on the tools route", async () => {
+  it("keeps the tools hub compact and opens device management on its own route", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockImplementation(() => Promise.resolve(Response.json({
@@ -114,22 +119,27 @@ describe("TripRoutePage", () => {
         devices: []
       })))
     );
-    renderTripRoute(fixture, "tools");
+    const home = renderTripRoute(fixture, "tools");
 
     expect(await screen.findByRole("heading", { name: "Travel Essentials" })).toBeVisible();
+    expect(screen.getByRole("link", { name: "연결 기기 관리 열기" })).toBeVisible();
+    expect(screen.queryByText("읽기 전용 미리보기에서는 기기를 관리할 수 없습니다.")).not.toBeInTheDocument();
+
+    home.unmount();
+    renderTripRoute(fixture, "tools", "devices");
     expect(await screen.findByText("읽기 전용 미리보기에서는 기기를 관리할 수 없습니다.")).toBeVisible();
   });
 
   it.each([
-    ["#bookings", "bookings"],
-    ["#devices", "devices"],
-    ["#emergency", "emergency"]
-  ])("scrolls the deferred tools %s target only after its workspace mounts", async (hash, targetId) => {
+    ["bookings", "예약·바우처"],
+    ["devices", "연결 기기 관리"],
+    ["emergency", "비상 연락처"]
+  ] as const)("renders the deferred standalone %s tool without scrolling the outer page", async (toolId, targetHeading) => {
     const workspace = deferred();
     const scrollIntoView = vi.fn();
     const original = HTMLElement.prototype.scrollIntoView;
     HTMLElement.prototype.scrollIntoView = scrollIntoView;
-    window.history.replaceState(null, "", `/trip/sydney-2026/tools${hash}`);
+    window.history.replaceState(null, "", `/trip/sydney-2026/tools/${toolId}`);
     const delayedSource = sourceWith({
       getTripContext: () => workspace.promise.then(() => fixture.getTripContext("sydney-2026")),
       getToday: () => workspace.promise.then(() => fixture.getToday("sydney-2026")),
@@ -140,29 +150,24 @@ describe("TripRoutePage", () => {
 
     try {
       render(<App dataSource={delayedSource} />);
-      expect(document.getElementById(targetId)).not.toBeInTheDocument();
+      expect(screen.queryByRole("heading", { name: targetHeading })).not.toBeInTheDocument();
       expect(scrollIntoView).not.toHaveBeenCalled();
 
       await act(async () => workspace.resolve());
 
-      const targetHeading = targetId === "bookings"
-        ? "예약·바우처"
-        : targetId === "devices"
-          ? "연결 기기 관리"
-          : "비상 연락처";
-      expect(await screen.findByRole("heading", { name: targetHeading })).toBeVisible();
-      await waitFor(() => expect(scrollIntoView).toHaveBeenCalledWith({ block: "start" }));
+      expect(await screen.findByRole("heading", { level: 1, name: targetHeading })).toBeVisible();
+      expect(scrollIntoView).not.toHaveBeenCalled();
     } finally {
       HTMLElement.prototype.scrollIntoView = original;
     }
   });
 
-  it("does not scroll an unsupported hash after a deferred tools workspace mounts", async () => {
+  it("does not move the outer document for a legacy tools hash", async () => {
     const workspace = deferred();
     const scrollIntoView = vi.fn();
     const original = HTMLElement.prototype.scrollIntoView;
     HTMLElement.prototype.scrollIntoView = scrollIntoView;
-    window.history.replaceState(null, "", "/trip/sydney-2026/tools#unsupported");
+    window.history.replaceState(null, "", "/trip/sydney-2026/tools#bookings");
     const delayedSource = sourceWith({
       getTripContext: () => workspace.promise.then(() => fixture.getTripContext("sydney-2026")),
       getToday: () => workspace.promise.then(() => fixture.getToday("sydney-2026")),
@@ -174,7 +179,7 @@ describe("TripRoutePage", () => {
     try {
       render(<App dataSource={delayedSource} />);
       await act(async () => workspace.resolve());
-      await screen.findByRole("heading", { name: "Travel Essentials" });
+      await screen.findByRole("heading", { name: "도구" });
       expect(scrollIntoView).not.toHaveBeenCalled();
     } finally {
       HTMLElement.prototype.scrollIntoView = original;
@@ -296,12 +301,13 @@ describe("TripRoutePage", () => {
           activeTab="tools"
           dataSource={dataSource}
           syncRuntime={runtime}
+          toolId="offline-sync"
           tripId="sydney-2026"
         />
       </ThemeProvider>
     );
 
-    expect(await screen.findByRole("heading", { name: "Travel Essentials" })).toBeVisible();
+    expect(await screen.findByRole("heading", { level: 1, name: "오프라인·동기화 상태" })).toBeVisible();
     await waitFor(() => expect(runtime.engine.flush).toHaveBeenCalledWith("sydney-2026"));
     expect(await screen.findByText("대기 2건")).toBeVisible();
     await waitFor(() =>

@@ -148,13 +148,14 @@ export const entityRegistry = {
   check_item: {
     table: "check_items",
     columns: [
-      "scope", "owner_member_id", "assignee_member_id", "title", "quantity",
+      "phase", "scope", "owner_member_id", "assignee_member_id", "title", "quantity",
       "memo", "requirement_kind", "is_done", "position",
     ],
     payloadSchema: entitySchemas.check_item,
     values: (raw, principal) => {
       const value = raw as MutationPayloadMap["check_item"];
       return [
+        value.phase,
         value.scope,
         value.scope === "personal" ? principal.memberId : value.ownerMemberId,
         value.assigneeMemberId, value.title, value.quantity, value.memo,
@@ -163,6 +164,7 @@ export const entityRegistry = {
     },
     parse: (row) => ({
       ...base(row),
+      phase: row.phase as EntityMap["check_item"]["phase"],
       scope: row.scope as EntityMap["check_item"]["scope"],
       ownerMemberId: row.owner_member_id === null
         ? null : String(row.owner_member_id),

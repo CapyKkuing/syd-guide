@@ -122,6 +122,7 @@ export interface Booking extends VersionedEntity {
 }
 
 export interface CheckItem extends VersionedEntity {
+  phase: "pretrip" | "travel";
   scope: "shared" | "personal";
   ownerMemberId: string | null;
   assigneeMemberId: string | null;

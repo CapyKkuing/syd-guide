@@ -43,6 +43,15 @@ body {
   backdrop-filter: blur(18px);
 }
 
+.trip-header {
+  top: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid color-mix(in srgb, var(--line) 76%, transparent);
+  border-radius: var(--radius-xl);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  box-shadow: var(--shadow-soft);
+}
+
 .library-brand strong {
   letter-spacing: -0.025em;
 }

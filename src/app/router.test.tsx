@@ -10,6 +10,7 @@ import {
   pathForMemories,
   pathForMemoryPlayer,
   pathForPair,
+  pathForTool,
   pathForTrip,
   useRoute
 } from "./router";
@@ -41,6 +42,12 @@ describe("path routing", () => {
     ["/trip/sydney-2026/schedule", { name: "trip", tripId: "sydney-2026", tab: "schedule" }],
     ["/trip/sydney-2026/map", { name: "trip", tripId: "sydney-2026", tab: "map" }],
     ["/trip/sydney-2026/tools", { name: "trip", tripId: "sydney-2026", tab: "tools" }],
+    ["/trip/sydney-2026/tools/checklist", {
+      name: "trip",
+      tripId: "sydney-2026",
+      tab: "tools",
+      toolId: "checklist"
+    }],
     ["/trip/sydney-2026/memories", {
       name: "memories",
       tripId: "sydney-2026",
@@ -85,6 +92,19 @@ describe("path routing", () => {
       tripId: "시드니 / 2026",
       tab: "tools",
     });
+  });
+
+  it("builds and parses standalone tool paths", () => {
+    const path = pathForTool("시드니 / 2026", "bookings");
+
+    expect(path).toBe("/trip/%EC%8B%9C%EB%93%9C%EB%8B%88%20%2F%202026/tools/bookings");
+    expect(parseRoute(path)).toEqual({
+      name: "trip",
+      tripId: "시드니 / 2026",
+      tab: "tools",
+      toolId: "bookings"
+    });
+    expect(parseRoute("/trip/sydney-2026/tools/unknown")).toEqual({ name: "not-found" });
   });
 
   it("builds memory editor and player paths with encoded trip IDs", () => {

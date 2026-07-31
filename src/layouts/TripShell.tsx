@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Button } from "@astryxdesign/core";
 import { ThemeControl } from "../app/theme/ThemeControl";
 import { pathForLibrary, pathForTrip, type TripTab } from "../app/router";
 import { useTripSwitcherFocus } from "../app/TripSwitcherFocus";
@@ -42,6 +43,7 @@ export function TripShell({
   children: ReactNode;
 }) {
   const [switcherOpen, setSwitcherOpen] = useState(false);
+  const [showBackToTop, setShowBackToTop] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const switcherRef = useRef<HTMLDivElement>(null);
   const { intentTripId, requestFocusRestoration, clearFocusRestoration } = useTripSwitcherFocus();
@@ -81,6 +83,24 @@ export function TripShell({
     triggerRef.current?.focus();
     clearFocusRestoration();
   }, [clearFocusRestoration, context.trip.id, intentTripId]);
+
+  useEffect(() => {
+    const content = document.getElementById("trip-content");
+    const updateVisibility = () => setShowBackToTop(window.scrollY > 240 || (content?.scrollTop ?? 0) > 240);
+
+    window.addEventListener("scroll", updateVisibility, { passive: true });
+    content?.addEventListener("scroll", updateVisibility, { passive: true });
+    updateVisibility();
+    return () => {
+      window.removeEventListener("scroll", updateVisibility);
+      content?.removeEventListener("scroll", updateVisibility);
+    };
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    document.getElementById("trip-content")?.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   return (
     <div className="trip-shell">
@@ -140,6 +160,16 @@ export function TripShell({
         </div>
       </header>
       <main id="trip-content" className="trip-content">{children}</main>
+      {showBackToTop ? (
+        <Button
+          className="trip-back-to-top"
+          icon={<Icon className="trip-back-to-top__icon" name="chevron" />}
+          label="맨 위로"
+          onClick={scrollToTop}
+          size="sm"
+          variant="secondary"
+        />
+      ) : null}
       <nav className="trip-navigation" aria-label="여행 메뉴">
         {tripNavItems.map((item) => (
           <AppLink

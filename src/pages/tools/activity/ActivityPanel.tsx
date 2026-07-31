@@ -1,3 +1,4 @@
+import { Button } from "@astryxdesign/core";
 import type { ActivityView } from "../../../data/contracts";
 
 export function ActivityPanel({
@@ -15,8 +16,8 @@ export function ActivityPanel({
   return (
     <article className="tool-card tool-card--wide" id="activity">
       <div className="tool-card__heading">
-        <h2>최근 활동</h2>
-        <button onClick={reload} type="button">활동 새로고침</button>
+        <h1>최근 활동</h1>
+        <Button className="activity-refresh-action" label="활동 새로고침" onClick={reload} size="sm" variant="secondary" />
       </div>
       <ul className="activity-list">
         {latest.map((entry) => <li key={entry.id}><p>{entry.summary}</p><time dateTime={entry.createdAt}>{relativeTime(entry.createdAt, now)}</time></li>)}
