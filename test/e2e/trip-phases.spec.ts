@@ -135,6 +135,7 @@ test("personal items paid by the other traveler create a settlement", async ({ p
   await page.goto(`/trip/${after.trip.id}/today`);
   await expect(page.getByRole("heading", { name: "정산하기" })).toBeVisible();
   await expect(page.getByText("대신 결제한 개인 비용", { exact: true })).toBeVisible();
+  await expect(page.locator(".settlement-panel__summary")).toContainText("대신 결제한 개인 비용");
   await expect(page.locator(".settlement-panel__currency")).toContainText("20.00");
   await page.getByRole("button", { name: "송금 완료로 표시" }).click();
   await flushOutbox(page, after.trip.id);

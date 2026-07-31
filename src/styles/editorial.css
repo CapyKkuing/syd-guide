@@ -600,6 +600,16 @@ body {
   color: var(--text-muted);
 }
 
+.settlement-panel__summary {
+  padding: var(--spacing-3);
+  border-radius: var(--radius-container);
+  background: var(--accent-soft);
+  color: var(--text) !important;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--text-supporting-leading);
+}
+
 .settlement-panel__details {
   margin-top: 20px;
   padding-top: 18px;

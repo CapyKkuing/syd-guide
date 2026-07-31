@@ -56,6 +56,14 @@ export function SettlementPanel({
       <p className="settlement-panel__intro">함께 쓴 비용과 대신 결제한 개인 비용만 계산했어요.</p>
       {settlements.map((summary) => {
         const transfer = summary.transfers[0];
+        const summaryParts = [
+          summary.sharedAmountMinor > 0
+            ? `함께 쓴 비용 ${formatMoney(summary.sharedAmountMinor, summary.currency)}`
+            : null,
+          summary.personalAmountMinor > 0
+            ? `대신 결제한 개인 비용 ${formatMoney(summary.personalAmountMinor, summary.currency)}`
+            : null,
+        ].filter((part): part is string => part !== null);
         return (
           <section className="settlement-panel__currency" key={summary.currency}>
             <p className="today-section-heading__eyebrow">{summary.currency}</p>
@@ -65,6 +73,7 @@ export function SettlementPanel({
                 : "추가 송금이 필요하지 않아요"}
             </strong>
             <p>{transfer ? "보내면 이 통화의 여행 비용 정산이 끝납니다." : "서로 낸 금액이 이미 균형입니다."}</p>
+            <p className="settlement-panel__summary">{summaryParts.join(" · ")}</p>
             <section className="settlement-panel__details">
               <h3>각자 낸 금액</h3>
               {members.map((member) => <p key={member.id}><span>{member.displayName}</span><b>{formatMoney(summary.totalsByMemberId.get(member.id) ?? 0, summary.currency)}</b></p>)}
