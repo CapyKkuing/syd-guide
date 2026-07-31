@@ -88,6 +88,8 @@ describe("TodayPage", () => {
     await user.type(screen.getByLabelText("항목"), "항공권");
     await user.clear(screen.getByLabelText("금액"));
     await user.type(screen.getByLabelText("금액"), "120000");
+    await user.click(screen.getByLabelText("함께"));
+    await user.click(screen.getByLabelText("카드"));
     await user.click(screen.getByRole("button", { name: "저장" }));
 
     expect(submit).toHaveBeenCalledWith(
@@ -102,8 +104,36 @@ describe("TodayPage", () => {
         amountMinor: 120000,
         currency: "KRW",
         paidByMemberId: "preview-owner",
+        expenseScope: "shared",
+        paymentMethod: "card",
         isSettled: false,
       }),
+    );
+  });
+
+  it("marks personal expenses as settled without showing a settlement choice", async () => {
+    const user = userEvent.setup();
+    const submit = vi.fn().mockResolvedValue({ entity: "expense", entityId: "expense-1", version: 1, syncVersion: 1 });
+    const controller: TripMutationController = { submit };
+    render(<TodayPage {...await todayProps("bondi-weekend")} mutationController={controller} />);
+
+    await user.click(screen.getByRole("button", { name: "준비 비용 추가" }));
+    await user.type(screen.getByLabelText("항목"), "개인 쇼핑");
+    await user.clear(screen.getByLabelText("금액"));
+    await user.type(screen.getByLabelText("금액"), "10000");
+    await user.click(screen.getByLabelText("개인"));
+    await user.click(screen.getByLabelText("현금"));
+
+    expect(screen.queryByLabelText("정산 완료")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "저장" }));
+
+    expect(submit).toHaveBeenCalledWith(
+      "expense",
+      "create",
+      expect.any(String),
+      null,
+      expect.objectContaining({ expenseScope: "personal", paymentMethod: "cash", isSettled: true }),
     );
   });
 

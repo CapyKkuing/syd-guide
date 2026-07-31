@@ -73,7 +73,7 @@ export function DuringTripHome({
 
   return (
     <VStack gap={6}>
-      <Card elevation="low" padding={5} variant="muted">
+      <Card className="today-live-hero" elevation="low" padding={5} variant="muted">
         <VStack gap={4}>
           <HStack align="center" justify="between">
             <VStack gap={1}>
@@ -85,7 +85,7 @@ export function DuringTripHome({
               <Text type="supporting">여행 중</Text>
             </HStack>
           </HStack>
-          <Card elevation="low" padding={4} variant="teal">
+          <Card className="today-live-next" elevation="low" padding={4} variant="teal">
             <VStack gap={3}>
               <Text type="label">다음 이동</Text>
               <Heading level={3}>
@@ -112,7 +112,7 @@ export function DuringTripHome({
         </VStack>
       </Card>
 
-      <Grid columns={{ minWidth: 280, max: 2 }} gap={4}>
+      <Grid className="today-live-quick-row" columns={{ minWidth: 280, max: 2 }} gap={4}>
         <ClickableCard
           elevation="low"
           href={pathForTrip(trip.id, "map")}
@@ -135,7 +135,7 @@ export function DuringTripHome({
         </Card>
       </Grid>
 
-      <Card elevation="low" padding={5} variant="default">
+      <Card className="today-live-schedule" elevation="low" padding={5} variant="default">
         <VStack gap={4}>
           <HStack align="center" justify="between">
             <VStack gap={1}>
@@ -145,7 +145,7 @@ export function DuringTripHome({
             <AppLink href={pathForTrip(trip.id, "schedule")}>전체 보기</AppLink>
           </HStack>
           {schedule.length ? (
-            <List density="balanced" hasDividers>
+            <List density="balanced">
               {schedule.map((item) => (
                 <ListItem
                   description={`${item.place || item.description}${item.travelNote ? ` · ${item.travelNote}` : ""}`}

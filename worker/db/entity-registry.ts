@@ -184,14 +184,15 @@ export const entityRegistry = {
     table: "expenses",
     columns: [
       "phase", "category", "title", "amount_minor", "currency", "spent_on",
-      "paid_by_member_id", "is_settled", "memo",
+      "paid_by_member_id", "expense_scope", "payment_method", "is_settled", "memo",
     ],
     payloadSchema: entitySchemas.expense,
     values: (raw) => {
       const value = raw as MutationPayloadMap["expense"];
       return [
         value.phase, value.category, value.title, value.amountMinor, value.currency,
-        value.spentOn, value.paidByMemberId, Number(value.isSettled), value.memo,
+        value.spentOn, value.paidByMemberId, value.expenseScope, value.paymentMethod,
+        Number(value.isSettled), value.memo,
       ];
     },
     parse: (row) => ({
@@ -203,6 +204,10 @@ export const entityRegistry = {
       currency: String(row.currency),
       spentOn: String(row.spent_on),
       paidByMemberId: String(row.paid_by_member_id),
+      expenseScope: row.expense_scope === null
+        ? null : row.expense_scope as EntityMap["expense"]["expenseScope"],
+      paymentMethod: row.payment_method === null
+        ? null : row.payment_method as EntityMap["expense"]["paymentMethod"],
       isSettled: bool(row.is_settled),
       memo: String(row.memo),
     }),

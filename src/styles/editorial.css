@@ -52,6 +52,20 @@ body {
   box-shadow: var(--shadow-soft);
 }
 
+@media (max-width: 760px) {
+  .trip-header {
+    position: static;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    border: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--line) 76%, transparent);
+    border-radius: 0;
+    background: color-mix(in srgb, var(--surface) 96%, transparent);
+    box-shadow: none;
+  }
+}
+
 .library-brand strong {
   letter-spacing: -0.025em;
 }

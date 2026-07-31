@@ -128,11 +128,12 @@ describe("TripShell", () => {
       .toContain("min-height: 44px;");
   });
 
-  it("gives mobile navigation its own grid row instead of covering trip content", () => {
+  it("keeps mobile navigation separate from the trip scroll area", () => {
     const desktopNavigation = navigationStyles.split("@media (min-width: 761px)")[1] ?? "";
 
-    expect(ruleFor(layoutStyles, ".trip-shell")).toContain("grid-template-rows: auto minmax(0, 1fr) auto;");
-    expect(layoutStyles).toMatch(/\.trip-content\s*\{[^}]*overflow-y: auto;/);
+    expect(ruleFor(layoutStyles, ".trip-shell")).toContain("grid-template-rows: minmax(0, 1fr) auto;");
+    expect(ruleFor(layoutStyles, ".trip-scroll")).toContain("overflow-y: auto;");
+    expect(layoutStyles).toMatch(/\.trip-content\s*\{[^}]*overflow: visible;/);
     expect(ruleFor(navigationStyles, ".trip-navigation")).toContain("position: static;");
     expect(ruleFor(desktopNavigation, ".trip-navigation")).toContain("position: fixed;");
   });
@@ -140,10 +141,10 @@ describe("TripShell", () => {
   it("shows a global back-to-top action after the trip content scrolls", async () => {
     await renderTripShell("today");
 
-    const content = document.getElementById("trip-content");
-    if (!content) throw new Error("trip content missing");
-    Object.defineProperty(content, "scrollTop", { configurable: true, value: 300 });
-    fireEvent.scroll(content);
+    const scrollContainer = document.getElementById("trip-scroll");
+    if (!scrollContainer) throw new Error("trip scroll container missing");
+    Object.defineProperty(scrollContainer, "scrollTop", { configurable: true, value: 300 });
+    fireEvent.scroll(scrollContainer);
 
     expect(screen.getByRole("button", { name: "맨 위로" })).toBeVisible();
   });

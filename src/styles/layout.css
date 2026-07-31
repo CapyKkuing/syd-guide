@@ -53,7 +53,7 @@
 .trip-shell {
   display: grid;
   height: 100dvh;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-rows: minmax(0, 1fr) auto;
   min-height: 100vh;
   overflow: hidden;
   background: var(--bg);
@@ -63,6 +63,11 @@
 .trip-content {
   width: min(100% - 32px, 1180px);
   margin: 0 auto;
+}
+
+.trip-scroll {
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .trip-header {
@@ -212,8 +217,8 @@
 }
 
 .trip-content {
-  min-height: 0;
-  overflow-y: auto;
+  min-height: auto;
+  overflow: visible;
   padding: var(--space-8) 0;
 }
 
@@ -296,6 +301,10 @@
   .trip-shell {
     display: block;
     height: auto;
+    overflow: visible;
+  }
+
+  .trip-scroll {
     overflow: visible;
   }
 

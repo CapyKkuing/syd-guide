@@ -92,6 +92,8 @@ export const entitySchemas = {
     currency: z.string().regex(/^[A-Z]{3}$/),
     spentOn: z.iso.date(),
     paidByMemberId: idSchema,
+    expenseScope: z.enum(["shared", "personal"]).nullable(),
+    paymentMethod: z.enum(["cash", "card"]).nullable(),
     isSettled: z.boolean(),
     memo: longText,
   }),

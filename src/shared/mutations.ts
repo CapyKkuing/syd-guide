@@ -88,6 +88,8 @@ export interface MutationPayloadMap {
     currency: string;
     spentOn: string;
     paidByMemberId: string;
+    expenseScope: "shared" | "personal" | null;
+    paymentMethod: "cash" | "card" | null;
     isSettled: boolean;
     memo: string;
   };

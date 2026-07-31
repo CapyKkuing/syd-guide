@@ -85,27 +85,28 @@ export function TripShell({
   }, [clearFocusRestoration, context.trip.id, intentTripId]);
 
   useEffect(() => {
-    const content = document.getElementById("trip-content");
-    const updateVisibility = () => setShowBackToTop(window.scrollY > 240 || (content?.scrollTop ?? 0) > 240);
+    const scrollContainer = document.getElementById("trip-scroll");
+    const updateVisibility = () => setShowBackToTop(window.scrollY > 240 || (scrollContainer?.scrollTop ?? 0) > 240);
 
     window.addEventListener("scroll", updateVisibility, { passive: true });
-    content?.addEventListener("scroll", updateVisibility, { passive: true });
+    scrollContainer?.addEventListener("scroll", updateVisibility, { passive: true });
     updateVisibility();
     return () => {
       window.removeEventListener("scroll", updateVisibility);
-      content?.removeEventListener("scroll", updateVisibility);
+      scrollContainer?.removeEventListener("scroll", updateVisibility);
     };
   }, []);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
-    document.getElementById("trip-content")?.scrollTo({ top: 0, behavior: "smooth" });
+    document.getElementById("trip-scroll")?.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
     <div className="trip-shell">
       <a className="skip-link" href="#trip-content">본문으로 건너뛰기</a>
-      <header className="trip-header">
+      <div id="trip-scroll" className="trip-scroll">
+        <header className="trip-header">
         <AppLink className="trip-header__back" href={pathForLibrary()} aria-label="여행 서재로 돌아가기">
           <Icon name="library" />
           <span>여행 서재</span>
@@ -158,8 +159,9 @@ export function TripShell({
           </span>
           <ThemeControl />
         </div>
-      </header>
-      <main id="trip-content" className="trip-content">{children}</main>
+        </header>
+        <main id="trip-content" className="trip-content">{children}</main>
+      </div>
       {showBackToTop ? (
         <Button
           className="trip-back-to-top"

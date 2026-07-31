@@ -58,6 +58,8 @@ export function ExpensePanel({
         currency: expense.currency,
         spentOn: expense.spentOn,
         paidByMemberId: expense.paidByMemberId,
+        expenseScope: expense.expenseScope,
+        paymentMethod: expense.paymentMethod,
         isSettled: !expense.isSettled,
         memo: expense.memo,
       });
@@ -95,16 +97,20 @@ export function ExpensePanel({
             <button className="expense-list__main" disabled={!controller || mode === "after"} onClick={() => setEditing(expense)} type="button">
               <span>{categoryLabels[expense.category]} · {expense.title}</span>
               <strong>{formatMoney(expense.amountMinor, expense.currency)}</strong>
-              <small>{expense.spentOn} · {memberName(members, expense.paidByMemberId)} 결제</small>
+              <small>
+                {expense.spentOn} · {memberName(members, expense.paidByMemberId)} 결제 · {scopeLabel(expense.expenseScope)} · {paymentMethodLabel(expense.paymentMethod)}
+              </small>
             </button>
-            <button
-              className={expense.isSettled ? "expense-settlement is-done" : "expense-settlement"}
-              disabled={!controller}
-              onClick={() => void toggleSettlement(expense)}
-              type="button"
-            >
-              {expense.isSettled ? "정산 완료" : "정산 미완료"}
-            </button>
+            {expense.expenseScope !== "personal" ? (
+              <button
+                className={expense.isSettled ? "expense-settlement is-done" : "expense-settlement"}
+                disabled={!controller}
+                onClick={() => void toggleSettlement(expense)}
+                type="button"
+              >
+                {expense.isSettled ? "정산 완료" : "정산 미완료"}
+              </button>
+            ) : null}
           </li>
         ))}
       </ul>
@@ -146,6 +152,8 @@ function ExpenseEditor({
   const [currency, setCurrency] = useState(expense?.currency ?? (mode === "before" ? "KRW" : "AUD"));
   const [spentOn, setSpentOn] = useState(expense?.spentOn ?? localDate);
   const [paidByMemberId, setPaidByMemberId] = useState(expense?.paidByMemberId ?? viewerMemberId);
+  const [expenseScope, setExpenseScope] = useState<Expense["expenseScope"] | "">(expense?.expenseScope ?? "");
+  const [paymentMethod, setPaymentMethod] = useState<Expense["paymentMethod"] | "">(expense?.paymentMethod ?? "");
   const [isSettled, setIsSettled] = useState(expense?.isSettled ?? false);
   const [memo, setMemo] = useState(expense?.memo ?? "");
   const [error, setError] = useState("");
@@ -158,6 +166,10 @@ function ExpenseEditor({
       setError("금액을 0보다 크게 입력해 주세요.");
       return;
     }
+    if (!expenseScope || !paymentMethod) {
+      setError("비용 구분과 결제 수단을 선택해 주세요.");
+      return;
+    }
     const payload: MutationPayloadMap["expense"] = {
       phase: mode === "before" ? "pretrip" : "travel",
       category,
@@ -166,7 +178,9 @@ function ExpenseEditor({
       currency: normalizedCurrency,
       spentOn,
       paidByMemberId,
-      isSettled,
+      expenseScope,
+      paymentMethod,
+      isSettled: expenseScope === "personal" ? true : isSettled,
       memo: memo.trim(),
     };
     try {
@@ -207,8 +221,18 @@ function ExpenseEditor({
         <label><span>결제자</span><select required value={paidByMemberId} onChange={(event) => setPaidByMemberId(event.target.value)}>
           {members.map((member) => <option key={member.id} value={member.id}>{member.displayName}</option>)}
         </select></label>
+        <fieldset className="expense-editor__choice">
+          <legend>비용 구분</legend>
+          <label><input checked={expenseScope === "personal"} name="expense-scope" onChange={() => setExpenseScope("personal")} type="radio" />개인</label>
+          <label><input checked={expenseScope === "shared"} name="expense-scope" onChange={() => setExpenseScope("shared")} type="radio" />함께</label>
+        </fieldset>
+        <fieldset className="expense-editor__choice">
+          <legend>결제 수단</legend>
+          <label><input checked={paymentMethod === "cash"} name="payment-method" onChange={() => setPaymentMethod("cash")} type="radio" />현금</label>
+          <label><input checked={paymentMethod === "card"} name="payment-method" onChange={() => setPaymentMethod("card")} type="radio" />카드</label>
+        </fieldset>
         <label><span>메모</span><textarea maxLength={5_000} value={memo} onChange={(event) => setMemo(event.target.value)} /></label>
-        <label className="tool-editor__check"><input checked={isSettled} onChange={(event) => setIsSettled(event.target.checked)} type="checkbox" />정산 완료</label>
+        {expenseScope !== "personal" ? <label className="tool-editor__check"><input checked={isSettled} onChange={(event) => setIsSettled(event.target.checked)} type="checkbox" />정산 완료</label> : null}
         {error ? <p role="alert">{error}</p> : null}
         <div className="tool-editor__actions">
           {expense ? <button className="danger-button" onClick={() => void remove()} type="button">삭제</button> : null}
@@ -255,4 +279,12 @@ function totalsByCurrency(expenses: Expense[]) {
 
 function memberName(members: PublicMember[], memberId: string): string {
   return members.find((member) => member.id === memberId)?.displayName ?? "여행자";
+}
+
+function scopeLabel(scope: Expense["expenseScope"]): string {
+  return scope === "personal" ? "개인" : scope === "shared" ? "함께" : "구분 미입력";
+}
+
+function paymentMethodLabel(paymentMethod: Expense["paymentMethod"]): string {
+  return paymentMethod === "cash" ? "현금" : paymentMethod === "card" ? "카드" : "수단 미입력";
 }

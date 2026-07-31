@@ -31,14 +31,11 @@ test("journey boundaries render the approved before, during, and after homes", a
   );
   await seedNextSchedule(page.request, during.trip.id, during.tripDayId);
   await page.goto(`/trip/${during.trip.id}/today`);
-  await expect(page.getByText(/여행 중/)).toBeVisible();
-  await expect(page.locator("[data-section]")).toHaveCount(4);
-  expect(
-    await page.locator("[data-section]").evaluateAll((sections) =>
-      sections.map((section) => (section as HTMLElement).dataset.section),
-    ),
-  ).toEqual(["schedule", "weather", "map", "nearby"]);
-  await expect(page.locator(".today-schedule__item")).toHaveCount(3);
+  await expect(page.getByText("여행 중", { exact: true })).toBeVisible();
+  await expect(page.locator(".today-live-hero")).toHaveCount(1);
+  await expect(page.locator(".today-live-next")).toHaveCount(1);
+  await expect(page.locator(".today-live-quick-row .astryx-card")).toHaveCount(2);
+  await expect(page.locator(".today-live-schedule")).toHaveCount(1);
   await expect(page.getByText("다음 일정 2")).toBeVisible();
   await expect(page.getByText("다음 일정 4")).toBeVisible();
 
@@ -61,6 +58,8 @@ test("journey boundaries render the approved before, during, and after homes", a
       currency: "AUD",
       spentOn: new Date().toISOString().slice(0, 10),
       paidByMemberId: "owner",
+      expenseScope: "shared",
+      paymentMethod: "card",
       isSettled: true,
       memo: "",
     },
@@ -71,6 +70,28 @@ test("journey boundaries render the approved before, during, and after homes", a
   await expect(page.getByRole("link", { name: "다시 여행 보기" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "정산 완료" })).toHaveCount(0);
   await expect(page.getByText("정산이 끝난 저녁")).toBeVisible();
+});
+
+test("personal expenses save their payment method without a settlement control", async ({ page }) => {
+  const before = await createWorkspace(
+    page.request,
+    unique("expense-scope"),
+    "owner",
+    phaseOptions("before"),
+  );
+
+  await page.goto(`/trip/${before.trip.id}/today`);
+  await page.getByRole("button", { name: "준비 비용 추가" }).click();
+  await page.getByLabel("항목").fill("개인 커피");
+  await page.getByLabel("금액").fill("5");
+  await page.getByLabel("개인").check();
+  await page.getByLabel("현금").check();
+
+  await expect(page.getByLabel("정산 완료")).toHaveCount(0);
+  await page.getByRole("button", { name: "저장" }).click();
+  await page.reload();
+  await expect(page.getByText("개인 커피")).toBeVisible();
+  await expect(page.getByText(/개인 · 현금/)).toBeVisible();
 });
 
 function phaseOptions(phase: "before" | "during" | "after") {
