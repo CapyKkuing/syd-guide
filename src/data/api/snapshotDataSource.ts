@@ -1,6 +1,6 @@
 import type { SessionPrincipal } from "../../features/auth/api";
 import type { TripSnapshot } from "../../shared/api";
-import type { ApiClient } from "../../services/api/client";
+import type { ApiClient, SnapshotResult } from "../../services/api/client";
 import { ApiClientError } from "../../services/api/errors";
 import type { SnapshotStore } from "../../services/offline/snapshotStore";
 import type {
@@ -25,6 +25,7 @@ type CacheEntry = {
 export class SnapshotTravelGuideDataSource implements MutableTravelGuideDataSource {
   private readonly cache = new Map<string, CacheEntry>();
   private readonly pending = new Map<string, Promise<TripWorkspace | null>>();
+  private readonly minimumSyncVersions = new Map<string, number>();
   private readonly client: Pick<ApiClient, "getTripSnapshot">;
   private readonly principalLoader: () => Promise<SessionPrincipal>;
   private readonly clock: () => Date;
@@ -51,10 +52,16 @@ export class SnapshotTravelGuideDataSource implements MutableTravelGuideDataSour
     return [];
   }
 
-  invalidateTrip(tripId: string): void {
+  invalidateTrip(tripId: string, minimumSyncVersion?: number): void {
     const current = this.cache.get(tripId);
     if (current) this.cache.set(tripId, { ...current, workspace: null });
     this.pending.delete(tripId);
+    if (minimumSyncVersion !== undefined && minimumSyncVersion >= 0) {
+      this.minimumSyncVersions.set(
+        tripId,
+        Math.max(minimumSyncVersion, this.minimumSyncVersions.get(tripId) ?? -1)
+      );
+    }
   }
 
   async getTripContext(tripId: string): Promise<TripContextViewModel | null> {
@@ -107,9 +114,10 @@ export class SnapshotTravelGuideDataSource implements MutableTravelGuideDataSour
     }
     let result;
     try {
-      result = await this.client.getTripSnapshot(
+      result = await this.loadFreshSnapshot(
         tripId,
-        cached?.etag ?? durable?.etag ?? undefined
+        cached?.etag ?? durable?.etag ?? undefined,
+        cached?.snapshot ?? durable?.snapshot ?? null
       );
     } catch (error) {
       if (error instanceof ApiClientError && error.status === 401) {
@@ -153,6 +161,7 @@ export class SnapshotTravelGuideDataSource implements MutableTravelGuideDataSour
     }
     const now = this.clock();
     const workspace = mapSnapshotToWorkspace(snapshot, principal, now);
+    this.minimumSyncVersions.delete(tripId);
     this.cache.set(tripId, {
       snapshot,
       etag: result.etag,
@@ -167,6 +176,27 @@ export class SnapshotTravelGuideDataSource implements MutableTravelGuideDataSour
     return workspace;
   }
 
+  private async loadFreshSnapshot(
+    tripId: string,
+    etag: string | undefined,
+    fallbackSnapshot: TripSnapshot | null
+  ): Promise<SnapshotResult> {
+    const minimumSyncVersion = this.minimumSyncVersions.get(tripId);
+    let result = await this.client.getTripSnapshot(tripId, etag);
+    if (minimumSyncVersion === undefined
+      || snapshotSyncVersion(result, fallbackSnapshot) >= minimumSyncVersion) {
+      return result;
+    }
+    for (const delay of [50, 100, 200, 400]) {
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      result = await this.client.getTripSnapshot(tripId, undefined);
+      if (snapshotSyncVersion(result, fallbackSnapshot) >= minimumSyncVersion) {
+        return result;
+      }
+    }
+    throw new Error("최신 변경사항을 불러오지 못했습니다. 다시 시도해 주세요.");
+  }
+
   private async loadPrincipal(): Promise<SessionPrincipal> {
     try {
       const principal = await this.principalLoader();
@@ -178,6 +208,15 @@ export class SnapshotTravelGuideDataSource implements MutableTravelGuideDataSour
       throw error;
     }
   }
+}
+
+function snapshotSyncVersion(
+  result: SnapshotResult,
+  fallbackSnapshot: TripSnapshot | null
+): number {
+  return result.notModified
+    ? fallbackSnapshot?.syncVersion ?? -1
+    : result.snapshot?.syncVersion ?? Number.MAX_SAFE_INTEGER;
 }
 
 function canUseOfflineSnapshot(error: unknown): boolean {

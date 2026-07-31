@@ -65,7 +65,7 @@ export function createTripMutationController({
         payload
       };
       const result = await transport.mutate(tripId, mutation);
-      dataSource.invalidateTrip(tripId);
+      dataSource.invalidateTrip(tripId, result.syncVersion);
       reload();
       return result;
     }

@@ -90,7 +90,7 @@ describe("createTripMutationController", () => {
       baseVersion: null,
       payload
     });
-    expect(dataSource.invalidateTrip).toHaveBeenCalledWith("trip-one");
+    expect(dataSource.invalidateTrip).toHaveBeenCalledWith("trip-one", 8);
     expect(reload).toHaveBeenCalledTimes(1);
   });
 

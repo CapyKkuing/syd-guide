@@ -204,4 +204,61 @@ describe("SnapshotTravelGuideDataSource", () => {
     expect(today?.schedule).toHaveLength(2);
     expect(client.getTripSnapshot).toHaveBeenNthCalledWith(2, snapshot.trip.id, "\"trip-one-7\"");
   });
+
+  it("waits for the mutation sync version before exposing refreshed data", async () => {
+    const snapshot = createTripSnapshot();
+    const freshSnapshot = {
+      ...snapshot,
+      expenses: [{
+        id: "expense-qa",
+        tripId: snapshot.trip.id,
+        phase: "pretrip" as const,
+        category: "reservation" as const,
+        title: "동기화 확인",
+        amountMinor: 1,
+        currency: "KRW",
+        spentOn: "2026-09-10",
+        paidByMemberId: "owner",
+        expenseScope: "shared" as const,
+        personalForMemberId: null,
+        paymentMethod: "card" as const,
+        isSettled: false,
+        memo: "",
+        version: 1,
+        updatedBy: "owner",
+        updatedAt: "2026-09-10T01:00:00.000Z"
+      }],
+      syncVersion: 8
+    };
+    const client = {
+      getTripSnapshot: vi.fn()
+        .mockResolvedValueOnce({
+          snapshot,
+          etag: "\"trip-one-7\"",
+          notModified: false
+        })
+        .mockResolvedValueOnce({
+          snapshot: null,
+          etag: "\"trip-one-7\"",
+          notModified: true
+        })
+        .mockResolvedValueOnce({
+          snapshot: freshSnapshot,
+          etag: "\"trip-one-8\"",
+          notModified: false
+        })
+    };
+    const source = new SnapshotTravelGuideDataSource(
+      client,
+      async () => ({ memberId: "owner", role: "owner" })
+    );
+
+    await source.getToday(snapshot.trip.id);
+    source.invalidateTrip(snapshot.trip.id, 8);
+    const today = await source.getToday(snapshot.trip.id);
+
+    expect(today?.expenses).toHaveLength(1);
+    expect(client.getTripSnapshot).toHaveBeenNthCalledWith(2, snapshot.trip.id, "\"trip-one-7\"");
+    expect(client.getTripSnapshot).toHaveBeenNthCalledWith(3, snapshot.trip.id, undefined);
+  });
 });

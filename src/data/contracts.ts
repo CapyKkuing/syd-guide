@@ -222,7 +222,7 @@ export interface TravelGuideDataSource {
 
 export interface MutableTravelGuideDataSource extends TravelGuideDataSource {
   // eslint-disable-next-line no-unused-vars
-  invalidateTrip(tripId: string): void;
+  invalidateTrip(tripId: string, minimumSyncVersion?: number): void;
 }
 
 export type TripWorkspaceResource =
