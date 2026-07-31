@@ -44,26 +44,13 @@ body {
 }
 
 .trip-header {
+  position: static;
   top: var(--space-2);
   padding: var(--space-3) var(--space-4);
   border: 1px solid color-mix(in srgb, var(--line) 76%, transparent);
   border-radius: var(--radius-xl);
   background: color-mix(in srgb, var(--surface) 92%, transparent);
   box-shadow: var(--shadow-soft);
-}
-
-@media (max-width: 760px) {
-  .trip-header {
-    position: static;
-    top: 0;
-    width: 100%;
-    margin: 0;
-    border: 0;
-    border-bottom: 1px solid color-mix(in srgb, var(--line) 76%, transparent);
-    border-radius: 0;
-    background: color-mix(in srgb, var(--surface) 96%, transparent);
-    box-shadow: none;
-  }
 }
 
 .library-brand strong {
