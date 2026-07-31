@@ -29,6 +29,7 @@ export function SettlementPanel({
         return controller.submit("expense", "update", expense.id, expense.version, {
           phase: expense.phase,
           category: expense.category,
+          customCategory: expense.customCategory,
           title: expense.title,
           amountMinor: expense.amountMinor,
           currency: expense.currency,

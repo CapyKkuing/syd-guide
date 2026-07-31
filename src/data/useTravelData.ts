@@ -67,7 +67,12 @@ export function useTripWorkspace(
   }));
   const reload = useCallback(() => {
     if (isMutableDataSource(dataSource)) dataSource.invalidateTrip(tripId);
-    setResource({ dataSource, tripId, value: { status: "loading" } });
+    setResource((current) =>
+      current.dataSource === dataSource
+        && current.tripId === tripId
+        && current.value.status === "ready"
+        ? current
+        : { dataSource, tripId, value: { status: "loading" } });
     setRetryGeneration((generation) => generation + 1);
   }, [dataSource, tripId]);
 

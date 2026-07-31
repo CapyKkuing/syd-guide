@@ -88,6 +88,7 @@ export const entitySchemas = {
     category: z.enum([
       "flight", "lodging", "reservation", "food", "transport", "shopping", "activity", "other",
     ]),
+    customCategory: shortText.nullable().optional(),
     title: shortText,
     amountMinor: z.number().int().min(1).max(999_999_999_999),
     currency: z.string().regex(/^[A-Z]{3}$/),

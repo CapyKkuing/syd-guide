@@ -84,6 +84,7 @@ export interface MutationPayloadMap {
       | "shopping"
       | "activity"
       | "other";
+    customCategory: string | null;
     title: string;
     amountMinor: number;
     currency: string;

@@ -1,4 +1,8 @@
 import { useMemo, useState, type FormEvent } from "react";
+import {
+  ToggleButton,
+  ToggleButtonGroup,
+} from "@astryxdesign/core/ToggleButton";
 import { BottomSheet } from "../../components/BottomSheet";
 import type { Expense, PublicMember } from "../../shared/entities";
 import type { MutationPayloadMap } from "../../shared/mutations";
@@ -35,24 +39,32 @@ export function ExpensePanel({
   const [editing, setEditing] = useState<Expense | null | undefined>(
     initiallyOpen ? null : undefined,
   );
+  const [optimisticExpenses, setOptimisticExpenses] = useState<Record<string, Expense | null>>({});
   const [error, setError] = useState("");
+
+  const displayExpenses = useMemo(
+    () => mergeOptimisticExpenses(expenses, optimisticExpenses),
+    [expenses, optimisticExpenses],
+  );
+
   const visibleExpenses = useMemo(() => {
-    if (mode === "before") return expenses.filter((expense) => expense.phase === "pretrip");
+    if (mode === "before") return displayExpenses.filter((expense) => expense.phase === "pretrip");
     if (mode === "during") {
-      return expenses.filter((expense) =>
+      return displayExpenses.filter((expense) =>
         expense.phase === "travel" && expense.spentOn === localDate
       );
     }
-    return expenses;
-  }, [expenses, localDate, mode]);
+    return displayExpenses;
+  }, [displayExpenses, localDate, mode]);
 
   async function toggleSettlement(expense: Expense) {
     if (!controller) return;
     setError("");
     try {
-      await controller.submit("expense", "update", expense.id, expense.version, {
+      const result = await controller.submit("expense", "update", expense.id, expense.version, {
         phase: expense.phase,
         category: expense.category,
+        customCategory: expense.customCategory,
         title: expense.title,
         amountMinor: expense.amountMinor,
         currency: expense.currency,
@@ -64,6 +76,10 @@ export function ExpensePanel({
         isSettled: !expense.isSettled,
         memo: expense.memo,
       });
+      setOptimisticExpenses((current) => ({
+        ...current,
+        [expense.id]: { ...expense, isSettled: !expense.isSettled, version: result.version },
+      }));
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "정산 상태를 바꾸지 못했습니다.");
     }
@@ -96,7 +112,7 @@ export function ExpensePanel({
         {visibleExpenses.map((expense) => (
           <li key={expense.id}>
             <button className="expense-list__main" disabled={!controller || mode === "after"} onClick={() => setEditing(expense)} type="button">
-              <span>{categoryLabels[expense.category]} · {expense.title}</span>
+              <span>{categoryName(expense)} · {expense.title}</span>
               <strong>{formatMoney(expense.amountMinor, expense.currency)}</strong>
               <small>
                 {expense.spentOn} · {memberName(members, expense.paidByMemberId)} 결제 · {scopeLabel(expense.expenseScope, expense.personalForMemberId, members)} · {paymentMethodLabel(expense.paymentMethod)}
@@ -123,6 +139,14 @@ export function ExpensePanel({
           members={members}
           mode={mode}
           onClose={() => setEditing(undefined)}
+          onDelete={(expenseId) => setOptimisticExpenses((current) => ({
+            ...current,
+            [expenseId]: null,
+          }))}
+          onSave={(saved) => setOptimisticExpenses((current) => ({
+            ...current,
+            [saved.id]: saved,
+          }))}
           viewerMemberId={viewerMemberId}
         />
       ) : null}
@@ -137,6 +161,8 @@ function ExpenseEditor({
   members,
   mode,
   onClose,
+  onDelete,
+  onSave,
   viewerMemberId,
 }: {
   controller: TripMutationController;
@@ -145,9 +171,14 @@ function ExpenseEditor({
   members: PublicMember[];
   mode: "before" | "during" | "after";
   onClose: () => void;
+  // eslint-disable-next-line no-unused-vars
+  onDelete: (expenseId: string) => void;
+  // eslint-disable-next-line no-unused-vars
+  onSave: (expense: Expense) => void;
   viewerMemberId: string;
 }) {
   const [category, setCategory] = useState<Expense["category"]>(expense?.category ?? (mode === "before" ? "reservation" : "food"));
+  const [customCategory, setCustomCategory] = useState(expense?.customCategory ?? "");
   const [title, setTitle] = useState(expense?.title ?? "");
   const [amount, setAmount] = useState(expense ? majorAmount(expense.amountMinor, expense.currency) : "");
   const [currency, setCurrency] = useState(expense?.currency ?? (mode === "before" ? "KRW" : "AUD"));
@@ -176,9 +207,14 @@ function ExpenseEditor({
       setError("개인 비용 대상을 선택해 주세요.");
       return;
     }
+    if (category === "other" && !customCategory.trim()) {
+      setError("기타 분류 이름을 입력해 주세요.");
+      return;
+    }
     const payload: MutationPayloadMap["expense"] = {
       phase: mode === "before" ? "pretrip" : "travel",
       category,
+      customCategory: category === "other" ? customCategory.trim() : null,
       title: title.trim(),
       amountMinor,
       currency: normalizedCurrency,
@@ -192,13 +228,22 @@ function ExpenseEditor({
       memo: memo.trim(),
     };
     try {
-      await controller.submit(
+      const entityId = expense?.id ?? crypto.randomUUID();
+      const result = await controller.submit(
         "expense",
         expense ? "update" : "create",
-        expense?.id ?? crypto.randomUUID(),
+        entityId,
         expense?.version ?? null,
         payload,
       );
+      onSave({
+        id: entityId,
+        tripId: expense?.tripId ?? "pending",
+        version: result.version,
+        updatedAt: new Date().toISOString(),
+        updatedBy: viewerMemberId,
+        ...payload,
+      });
       onClose();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "비용을 저장하지 못했습니다.");
@@ -209,6 +254,7 @@ function ExpenseEditor({
     if (!expense) return;
     try {
       await controller.submit("expense", "delete", expense.id, expense.version, null);
+      onDelete(expense.id);
       onClose();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "비용을 삭제하지 못했습니다.");
@@ -219,11 +265,25 @@ function ExpenseEditor({
     <BottomSheet ariaLabel={expense ? "비용 수정" : "비용 추가"} onClose={onClose} returnFocusTo={null}>
       <form className="tool-editor" onSubmit={submit}>
         <h2>{expense ? "비용 수정" : "비용 추가"}</h2>
-        <label><span>항목</span><input maxLength={160} required value={title} onChange={(event) => setTitle(event.target.value)} /></label>
-        <label><span>분류</span><select value={category} onChange={(event) => setCategory(event.target.value as Expense["category"])}>
-          {Object.entries(categoryLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-        </select></label>
-        <label><span>금액</span><input inputMode="decimal" min="0" required step="0.01" type="number" value={amount} onChange={(event) => setAmount(event.target.value)} /></label>
+        <label><span>이름</span><input maxLength={160} required value={title} onChange={(event) => setTitle(event.target.value)} /></label>
+        <fieldset className="expense-editor__category">
+          <legend>분류</legend>
+          <ToggleButtonGroup
+            label="분류"
+            onChange={(value) => value && setCategory(value as Expense["category"])}
+            size="sm"
+            type="single"
+            value={category}
+          >
+            {Object.entries(categoryLabels).map(([value, label]) => (
+              <ToggleButton key={value} label={label} value={value}>{label}</ToggleButton>
+            ))}
+          </ToggleButtonGroup>
+        </fieldset>
+        {category === "other" ? (
+          <label><span>직접 입력 분류</span><input maxLength={160} required value={customCategory} onChange={(event) => setCustomCategory(event.target.value)} /></label>
+        ) : null}
+        <label><span>금액</span><input inputMode="decimal" required type="text" value={amount} onChange={(event) => setAmount(formatAmountInput(event.target.value))} /></label>
         <label><span>통화</span><input maxLength={3} minLength={3} pattern="[A-Za-z]{3}" required value={currency} onChange={(event) => setCurrency(event.target.value)} /></label>
         <label><span>사용일</span><input required type="date" value={spentOn} onChange={(event) => setSpentOn(event.target.value)} /></label>
         <label><span>결제자</span><select required value={paidByMemberId} onChange={(event) => setPaidByMemberId(event.target.value)}>
@@ -265,13 +325,20 @@ function fractionDigits(currency: string): number {
 }
 
 function toMinorAmount(amount: string, currency: string): number {
-  const parsed = Number(amount);
+  const parsed = Number(amount.replaceAll(",", ""));
   if (!Number.isFinite(parsed)) return 0;
   return Math.round(parsed * (10 ** fractionDigits(currency)));
 }
 
 function majorAmount(amountMinor: number, currency: string): string {
-  return String(amountMinor / (10 ** fractionDigits(currency)));
+  return formatAmountInput(String(amountMinor / (10 ** fractionDigits(currency))));
+}
+
+function formatAmountInput(value: string): string {
+  const normalized = value.replaceAll(",", "").replace(/[^\d.]/g, "");
+  const [integer = "", ...fractions] = normalized.split(".");
+  const grouped = integer.replace(/^0+(?=\d)/, "").replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return fractions.length > 0 ? `${grouped}.${fractions.join("").slice(0, 2)}` : grouped;
 }
 
 function formatMoney(amountMinor: number, currency: string): string {
@@ -291,6 +358,28 @@ function totalsByCurrency(expenses: Expense[]) {
 
 function memberName(members: PublicMember[], memberId: string): string {
   return members.find((member) => member.id === memberId)?.displayName ?? "여행자";
+}
+
+function categoryName(expense: Expense): string {
+  return expense.category === "other" && expense.customCategory
+    ? expense.customCategory
+    : categoryLabels[expense.category];
+}
+
+function mergeOptimisticExpenses(
+  expenses: Expense[],
+  optimistic: Record<string, Expense | null>,
+): Expense[] {
+  const ids = new Set(expenses.map((expense) => expense.id));
+  const merged = expenses.flatMap((expense) => {
+    const pending = optimistic[expense.id];
+    if (pending === null) return [];
+    return [pending && pending.version > expense.version ? pending : expense];
+  });
+  for (const pending of Object.values(optimistic)) {
+    if (pending && !ids.has(pending.id)) merged.unshift(pending);
+  }
+  return merged;
 }
 
 function scopeLabel(

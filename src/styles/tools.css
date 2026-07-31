@@ -833,6 +833,24 @@
   padding: 0;
 }
 
+.expense-editor__category {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.expense-editor__category legend {
+  margin-bottom: var(--space-2);
+  color: var(--text);
+  font-weight: 700;
+}
+
+.expense-editor__category .astryx-toggle-button-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
 .tool-editor__actions {
   justify-content: flex-end;
 }

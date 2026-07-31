@@ -85,9 +85,10 @@ describe("TodayPage", () => {
     render(<TodayPage {...await todayProps("bondi-weekend")} mutationController={controller} />);
 
     await user.click(screen.getByRole("button", { name: "준비 비용 추가" }));
-    await user.type(screen.getByLabelText("항목"), "항공권");
+    await user.type(screen.getByLabelText("이름"), "항공권");
     await user.clear(screen.getByLabelText("금액"));
     await user.type(screen.getByLabelText("금액"), "120000");
+    expect(screen.getByLabelText("금액")).toHaveValue("120,000");
     await user.click(screen.getByLabelText("함께"));
     await user.click(screen.getByLabelText("카드"));
     await user.click(screen.getByRole("button", { name: "저장" }));
@@ -100,6 +101,7 @@ describe("TodayPage", () => {
       expect.objectContaining({
         phase: "pretrip",
         category: "reservation",
+        customCategory: null,
         title: "항공권",
         amountMinor: 120000,
         currency: "KRW",
@@ -112,6 +114,37 @@ describe("TodayPage", () => {
     );
   });
 
+  it("accepts a custom label when the expense category is 기타", async () => {
+    const user = userEvent.setup();
+    const submit = vi.fn().mockResolvedValue({
+      entity: "expense",
+      entityId: "expense-1",
+      version: 1,
+      syncVersion: 1,
+    });
+    render(<TodayPage
+      {...await todayProps("bondi-weekend")}
+      mutationController={{ submit }}
+    />);
+
+    await user.click(screen.getByRole("button", { name: "준비 비용 추가" }));
+    await user.click(screen.getByRole("button", { name: "기타" }));
+    await user.type(screen.getByLabelText("직접 입력 분류"), "통신");
+    await user.type(screen.getByLabelText("이름"), "여행용 eSIM");
+    await user.type(screen.getByLabelText("금액"), "25000");
+    await user.click(screen.getByLabelText("함께"));
+    await user.click(screen.getByLabelText("카드"));
+    await user.click(screen.getByRole("button", { name: "저장" }));
+
+    expect(submit).toHaveBeenCalledWith(
+      "expense",
+      "create",
+      expect.any(String),
+      null,
+      expect.objectContaining({ category: "other", customCategory: "통신" }),
+    );
+  });
+
   it("marks personal expenses as settled without showing a settlement choice", async () => {
     const user = userEvent.setup();
     const submit = vi.fn().mockResolvedValue({ entity: "expense", entityId: "expense-1", version: 1, syncVersion: 1 });
@@ -119,7 +152,7 @@ describe("TodayPage", () => {
     render(<TodayPage {...await todayProps("bondi-weekend")} mutationController={controller} />);
 
     await user.click(screen.getByRole("button", { name: "준비 비용 추가" }));
-    await user.type(screen.getByLabelText("항목"), "개인 쇼핑");
+    await user.type(screen.getByLabelText("이름"), "개인 쇼핑");
     await user.clear(screen.getByLabelText("금액"));
     await user.type(screen.getByLabelText("금액"), "10000");
     await user.click(screen.getByLabelText("개인"));

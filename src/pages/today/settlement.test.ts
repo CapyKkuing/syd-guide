@@ -40,6 +40,7 @@ function expense(overrides: Partial<Expense>): Expense {
     updatedBy: "yeonjun",
     phase: "travel",
     category: "shopping",
+    customCategory: null,
     title: "개인 물품",
     amountMinor: 1,
     currency: "AUD",
