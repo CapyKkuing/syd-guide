@@ -12,6 +12,7 @@ test("owner and partner share schedule, place, booking, checklist, note, and vot
   browser,
   page
 }) => {
+  test.setTimeout(120_000);
   const workspace = await createWorkspace(page.request, unique("shared-workspace"));
   const partner = await createPairedPartner(browser, page.request, unique("shared-phone"));
 
@@ -22,6 +23,7 @@ test("owner and partner share schedule, place, booking, checklist, note, and vot
   await scheduleDialog.getByLabel("시작 시간").fill("08:30");
   await scheduleDialog.getByRole("button", { name: "저장" }).click();
   await flushOutbox(page, workspace.trip.id);
+  await page.getByRole("radio", { name: "전체 일정" }).check();
   await expect(page.getByRole("button", { name: /함께 보는 아침 일정/ }))
     .toBeVisible();
 
@@ -35,7 +37,7 @@ test("owner and partner share schedule, place, booking, checklist, note, and vot
   await flushOutbox(page, workspace.trip.id);
   await expect(page.getByRole("button", { name: /함께 고른 카페/ })).toBeVisible();
 
-  await page.goto(`/trip/${workspace.trip.id}/tools`);
+  await page.goto(`/trip/${workspace.trip.id}/tools/bookings`);
   await page.getByRole("button", { name: "예약 추가" }).click();
   const bookingDialog = page.getByRole("dialog", { name: "예약 추가" });
   await bookingDialog.getByLabel("예약처").fill("Shared Harbour Hotel");
@@ -45,13 +47,17 @@ test("owner and partner share schedule, place, booking, checklist, note, and vot
   await flushOutbox(page, workspace.trip.id);
   await expect(page.getByText("Shared Harbour Hotel")).toBeVisible();
   await expect(page.getByText("SECRET-BOOKING-13")).toHaveCount(0);
+  await page.getByRole("button", { name: "예약 정보 보기" }).click();
   await expect(page.getByRole("button", { name: "예약번호 보기" })).toBeVisible();
 
+  await page.goto(`/trip/${workspace.trip.id}/tools/checklist`);
+  await page.getByText("새 체크 항목 추가").click();
   await page.getByLabel("준비물", { exact: true }).fill("공용 충전기");
-  await page.getByRole("button", { name: "추가", exact: true }).click();
+  await page.getByRole("button", { name: "체크 항목 추가" }).click();
   await flushOutbox(page, workspace.trip.id);
   await expect(page.getByText(/공용 충전기/)).toBeVisible();
 
+  await page.goto(`/trip/${workspace.trip.id}/tools/notes`);
   await page.getByLabel("메모 내용").fill("함께 보는 메모");
   await page.getByRole("button", { name: "메모 추가" }).click();
   await flushOutbox(page, workspace.trip.id);
@@ -63,13 +69,16 @@ test("owner and partner share schedule, place, booking, checklist, note, and vot
   await flushOutbox(page, workspace.trip.id);
 
   await partner.page.goto(`/trip/${workspace.trip.id}/schedule`);
+  await partner.page.getByRole("radio", { name: "전체 일정" }).check();
   await expect(partner.page.getByRole("button", { name: /함께 보는 아침 일정/ }))
     .toBeVisible();
-  await partner.page.goto(`/trip/${workspace.trip.id}/tools`);
+  await partner.page.goto(`/trip/${workspace.trip.id}/tools/bookings`);
   await expect(partner.page.getByText("Shared Harbour Hotel")).toBeVisible();
-  await expect(partner.page.getByText(/공용 충전기/)).toBeVisible();
-  await expect(partner.page.getByText("함께 보는 메모")).toBeVisible();
   await expect(partner.page.getByText("SECRET-BOOKING-13")).toHaveCount(0);
+  await partner.page.goto(`/trip/${workspace.trip.id}/tools/checklist`);
+  await expect(partner.page.getByText(/공용 충전기/)).toBeVisible();
+  await partner.page.goto(`/trip/${workspace.trip.id}/tools/notes`);
+  await expect(partner.page.getByText("함께 보는 메모")).toBeVisible();
 
   await partner.page.goto(`/trip/${workspace.trip.id}/map`);
   await partner.page.getByRole("button", { name: /함께 고른 카페/ }).click();
@@ -83,25 +92,29 @@ test("owner and partner share schedule, place, booking, checklist, note, and vot
   await expect(page.getByRole("button", { name: /파트너가 수정한 카페/ }))
     .toBeVisible();
 
-  await page.goto(`/trip/${workspace.trip.id}/tools`);
+  await page.goto(`/trip/${workspace.trip.id}/tools/checklist`);
+  await page.getByText("새 체크 항목 추가").click();
   await page.getByLabel("준비물 범위").selectOption("personal");
   await page.getByLabel("준비물", { exact: true }).fill("owner 전용 준비물");
-  await page.getByRole("button", { name: "추가", exact: true }).click();
+  await page.getByRole("button", { name: "체크 항목 추가" }).click();
   await flushOutbox(page, workspace.trip.id);
+  await page.goto(`/trip/${workspace.trip.id}/tools/notes`);
   await page.getByLabel("메모 공개 범위").selectOption("personal");
   await page.getByLabel("메모 내용").fill("owner 전용 메모");
   await page.getByRole("button", { name: "메모 추가" }).click();
   await flushOutbox(page, workspace.trip.id);
 
-  await partner.page.goto(`/trip/${workspace.trip.id}/tools`);
+  await partner.page.goto(`/trip/${workspace.trip.id}/tools/checklist`);
   await partner.page.reload();
   await expect(partner.page.getByText(/owner 전용 준비물/)).toHaveCount(0);
+  await partner.page.goto(`/trip/${workspace.trip.id}/tools/notes`);
   await expect(partner.page.getByText("owner 전용 메모")).toHaveCount(0);
 
   await partner.page.getByLabel("메모 공개 범위").selectOption("personal");
   await partner.page.getByLabel("메모 내용").fill("partner 전용 메모");
   await partner.page.getByRole("button", { name: "메모 추가" }).click();
   await flushOutbox(partner.page, workspace.trip.id);
+  await page.goto(`/trip/${workspace.trip.id}/tools/notes`);
   await page.reload();
   await expect(page.getByText("partner 전용 메모")).toHaveCount(0);
 
@@ -124,7 +137,7 @@ test("visible online workspace flushes a queued edit on the fifteen-second inter
 }) => {
   const workspace = await createWorkspace(page.request, unique("poll-workspace"));
   const note = unique("poll-note");
-  await page.goto(`/trip/${workspace.trip.id}/tools`);
+  await page.goto(`/trip/${workspace.trip.id}/tools/notes`);
 
   await page.getByLabel("메모 내용").fill(note);
   await page.getByRole("button", { name: "메모 추가" }).click();

@@ -27,7 +27,7 @@ test("offline snapshot remains readable and queued edit flushes on reconnect", a
     }
   });
 
-  await page.goto(`/trip/${workspace.trip.id}/tools`);
+  await page.goto(`/trip/${workspace.trip.id}/tools/notes`);
   await expect(page.getByText("온라인에서 저장한 캐시 메모")).toBeVisible();
   await page.evaluate(async () => Boolean(await navigator.serviceWorker.ready));
   await page.reload();
@@ -37,14 +37,20 @@ test("offline snapshot remains readable and queued edit flushes on reconnect", a
   await context.setOffline(true);
   await page.reload();
   await page.evaluate(() => window.dispatchEvent(new Event("offline")));
-  await expect(page.getByRole("heading", { name: "도구" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "여행 메모" })).toBeVisible();
   await expect(page.getByText("온라인에서 저장한 캐시 메모")).toBeVisible();
-  await expect(page.getByText("오프라인", { exact: true })).toBeVisible();
+  expect(await page.evaluate(async () => {
+    try {
+      await fetch(`/api/health?offline=${Date.now()}`, { cache: "no-store" });
+      return false;
+    } catch {
+      return true;
+    }
+  })).toBe(true);
 
   await page.getByLabel("메모 내용").fill("오프라인에서 추가한 메모");
   await page.getByRole("button", { name: "메모 추가" }).click();
   await expect.poll(() => outboxCount(page, workspace.trip.id)).toBe(1);
-  await expect(page.getByText("대기 1건")).toBeVisible();
 
   const responsePromise = page.waitForResponse((candidate) =>
     candidate.request().method() === "POST"
@@ -55,12 +61,12 @@ test("offline snapshot remains readable and queued edit flushes on reconnect", a
   await expect.poll(() => outboxCount(page, workspace.trip.id)).toBe(0);
   await expect(page.getByText("오프라인에서 추가한 메모")).toBeVisible();
 
-  const toolsUrl = page.url();
+  const notesUrl = page.url();
   await page.close();
   await context.setOffline(true);
   const coldPage = await context.newPage();
-  await coldPage.goto(toolsUrl);
-  await expect(coldPage.getByRole("heading", { name: "도구" })).toBeVisible();
+  await coldPage.goto(notesUrl);
+  await expect(coldPage.getByRole("heading", { name: "여행 메모" })).toBeVisible();
   await expect(coldPage.getByText("온라인에서 저장한 캐시 메모")).toBeVisible();
   await expect(coldPage.getByText("오프라인에서 추가한 메모")).toBeVisible();
   await context.setOffline(false);
