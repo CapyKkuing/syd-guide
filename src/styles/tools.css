@@ -239,6 +239,14 @@
   color: var(--accent-strong);
 }
 
+.bookings-panel__phase-note {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
 .booking-priority-section,
 .booking-remaining-section {
   display: grid;
@@ -325,48 +333,178 @@
   color: var(--accent-strong);
 }
 
-.booking-card__actions {
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.booking-card__actions a {
+.booking-card__primary-action,
+.booking-detail__actions a,
+.booking-detail__actions button {
   display: inline-flex;
   min-height: calc(var(--space-8) + var(--space-1));
   align-items: center;
+  justify-content: center;
   padding: 0 var(--space-3);
   border: 1px solid var(--today-boundary);
   border-radius: var(--radius-pill);
+  background: var(--surface);
   color: var(--text);
   font-size: var(--text-sm);
   font-weight: 700;
   text-decoration: none;
+  cursor: pointer;
 }
 
-.booking-card__actions a:hover {
+.booking-card__primary-action:hover,
+.booking-detail__actions a:hover,
+.booking-detail__actions button:hover {
   border-color: var(--accent);
   background: var(--accent-soft);
 }
 
-.booking-card__actions .booking-card__primary-action {
+.booking-card__primary-action {
   border-color: var(--accent);
   background: var(--accent);
-  color: var(--surface);
+  color: var(--text-on-accent);
 }
 
 .booking-list--compact {
   gap: var(--space-2);
 }
 
-.booking-list--compact .booking-card {
+.booking-list--compact {
+  overflow: hidden;
+  border: 1px solid var(--today-boundary);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.booking-list--compact li + li {
+  border-top: 1px solid var(--today-boundary);
+}
+
+.booking-list__item {
+  display: grid;
+  width: 100%;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
   gap: var(--space-2);
+  align-items: center;
   padding: var(--space-3);
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.booking-list__item:hover {
+  background: var(--surface-2);
+}
+
+.booking-list__icon {
+  display: grid;
+  width: calc(var(--space-7) + var(--space-2));
+  height: calc(var(--space-7) + var(--space-2));
+  place-items: center;
   border-radius: var(--radius-md);
-  box-shadow: none;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+.booking-list__copy {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-1);
+}
+
+.booking-list__copy strong,
+.booking-list__copy span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.booking-list__copy span {
+  color: var(--text-2);
+  font-size: var(--text-sm);
+}
+
+.booking-list__chevron {
+  color: var(--text-3);
+  font-size: var(--text-lg);
 }
 
 .booking-empty-state {
   background: var(--surface);
+}
+
+.booking-detail {
+  display: grid;
+  gap: var(--space-5);
+  padding-top: var(--space-4);
+}
+
+.booking-detail__type,
+.booking-detail h2 {
+  margin: 0;
+}
+
+.booking-detail__type {
+  width: fit-content;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-pill);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  font-size: var(--text-sm);
+  font-weight: 800;
+}
+
+.booking-detail h2 {
+  color: var(--text);
+  font-size: var(--text-2xl);
+  letter-spacing: -0.04em;
+}
+
+.booking-detail dl {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--surface) 70%, var(--accent-soft));
+}
+
+.booking-detail dl > div {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.booking-detail dt {
+  color: var(--text-3);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.booking-detail dd {
+  margin: 0;
+  color: var(--text);
+}
+
+.booking-detail__actions {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.booking-detail__actions > * {
+  width: 100%;
+}
+
+.booking-detail__actions > a:first-child {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--text-on-accent);
+}
+
+.booking-detail__actions .booking-detail__document,
+.booking-detail__actions button {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
 }
 
 .checklist-panel {

@@ -10,7 +10,7 @@ const bookings: BookingView[] = [
   {
     id: "flight", tripId: "sydney", version: 1, updatedAt: "2026-07-01T00:00:00", updatedBy: "minji",
     placeId: null, bookingType: "flight", provider: "대한항공 KE401", startsAt: "2026-07-29T18:05:00",
-    endsAt: null, reservationCode: null, paymentStatus: "paid", externalUrl: null, documentUrl: null,
+    endsAt: null, reservationCode: "KE-PRIVATE", paymentStatus: "paid", externalUrl: null, documentUrl: null,
     memo: "", isFixed: true, isRequired: true
   },
   {
@@ -53,6 +53,18 @@ describe("protected bookings", () => {
     expect(screen.getByText("ABC12345")).toBeVisible();
     fireEvent.pointerUp(reveal);
     expect(screen.queryByText("ABC12345")).not.toBeInTheDocument();
+  });
+
+  it("opens a booking detail sheet without exposing its reservation code", async () => {
+    render(
+      <BookingsPanel bookings={bookings} experiencePhase="before" places={[]} timeZone="Australia/Sydney" />
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "체크인 · 예약 정보 보기" }));
+
+    const detail = screen.getByRole("dialog", { name: "예약 상세" });
+    expect(detail).toHaveTextContent("대한항공 KE401");
+    expect(detail).not.toHaveTextContent("KE-PRIVATE");
   });
 
   it("creates a booking without changing its reservation value", async () => {

@@ -3,9 +3,8 @@ import { Button, HStack, Icon, Text, VStack } from "@astryxdesign/core";
 import type { BookingView } from "../../../data/contracts";
 import type { ExperiencePhase } from "../../../domain/tripPhase";
 import type { TripMutationController } from "../../../services/mutations/controller";
-import { isSafeExternalHttpsUrl } from "../../../shared/externalUrls";
 import { BookingEditorDialog } from "./BookingEditorDialog";
-import { ReservationCode } from "./ReservationCode";
+import { BookingDetailSheet } from "./BookingDetailSheet";
 
 const payments = { unpaid: "미결제", partial: "일부 결제", paid: "결제 완료", refunded: "환불" };
 const bookingTypes = {
@@ -29,9 +28,18 @@ export function BookingsPanel({
   localDate?: string;
 }) {
   const [editing, setEditing] = useState<BookingView | null | undefined>();
+  const [selected, setSelected] = useState<BookingView | null>(null);
+  const [detailReturnFocusTo, setDetailReturnFocusTo] = useState<HTMLElement | null>(null);
   const priorityBooking = selectPriorityBooking(bookings, experiencePhase, localDate);
   const remainingBookings = bookings.filter((booking) => booking.id !== priorityBooking?.id);
   const priorityCopy = priorityMessage(experiencePhase);
+  const phaseNotice = phaseMessage(experiencePhase);
+
+  function openDetail(booking: BookingView, trigger: HTMLElement) {
+    setDetailReturnFocusTo(trigger);
+    setSelected(booking);
+  }
+
   return (
     <VStack className="bookings-panel" gap={3}>
       <HStack className="bookings-panel__intro" gap={3}>
@@ -41,6 +49,7 @@ export function BookingsPanel({
         </VStack>
         <Button isDisabled={!controller} label="예약 추가" onClick={() => setEditing(null)} variant="primary" />
       </HStack>
+      {experiencePhase !== "after" ? <Text className="bookings-panel__phase-note" type="body">{phaseNotice}</Text> : null}
       {priorityBooking ? (
         <section className="booking-priority-section" aria-labelledby="booking-priority-title">
           <Text className="booking-priority-section__label" id="booking-priority-title" type="label">
@@ -58,8 +67,9 @@ export function BookingsPanel({
               <Text className="booking-card__type" type="label">{bookingTypes[priorityBooking.bookingType]}</Text>
             </HStack>
             <Text className="booking-card__priority-copy" type="body">{priorityCopy.description}</Text>
-            <ReservationCode value={priorityBooking.reservationCode} />
-            <BookingActions booking={priorityBooking} controller={controller} onEdit={() => setEditing(priorityBooking)} primary />
+            <button className="booking-card__primary-action" onClick={(event) => openDetail(priorityBooking, event.currentTarget)} type="button">
+              {priorityActionLabel(priorityBooking)}
+            </button>
           </article>
         </section>
       ) : null}
@@ -70,19 +80,17 @@ export function BookingsPanel({
           </Text>
           <ul className="booking-list booking-list--compact">
             {remainingBookings.map((booking) => (
-          <li key={booking.id}>
-            <article className="booking-card">
-              <HStack className="booking-card__heading" gap={2}>
-                <VStack gap={1}>
-                  <h4>{booking.provider}</h4>
-                  <p><time>{formatDateTime(booking.startsAt)}</time> · {payments[booking.paymentStatus]}</p>
-                </VStack>
-                <Text className="booking-card__type" type="label">{bookingTypes[booking.bookingType]}</Text>
-              </HStack>
-              <ReservationCode value={booking.reservationCode} />
-              <BookingActions booking={booking} controller={controller} onEdit={() => setEditing(booking)} />
-            </article>
-          </li>
+              <li key={booking.id}>
+                <button className="booking-list__item" onClick={(event) => openDetail(booking, event.currentTarget)} type="button">
+                  <span className="booking-list__icon"><Icon icon={bookingIcon()} size="sm" /></span>
+                  <span className="booking-list__copy">
+                    <strong>{booking.provider}</strong>
+                    <span><time>{formatDateTime(booking.startsAt)}</time> · {payments[booking.paymentStatus]}</span>
+                  </span>
+                  <span className="booking-card__type">{bookingTypes[booking.bookingType]}</span>
+                  <span className="booking-list__chevron" aria-hidden="true">›</span>
+                </button>
+              </li>
             ))}
           </ul>
         </section>
@@ -94,27 +102,16 @@ export function BookingsPanel({
         </VStack>
       ) : null}
       {editing !== undefined && controller ? <BookingEditorDialog booking={editing} controller={controller} onClose={() => setEditing(undefined)} places={places} timeZone={timeZone} /> : null}
+      {selected ? (
+        <BookingDetailSheet
+          booking={selected}
+          onClose={() => setSelected(null)}
+          onEdit={controller ? () => { setSelected(null); setEditing(selected); } : undefined}
+          placeName={places.find((place) => place.id === selected.placeId)?.name}
+          returnFocusTo={detailReturnFocusTo}
+        />
+      ) : null}
     </VStack>
-  );
-}
-
-function BookingActions({
-  booking,
-  controller,
-  onEdit,
-  primary = false
-}: {
-  booking: BookingView;
-  controller?: TripMutationController;
-  onEdit: () => void;
-  primary?: boolean;
-}) {
-  return (
-    <HStack className="booking-card__actions" gap={2}>
-      {isSafeExternalHttpsUrl(booking.externalUrl) ? <a className={primary ? "booking-card__primary-action" : undefined} href={booking.externalUrl} rel="noreferrer noopener" target="_blank">예약 정보 보기</a> : null}
-      {isSafeExternalHttpsUrl(booking.documentUrl) ? <a href={booking.documentUrl} rel="noreferrer noopener" target="_blank">문서 열기</a> : null}
-      {controller ? <Button label="수정" onClick={onEdit} size="sm" variant="secondary" /> : null}
-    </HStack>
   );
 }
 
@@ -135,6 +132,17 @@ function priorityMessage(phase: ExperiencePhase): { label: string; description: 
     return { label: "지금 확인할 예약", description: "오늘의 바우처와 체크인 정보를 바로 확인하세요." };
   }
   return { label: "출발 전 확인할 예약", description: "출발 전에 예약 정보와 필요한 준비물을 확인하세요." };
+}
+
+function phaseMessage(phase: ExperiencePhase): string {
+  if (phase === "during") return "여행 중에는 오늘의 바우처와 체크인 정보를 먼저 확인하세요.";
+  return "출발 전에는 예약 번호와 필요한 문서를 한곳에서 확인하세요.";
+}
+
+function priorityActionLabel(booking: BookingView): string {
+  if (booking.bookingType === "flight") return "체크인 · 예약 정보 보기";
+  if (booking.bookingType === "lodging") return "체크인 · 예약 정보 보기";
+  return "예약 정보 보기";
 }
 
 function bookingIcon(): "calendar" {
