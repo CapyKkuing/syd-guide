@@ -62,6 +62,7 @@ export interface MutationPayloadMap {
   };
   check_item: {
     phase: "pretrip" | "travel";
+    category?: "essential" | "reservation" | "packing" | "travel";
     scope: "shared" | "personal";
     ownerMemberId: string | null;
     assigneeMemberId: string | null;

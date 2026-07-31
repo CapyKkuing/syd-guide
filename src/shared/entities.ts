@@ -121,8 +121,11 @@ export interface Booking extends VersionedEntity {
   isRequired: boolean;
 }
 
+export type CheckItemCategory = "essential" | "reservation" | "packing" | "travel";
+
 export interface CheckItem extends VersionedEntity {
   phase: "pretrip" | "travel";
+  category: CheckItemCategory;
   scope: "shared" | "personal";
   ownerMemberId: string | null;
   assigneeMemberId: string | null;

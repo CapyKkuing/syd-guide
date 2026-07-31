@@ -6,9 +6,11 @@ import type { TripMutationController } from "../../../services/mutations/control
 
 type ScopeFilter = "all" | CheckItemView["scope"];
 
-const phaseSections = [
-  { id: "pretrip", title: "출발 전 준비", description: "여권과 필수 준비물을 출발 전에 확인하세요." },
-  { id: "travel", title: "여행 중 할 일", description: "현지에서 챙기거나 처리할 일을 모아두세요." }
+const categorySections = [
+  { id: "essential", title: "필수 준비", description: "여권, 보험, 입국 준비를 확인하세요." },
+  { id: "reservation", title: "예약·바우처", description: "항공, 숙소, 이용권 정보를 모아두세요." },
+  { id: "packing", title: "개인 짐", description: "통신과 개인 준비물을 챙기세요." },
+  { id: "travel", title: "여행 중", description: "현지에서 처리할 일을 정리하세요." }
 ] as const;
 
 export function ChecklistPanel({
@@ -23,7 +25,7 @@ export function ChecklistPanel({
   viewerMemberId: string;
 }) {
   const [filter, setFilter] = useState<ScopeFilter>("all");
-  const [phase, setPhase] = useState<CheckItemView["phase"]>("pretrip");
+  const [category, setCategory] = useState<CheckItemView["category"]>("essential");
   const [scope, setScope] = useState<CheckItemView["scope"]>("shared");
   const [title, setTitle] = useState("");
   const [quantity, setQuantity] = useState("1");
@@ -40,15 +42,16 @@ export function ChecklistPanel({
     [members]
   );
   const doneCount = items.filter((item) => item.isDone).length;
-  const passportItems = items.filter((item) => item.requirementKind === "passport");
-  const essentialItems = items.filter((item) => item.requirementKind === "essential");
+  const essentialItems = items.filter((item) => item.category === "essential");
+  const reservationItems = items.filter((item) => item.category === "reservation");
 
   async function create(event: FormEvent) {
     event.preventDefault();
     if (!controller) return;
     try {
       await controller.submit("check_item", "create", crypto.randomUUID(), null, {
-        phase,
+        phase: category === "travel" ? "travel" : "pretrip",
+        category,
         scope,
         ownerMemberId: scope === "personal" ? viewerMemberId : null,
         assigneeMemberId: assigneeMemberId || null,
@@ -70,6 +73,7 @@ export function ChecklistPanel({
     if (!controller) return;
     await controller.submit("check_item", "update", item.id, item.version, {
       phase: item.phase,
+      category: item.category,
       scope: item.scope,
       ownerMemberId: item.scope === "personal" ? viewerMemberId : null,
       assigneeMemberId: item.assigneeMemberId,
@@ -98,8 +102,8 @@ export function ChecklistPanel({
           <Text className="checklist-progress" type="label">{items.length ? Math.round(doneCount / items.length * 100) : 0}%</Text>
         </HStack>
         <HStack className="checklist-statuses" gap={2}>
-          <Text className="checklist-status" type="label">여권 {statusCopy(passportItems)}</Text>
           <Text className="checklist-status" type="label">필수 {statusCopy(essentialItems)}</Text>
+          <Text className="checklist-status" type="label">예약 {statusCopy(reservationItems)}</Text>
         </HStack>
       </VStack>
 
@@ -109,8 +113,8 @@ export function ChecklistPanel({
       {error ? <p role="alert">{error}</p> : null}
 
       <VStack className="checklist-groups" gap={4}>
-        {phaseSections.map((section) => {
-          const sectionItems = visibleItems.filter((item) => item.phase === section.id);
+        {categorySections.map((section) => {
+          const sectionItems = visibleItems.filter((item) => item.category === section.id);
           const sectionDone = sectionItems.filter((item) => item.isDone).length;
           return (
             <section className="checklist-section" key={section.id} aria-labelledby={`checklist-${section.id}`}>
@@ -145,8 +149,8 @@ export function ChecklistPanel({
       <details className="checklist-add-panel">
         <summary>새 체크 항목 추가</summary>
         <form className="tool-inline-form checklist-form" onSubmit={create}>
-          <label><span>언제 할 일</span><select disabled={!controller} value={phase} onChange={(event) => setPhase(event.target.value as CheckItemView["phase"])}>
-            <option value="pretrip">출발 전</option><option value="travel">여행 중</option>
+          <label><span>카테고리</span><select disabled={!controller} value={category} onChange={(event) => setCategory(event.target.value as CheckItemView["category"])}>
+            <option value="essential">필수 준비</option><option value="reservation">예약·바우처</option><option value="packing">개인 짐</option><option value="travel">여행 중</option>
           </select></label>
           <label><span>준비물 범위</span><select disabled={!controller} value={scope} onChange={(event) => setScope(event.target.value as CheckItemView["scope"])}>
             <option value="shared">함께</option><option value="personal">개인</option>

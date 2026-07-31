@@ -37,6 +37,7 @@ describe("Today home selectors", () => {
       ...base,
       id: "passport",
       phase: "pretrip",
+      category: "essential",
       scope: "shared",
       ownerMemberId: null,
       assigneeMemberId: "owner",

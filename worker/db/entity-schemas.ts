@@ -72,6 +72,7 @@ export const entitySchemas = {
   }),
   check_item: z.object({
     phase: z.enum(["pretrip", "travel"]).default("pretrip"),
+    category: z.enum(["essential", "reservation", "packing", "travel"]).default("essential"),
     scope: z.enum(["shared", "personal"]),
     ownerMemberId: nullableId,
     assigneeMemberId: nullableId,
