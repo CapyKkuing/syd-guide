@@ -12,12 +12,16 @@ export const flightStatusSchema = z.enum([
 
 const timestamp = z.iso.datetime({ offset: true });
 const optionalText = z.string().trim().max(80).nullable();
+const iataCode = z.string().trim().toUpperCase().refine(
+  (value) => value === "" || /^[A-Z]{3}$/.test(value),
+  "IATA 코드는 3자리 영문이어야 합니다.",
+);
 
 export const flightDetailsSchema = z.object({
   airline: z.string().trim().min(1).max(160),
   flightNumber: z.string().trim().toUpperCase().regex(/^[A-Z0-9][A-Z0-9 -]{1,11}$/),
   departureAirportName: z.string().trim().min(1).max(160),
-  departureIataCode: z.string().trim().toUpperCase().regex(/^[A-Z]{3}$/),
+  departureIataCode: iataCode,
   departureTimeZone: z.string().refine(isValidTimeZone),
   scheduledDepartureAt: timestamp,
   estimatedDepartureAt: timestamp.nullable(),
@@ -25,7 +29,7 @@ export const flightDetailsSchema = z.object({
   departureTerminal: optionalText,
   departureGate: optionalText,
   arrivalAirportName: z.string().trim().min(1).max(160),
-  arrivalIataCode: z.string().trim().toUpperCase().regex(/^[A-Z]{3}$/),
+  arrivalIataCode: iataCode,
   arrivalTimeZone: z.string().refine(isValidTimeZone),
   scheduledArrivalAt: timestamp,
   estimatedArrivalAt: timestamp.nullable(),
@@ -47,15 +51,11 @@ export type FlightStatus = z.infer<typeof flightStatusSchema>;
 export type FlightDetails = z.infer<typeof flightDetailsSchema>;
 
 export function effectiveDepartureAt(flight: FlightDetails): string {
-  return flight.actualDepartureAt
-    ?? flight.estimatedDepartureAt
-    ?? flight.scheduledDepartureAt;
+  return flight.scheduledDepartureAt;
 }
 
 export function effectiveArrivalAt(flight: FlightDetails): string {
-  return flight.actualArrivalAt
-    ?? flight.estimatedArrivalAt
-    ?? flight.scheduledArrivalAt;
+  return flight.scheduledArrivalAt;
 }
 
 export function deriveJourneyBoundaries(

@@ -46,10 +46,10 @@ const inbound = {
 } satisfies FlightDetails;
 
 describe("flight details", () => {
-  it("uses actual, estimated, then scheduled times for journey boundaries", () => {
+  it("uses scheduled times for journey boundaries", () => {
     expect(deriveJourneyBoundaries(outbound, inbound)).toEqual({
-      journeyStartsAt: "2026-09-09T22:30:00+09:00",
-      journeyEndsAt: "2026-09-14T20:30:00+09:00",
+      journeyStartsAt: "2026-09-09T22:00:00+09:00",
+      journeyEndsAt: "2026-09-14T20:00:00+09:00",
     });
   });
 
@@ -67,7 +67,7 @@ describe("flight details", () => {
     });
   });
 
-  it("validates airport codes, offsets, and effective time order", () => {
+  it("validates airport codes, offsets, and scheduled time order", () => {
     expect(flightDetailsSchema.safeParse(outbound).success).toBe(true);
     expect(flightDetailsSchema.safeParse({
       ...outbound,
@@ -79,7 +79,7 @@ describe("flight details", () => {
     }).success).toBe(false);
     expect(flightDetailsSchema.safeParse({
       ...outbound,
-      actualDepartureAt: "2026-09-10T10:00:00+10:00",
+      scheduledDepartureAt: "2026-09-10T10:00:00+10:00",
     }).success).toBe(false);
   });
 });

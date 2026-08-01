@@ -1,6 +1,5 @@
-import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { ComponentProps } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { FixtureTravelGuideDataSource } from "../../data/fixture/fixtureDataSource";
 import { LibraryPage } from "../../pages/library/LibraryPage";
@@ -14,7 +13,6 @@ import {
   type TripLibrarySummary,
   tripInputSchema
 } from "./api";
-import { TripForm } from "./TripForm";
 
 const tripInput: TripInput = {
   title: "시드니 여행",
@@ -87,53 +85,6 @@ function libraryClient(options: {
     trash: vi.fn<TripLibraryClient["trash"]>().mockResolvedValue(undefined),
     restore: vi.fn<TripLibraryClient["restore"]>().mockResolvedValue(activeTrip)
   };
-}
-
-async function fillFlight(
-  group: HTMLElement,
-  values: {
-    airline: string;
-    flightNumber: string;
-    departureAirport: string;
-    departureCode: string;
-    departureTimeZone: string;
-    scheduledDepartureAt: string;
-    actualDepartureAt?: string;
-    arrivalAirport: string;
-    arrivalCode: string;
-    arrivalTimeZone: string;
-    scheduledArrivalAt: string;
-    estimatedArrivalAt?: string;
-  }
-) {
-  const fields = within(group);
-  const airports = fields.getAllByLabelText("공항");
-  const codes = fields.getAllByLabelText("IATA 코드");
-  const timeZones = fields.getAllByLabelText("현지 시간대");
-  await userEvent.type(fields.getByLabelText("항공사"), values.airline);
-  await userEvent.type(fields.getByLabelText("편명"), values.flightNumber);
-  await userEvent.type(airports[0]!, values.departureAirport);
-  await userEvent.type(codes[0]!, values.departureCode);
-  await userEvent.type(timeZones[0]!, values.departureTimeZone);
-  fireEvent.change(fields.getByLabelText("예정 출발"), {
-    target: { value: values.scheduledDepartureAt }
-  });
-  if (values.actualDepartureAt) {
-    fireEvent.change(fields.getByLabelText("실제 출발"), {
-      target: { value: values.actualDepartureAt }
-    });
-  }
-  await userEvent.type(airports[1]!, values.arrivalAirport);
-  await userEvent.type(codes[1]!, values.arrivalCode);
-  await userEvent.type(timeZones[1]!, values.arrivalTimeZone);
-  fireEvent.change(fields.getByLabelText("예정 도착"), {
-    target: { value: values.scheduledArrivalAt }
-  });
-  if (values.estimatedArrivalAt) {
-    fireEvent.change(fields.getByLabelText("예상 도착"), {
-      target: { value: values.estimatedArrivalAt }
-    });
-  }
 }
 
 afterEach(() => {
@@ -331,89 +282,6 @@ describe("trip library API", () => {
 });
 
 describe("shared trip library UI", () => {
-  it("submits manually entered flights with each airport local offset", async () => {
-    const onSubmit = vi.fn<ComponentProps<typeof TripForm>["onSubmit"]>()
-      .mockResolvedValue(true);
-    const view = render(
-      <TripForm
-        submitting={false}
-        onSubmit={onSubmit}
-        onClose={vi.fn()}
-        returnFocusTo={null}
-      />
-    );
-
-    const dialog = screen.getByRole("dialog", { name: "새 여행 만들기" });
-    await userEvent.type(within(dialog).getByLabelText("여행 제목"), "시드니 여행");
-    await userEvent.type(within(dialog).getByLabelText("여행지"), "Sydney");
-    await userEvent.type(within(dialog).getByLabelText("시작일"), "2026-09-10");
-    await userEvent.type(within(dialog).getByLabelText("종료일"), "2026-09-14");
-
-    await userEvent.click(within(dialog).getByRole("button", { name: "출국편 입력" }));
-    await fillFlight(within(dialog).getByRole("group", { name: "출국편" }), {
-      airline: "대한항공",
-      flightNumber: "KE401",
-      departureAirport: "인천국제공항",
-      departureCode: "ICN",
-      departureTimeZone: "Asia/Seoul",
-      scheduledDepartureAt: "2026-09-09T22:00",
-      actualDepartureAt: "2026-09-09T22:30",
-      arrivalAirport: "시드니 공항",
-      arrivalCode: "SYD",
-      arrivalTimeZone: "Australia/Sydney",
-      scheduledArrivalAt: "2026-09-10T09:00"
-    });
-
-    await userEvent.click(within(dialog).getByRole("button", { name: "귀국편 입력" }));
-    await fillFlight(within(dialog).getByRole("group", { name: "귀국편" }), {
-      airline: "대한항공",
-      flightNumber: "KE402",
-      departureAirport: "시드니 공항",
-      departureCode: "SYD",
-      departureTimeZone: "Australia/Sydney",
-      scheduledDepartureAt: "2026-09-14T09:00",
-      arrivalAirport: "인천국제공항",
-      arrivalCode: "ICN",
-      arrivalTimeZone: "Asia/Seoul",
-      scheduledArrivalAt: "2026-09-14T20:00",
-      estimatedArrivalAt: "2026-09-14T20:30"
-    });
-
-    await userEvent.click(within(dialog).getByRole("button", { name: "여행 만들기" }));
-
-    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
-      outboundFlight: expect.objectContaining({
-        flightNumber: "KE401",
-        scheduledDepartureAt: "2026-09-09T22:00:00+09:00",
-        actualDepartureAt: "2026-09-09T22:30:00+09:00",
-        scheduledArrivalAt: "2026-09-10T09:00:00+10:00"
-      }),
-      returnFlight: expect.objectContaining({
-        flightNumber: "KE402",
-        scheduledDepartureAt: "2026-09-14T09:00:00+10:00",
-        scheduledArrivalAt: "2026-09-14T20:00:00+09:00",
-        estimatedArrivalAt: "2026-09-14T20:30:00+09:00"
-      })
-    }));
-
-    const saved = onSubmit.mock.calls[0]![0];
-    view.unmount();
-    render(
-      <TripForm
-        trip={summary({ ...saved })}
-        submitting={false}
-        onSubmit={vi.fn().mockResolvedValue(true)}
-        onClose={vi.fn()}
-        returnFocusTo={null}
-      />
-    );
-    const reopened = screen.getByRole("dialog", { name: "여행 수정" });
-    const reopenedOutbound = within(reopened).getByRole("group", { name: "출국편" });
-    expect(within(reopenedOutbound).getByLabelText("편명")).toHaveValue("KE401");
-    expect(within(reopenedOutbound).getByLabelText("실제 출발"))
-      .toHaveValue("2026-09-09T22:30");
-  });
-
   it("groups each status and sorts cards by the latest update", async () => {
     const client = libraryClient({
       active: [

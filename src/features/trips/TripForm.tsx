@@ -207,7 +207,7 @@ export function TripForm({
         <div className="trip-form__section-heading">
           <h3>항공편</h3>
           <p>
-            실제 시각이 있으면 실제, 없으면 예상, 예정 순서로 여행 시작·종료를 계산합니다.
+            출국편 예정 출발과 귀국편 예정 도착을 여행 시작·종료 기준으로 사용합니다.
           </p>
         </div>
         {input.outboundFlight ? (

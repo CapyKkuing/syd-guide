@@ -7,16 +7,12 @@ export interface FlightDraft {
   departureIataCode: string;
   departureTimeZone: string;
   scheduledDepartureAt: string;
-  estimatedDepartureAt: string;
-  actualDepartureAt: string;
   departureTerminal: string;
   departureGate: string;
   arrivalAirportName: string;
   arrivalIataCode: string;
   arrivalTimeZone: string;
   scheduledArrivalAt: string;
-  estimatedArrivalAt: string;
-  actualArrivalAt: string;
   arrivalTerminal: string;
   arrivalGate: string;
   status: FlightStatus;
@@ -30,16 +26,12 @@ export function emptyFlightDraft(): FlightDraft {
     departureIataCode: "",
     departureTimeZone: "",
     scheduledDepartureAt: "",
-    estimatedDepartureAt: "",
-    actualDepartureAt: "",
     departureTerminal: "",
     departureGate: "",
     arrivalAirportName: "",
     arrivalIataCode: "",
     arrivalTimeZone: "",
     scheduledArrivalAt: "",
-    estimatedArrivalAt: "",
-    actualArrivalAt: "",
     arrivalTerminal: "",
     arrivalGate: "",
     status: "scheduled",
@@ -48,17 +40,21 @@ export function emptyFlightDraft(): FlightDraft {
 
 export function flightDetailsToDraft(flight: FlightDetails): FlightDraft {
   return {
-    ...flight,
+    airline: flight.airline,
+    flightNumber: flight.flightNumber,
+    departureAirportName: flight.departureAirportName,
+    departureIataCode: flight.departureIataCode,
+    departureTimeZone: flight.departureTimeZone,
     scheduledDepartureAt: localDateTime(flight.scheduledDepartureAt),
-    estimatedDepartureAt: optionalLocalDateTime(flight.estimatedDepartureAt),
-    actualDepartureAt: optionalLocalDateTime(flight.actualDepartureAt),
     departureTerminal: flight.departureTerminal ?? "",
     departureGate: flight.departureGate ?? "",
+    arrivalAirportName: flight.arrivalAirportName,
+    arrivalIataCode: flight.arrivalIataCode,
+    arrivalTimeZone: flight.arrivalTimeZone,
     scheduledArrivalAt: localDateTime(flight.scheduledArrivalAt),
-    estimatedArrivalAt: optionalLocalDateTime(flight.estimatedArrivalAt),
-    actualArrivalAt: optionalLocalDateTime(flight.actualArrivalAt),
     arrivalTerminal: flight.arrivalTerminal ?? "",
     arrivalGate: flight.arrivalGate ?? "",
+    status: flight.status,
   };
 }
 
@@ -74,14 +70,8 @@ export function flightDraftToDetails(draft: FlightDraft): FlightDetails {
       draft.departureTimeZone,
       "예정 출발시각"
     ),
-    estimatedDepartureAt: optionalZonedDateTime(
-      draft.estimatedDepartureAt,
-      draft.departureTimeZone
-    ),
-    actualDepartureAt: optionalZonedDateTime(
-      draft.actualDepartureAt,
-      draft.departureTimeZone
-    ),
+    estimatedDepartureAt: null,
+    actualDepartureAt: null,
     departureTerminal: optionalText(draft.departureTerminal),
     departureGate: optionalText(draft.departureGate),
     arrivalAirportName: draft.arrivalAirportName.trim(),
@@ -92,14 +82,8 @@ export function flightDraftToDetails(draft: FlightDraft): FlightDetails {
       draft.arrivalTimeZone,
       "예정 도착시각"
     ),
-    estimatedArrivalAt: optionalZonedDateTime(
-      draft.estimatedArrivalAt,
-      draft.arrivalTimeZone
-    ),
-    actualArrivalAt: optionalZonedDateTime(
-      draft.actualArrivalAt,
-      draft.arrivalTimeZone
-    ),
+    estimatedArrivalAt: null,
+    actualArrivalAt: null,
     arrivalTerminal: optionalText(draft.arrivalTerminal),
     arrivalGate: optionalText(draft.arrivalGate),
     status: draft.status,
@@ -110,16 +94,8 @@ function localDateTime(value: string): string {
   return value.slice(0, 16);
 }
 
-function optionalLocalDateTime(value: string | null): string {
-  return value ? localDateTime(value) : "";
-}
-
 function optionalText(value: string): string | null {
   return value.trim() || null;
-}
-
-function optionalZonedDateTime(value: string, timeZone: string): string | null {
-  return value ? zonedDateTime(value, timeZone) : null;
 }
 
 function requiredZonedDateTime(
