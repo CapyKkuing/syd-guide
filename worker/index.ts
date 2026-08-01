@@ -6,7 +6,7 @@ const app = createApp();
 const contentSecurityPolicy = [
   "default-src 'self'",
   "base-uri 'self'",
-  "connect-src 'self' https://accounts.google.com https://www.googleapis.com https://huggingface.co https://us.aws.cdn.hf.co https://open.er-api.com https://tiles.openfreemap.org",
+  "connect-src 'self' https://accounts.google.com https://www.googleapis.com https://cdn.jsdelivr.net https://huggingface.co https://us.aws.cdn.hf.co https://open.er-api.com https://tiles.openfreemap.org",
   "font-src 'self' data:",
   "frame-ancestors 'none'",
   "frame-src https://accounts.google.com",

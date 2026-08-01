@@ -11,7 +11,7 @@ it("serves API health before static assets", async () => {
     "connect-src 'self' https://accounts.google.com https://www.googleapis.com"
   );
   expect(response.headers.get("content-security-policy")).toContain(
-    "https://huggingface.co https://us.aws.cdn.hf.co"
+    "https://cdn.jsdelivr.net https://huggingface.co https://us.aws.cdn.hf.co"
   );
   expect(response.headers.get("referrer-policy")).toBe(
     "strict-origin-when-cross-origin"
