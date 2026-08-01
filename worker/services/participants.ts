@@ -80,13 +80,19 @@ export async function setupParticipants(
     env.DB.prepare(
       "UPDATE members SET display_name = ?, is_active = 1 WHERE id = 'owner'"
     ).bind(ownerName),
-    env.DB.prepare(
-      "UPDATE members SET display_name = ?, is_active = 1 WHERE id = 'partner'"
-    ).bind(participantNames[0]),
+    env.DB.prepare("UPDATE members SET is_active = 0 WHERE id <> 'owner'"),
+    ...(participantNames[0] ? [
+      env.DB.prepare(
+        "UPDATE members SET display_name = ?, is_active = 1 WHERE id = 'partner'"
+      ).bind(participantNames[0]),
+    ] : []),
     ...participantNames.slice(1).map((name) =>
       env.DB.prepare(
         "INSERT INTO members (id, role, display_name, access_email, created_at, is_active) VALUES (?, 'partner', ?, NULL, ?, 1)"
       ).bind(crypto.randomUUID(), name, timestamp)
+    ),
+    env.DB.prepare(
+      "DELETE FROM trip_members WHERE member_id IN (SELECT id FROM members WHERE is_active = 0)"
     ),
     env.DB.prepare(
       `INSERT OR IGNORE INTO trip_members (trip_id, member_id, joined_at)

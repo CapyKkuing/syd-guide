@@ -41,6 +41,47 @@ describe("participant setup", () => {
     ).run();
   });
 
+  it("completes setup with only the owner", async () => {
+    const tripResponse = await request("/api/trips", {
+      method: "POST",
+      body: JSON.stringify({
+        title: "시드니 여행",
+        destination: "Sydney",
+        startDate: "2026-10-08",
+        endDate: "2026-10-15",
+        timeZone: "Australia/Sydney",
+        status: "upcoming",
+        coverImageUrl: null,
+      }),
+    });
+    const trip = await tripResponse.json() as { trip: { id: string } };
+
+    const response = await request("/api/admin/participants/setup", {
+      method: "POST",
+      body: JSON.stringify({ ownerName: "연준", participantNames: [] }),
+    });
+
+    expect(response.status).toBe(200);
+    const body = await response.json() as {
+      roster: {
+        setupComplete: boolean;
+        representativeMemberId: string;
+        members: Array<{ id: string; displayName: string; isActive: boolean }>;
+      };
+    };
+    expect(body.roster).toMatchObject({
+      setupComplete: true,
+      representativeMemberId: "owner",
+    });
+    expect(body.roster.members).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: "owner", displayName: "연준", isActive: true }),
+      expect.objectContaining({ id: "partner", isActive: false }),
+    ]));
+    await expect(env.DB.prepare(
+      "SELECT COUNT(*) AS count FROM trip_members WHERE trip_id = ?"
+    ).bind(trip.trip.id).first<{ count: number }>()).resolves.toMatchObject({ count: 1 });
+  });
+
   it("keeps seeded IDs while completing setup with multiple people", async () => {
     const response = await request("/api/admin/participants/setup", {
       method: "POST",

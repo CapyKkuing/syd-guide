@@ -14,7 +14,7 @@ import {
 const name = z.string().trim().min(1).max(40);
 const setupSchema = z.object({
   ownerName: name,
-  participantNames: z.array(name).min(1).max(20),
+  participantNames: z.array(name).max(20),
 });
 const addSchema = z.object({ displayName: name });
 const updateSchema = z.object({

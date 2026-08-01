@@ -31,7 +31,7 @@ function SetupScreen({
   const [ownerName, setOwnerName] = useState(
     owner?.displayName === "나" ? "" : owner?.displayName ?? ""
   );
-  const [participantNames, setParticipantNames] = useState([""]);
+  const [participantNames, setParticipantNames] = useState<string[]>([]);
   const [status, setStatus] = useState("");
   const [attempted, setAttempted] = useState(false);
   const validNames = participantNames.map((name) => name.trim()).filter(Boolean);
@@ -91,6 +91,11 @@ function SetupScreen({
               {validNames.length}명 입력됨
             </Text>
           </HStack>
+          {!participantNames.length ? (
+            <Text color="secondary" type="supporting">
+              선택 사항입니다. 나중에 기기 관리에서 추가할 수 있어요.
+            </Text>
+          ) : null}
           {participantNames.map((name, index) => (
             <HStack className="participant-person" align="end" gap={3} key={index}>
               <Avatar name={name || `참여자 ${index + 1}`} size="lg" tooltip={false} />
@@ -108,7 +113,7 @@ function SetupScreen({
                   value={name}
                 />
               </StackItem>
-              {participantNames.length > 1 ? (
+              {participantNames.length ? (
                 <Button
                   label={`${index + 1}번째 사람 삭제`}
                   onClick={() => setParticipantNames((current) =>
@@ -132,7 +137,7 @@ function SetupScreen({
       <VStack gap={2}>
         <Button
           clickAction={submit}
-          label={`${Math.max(2, validNames.length + 1)}명으로 시작하기`}
+          label={`${participantNames.length + 1}명으로 시작하기`}
           size="lg"
           variant="primary"
           width="100%"
