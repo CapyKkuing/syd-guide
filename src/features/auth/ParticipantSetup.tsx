@@ -13,11 +13,41 @@ import {
 import { useEffect, useState, type ReactNode } from "react";
 import { StatusPanel } from "../../components/StatusPanel";
 import {
+  AuthRequestError,
   getParticipantRoster,
   getPrincipal,
   setupParticipants,
   type ParticipantRoster,
 } from "./api";
+
+const sessionErrorCodes = new Set([
+  "SESSION_REQUIRED",
+  "SESSION_EXPIRED",
+  "SESSION_REVOKED",
+]);
+
+function recoveryFor(error: unknown) {
+  if (error instanceof AuthRequestError && sessionErrorCodes.has(error.code)) {
+    return {
+      kind: "session-expired" as const,
+      title: "기기 연결이 필요합니다",
+      message: "관리자에게 새 연결 링크를 요청해 이 기기를 다시 연결해 주세요.",
+    };
+  }
+  if (error instanceof AuthRequestError
+    && (error.code === "ACCESS_REQUIRED" || error.code === "ACCESS_INVALID")) {
+    return {
+      kind: "session-expired" as const,
+      title: "관리자 로그인이 필요합니다",
+      message: "관리자 페이지에서 Cloudflare Access 로그인을 다시 진행해 주세요.",
+    };
+  }
+  return {
+    kind: "error" as const,
+    title: "참여자 설정을 불러오지 못했습니다",
+    message: error instanceof Error ? error.message : "참여자 설정을 확인하지 못했습니다.",
+  };
+}
 
 function SetupScreen({
   roster,
@@ -158,10 +188,16 @@ export function ParticipantSetupGate({
   children: ReactNode;
   enabled?: boolean;
 }) {
+  const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState<
     | { status: "loading" }
     | { status: "ready"; roster: ParticipantRoster | null }
-    | { status: "error"; message: string }
+    | {
+        status: "error";
+        kind: "error" | "session-expired";
+        title: string;
+        message: string;
+      }
   >({ status: enabled ? "loading" : "ready", roster: null });
 
   useEffect(() => {
@@ -172,20 +208,30 @@ export function ParticipantSetupGate({
       if (active) setState({ status: "ready", roster });
     }).catch((error: unknown) => {
       if (active) {
-        setState({
-          status: "error",
-          message: error instanceof Error ? error.message : "참여자 설정을 확인하지 못했습니다.",
-        });
+        setState({ status: "error", ...recoveryFor(error) });
       }
     });
     return () => { active = false; };
-  }, [enabled]);
+  }, [attempt, enabled]);
 
   if (state.status === "loading") {
     return <StatusPanel kind="loading" title="참여자 설정 확인 중" description="잠시만 기다려 주세요." />;
   }
   if (state.status === "error") {
-    return <StatusPanel kind="error" title="참여자 설정을 불러오지 못했습니다" description={state.message} />;
+    return (
+      <StatusPanel
+        action={{
+          label: "다시 확인",
+          onClick: () => {
+            setState({ status: "loading" });
+            setAttempt((current) => current + 1);
+          },
+        }}
+        kind={state.kind}
+        title={state.title}
+        description={state.message}
+      />
+    );
   }
   if (state.roster && !state.roster.setupComplete) {
     return <SetupScreen roster={state.roster} onComplete={() => setState({ status: "ready", roster: null })} />;

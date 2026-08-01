@@ -82,6 +82,28 @@ describe("participant setup", () => {
     ).bind(trip.trip.id).first<{ count: number }>()).resolves.toMatchObject({ count: 1 });
   });
 
+  it("revokes devices and unused invites for members deactivated during setup", async () => {
+    await env.DB.prepare(
+      "INSERT INTO pair_invites (id, token_hash, created_by, expires_at, used_at, created_at, member_id) VALUES ('invite-used', 'used-hash', 'owner', '2026-08-01T00:10:00.000Z', '2026-08-01T00:00:00.000Z', '2026-08-01T00:00:00.000Z', 'partner'), ('invite-unused', 'unused-hash', 'owner', '2026-08-01T00:10:00.000Z', NULL, '2026-08-01T00:00:00.000Z', 'partner')"
+    ).run();
+    await env.DB.prepare(
+      "INSERT INTO device_sessions (id, member_id, invite_id, token_hash, device_name, last_seen_at, expires_at, revoked_at, created_at) VALUES ('device-partner', 'partner', 'invite-used', 'session-hash', '이전 iPhone', '2026-08-01T00:00:00.000Z', '2026-10-30T00:00:00.000Z', NULL, '2026-08-01T00:00:00.000Z')"
+    ).run();
+
+    const response = await request("/api/admin/participants/setup", {
+      method: "POST",
+      body: JSON.stringify({ ownerName: "연준", participantNames: [] }),
+    });
+
+    expect(response.status).toBe(200);
+    await expect(env.DB.prepare(
+      "SELECT revoked_at FROM device_sessions WHERE id = 'device-partner'"
+    ).first<{ revoked_at: string }>()).resolves.toEqual({ revoked_at: now.toISOString() });
+    await expect(env.DB.prepare(
+      "SELECT expires_at FROM pair_invites WHERE id = 'invite-unused'"
+    ).first<{ expires_at: string }>()).resolves.toEqual({ expires_at: now.toISOString() });
+  });
+
   it("keeps seeded IDs while completing setup with multiple people", async () => {
     const response = await request("/api/admin/participants/setup", {
       method: "POST",

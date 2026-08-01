@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { MapPlaceView } from "../../data/contracts";
 import { MapCanvas } from "./MapCanvas";
@@ -45,5 +45,63 @@ describe("MapCanvas", () => {
     await screen.findByLabelText("온라인 지도");
     view.unmount();
     expect(remove).toHaveBeenCalled();
+  });
+
+  it("numbers route markers and connects them in the received order", async () => {
+    const markers: HTMLElement[] = [];
+    const addSource = vi.fn();
+    const addLayer = vi.fn();
+    class FakeMap {
+      addControl() {}
+      addSource = addSource;
+      addLayer = addLayer;
+      once(_event: string, listener: () => void) { listener(); }
+      remove() {}
+    }
+    class FakeMarker {
+      constructor({ element }: { element: HTMLElement }) {
+        markers.push(element);
+      }
+      setLngLat() { return this; }
+      addTo() { return this; }
+    }
+    const secondPlace = {
+      ...place,
+      id: "place-two",
+      name: "Harbour Bridge",
+      latitude: -33.8523,
+      longitude: 151.2108,
+    };
+
+    render(
+      <MapCanvas
+        connectRoute
+        loader={vi.fn().mockResolvedValue({
+          Map: FakeMap,
+          Marker: FakeMarker,
+          NavigationControl: class {},
+        })}
+        numberedMarkers
+        onOpenPlace={vi.fn()}
+        places={[secondPlace, place]}
+      />
+    );
+
+    await waitFor(() => expect(markers).toHaveLength(2));
+    expect(markers.map((marker) => marker.textContent)).toEqual(["1", "2"]);
+    expect(addSource).toHaveBeenCalledWith("schedule-route", expect.objectContaining({
+      data: expect.objectContaining({
+        geometry: expect.objectContaining({
+          coordinates: [
+            [secondPlace.longitude, secondPlace.latitude],
+            [place.longitude, place.latitude],
+          ],
+        }),
+      }),
+    }));
+    expect(addLayer).toHaveBeenCalledWith(expect.objectContaining({
+      id: "schedule-route-line",
+      source: "schedule-route",
+    }));
   });
 });

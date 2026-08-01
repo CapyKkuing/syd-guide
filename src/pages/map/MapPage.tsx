@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { MapPlaceView, ScheduleDayView } from "../../data/contracts";
+import { orderScheduleItems, placesInScheduleOrder } from "../../domain/scheduleOrder";
 import type { TripMutationController } from "../../services/mutations/controller";
 import { MapCanvas, type MapLoader } from "./MapCanvas";
 import { MapPlaceSheet } from "./MapPlaceSheet";
@@ -72,13 +73,23 @@ export function MapPage({
 
   const filteredPlaces = useMemo(() => {
     const normalizedSearch = search.trim().toLocaleLowerCase();
-    return places.filter((place) => (
+    const selectedDay = dayDate === "all"
+      ? null
+      : days.find((day) => day.date === dayDate) ?? null;
+    const scheduledPlaces = selectedDay
+      ? placesInScheduleOrder(orderScheduleItems(selectedDay.items), places)
+      : [];
+    const scheduledIds = new Set(scheduledPlaces.map((place) => place.id));
+    const orderedPlaces = selectedDay
+      ? [...scheduledPlaces, ...places.filter((place) => !scheduledIds.has(place.id))]
+      : places;
+    return orderedPlaces.filter((place) => (
       (dayDate === "all" || place.dayDate === dayDate)
       && (category === "all" || place.category === category)
       && (status === "all" || place.status === status)
       && (!normalizedSearch || `${place.name} ${place.address}`.toLocaleLowerCase().includes(normalizedSearch))
     ));
-  }, [category, dayDate, places, search, status]);
+  }, [category, dayDate, days, places, search, status]);
 
   const dates = Array.from(new Set(days.map((day) => day.date)));
   const resetFilters = () => {
@@ -135,7 +146,13 @@ export function MapPage({
 
       <div className="map-page__content">
         {online ? (
-          <MapCanvas loader={mapLoader} onOpenPlace={openPlace} places={filteredPlaces} />
+          <MapCanvas
+            connectRoute={dayDate !== "all"}
+            loader={mapLoader}
+            numberedMarkers={dayDate !== "all"}
+            onOpenPlace={openPlace}
+            places={filteredPlaces}
+          />
         ) : (
           <p className="map-offline-status" role="status">오프라인 — 저장된 장소 목록을 표시합니다.</p>
         )}

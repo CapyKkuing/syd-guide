@@ -35,7 +35,7 @@ describe("SchedulePage", () => {
     );
 
     expect(screen.getByRole("button", { name: "일정 추가" })).toBeDisabled();
-    expect(screen.getByText("미리보기에서는 일정을 편집할 수 없습니다.")).toBeVisible();
+    expect(screen.getByText("미리보기에서는 일정 추가와 내용 수정만 제한됩니다.")).toBeVisible();
   });
 
   it("switches fixture schedule dates and announces the selected summary", async () => {
@@ -206,5 +206,97 @@ describe("SchedulePage", () => {
       1,
       expect.objectContaining({ title: "오페라 하우스 투어" })
     );
+  });
+
+  it("renders the saved position order instead of sorting the list by time", async () => {
+    const days = await getScheduleDays();
+    const sourceDay = days[1]!;
+    const reversedDay = {
+      ...sourceDay,
+      items: sourceDay.items.map((item, index) => ({
+        ...item,
+        position: sourceDay.items.length - index,
+      })),
+    };
+    render(<SchedulePage days={[reversedDay]} />);
+
+    await showFullSchedule();
+
+    const rows = within(screen.getByRole("list")).getAllByRole("button");
+    expect(rows[0]).toHaveTextContent(sourceDay.items[1]!.title);
+    expect(rows[1]).toHaveTextContent(sourceDay.items[0]!.title);
+  });
+
+  it("moves an item down with accessible controls and swaps persisted positions", async () => {
+    const days = await getScheduleDays();
+    const sourceDay = days[1]!;
+    const editableDay: ScheduleDayView = {
+      ...sourceDay,
+      id: "day-two",
+      items: sourceDay.items.map((item, index) => ({
+        ...item,
+        tripDayId: "day-two",
+        version: index + 1,
+        position: index + 1,
+      })),
+    };
+    const submit = vi.fn().mockResolvedValue({
+      entity: "schedule_item",
+      entityId: "updated",
+      version: 2,
+      syncVersion: 9,
+    });
+    render(
+      <SchedulePage
+        days={[editableDay]}
+        mutationController={{ submit }}
+      />
+    );
+
+    await showFullSchedule();
+    await userEvent.click(screen.getByRole("button", { name: "순서 편집" }));
+    await userEvent.click(screen.getByRole("button", {
+      name: `${editableDay.items[0]!.title} 아래로 이동`,
+    }));
+
+    expect(submit).toHaveBeenCalledTimes(2);
+    expect(submit).toHaveBeenCalledWith(
+      "schedule_item",
+      "update",
+      editableDay.items[0]!.id,
+      editableDay.items[0]!.version,
+      expect.objectContaining({ position: 2 })
+    );
+    expect(submit).toHaveBeenCalledWith(
+      "schedule_item",
+      "update",
+      editableDay.items[1]!.id,
+      editableDay.items[1]!.version,
+      expect.objectContaining({ position: 1 })
+    );
+  });
+
+  it("allows a local-only reorder preview with mobile move controls", async () => {
+    const days = await getScheduleDays();
+    const previewDay = days[1]!;
+    render(<SchedulePage days={[previewDay]} />);
+
+    await showFullSchedule();
+    await userEvent.click(screen.getByRole("button", { name: "순서 편집" }));
+
+    const firstItem = previewDay.items[0]!;
+    const secondItem = previewDay.items[1]!;
+    const moveDown = screen.getByRole("button", {
+      name: `${firstItem.title} 아래로 이동`,
+    });
+    expect(moveDown).toBeVisible();
+
+    await userEvent.click(moveDown);
+
+    const rows = within(screen.getByRole("list", { name: "일정 순서 편집" }))
+      .getAllByRole("listitem");
+    expect(rows[0]).toHaveTextContent(secondItem.title);
+    expect(rows[1]).toHaveTextContent(firstItem.title);
+    expect(screen.getByText(`${firstItem.title} 순서를 미리 바꿨습니다.`)).toBeVisible();
   });
 });

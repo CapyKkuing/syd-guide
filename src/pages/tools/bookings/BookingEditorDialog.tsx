@@ -1,23 +1,30 @@
 import { useState, type FormEvent } from "react";
 import { BottomSheet } from "../../../components/BottomSheet";
-import type { BookingView } from "../../../data/contracts";
+import type { BookingView, ScheduleItemView } from "../../../data/contracts";
 import type { MutationPayloadMap } from "../../../shared/mutations";
+import type { BookingDocument } from "../../../shared/media";
 import type { TripMutationController } from "../../../services/mutations/controller";
+import type { BookingDocumentRuntime } from "../../../services/media/bookingDocumentRuntime";
 import { isSafeExternalHttpsUrl } from "../../../shared/externalUrls";
 
 export function BookingEditorDialog({
   booking,
   controller,
+  documentRuntime,
   onClose,
   places,
+  scheduleItems = [],
   timeZone
 }: {
   booking: BookingView | null;
   controller: TripMutationController;
+  documentRuntime?: BookingDocumentRuntime;
   onClose: () => void;
   places: Array<{ id: string; name: string }>;
+  scheduleItems?: ScheduleItemView[];
   timeZone: string;
 }) {
+  const [entityId] = useState(() => booking?.id ?? crypto.randomUUID());
   const [provider, setProvider] = useState(booking?.provider ?? "");
   const [bookingType, setBookingType] = useState<MutationPayloadMap["booking"]["bookingType"]>(booking?.bookingType ?? "other");
   const [startsAt, setStartsAt] = useState(booking ? localDateTime(booking.startsAt) : "");
@@ -30,11 +37,37 @@ export function BookingEditorDialog({
   const [memo, setMemo] = useState(booking?.memo ?? "");
   const [isFixed, setIsFixed] = useState(booking?.isFixed ?? false);
   const [isRequired, setIsRequired] = useState(booking?.isRequired ?? false);
+  const linkedSchedule = scheduleItems.find((item) => item.bookingId === booking?.id);
+  const [scheduleItemId, setScheduleItemId] = useState(linkedSchedule?.id ?? "");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [removeDocument, setRemoveDocument] = useState(false);
   const [confirmation, setConfirmation] = useState<"none" | "delete" | "fixed">("none");
   const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [bookingSaved, setBookingSaved] = useState(false);
+  const scheduleCandidates = rankScheduleCandidates(
+    scheduleItems,
+    startsAt,
+    provider,
+    placeId,
+    linkedSchedule?.id
+  );
 
   async function submit(event: FormEvent) {
     event.preventDefault();
+    setBusy(true);
+    setError("");
+    let uploadedDocument: BookingDocument | null = null;
+    let documentFile = removeDocument ? null : booking?.documentFile ?? null;
+    let didSaveBooking = false;
+    try {
+      if (selectedFile) {
+        if (!documentRuntime) {
+          throw new Error("Google Drive 예약 파일 기능을 사용할 수 없습니다.");
+        }
+        uploadedDocument = await documentRuntime.upload(selectedFile);
+        documentFile = uploadedDocument;
+      }
     const payload: MutationPayloadMap["booking"] = {
       placeId: placeId || null,
       bookingType,
@@ -45,15 +78,61 @@ export function BookingEditorDialog({
       paymentStatus,
       externalUrl: safeUrl(externalUrl),
       documentUrl: safeUrl(documentUrl),
+      documentFile,
       memo: memo.trim(),
       isFixed,
       isRequired
     };
-    try {
-      await controller.submit("booking", booking ? "update" : "create", booking?.id ?? crypto.randomUUID(), booking?.version ?? null, payload);
+      await controller.submit(
+        "booking",
+        booking ? "update" : "create",
+        entityId,
+        booking?.version ?? null,
+        payload
+      );
+      didSaveBooking = true;
+      setBookingSaved(true);
+      const previousDocument = booking?.documentFile ?? null;
+      if (
+        previousDocument
+        && previousDocument.providerObjectId !== documentFile?.providerObjectId
+        && documentRuntime
+      ) {
+        await documentRuntime.remove(previousDocument).catch(() => undefined);
+      }
+      await updateScheduleLink(entityId);
       onClose();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "예약을 저장하지 못했습니다.");
+      if (!didSaveBooking && uploadedDocument && documentRuntime) {
+        await documentRuntime.remove(uploadedDocument).catch(() => undefined);
+      }
+      setError(didSaveBooking
+        ? "예약은 저장됐지만 일정 연결에 실패했습니다. 창을 닫고 예약을 다시 열어 연결해 주세요."
+        : caught instanceof Error ? caught.message : "예약을 저장하지 못했습니다.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function updateScheduleLink(bookingId: string) {
+    const selected = scheduleItems.find((item) => item.id === scheduleItemId);
+    if (selected && selected.id !== linkedSchedule?.id) {
+      await controller.submit(
+        "schedule_item",
+        "update",
+        selected.id,
+        selected.version,
+        schedulePayload(selected, bookingId)
+      );
+    }
+    if (linkedSchedule && linkedSchedule.id !== selected?.id) {
+      await controller.submit(
+        "schedule_item",
+        "update",
+        linkedSchedule.id,
+        linkedSchedule.version,
+        schedulePayload(linkedSchedule, null)
+      );
     }
   }
 
@@ -61,6 +140,9 @@ export function BookingEditorDialog({
     if (!booking) return;
     try {
       await controller.submit("booking", "delete", booking.id, booking.version, null);
+      if (booking.documentFile && documentRuntime) {
+        await documentRuntime.remove(booking.documentFile).catch(() => undefined);
+      }
       onClose();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "예약을 삭제하지 못했습니다.");
@@ -79,6 +161,16 @@ export function BookingEditorDialog({
         <label><span>연결 장소</span><select value={placeId} onChange={(event) => setPlaceId(event.target.value)}>
           <option value="">없음</option>{places.map((place) => <option key={place.id} value={place.id}>{place.name}</option>)}
         </select></label>
+        <label>
+          <span>연결할 기존 일정</span>
+          <select aria-label="연결할 기존 일정" value={scheduleItemId} onChange={(event) => setScheduleItemId(event.target.value)}>
+            <option value="">연결하지 않음</option>
+            {scheduleCandidates.map((item) => (
+              <option key={item.id} value={item.id}>{scheduleLabel(item)}</option>
+            ))}
+          </select>
+          <small>비슷한 날짜와 장소 순서로 보여줍니다. 직접 선택할 때만 연결합니다.</small>
+        </label>
         <label><span>시작 일시</span><input required type="datetime-local" value={startsAt} onChange={(event) => setStartsAt(event.target.value)} /></label>
         <label><span>종료 일시</span><input type="datetime-local" value={endsAt} onChange={(event) => setEndsAt(event.target.value)} /></label>
         <label><span>결제 상태</span><select value={paymentStatus} onChange={(event) => setPaymentStatus(event.target.value as typeof paymentStatus)}>
@@ -87,6 +179,26 @@ export function BookingEditorDialog({
         <label><span>예약번호</span><input value={reservationCode} onChange={(event) => setReservationCode(event.target.value)} /></label>
         <label><span>외부 주소</span><input type="url" value={externalUrl} onChange={(event) => setExternalUrl(event.target.value)} /></label>
         <label><span>문서 주소</span><input type="url" value={documentUrl} onChange={(event) => setDocumentUrl(event.target.value)} /></label>
+        <label className="booking-document-input">
+          <span>예약 사진·PDF</span>
+          <input
+            accept="image/jpeg,image/png,image/webp,application/pdf"
+            aria-label="예약 사진·PDF"
+            disabled={!documentRuntime || busy}
+            onChange={(event) => {
+              setSelectedFile(event.currentTarget.files?.[0] ?? null);
+              setRemoveDocument(false);
+            }}
+            type="file"
+          />
+          <small>{selectedFile?.name ?? booking?.documentFile?.originalName ?? "JPG, PNG, WebP, PDF · 최대 25MB"}</small>
+        </label>
+        {booking?.documentFile && !selectedFile ? (
+          <label className="tool-editor__check">
+            <input checked={removeDocument} onChange={(event) => setRemoveDocument(event.target.checked)} type="checkbox" />
+            저장된 예약 파일 제거
+          </label>
+        ) : null}
         <label><span>메모</span><textarea value={memo} onChange={(event) => setMemo(event.target.value)} /></label>
         <label className="tool-editor__check"><input checked={isFixed} onChange={(event) => setIsFixed(event.target.checked)} type="checkbox" />고정 예약</label>
         <label className="tool-editor__check"><input checked={isRequired} onChange={(event) => setIsRequired(event.target.checked)} type="checkbox" />필수 예약</label>
@@ -95,11 +207,56 @@ export function BookingEditorDialog({
         {confirmation === "fixed" ? <div className="tool-editor__confirm"><p>고정 예약입니다. 그래도 삭제할까요?</p><button onClick={() => void remove()} type="button">고정 예약 삭제</button></div> : null}
         <div className="tool-editor__actions">
           {booking ? <button className="danger-button" onClick={() => setConfirmation("delete")} type="button">삭제</button> : null}
-          <button className="primary-button" type="submit">저장</button>
+          <button className="primary-button" disabled={busy || bookingSaved} type="submit">
+            {bookingSaved ? "예약 저장됨" : busy ? "저장 중…" : "저장"}
+          </button>
         </div>
       </form>
     </BottomSheet>
   );
+}
+
+function schedulePayload(
+  item: ScheduleItemView,
+  bookingId: string | null
+): MutationPayloadMap["schedule_item"] {
+  return {
+    tripDayId: item.tripDayId,
+    placeId: item.placeId,
+    bookingId,
+    title: item.title,
+    startsAt: item.startsAt,
+    endsAt: item.endsAt,
+    memo: item.description,
+    travelMode: item.travelMode,
+    travelNote: item.travelNote ?? "",
+    position: item.position,
+    isFixed: item.isFixed,
+    isDone: item.isDone,
+  };
+}
+
+function rankScheduleCandidates(
+  items: ScheduleItemView[],
+  startsAt: string,
+  provider: string,
+  placeId: string,
+  linkedId?: string
+): ScheduleItemView[] {
+  const targetDate = startsAt.slice(0, 10);
+  const query = provider.trim().toLocaleLowerCase();
+  return [...items].sort((left, right) => {
+    const score = (item: ScheduleItemView) =>
+      (item.id === linkedId ? 100 : 0)
+      + (targetDate && item.startsAt.startsWith(targetDate) ? 30 : 0)
+      + (placeId && item.placeId === placeId ? 20 : 0)
+      + (query && item.title.toLocaleLowerCase().includes(query) ? 10 : 0);
+    return score(right) - score(left) || left.startsAt.localeCompare(right.startsAt);
+  });
+}
+
+function scheduleLabel(item: ScheduleItemView): string {
+  return `${item.startsAt.slice(0, 16).replace("T", " ")} · ${item.title}`;
 }
 
 function localDateTime(value: string): string {

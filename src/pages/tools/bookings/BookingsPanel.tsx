@@ -1,6 +1,13 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Button, HStack, Icon, Text, VStack } from "@astryxdesign/core";
-import type { BookingView } from "../../../data/contracts";
+import type { BookingView, ScheduleItemView } from "../../../data/contracts";
+import type { MemberRole } from "../../../shared/entities";
+import type { MediaApi } from "../../../services/media/api";
+import type { MediaStorageProviderClient } from "../../../services/media/provider";
+import {
+  createBookingDocumentRuntime,
+  type BookingDocumentRuntime,
+} from "../../../services/media/bookingDocumentRuntime";
 import type { ExperiencePhase } from "../../../domain/tripPhase";
 import type { TripMutationController } from "../../../services/mutations/controller";
 import { BookingEditorDialog } from "./BookingEditorDialog";
@@ -15,21 +22,46 @@ const bookingTypes = {
 export function BookingsPanel({
   bookings,
   controller,
+  documentRuntime: suppliedDocumentRuntime,
   places,
+  mediaApi,
+  mediaProvider,
+  scheduleItems = [],
   timeZone,
+  tripId,
+  viewerRole,
   experiencePhase = "before",
   localDate
 }: {
   bookings: BookingView[];
   controller?: TripMutationController;
+  documentRuntime?: BookingDocumentRuntime;
   places: Array<{ id: string; name: string }>;
+  mediaApi?: MediaApi;
+  mediaProvider?: MediaStorageProviderClient;
+  scheduleItems?: ScheduleItemView[];
   timeZone: string;
+  tripId?: string;
+  viewerRole?: MemberRole;
   experiencePhase?: ExperiencePhase;
   localDate?: string;
 }) {
   const [editing, setEditing] = useState<BookingView | null | undefined>();
   const [selected, setSelected] = useState<BookingView | null>(null);
   const [detailReturnFocusTo, setDetailReturnFocusTo] = useState<HTMLElement | null>(null);
+  const documentRuntime = useMemo(
+    () => suppliedDocumentRuntime ?? (
+      mediaApi && mediaProvider && tripId && viewerRole
+        ? createBookingDocumentRuntime({
+          api: mediaApi,
+          provider: mediaProvider,
+          tripId,
+          viewerRole,
+        })
+        : undefined
+    ),
+    [mediaApi, mediaProvider, suppliedDocumentRuntime, tripId, viewerRole]
+  );
   const priorityBooking = selectPriorityBooking(bookings, experiencePhase, localDate);
   const remainingBookings = bookings.filter((booking) => booking.id !== priorityBooking?.id);
   const priorityCopy = priorityMessage(experiencePhase);
@@ -101,10 +133,11 @@ export function BookingsPanel({
           <Text type="body">미리 예약한 항공권, 호텔, 이용권을 추가해 두세요.</Text>
         </VStack>
       ) : null}
-      {editing !== undefined && controller ? <BookingEditorDialog booking={editing} controller={controller} onClose={() => setEditing(undefined)} places={places} timeZone={timeZone} /> : null}
+      {editing !== undefined && controller ? <BookingEditorDialog booking={editing} controller={controller} documentRuntime={documentRuntime} onClose={() => setEditing(undefined)} places={places} scheduleItems={scheduleItems} timeZone={timeZone} /> : null}
       {selected ? (
         <BookingDetailSheet
           booking={selected}
+          documentRuntime={documentRuntime}
           onClose={() => setSelected(null)}
           onEdit={controller ? () => { setSelected(null); setEditing(selected); } : undefined}
           placeName={places.find((place) => place.id === selected.placeId)?.name}

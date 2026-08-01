@@ -92,6 +92,12 @@ export async function setupParticipants(
       ).bind(crypto.randomUUID(), name, timestamp)
     ),
     env.DB.prepare(
+      "UPDATE device_sessions SET revoked_at = COALESCE(revoked_at, ?) WHERE member_id IN (SELECT id FROM members WHERE is_active = 0)"
+    ).bind(timestamp),
+    env.DB.prepare(
+      "UPDATE pair_invites SET expires_at = ? WHERE member_id IN (SELECT id FROM members WHERE is_active = 0) AND used_at IS NULL AND expires_at > ?"
+    ).bind(timestamp, timestamp),
+    env.DB.prepare(
       "DELETE FROM trip_members WHERE member_id IN (SELECT id FROM members WHERE is_active = 0)"
     ),
     env.DB.prepare(

@@ -131,6 +131,13 @@ function formatCountdown(minutes: number): string {
   return `${hours}시간 ${remainingMinutes}분 후`;
 }
 
+const fixturePlaceIds: Record<string, string> = {
+  "Meriton Sussex Street": "meriton-sussex-street",
+  "Sydney Opera House": "sydney-opera-house",
+  "Sample Coffee": "sample-coffee",
+  Quay: "quay",
+};
+
 function makeScheduleItem(
   id: string,
   date: string,
@@ -149,7 +156,7 @@ function makeScheduleItem(
     id,
     version: 1,
     tripDayId: `preview-${date}`,
-    placeId: null,
+    placeId: fixturePlaceIds[place] ?? null,
     bookingId: null,
     bookingProvider: null,
     updatedAt: `${date}T${startsAt}:00`,

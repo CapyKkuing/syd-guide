@@ -258,6 +258,65 @@
   background: var(--surface);
 }
 
+.schedule-reorder-list {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.schedule-reorder-item {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  cursor: grab;
+  touch-action: pan-y;
+}
+
+.schedule-reorder-item:active {
+  cursor: grabbing;
+}
+
+.schedule-reorder-item[data-dragging="true"] {
+  border-color: var(--accent);
+  opacity: 0.68;
+}
+
+.schedule-reorder-item > .astryx-stack {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+}
+
+.schedule-reorder-item__number {
+  display: inline-flex;
+  min-width: var(--space-5);
+  justify-content: center;
+  color: var(--accent-strong);
+}
+
+.schedule-reorder-item__copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.schedule-reorder-item__copy .astryx-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.schedule-reorder-status {
+  min-height: 1em;
+  margin: 0;
+  color: var(--accent-strong);
+  font-size: var(--text-sm);
+}
+
+.schedule-reorder-status.is-error {
+  color: var(--danger);
+}
+
 .schedule-page__header {
   justify-content: space-between;
 }

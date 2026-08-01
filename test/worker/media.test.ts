@@ -151,4 +151,53 @@ describe("private trip media API", () => {
       error: { code: "MEDIA_STORAGE_OWNER_REQUIRED" },
     });
   });
+
+  it("stores a separate booking document folder for Reservations/trip-id", async () => {
+    const trip = await createTrip();
+
+    const empty = await request(
+      "owner",
+      `/api/trips/${trip.id}/media/booking-storage`,
+      { headers: headers("owner") }
+    );
+    await expect(empty.json()).resolves.toEqual({ storage: null });
+
+    const saved = await request(
+      "owner",
+      `/api/trips/${trip.id}/media/booking-storage`,
+      {
+        method: "PUT",
+        headers: headers("owner", true),
+        body: JSON.stringify({
+          provider: "google-drive",
+          rootObjectId: "booking_folder_12345",
+        }),
+      }
+    );
+    expect(saved.status).toBe(200);
+    await expect(saved.json()).resolves.toMatchObject({
+      storage: {
+        tripId: trip.id,
+        provider: "google-drive",
+        rootObjectId: "booking_folder_12345",
+      },
+    });
+
+    const partnerOverwrite = await request(
+      "partner",
+      `/api/trips/${trip.id}/media/booking-storage`,
+      {
+        method: "PUT",
+        headers: headers("partner", true),
+        body: JSON.stringify({
+          provider: "google-drive",
+          rootObjectId: "partner_folder_12345",
+        }),
+      }
+    );
+    expect(partnerOverwrite.status).toBe(403);
+    await expect(partnerOverwrite.json()).resolves.toMatchObject({
+      error: { code: "BOOKING_STORAGE_OWNER_REQUIRED" },
+    });
+  });
 });

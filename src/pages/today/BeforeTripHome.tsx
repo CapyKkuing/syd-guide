@@ -1,4 +1,4 @@
-import { pathForLibrary, pathForTrip } from "../../app/router";
+import { pathForLibrary, pathForTool } from "../../app/router";
 import { AppLink } from "../../components/AppLink";
 import { ExpensePanel } from "./ExpensePanel";
 import { selectUrgentGaps } from "./homeSelectors";
@@ -42,14 +42,14 @@ export function BeforeTripHome({
             <p className="today-section-heading__eyebrow">PREPARATION</p>
             <h2 id="urgent-gaps-title">지금 확인할 준비</h2>
           </div>
-          <AppLink className="secondary-button" href={`${pathForTrip(trip.id, "tools")}#checklist`}>전체 준비 보기</AppLink>
+          <AppLink className="secondary-button" href={pathForTool(trip.id, "checklist")}>전체 준비 보기</AppLink>
         </div>
         {gaps.length ? (
           <ol className="urgent-gap-list">
             {gaps.map((gap) => (
               <li key={gap.kind}>
                 <div><strong>{gap.label}</strong><p>{gap.description}</p></div>
-                <AppLink href={gap.target === "trip" ? pathForLibrary() : `${pathForTrip(trip.id, "tools")}#${gap.target}`}>
+                <AppLink href={gap.target === "trip" ? pathForLibrary() : pathForTool(trip.id, gap.target)}>
                   확인
                 </AppLink>
               </li>

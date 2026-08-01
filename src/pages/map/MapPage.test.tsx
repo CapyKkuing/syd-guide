@@ -79,6 +79,35 @@ describe("MapPage", () => {
     expect(screen.getByRole("button", { name: /Sydney Opera House, 관광, 저장/ })).toBeVisible();
   });
 
+  it("uses the saved schedule position for a selected day's map and place list order", async () => {
+    const { places, days } = await getMapFixtures();
+    const sourceDay = days.find((day) => day.date === "2026-07-28");
+    if (!sourceDay) throw new Error("route day missing");
+    const routePlaces = places.slice(0, 2).map((place) => ({
+      ...place,
+      dayDate: sourceDay.date,
+    }));
+    if (routePlaces.length < 2 || sourceDay.items.length < 2) {
+      throw new Error("route fixtures missing");
+    }
+    const reorderedDay = {
+      ...sourceDay,
+      items: sourceDay.items.slice(0, 2).map((item, index) => ({
+        ...item,
+        placeId: routePlaces[index]!.id,
+        position: 2 - index,
+      })),
+    };
+    render(<MapPage places={routePlaces} days={[reorderedDay]} />);
+
+    await userEvent.click(screen.getByRole("button", { name: reorderedDay.date }));
+
+    const cards = within(screen.getByRole("list", { name: "장소 목록" }))
+      .getAllByRole("button");
+    expect(cards[0]).toHaveAccessibleName(expect.stringContaining(routePlaces[1]!.name));
+    expect(cards[1]).toHaveAccessibleName(expect.stringContaining(routePlaces[0]!.name));
+  });
+
   it("shows an online map shell and an always-present semantic list fallback", async () => {
     const { places, days } = await getMapFixtures();
     render(<MapPage places={places} days={days} />);

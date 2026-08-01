@@ -265,7 +265,7 @@ describe("TripRoutePage", () => {
     );
 
     expect(await screen.findByRole("button", { name: "일정 추가" })).toBeDisabled();
-    expect(screen.getByText("미리보기에서는 일정을 편집할 수 없습니다.")).toBeVisible();
+    expect(screen.getByText("미리보기에서는 일정 추가와 내용 수정만 제한됩니다.")).toBeVisible();
     expect(mutationTransport.mutate).not.toHaveBeenCalled();
   });
 

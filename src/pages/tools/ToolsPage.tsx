@@ -17,6 +17,8 @@ import {
 import { AppLink } from "../../components/AppLink";
 import type { ToolItemView, ToolsViewModel, TripWorkspace } from "../../data/contracts";
 import type { TripMutationController } from "../../services/mutations/controller";
+import type { MediaApi } from "../../services/media/api";
+import type { MediaStorageProviderClient } from "../../services/media/provider";
 import { ActivityPanel } from "./activity/ActivityPanel";
 import { AiLauncher } from "./ai/AiLauncher";
 import { BookingsPanel } from "./bookings/BookingsPanel";
@@ -31,6 +33,8 @@ interface ToolsPageProps {
   tools: ToolsViewModel;
   deviceManagement: ReactNode;
   mutationController?: TripMutationController;
+  mediaApi?: MediaApi;
+  mediaProvider?: MediaStorageProviderClient;
   reload?: () => void;
   workspace?: TripWorkspace;
 }
@@ -110,12 +114,16 @@ function ToolLaunchCard({ item, tripId }: { item: ToolItemView; tripId: string }
 function ToolCard({
   controller,
   item,
+  mediaApi,
+  mediaProvider,
   reload,
   tools,
   workspace
 }: {
   controller?: TripMutationController;
   item: ToolItemView;
+  mediaApi?: MediaApi;
+  mediaProvider?: MediaStorageProviderClient;
   reload: () => void;
   tools: ToolsViewModel;
   workspace?: TripWorkspace;
@@ -130,8 +138,13 @@ function ToolCard({
           controller={controller}
           experiencePhase={workspace?.context.trip.experiencePhase}
           localDate={workspace?.context.localDate}
+          mediaApi={mediaApi}
+          mediaProvider={mediaProvider}
           places={tools.places}
+          scheduleItems={workspace?.schedule.days.flatMap((day) => day.items)}
           timeZone={tools.timeZone}
+          tripId={tools.tripId}
+          viewerRole={workspace?.context.viewer.role}
         />
       </article>
     );
@@ -208,6 +221,8 @@ function ToolCard({
 export function ToolsPage({
   activeToolId,
   deviceManagement,
+  mediaApi,
+  mediaProvider,
   mutationController,
   reload = () => undefined,
   tools,
@@ -243,6 +258,8 @@ export function ToolsPage({
           <ToolCard
             controller={mutationController}
             item={selectedTool}
+            mediaApi={mediaApi}
+            mediaProvider={mediaProvider}
             reload={reload}
             tools={tools}
             workspace={workspace}

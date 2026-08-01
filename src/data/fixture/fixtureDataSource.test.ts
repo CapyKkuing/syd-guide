@@ -29,6 +29,18 @@ describe("FixtureTravelGuideDataSource", () => {
     expect(tools?.groups).toHaveLength(3);
   });
 
+  it("links fixture schedule items to matching map places", async () => {
+    const dataSource = new FixtureTravelGuideDataSource(fixedClock);
+    const [schedule, mapPreview] = await Promise.all([
+      dataSource.getSchedule("sydney-2026"),
+      dataSource.getMapPreview("sydney-2026")
+    ]);
+
+    const hotel = schedule?.days[0]?.items.find((item) => item.place === "Meriton Sussex Street");
+    expect(hotel?.placeId).toBe("meriton-sussex-street");
+    expect(mapPreview?.places.some((place) => place.id === hotel?.placeId)).toBe(true);
+  });
+
   it("returns null for an unknown trip", async () => {
     const dataSource = new FixtureTravelGuideDataSource(fixedClock);
 

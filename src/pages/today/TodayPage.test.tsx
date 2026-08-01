@@ -71,6 +71,12 @@ describe("TodayPage", () => {
     expect(gaps?.[0]).toHaveTextContent("항공편 확인");
     expect(gaps?.[1]).toHaveTextContent("숙소 예약");
     expect(gaps?.[2]).toHaveTextContent("여권 확인");
+    expect(screen.getByRole("link", { name: "전체 준비 보기" }))
+      .toHaveAttribute("href", "/trip/bondi-weekend/tools/checklist");
+    expect(gaps?.[1]?.querySelector("a"))
+      .toHaveAttribute("href", "/trip/bondi-weekend/tools/bookings");
+    expect(gaps?.[2]?.querySelector("a"))
+      .toHaveAttribute("href", "/trip/bondi-weekend/tools/checklist");
   });
 
   it("submits a preparation expense through the shared mutation controller", async () => {

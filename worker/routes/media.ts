@@ -6,6 +6,8 @@ import { requirePrincipal } from "../auth/principal";
 import {
   createMedia,
   deleteMedia,
+  findBookingStorage,
+  saveBookingStorage,
   saveMediaStorage,
   selectRepresentativeMedia,
 } from "../db/media";
@@ -100,6 +102,36 @@ export function registerMediaRoutes(
     const body = await input(c.req.raw, storageInput);
     return c.json({
       storage: await saveMediaStorage(
+        c.env,
+        principal,
+        tripId,
+        body.rootObjectId,
+        dependencies.now()
+      ),
+    });
+  });
+
+  app.get("/api/trips/:id/media/booking-storage", async (c) => {
+    const principal = await requirePrincipal(c, dependencies);
+    const tripId = c.req.param("id");
+    await tripForMember(c.env, tripId, principal.memberId);
+    return c.json({ storage: await findBookingStorage(c.env, tripId) });
+  });
+
+  app.put("/api/trips/:id/media/booking-storage", async (c) => {
+    const principal = await requirePrincipal(c, dependencies);
+    const tripId = c.req.param("id");
+    await tripForMember(c.env, tripId, principal.memberId);
+    if (principal.role !== "owner") {
+      throw new MediaError(
+        403,
+        "BOOKING_STORAGE_OWNER_REQUIRED",
+        "예약 파일 폴더 연결은 여행 대표자만 할 수 있습니다."
+      );
+    }
+    const body = await input(c.req.raw, storageInput);
+    return c.json({
+      storage: await saveBookingStorage(
         c.env,
         principal,
         tripId,

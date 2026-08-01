@@ -5,6 +5,7 @@ import type {
   PlaceStatus,
   VoteChoice,
 } from "./entities";
+import type { BookingDocument } from "./media";
 
 export interface MutationPayloadMap {
   trip_day: {
@@ -56,6 +57,7 @@ export interface MutationPayloadMap {
     paymentStatus: "unpaid" | "partial" | "paid" | "refunded";
     externalUrl: string | null;
     documentUrl: string | null;
+    documentFile?: BookingDocument | null;
     memo: string;
     isFixed: boolean;
     isRequired: boolean;

@@ -24,11 +24,15 @@ const defaultLoader: MapLoader = async () => {
 };
 
 export function MapCanvas({
+  connectRoute = false,
   loader = defaultLoader,
+  numberedMarkers = false,
   onOpenPlace,
   places
 }: {
+  connectRoute?: boolean;
   loader?: MapLoader;
+  numberedMarkers?: boolean;
   onOpenPlace: Dispatch<MapOpenRequest>;
   places: MapPlaceView[];
 }) {
@@ -68,17 +72,52 @@ export function MapCanvas({
       });
       map = createdMap;
       createdMap.addControl(new runtime.NavigationControl());
-      for (const place of located) {
+      if (connectRoute && located.length > 1) {
+        createdMap.once("load", () => {
+          if (!active || !container.current) return;
+          const routeColor = getComputedStyle(container.current)
+            .getPropertyValue("--accent")
+            .trim() || getComputedStyle(container.current).color;
+          createdMap.addSource("schedule-route", {
+            type: "geojson",
+            data: {
+              type: "Feature",
+              properties: {},
+              geometry: {
+                type: "LineString",
+                coordinates: located.map((place) => [place.longitude!, place.latitude!]),
+              },
+            },
+          });
+          createdMap.addLayer({
+            id: "schedule-route-line",
+            type: "line",
+            source: "schedule-route",
+            layout: {
+              "line-cap": "round",
+              "line-join": "round",
+            },
+            paint: {
+              "line-color": routeColor,
+              "line-opacity": 0.72,
+              "line-width": 4,
+            },
+          });
+        });
+      }
+      located.forEach((place, index) => {
         const marker = document.createElement("button");
         marker.type = "button";
         marker.className = "maplibre-place-marker";
-        marker.ariaLabel = `${place.name} 상세 보기`;
-        marker.textContent = place.name.slice(0, 1);
+        marker.ariaLabel = numberedMarkers
+          ? `${index + 1}번 ${place.name} 상세 보기`
+          : `${place.name} 상세 보기`;
+        marker.textContent = numberedMarkers ? String(index + 1) : place.name.slice(0, 1);
         marker.addEventListener("click", () => onOpenPlace({ place, opener: marker }));
         new runtime.Marker({ element: marker })
           .setLngLat([place.longitude!, place.latitude!])
           .addTo(createdMap);
-      }
+      });
       failed.current = false;
       setStatus("ready");
     }).catch(() => {
@@ -94,7 +133,7 @@ export function MapCanvas({
         map = null;
       }
     };
-  }, [attempt, loader, onOpenPlace, places]);
+  }, [attempt, connectRoute, loader, numberedMarkers, onOpenPlace, places]);
 
   return (
     <div className="map-canvas-shell">

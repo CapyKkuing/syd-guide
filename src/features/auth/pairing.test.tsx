@@ -161,6 +161,33 @@ describe("device pairing UI", () => {
     );
   });
 
+  it("shows an inactive participant device as disconnected", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        Response.json({
+          devices: [{
+            id: "device-inactive",
+            memberId: "partner",
+            memberName: "이전 참여자",
+            memberActive: false,
+            deviceName: "이전 iPhone",
+            lastSeenAt: "2026-07-27T00:00:00.000Z",
+            expiresAt: "2026-10-25T00:00:00.000Z",
+            revokedAt: null,
+            createdAt: "2026-07-27T00:00:00.000Z",
+          }],
+        })
+      )
+    );
+
+    render(<DeviceList />);
+
+    expect(await screen.findByText("연결 해제됨")).toBeVisible();
+    expect(screen.getByRole("button", { name: "기록 삭제" })).toBeVisible();
+    expect(screen.queryByRole("button", { name: "연결 해제" })).not.toBeInTheDocument();
+  });
+
   it("hides device administration from a partner", async () => {
     vi.stubGlobal(
       "fetch",

@@ -61,6 +61,8 @@ function setup(clientId: string | null = "test-client-id") {
       provider: "google-drive",
       clientId,
     }),
+    getBookingStorage: vi.fn().mockResolvedValue(null),
+    saveBookingStorage: vi.fn(),
     saveStorage: vi.fn().mockResolvedValue(storage),
     register: vi.fn().mockResolvedValue(savedMedia),
     selectRepresentative: vi.fn().mockResolvedValue(undefined),

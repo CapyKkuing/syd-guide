@@ -123,6 +123,7 @@ describe("one-time device pairing", () => {
     expect(body.devices[0]).toMatchObject({
       deviceName: "Galaxy",
       memberId: "partner",
+      memberActive: true,
       revokedAt: null,
     });
     expect(body.devices[0]).not.toHaveProperty("tokenHash");
@@ -216,6 +217,36 @@ describe("one-time device pairing", () => {
     await expect(env.DB.prepare(
       "SELECT COUNT(*) AS count FROM device_sessions"
     ).first<{ count: number }>()).resolves.toEqual({ count: 1 });
+  });
+
+  it("treats an inactive participant device as disconnected and deletable", async () => {
+    const invite = await issueInvite();
+    await claimInvite(invite.token, "이전 iPhone");
+    await env.DB.prepare("UPDATE members SET is_active = 0 WHERE id = 'partner'").run();
+
+    const list = await app.request(
+      "http://localhost/api/admin/devices",
+      { headers: { "X-Dev-Principal": "owner" } },
+      bindings("admin")
+    );
+    const body = await list.json() as {
+      devices: Array<{ id: string; memberActive: boolean; revokedAt: string | null }>;
+    };
+    expect(body.devices[0]).toMatchObject({ memberActive: false, revokedAt: null });
+
+    const removed = await app.request(
+      `http://localhost/api/admin/devices/${body.devices[0]?.id}/permanent`,
+      {
+        method: "DELETE",
+        headers: {
+          Origin: "http://localhost",
+          "X-Dev-Principal": "owner",
+        },
+      },
+      bindings("admin")
+    );
+
+    expect(removed.status).toBe(204);
   });
 
   it("does not allow a partner to use owner device APIs", async () => {

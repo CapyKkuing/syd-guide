@@ -171,6 +171,8 @@ export function TripRoutePage({
                   : "읽기 전용 미리보기에서는 기기를 관리할 수 없습니다."}
               </p>}
             mutationController={mutationController}
+            mediaApi={hasVerifiedIdentity ? mediaApi : undefined}
+            mediaProvider={mediaProvider}
             reload={workspace.reload}
             tools={workspace.data.tools}
             workspace={workspace.data}

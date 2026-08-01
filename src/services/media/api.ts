@@ -1,5 +1,9 @@
 /* eslint-disable no-unused-vars */
-import type { TripMedia, TripMediaStorage } from "../../shared/media";
+import type {
+  TripBookingStorage,
+  TripMedia,
+  TripMediaStorage,
+} from "../../shared/media";
 import { errorFromResponse } from "../api/errors";
 
 type Fetcher = typeof fetch;
@@ -23,6 +27,11 @@ export interface RegisterMediaInput {
 
 export interface MediaApi {
   getConfig(tripId: string): Promise<MediaConfig>;
+  getBookingStorage(tripId: string): Promise<TripBookingStorage | null>;
+  saveBookingStorage(
+    tripId: string,
+    rootObjectId: string
+  ): Promise<TripBookingStorage>;
   saveStorage(tripId: string, rootObjectId: string): Promise<TripMediaStorage>;
   register(tripId: string, input: RegisterMediaInput): Promise<TripMedia>;
   selectRepresentative(tripId: string, mediaId: string): Promise<void>;
@@ -43,6 +52,32 @@ export class MediaApiClient implements MediaApi {
 
   async getConfig(tripId: string): Promise<MediaConfig> {
     return this.json<MediaConfig>(tripId, "/media/config");
+  }
+
+  async getBookingStorage(tripId: string): Promise<TripBookingStorage | null> {
+    const result = await this.json<{ storage: TripBookingStorage | null }>(
+      tripId,
+      "/media/booking-storage"
+    );
+    return result.storage;
+  }
+
+  async saveBookingStorage(
+    tripId: string,
+    rootObjectId: string
+  ): Promise<TripBookingStorage> {
+    const result = await this.json<{ storage: TripBookingStorage }>(
+      tripId,
+      "/media/booking-storage",
+      {
+        method: "PUT",
+        body: JSON.stringify({
+          provider: "google-drive",
+          rootObjectId,
+        }),
+      }
+    );
+    return result.storage;
   }
 
   async saveStorage(

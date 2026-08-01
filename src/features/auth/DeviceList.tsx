@@ -78,7 +78,7 @@ export function DeviceList() {
               <span>마지막 사용 {date(device.lastSeenAt)}</span>
               <span>만료 {date(device.expiresAt)}</span>
             </div>
-            {device.revokedAt ? (
+            {device.revokedAt || device.memberActive === false ? (
               <HStack className="device-list__actions" gap={1} wrap="wrap">
                 <span className="revoked-label">연결 해제됨</span>
                 {deleteTargetId === device.id ? (

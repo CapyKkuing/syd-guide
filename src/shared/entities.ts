@@ -1,4 +1,5 @@
 import type { FlightDetails } from "./flights";
+import type { BookingDocument } from "./media";
 
 export type MemberRole = "owner" | "partner";
 export type TripStatus = "upcoming" | "active" | "completed";
@@ -116,6 +117,7 @@ export interface Booking extends VersionedEntity {
   paymentStatus: "unpaid" | "partial" | "paid" | "refunded";
   externalUrl: string | null;
   documentUrl: string | null;
+  documentFile?: BookingDocument | null;
   memo: string;
   isFixed: boolean;
   isRequired: boolean;

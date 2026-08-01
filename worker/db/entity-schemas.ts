@@ -66,6 +66,14 @@ export const entitySchemas = {
     paymentStatus: z.enum(["unpaid", "partial", "paid", "refunded"]),
     externalUrl: nullableUrl,
     documentUrl: nullableUrl,
+    documentFile: z.object({
+      provider: z.literal("google-drive"),
+      providerObjectId: idSchema,
+      originalName: z.string().trim().min(1).max(180),
+      mimeType: z.enum([
+        "image/jpeg", "image/png", "image/webp", "application/pdf",
+      ]),
+    }).nullable().default(null),
     memo: longText,
     isFixed: z.boolean(),
     isRequired: z.boolean(),

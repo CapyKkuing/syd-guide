@@ -4,6 +4,7 @@ type DeviceRow = {
   id: string;
   member_id: string;
   display_name: string;
+  member_active: number;
   device_name: string;
   last_seen_at: string;
   expires_at: string;
@@ -15,6 +16,7 @@ export interface DeviceSummary {
   id: string;
   memberId: string;
   memberName: string;
+  memberActive: boolean;
   deviceName: string;
   lastSeenAt: string;
   expiresAt: string;
@@ -24,7 +26,8 @@ export interface DeviceSummary {
 
 export async function listDevices(env: Env): Promise<DeviceSummary[]> {
   const { results } = await env.DB.prepare(
-    `SELECT d.id, d.member_id, m.display_name, d.device_name, d.last_seen_at,
+    `SELECT d.id, d.member_id, m.display_name, m.is_active AS member_active,
+            d.device_name, d.last_seen_at,
             d.expires_at, d.revoked_at, d.created_at
      FROM device_sessions d
      INNER JOIN members m ON m.id = d.member_id
@@ -34,6 +37,7 @@ export async function listDevices(env: Env): Promise<DeviceSummary[]> {
     id: row.id,
     memberId: row.member_id,
     memberName: row.display_name,
+    memberActive: row.member_active === 1,
     deviceName: row.device_name,
     lastSeenAt: row.last_seen_at,
     expiresAt: row.expires_at,
@@ -60,7 +64,11 @@ export async function deleteRevokedDevice(
   deviceId: string
 ): Promise<"deleted" | "active" | "missing"> {
   const result = await env.DB.prepare(
-    "DELETE FROM device_sessions WHERE id = ? AND revoked_at IS NOT NULL"
+    `DELETE FROM device_sessions
+     WHERE id = ? AND (
+       revoked_at IS NOT NULL
+       OR member_id IN (SELECT id FROM members WHERE is_active = 0)
+     )`
   )
     .bind(deviceId)
     .run();

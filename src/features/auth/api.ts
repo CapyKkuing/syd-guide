@@ -8,6 +8,7 @@ export interface Device {
   id: string;
   memberId: string;
   memberName: string;
+  memberActive: boolean;
   deviceName: string;
   lastSeenAt: string;
   expiresAt: string;
@@ -35,6 +36,15 @@ export interface SessionPrincipal {
   sessionId?: string;
 }
 
+export class AuthRequestError extends Error {
+  readonly code: string;
+
+  constructor(code: string, message: string) {
+    super(message);
+    this.code = code;
+  }
+}
+
 function isLocalHost() {
   return (
     window.location.hostname === "localhost" ||
@@ -54,9 +64,12 @@ function headers(admin: boolean, json = false) {
 async function ensureOk(response: Response) {
   if (response.ok) return;
   const body = (await response.json().catch(() => null)) as {
-    error?: { message?: string };
+    error?: { code?: string; message?: string };
   } | null;
-  throw new Error(body?.error?.message ?? "요청을 처리하지 못했습니다.");
+  throw new AuthRequestError(
+    body?.error?.code ?? "HTTP_ERROR",
+    body?.error?.message ?? "요청을 처리하지 못했습니다."
+  );
 }
 
 async function json<T>(response: Response): Promise<T> {

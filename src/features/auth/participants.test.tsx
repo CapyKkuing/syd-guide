@@ -28,6 +28,33 @@ const initialRoster = {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("participant first setup", () => {
+  it("shows reconnect guidance and retries an invalid device session", async () => {
+    const request = vi.fn()
+      .mockResolvedValueOnce(Response.json({
+        error: { code: "SESSION_REVOKED", message: "Device session is not valid" },
+      }, { status: 401 }))
+      .mockResolvedValueOnce(Response.json({
+        principal: { memberId: "partner", role: "partner" },
+      }));
+    vi.stubGlobal("fetch", request);
+
+    render(
+      <ParticipantSetupGate>
+        <p>여행 서재 내용</p>
+      </ParticipantSetupGate>
+    );
+
+    expect(await screen.findByRole("heading", { name: "기기 연결이 필요합니다" }))
+      .toBeVisible();
+    expect(screen.getByText(/관리자에게 새 연결 링크를 요청/)).toBeVisible();
+    expect(screen.queryByText("Device session is not valid")).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "다시 확인" }));
+
+    expect(await screen.findByText("여행 서재 내용")).toBeVisible();
+    expect(request).toHaveBeenCalledTimes(2);
+  });
+
   it("allows the administrator to start alone", async () => {
     const request = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);

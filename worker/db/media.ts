@@ -1,5 +1,9 @@
 import type { Principal } from "../../src/shared/entities";
-import type { TripMedia, TripMediaStorage } from "../../src/shared/media";
+import type {
+  TripBookingStorage,
+  TripMedia,
+  TripMediaStorage,
+} from "../../src/shared/media";
 import type { Env } from "../env";
 
 type Row = Record<string, unknown>;
@@ -44,6 +48,50 @@ export function toTripMediaStorage(row: Row): TripMediaStorage {
     connectedBy: String(row.connected_by),
     connectedAt: String(row.connected_at),
   };
+}
+
+export function toTripBookingStorage(row: Row): TripBookingStorage {
+  return {
+    tripId: String(row.trip_id),
+    provider: "google-drive",
+    rootObjectId: String(row.root_object_id),
+    connectedBy: String(row.connected_by),
+    connectedAt: String(row.connected_at),
+  };
+}
+
+export async function findBookingStorage(
+  env: Env,
+  tripId: string
+): Promise<TripBookingStorage | null> {
+  const row = await env.DB.prepare(
+    "SELECT * FROM trip_booking_storage WHERE trip_id = ?"
+  ).bind(tripId).first<Row>();
+  return row ? toTripBookingStorage(row) : null;
+}
+
+export async function saveBookingStorage(
+  env: Env,
+  principal: Principal,
+  tripId: string,
+  rootObjectId: string,
+  now: Date
+): Promise<TripBookingStorage> {
+  const timestamp = now.toISOString();
+  const row = await env.DB.prepare(
+    `INSERT INTO trip_booking_storage (
+       trip_id, provider, root_object_id, connected_by, connected_at
+     ) VALUES (?, 'google-drive', ?, ?, ?)
+     ON CONFLICT (trip_id) DO UPDATE SET
+       provider = excluded.provider,
+       root_object_id = excluded.root_object_id,
+       connected_by = excluded.connected_by,
+       connected_at = excluded.connected_at
+     RETURNING *`
+  ).bind(tripId, rootObjectId, principal.memberId, timestamp).first<Row>();
+  await touchTrip(env, tripId, principal.memberId, timestamp, false);
+  if (!row) throw new Error("Booking storage could not be saved");
+  return toTripBookingStorage(row);
 }
 
 export async function saveMediaStorage(

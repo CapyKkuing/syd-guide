@@ -66,13 +66,17 @@ export class GoogleDriveProvider implements MediaStorageProviderClient {
     });
   }
 
-  async createFolder(name: string): Promise<MediaObject> {
+  async createFolder(
+    name: string,
+    parentObjectId?: string
+  ): Promise<MediaObject> {
     return this.requestJson<MediaObject>(`${DRIVE_API}/files?fields=id`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name,
         mimeType: "application/vnd.google-apps.folder",
+        ...(parentObjectId ? { parents: [parentObjectId] } : {}),
       }),
     });
   }

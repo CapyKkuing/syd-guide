@@ -116,15 +116,19 @@ export const entityRegistry = {
     columns: [
       "place_id", "booking_type", "provider", "starts_at", "ends_at",
       "reservation_code", "payment_status", "external_url", "document_url",
-      "memo", "is_fixed", "is_required",
+      "document_provider", "document_object_id", "document_name",
+      "document_mime_type", "memo", "is_fixed", "is_required",
     ],
     payloadSchema: entitySchemas.booking,
     values: (raw) => {
       const value = raw as MutationPayloadMap["booking"];
+      const document = value.documentFile ?? null;
       return [
         value.placeId, value.bookingType, value.provider, value.startsAt,
         value.endsAt, value.reservationCode, value.paymentStatus,
-        value.externalUrl, value.documentUrl, value.memo, Number(value.isFixed),
+        value.externalUrl, value.documentUrl, document?.provider ?? null,
+        document?.providerObjectId ?? null, document?.originalName ?? null,
+        document?.mimeType ?? null, value.memo, Number(value.isFixed),
         Number(value.isRequired),
       ];
     },
@@ -140,6 +144,14 @@ export const entityRegistry = {
       paymentStatus: row.payment_status as EntityMap["booking"]["paymentStatus"],
       externalUrl: row.external_url === null ? null : String(row.external_url),
       documentUrl: row.document_url === null ? null : String(row.document_url),
+      documentFile: row.document_object_id === null ? null : {
+        provider: "google-drive",
+        providerObjectId: String(row.document_object_id),
+        originalName: String(row.document_name),
+        mimeType: row.document_mime_type as NonNullable<
+          EntityMap["booking"]["documentFile"]
+        >["mimeType"],
+      },
       memo: String(row.memo),
       isFixed: bool(row.is_fixed),
       isRequired: bool(row.is_required),
