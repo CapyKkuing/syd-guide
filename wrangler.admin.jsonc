@@ -21,7 +21,8 @@
     "APP_ORIGIN": "https://couple-travel-guide-admin.yeonuunim521.workers.dev",
     "PARTNER_ORIGIN": "https://couple-travel-guide.yeonuunim521.workers.dev",
     "ACCESS_TEAM_DOMAIN": "yeonjun-lab.cloudflareaccess.com",
-    "ACCESS_AUD": "67f4e87140de3d5043283a194d4cf5ce1a89f70aa1133f50c58b6d40d472ab6c"
+    "ACCESS_AUD": "67f4e87140de3d5043283a194d4cf5ce1a89f70aa1133f50c58b6d40d472ab6c",
+    "GOOGLE_DRIVE_CLIENT_ID": "494144169808-nr0ncu3g27063ggte39i3s1mn5i4jtkv.apps.googleusercontent.com"
   },
   "triggers": {
     "crons": ["17 3 * * *"]

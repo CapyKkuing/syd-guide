@@ -65,6 +65,11 @@ describe("ToolsPage", () => {
     ]) {
       expect(screen.getAllByRole("link", { name: `${label} 열기` })[0]).toBeVisible();
     }
+    expect(screen.getByRole("link", { name: "저장 장소 열기" })).toHaveAttribute(
+      "href",
+      "/trip/sydney-2026/map"
+    );
+    expect(screen.getByRole("link", { name: "저장 장소 열기" })).not.toHaveTextContent("준비 중");
     for (const label of ["참여자 연결", "초대·기기 관리", "테마", "오프라인·동기화 상태"]) {
       expect(screen.queryByRole("link", { name: `${label} 열기` })).not.toBeInTheDocument();
     }

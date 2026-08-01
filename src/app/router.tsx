@@ -94,6 +94,9 @@ export function parseRoute(pathname: string, baseUrl = APP_BASE_URL): Route {
       const tripId = decodeURIComponent(encodedTripId);
       if (!toolId) return { name: "trip", tripId, tab: "tools" };
       if (!isToolRouteId(toolId)) return { name: "not-found" };
+      if (toolId === "saved-places") {
+        return { name: "trip", tripId, tab: "map" };
+      }
       return { name: "trip", tripId, tab: "tools", toolId };
     } catch {
       return { name: "not-found" };
@@ -139,6 +142,9 @@ export function pathForTool(
   toolId: ToolRouteId,
   baseUrl = APP_BASE_URL
 ): string {
+  if (toolId === "saved-places") {
+    return pathForTrip(tripId, "map", baseUrl);
+  }
   return pathForApp(`/trip/${encodeURIComponent(tripId)}/tools/${toolId}`, baseUrl);
 }
 

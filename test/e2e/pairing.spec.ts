@@ -15,9 +15,10 @@ test("QR/link invite lasts ten minutes, claims once, and rejects replay", async 
   await expect(page.getByRole("heading", { name: "여행 서재" })).toBeVisible();
   await page.getByRole("button", { name: "연결 기기" }).click();
   const management = page.getByRole("dialog", { name: "연결 기기 관리" });
+  await management.getByRole("radio", { name: "민지" }).check();
   await management.getByRole("button", { name: "초대 만들기" }).click();
 
-  await expect(management.getByRole("img", { name: "파트너 연결 QR 코드" }))
+  await expect(management.getByRole("img", { name: "민지 연결 QR 코드" }))
     .toBeVisible();
   await expect(management.getByText(/남은 시간 (10:00|9:59)/)).toBeVisible();
   const inviteUrl = await management.getByLabel("초대 링크").inputValue();
@@ -102,6 +103,7 @@ test.describe("shared trip lifecycle", () => {
       const createDialog = actor.getByRole("dialog", { name: "새 여행 만들기" });
       await createDialog.getByLabel("여행 제목").fill(title);
       await createDialog.getByLabel("여행지").fill("Sydney");
+      await createDialog.getByRole("option", { name: /시드니.*Sydney/ }).click();
       await createDialog.getByLabel("시작일").fill("2026-10-08");
       await createDialog.getByLabel("종료일").fill("2026-10-15");
       await createDialog.getByRole("button", { name: "여행 만들기" }).click();

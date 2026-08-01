@@ -183,7 +183,7 @@ function toolGroups(): ToolGroupView[] {
       items: [
         { id: "restaurants", label: "맛집", description: "맛집 목록은 준비 중입니다.", status: "preview" },
         { id: "cafes", label: "카페", description: "카페 목록은 준비 중입니다.", status: "preview" },
-        { id: "saved-places", label: "저장 장소", description: "저장 장소 기능은 준비 중입니다.", status: "preview" }
+        { id: "saved-places", label: "저장 장소", description: "지도에서 저장한 장소를 확인하고 수정합니다.", status: "available" }
       ]
     },
     {

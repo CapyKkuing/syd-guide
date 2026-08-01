@@ -85,7 +85,7 @@ test("personal expenses save their payment method without a settlement control",
 
   await page.goto(`/trip/${before.trip.id}/today`);
   await page.getByRole("button", { name: "준비 비용 추가" }).click();
-  await page.getByLabel("항목").fill("개인 커피");
+  await page.getByLabel("이름").fill("개인 커피");
   await page.getByLabel("금액").fill("5");
   await page.getByLabel("개인").check();
   await page.getByLabel("개인 비용 대상").selectOption("owner");

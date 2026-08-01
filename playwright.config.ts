@@ -2,9 +2,13 @@ import { defineConfig, devices } from "@playwright/test";
 
 const baseURL = "http://localhost:4173";
 const responsiveTest = /responsive\.spec\.ts/;
+const e2eStatePath = process.env.E2E_STATE_PATH ?? `.tmp/e2e-state-${Date.now()}`;
+
+process.env.E2E_STATE_PATH = e2eStatePath;
 
 export default defineConfig({
   testDir: "./test/e2e",
+  globalSetup: "./test/e2e/global-setup.ts",
   fullyParallel: false,
   workers: 1,
   timeout: 45_000,
@@ -25,9 +29,9 @@ export default defineConfig({
   webServer: {
     command: "npm run build"
       + " && npx wrangler d1 migrations apply couple-travel-guide"
-      + " --local --persist-to .tmp/e2e-state --config wrangler.jsonc"
+      + ` --local --persist-to ${e2eStatePath} --config wrangler.jsonc`
       + " && npx wrangler dev --local --ip 127.0.0.1 --port 4173"
-      + " --persist-to .tmp/e2e-state"
+      + ` --persist-to ${e2eStatePath}`
       + " --config dist/couple_travel_guide/wrangler.json"
       + " --var SURFACE:partner"
       + " --var APP_ORIGIN:http://localhost:4173"

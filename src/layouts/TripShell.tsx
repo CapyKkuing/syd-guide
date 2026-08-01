@@ -36,8 +36,8 @@ function dayNumber(context: TripContextViewModel): string {
 
 function partnerStatusCopy(partnerStatus: TripContextViewModel["partnerStatus"]) {
   return partnerStatus === "connected"
-    ? { desktop: "참여자 등록됨", mobile: "등록됨" }
-    : { desktop: "참여자 등록 필요", mobile: "등록 필요" };
+    ? { desktop: "여러 명이 함께", mobile: "함께" }
+    : { desktop: "참여자 1명", mobile: "1명" };
 }
 
 export function TripShell({

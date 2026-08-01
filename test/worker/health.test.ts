@@ -7,6 +7,14 @@ it("serves API health before static assets", async () => {
   );
 
   expect(response.status).toBe(200);
+  expect(response.headers.get("content-security-policy")).toContain(
+    "connect-src 'self' https://accounts.google.com https://www.googleapis.com"
+  );
+  expect(response.headers.get("referrer-policy")).toBe(
+    "strict-origin-when-cross-origin"
+  );
+  expect(response.headers.get("x-content-type-options")).toBe("nosniff");
+  expect(response.headers.get("x-frame-options")).toBe("DENY");
   await expect(response.json()).resolves.toEqual({ ok: true });
 });
 

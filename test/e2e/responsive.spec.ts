@@ -45,6 +45,7 @@ test("three target viewports keep primary routes inside the viewport", async ({
   ]) {
     await page.goto(path);
     await expect(page.locator("main")).toBeVisible();
+    await page.waitForLoadState("networkidle");
     await expect(page.locator("vite-error-overlay")).toHaveCount(0);
     await expectNoHorizontalOverflow(page);
   }

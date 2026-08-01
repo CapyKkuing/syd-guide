@@ -130,8 +130,9 @@ describe("participant management", () => {
 
     render(<ParticipantManager roster={initialRoster} onChange={onChange} />);
     await userEvent.click(screen.getByRole("button", { name: "여자친구 삭제" }));
-    expect(screen.getByRole("button", { name: "여자친구 삭제 확인" })).toBeVisible();
-    await userEvent.click(screen.getByRole("button", { name: "여자친구 삭제 확인" }));
+    const confirmRemoval = await screen.findByRole("button", { name: "여자친구 삭제 확인" });
+    expect(confirmRemoval).toBeVisible();
+    await userEvent.click(confirmRemoval);
 
     await waitFor(() => expect(onChange).toHaveBeenCalledWith(updatedRoster));
     expect(request).toHaveBeenCalledWith(

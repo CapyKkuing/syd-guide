@@ -58,7 +58,7 @@ describe("TripShell", () => {
     expect(within(nav).getByRole("link", {
       name: "관리자 페이지에서 초대·기기 관리 열기"
     })).toHaveAttribute("href", "/trip/sydney-2026/tools/devices");
-    expect(screen.getByRole("status", { name: "참여자 등록됨" })).toBeVisible();
+    expect(screen.getByRole("status", { name: "여러 명이 함께" })).toBeVisible();
   });
 
   it.each(["partner-connect", "devices", "theme", "offline-sync"] as const)(
@@ -75,8 +75,8 @@ describe("TripShell", () => {
   );
 
   it.each([
-    ["connected", "참여자 등록됨", "등록됨"],
-    ["not-connected", "참여자 등록 필요", "등록 필요"]
+    ["connected", "여러 명이 함께", "함께"],
+    ["not-connected", "참여자 1명", "1명"]
   ] as const)("renders distinct desktop and mobile copy for a %s partner state", async (partnerStatus, desktopCopy, mobileCopy) => {
     await renderTripShell("today", partnerStatus);
 

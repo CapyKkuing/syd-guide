@@ -39,6 +39,14 @@ export interface WorkspaceSeed {
   tripDayId: string;
 }
 
+interface ParticipantRoster {
+  setupComplete: boolean;
+  members: Array<{
+    id: string;
+    isActive: boolean;
+  }>;
+}
+
 export interface WorkspaceOptions {
   coverImageUrl?: string | null;
   endDate?: string;
@@ -57,11 +65,44 @@ export function ownerHeaders(json = false): Record<string, string> {
   return requestHeaders("owner", json);
 }
 
+export async function ensureE2eParticipants(
+  request: APIRequestContext
+): Promise<string> {
+  let roster = await getParticipantRoster(request);
+  if (!roster.setupComplete) {
+    const response = await request.post(`${BASE_URL}/api/admin/participants/setup`, {
+      headers: ownerHeaders(true),
+      data: { ownerName: "연준", participantNames: ["민지"] }
+    });
+    if (!response.ok()) {
+      throw new Error(`E2E participant setup failed: ${response.status()}`);
+    }
+    roster = (await response.json() as { roster: ParticipantRoster }).roster;
+  }
+
+  let participant = roster.members.find((member) => member.isActive && member.id !== "owner");
+  if (!participant) {
+    const response = await request.post(`${BASE_URL}/api/admin/participants`, {
+      headers: ownerHeaders(true),
+      data: { displayName: "민지" }
+    });
+    if (!response.ok()) {
+      throw new Error(`E2E participant creation failed: ${response.status()}`);
+    }
+    roster = (await response.json() as { roster: ParticipantRoster }).roster;
+    participant = roster.members.find((member) => member.isActive && member.id !== "owner");
+  }
+  if (!participant) throw new Error("E2E participant is missing");
+  return participant.id;
+}
+
 export async function issueInvite(
   request: APIRequestContext
 ): Promise<Invite> {
+  const memberId = await ensureE2eParticipants(request);
   const response = await request.post(`${BASE_URL}/api/admin/invites`, {
-    headers: ownerHeaders()
+    headers: ownerHeaders(true),
+    data: { memberId }
   });
   expect(response.status()).toBe(201);
   return (await response.json() as { invite: Invite }).invite;
@@ -231,7 +272,20 @@ function requestHeaders(
   return headers;
 }
 
+async function getParticipantRoster(
+  request: APIRequestContext
+): Promise<ParticipantRoster> {
+  const response = await request.get(`${BASE_URL}/api/admin/participants`, {
+    headers: ownerHeaders()
+  });
+  if (!response.ok()) {
+    throw new Error(`E2E participant roster failed: ${response.status()}`);
+  }
+  return (await response.json() as { roster: ParticipantRoster }).roster;
+}
+
 async function runD1(sql: string): Promise<void> {
+  const e2eStatePath = process.env.E2E_STATE_PATH ?? ".tmp/e2e-state";
   await executeFile(process.execPath, [
     wrangler,
     "d1",
@@ -239,7 +293,7 @@ async function runD1(sql: string): Promise<void> {
     "couple-travel-guide",
     "--local",
     "--persist-to",
-    ".tmp/e2e-state",
+    e2eStatePath,
     "--config",
     "wrangler.jsonc",
     "--command",

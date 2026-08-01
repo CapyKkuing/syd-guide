@@ -164,7 +164,7 @@ describe("FixtureTravelGuideDataSource", () => {
         items: [
           { label: "맛집", status: "preview" },
           { label: "카페", status: "preview" },
-          { label: "저장 장소", status: "preview" }
+          { label: "저장 장소", status: "available" }
         ]
       },
       {
