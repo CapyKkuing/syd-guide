@@ -212,7 +212,7 @@ function buildDestinationItems(): DestinationItem[] {
     }];
   });
   const additionalItems = additionalDestinationSeeds.flatMap((seed) => {
-    const key = `${seed.destination.toLocaleLowerCase("en-US")}:${seed.timeZone}`;
+    const key = `${seed.englishName.toLocaleLowerCase("en-US")}:${seed.timeZone}`;
     if (seen.has(key)) return [];
     seen.add(key);
     const label = [seed.destination, seed.englishName, seed.country].join(" · ");
