@@ -132,6 +132,35 @@ describe("device pairing UI", () => {
     expect(screen.getByRole("button", { name: "연결 해제" })).toBeVisible();
   });
 
+  it("permanently deletes only after a revoked device is confirmed", async () => {
+    const revokedDevice = {
+      id: "device-revoked",
+      memberId: "partner",
+      memberName: "민지",
+      deviceName: "이전 Galaxy",
+      lastSeenAt: "2026-07-27T00:00:00.000Z",
+      expiresAt: "2026-10-25T00:00:00.000Z",
+      revokedAt: "2026-07-28T00:00:00.000Z",
+      createdAt: "2026-07-27T00:00:00.000Z",
+    };
+    const request = vi.fn()
+      .mockResolvedValueOnce(Response.json({ devices: [revokedDevice] }))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }))
+      .mockResolvedValueOnce(Response.json({ devices: [] }));
+    vi.stubGlobal("fetch", request);
+
+    render(<DeviceList />);
+    await userEvent.click(await screen.findByRole("button", { name: "기록 삭제" }));
+    expect(screen.getByRole("button", { name: "영구 삭제" })).toBeVisible();
+    await userEvent.click(screen.getByRole("button", { name: "영구 삭제" }));
+
+    await waitFor(() => expect(screen.queryByText("이전 Galaxy")).not.toBeInTheDocument());
+    expect(request).toHaveBeenCalledWith(
+      "/api/admin/devices/device-revoked/permanent",
+      expect.objectContaining({ method: "DELETE" })
+    );
+  });
+
   it("hides device administration from a partner", async () => {
     vi.stubGlobal(
       "fetch",

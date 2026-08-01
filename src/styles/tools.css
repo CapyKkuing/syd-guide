@@ -207,6 +207,37 @@
   margin-top: var(--space-2);
 }
 
+.management-page h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: var(--text-xl);
+}
+
+.management-setting-card {
+  min-width: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--today-boundary);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.management-setting-card .theme-control {
+  width: 100%;
+}
+
+.management-setting-card .offline-banner {
+  position: static;
+  width: auto;
+  max-width: none;
+  margin: 0;
+}
+
+.management-page .pair-grid {
+  max-width: none;
+  margin-top: 0;
+}
+
 .tool-panel,
 .tool-editor,
 .tool-inline-form {

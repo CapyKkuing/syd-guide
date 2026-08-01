@@ -123,7 +123,7 @@ export function TripRoutePage({
         view={memoryView}
       />
     ) : (
-      <TripShell context={workspace.data.context} activeTab={activeTab}>
+      <TripShell context={workspace.data.context} activeTab={activeTab} activeToolId={toolId}>
         {activeTab === "today" ? (
           <section aria-labelledby="trip-today-title">
             <h1 id="trip-today-title" className="today-route-title">오늘</h1>

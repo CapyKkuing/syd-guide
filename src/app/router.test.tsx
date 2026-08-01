@@ -4,8 +4,10 @@ import type { MouseEvent } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AppLink } from "../components/AppLink";
 import {
+  isManagementToolRoute,
   navigate,
   parseRoute,
+  pathForAdminDevices,
   pathForLibrary,
   pathForMemories,
   pathForMemoryPlayer,
@@ -105,6 +107,30 @@ describe("path routing", () => {
       toolId: "bookings"
     });
     expect(parseRoute("/trip/sydney-2026/tools/unknown")).toEqual({ name: "not-found" });
+  });
+
+  it("sends the guidebook management shortcut to the protected admin host", () => {
+    expect(pathForAdminDevices("시드니 / 2026", {
+      hostname: "couple-travel-guide.yeonuunim521.workers.dev",
+      origin: "https://couple-travel-guide.yeonuunim521.workers.dev",
+    })).toBe(
+      "https://couple-travel-guide-admin.yeonuunim521.workers.dev/trip/%EC%8B%9C%EB%93%9C%EB%8B%88%20%2F%202026/tools/devices"
+    );
+
+    expect(pathForAdminDevices("sydney-2026", {
+      hostname: "couple-travel-guide-admin.yeonuunim521.workers.dev",
+      origin: "https://couple-travel-guide-admin.yeonuunim521.workers.dev",
+    })).toBe("/trip/sydney-2026/tools/devices");
+  });
+
+  it("classifies only administrator settings as management routes", () => {
+    expect(isManagementToolRoute("devices")).toBe(true);
+    expect(isManagementToolRoute("theme")).toBe(true);
+    expect(isManagementToolRoute("offline-sync")).toBe(true);
+    expect(isManagementToolRoute("partner-connect")).toBe(true);
+    expect(isManagementToolRoute("bookings")).toBe(false);
+    expect(isManagementToolRoute("ai-connect")).toBe(false);
+    expect(isManagementToolRoute()).toBe(false);
   });
 
   it("builds memory editor and player paths with encoded trip IDs", () => {

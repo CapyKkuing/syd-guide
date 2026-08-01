@@ -206,6 +206,10 @@
   font-weight: 750;
 }
 
+.device-list__actions {
+  justify-content: flex-end;
+}
+
 @media (max-width: 760px) {
   .pair-grid {
     grid-template-columns: 1fr;

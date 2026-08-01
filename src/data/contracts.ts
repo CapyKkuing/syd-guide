@@ -167,7 +167,7 @@ export interface ToolItemView {
 
 export interface ToolGroupView {
   id: "essentials" | "places" | "planning";
-  title: "Travel Essentials" | "Places" | "Planning & Settings";
+  title: "Travel Essentials" | "Places" | "Planning";
   items: ToolItemView[];
 }
 

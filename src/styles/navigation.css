@@ -5,7 +5,7 @@
   bottom: 0;
   left: 0;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   min-height: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom));
   padding: var(--space-2) var(--space-2) calc(var(--space-2) + env(safe-area-inset-bottom));
   border-top: 1px solid var(--line);

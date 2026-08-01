@@ -140,6 +140,14 @@ export async function removeDevice(deviceId: string): Promise<void> {
   await ensureOk(response);
 }
 
+export async function deleteRevokedDevice(deviceId: string): Promise<void> {
+  const response = await fetch(
+    `/api/admin/devices/${encodeURIComponent(deviceId)}/permanent`,
+    { method: "DELETE", headers: headers(true) }
+  );
+  await ensureOk(response);
+}
+
 export async function claimDevice(token: string, deviceName: string) {
   const response = await fetch("/api/pair/claim", {
     method: "POST",

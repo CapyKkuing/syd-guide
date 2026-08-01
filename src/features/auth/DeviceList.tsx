@@ -1,5 +1,11 @@
+import { HStack } from "@astryxdesign/core";
 import { useEffect, useState } from "react";
-import { getDevices, removeDevice, type Device } from "./api";
+import {
+  deleteRevokedDevice,
+  getDevices,
+  removeDevice,
+  type Device,
+} from "./api";
 
 const dateTime = new Intl.DateTimeFormat("ko-KR", {
   dateStyle: "medium",
@@ -14,6 +20,7 @@ function date(value: string) {
 export function DeviceList() {
   const [devices, setDevices] = useState<Device[]>([]);
   const [status, setStatus] = useState("불러오는 중…");
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -45,6 +52,18 @@ export function DeviceList() {
     }
   }
 
+  async function removeRevoked(device: Device) {
+    try {
+      await deleteRevokedDevice(device.id);
+      const result = await getDevices();
+      setDevices(result);
+      setDeleteTargetId(null);
+      setStatus(result.length ? "" : "연결된 참여자 기기가 없습니다.");
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "기기 기록을 삭제하지 못했습니다.");
+    }
+  }
+
   return (
     <section className="pair-card" aria-labelledby="devices-title">
       <p className="eyebrow">CONNECTED DEVICES</p>
@@ -60,7 +79,23 @@ export function DeviceList() {
               <span>만료 {date(device.expiresAt)}</span>
             </div>
             {device.revokedAt ? (
-              <span className="revoked-label">연결 해제됨</span>
+              <HStack className="device-list__actions" gap={1} wrap="wrap">
+                <span className="revoked-label">연결 해제됨</span>
+                {deleteTargetId === device.id ? (
+                  <>
+                    <button className="text-button" onClick={() => removeRevoked(device)}>
+                      영구 삭제
+                    </button>
+                    <button className="secondary-button" onClick={() => setDeleteTargetId(null)}>
+                      취소
+                    </button>
+                  </>
+                ) : (
+                  <button className="text-button" onClick={() => setDeleteTargetId(device.id)}>
+                    기록 삭제
+                  </button>
+                )}
+              </HStack>
             ) : (
               <button className="text-button" onClick={() => revoke(device)}>
                 연결 해제

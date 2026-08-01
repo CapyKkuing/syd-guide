@@ -54,3 +54,20 @@ export async function revokeDevice(
     .run();
   return result.meta.changes > 0;
 }
+
+export async function deleteRevokedDevice(
+  env: Env,
+  deviceId: string
+): Promise<"deleted" | "active" | "missing"> {
+  const result = await env.DB.prepare(
+    "DELETE FROM device_sessions WHERE id = ? AND revoked_at IS NOT NULL"
+  )
+    .bind(deviceId)
+    .run();
+  if (result.meta.changes > 0) return "deleted";
+
+  const device = await env.DB.prepare(
+    "SELECT id FROM device_sessions WHERE id = ?"
+  ).bind(deviceId).first<{ id: string }>();
+  return device ? "active" : "missing";
+}

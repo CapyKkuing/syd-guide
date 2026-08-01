@@ -1,7 +1,11 @@
 import type { Hono } from "hono";
 import type { AppDependencies } from "../auth/access";
 import { requireOwner } from "../auth/principal";
-import { listDevices, revokeDevice } from "../db/sessions";
+import {
+  deleteRevokedDevice,
+  listDevices,
+  revokeDevice,
+} from "../db/sessions";
 import type { AppEnv } from "../env";
 import { claimInvite, issueInvite, PairingError } from "../services/pairing";
 import { requireInvitableParticipant } from "../services/participants";
@@ -27,6 +31,22 @@ export function registerPairingRoutes(
   app.get("/api/admin/devices", async (c) => {
     await requireOwner(c, dependencies);
     return c.json({ devices: await listDevices(c.env) });
+  });
+
+  app.delete("/api/admin/devices/:id/permanent", async (c) => {
+    await requireOwner(c, dependencies);
+    const id = c.req.param("id");
+    if (!id || id.length > 100) {
+      throw new PairingError(400, "DEVICE_INVALID", "기기 정보가 올바르지 않습니다.");
+    }
+    const result = await deleteRevokedDevice(c.env, id);
+    if (result === "active") {
+      throw new PairingError(409, "DEVICE_STILL_ACTIVE", "먼저 기기 연결을 해제해 주세요.");
+    }
+    if (result === "missing") {
+      throw new PairingError(404, "DEVICE_NOT_FOUND", "기기를 찾을 수 없습니다.");
+    }
+    return c.body(null, 204);
   });
 
   app.delete("/api/admin/devices/:id", async (c) => {

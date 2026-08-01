@@ -111,7 +111,7 @@ describe("TripRoutePage", () => {
     expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
   });
 
-  it("keeps the tools hub compact and opens device management on its own route", async () => {
+  it("keeps admin settings out of tools and opens them together on management", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockImplementation(() => Promise.resolve(Response.json({
@@ -122,17 +122,19 @@ describe("TripRoutePage", () => {
     const home = renderTripRoute(fixture, "tools");
 
     expect(await screen.findByRole("heading", { name: "Travel Essentials" })).toBeVisible();
-    expect(screen.getByRole("link", { name: "연결 기기 관리 열기" })).toBeVisible();
+    expect(screen.queryByRole("link", { name: "초대·기기 관리 열기" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "테마 열기" })).not.toBeInTheDocument();
     expect(screen.queryByText("읽기 전용 미리보기에서는 기기를 관리할 수 없습니다.")).not.toBeInTheDocument();
 
     home.unmount();
     renderTripRoute(fixture, "tools", "devices");
+    expect(await screen.findByRole("heading", { level: 1, name: "관리" })).toBeVisible();
     expect(await screen.findByText("읽기 전용 미리보기에서는 기기를 관리할 수 없습니다.")).toBeVisible();
   });
 
   it.each([
     ["bookings", "예약·바우처"],
-    ["devices", "연결 기기 관리"],
+    ["devices", "관리"],
     ["emergency", "비상 연락처"]
   ] as const)("renders the deferred standalone %s tool without scrolling the outer page", async (toolId, targetHeading) => {
     const workspace = deferred();
@@ -307,7 +309,8 @@ describe("TripRoutePage", () => {
       </ThemeProvider>
     );
 
-    expect(await screen.findByRole("heading", { level: 1, name: "오프라인·동기화 상태" })).toBeVisible();
+    expect(await screen.findByRole("heading", { level: 1, name: "관리" })).toBeVisible();
+    expect(screen.getByRole("heading", { level: 2, name: "오프라인·동기화" })).toBeVisible();
     await waitFor(() => expect(runtime.engine.flush).toHaveBeenCalledWith("sydney-2026"));
     expect(await screen.findByText("대기 2건")).toBeVisible();
     await waitFor(() =>

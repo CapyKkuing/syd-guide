@@ -3,7 +3,7 @@ import { act, fireEvent, render, screen, waitFor, within } from "@testing-librar
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
 import { App } from "../app/App";
-import { navigate, type TripTab } from "../app/router";
+import { navigate, type ToolRouteId, type TripTab } from "../app/router";
 import { ThemeProvider } from "../app/theme/ThemeProvider";
 import { FixtureTravelGuideDataSource } from "../data/fixture/fixtureDataSource";
 import { TripShell } from "./TripShell";
@@ -16,7 +16,8 @@ const navigationStyles = readFileSync("src/styles/navigation.css", "utf8")
 async function renderTripShell(
   activeTab: TripTab,
   partnerStatus: "connected" | "not-connected" = "connected",
-  tripId = "sydney-2026"
+  tripId = "sydney-2026",
+  activeToolId?: ToolRouteId
 ) {
   const dataSource = new FixtureTravelGuideDataSource(
     () => new Date("2026-07-28T00:00:00.000Z")
@@ -26,7 +27,7 @@ async function renderTripShell(
 
   return render(
     <ThemeProvider>
-      <TripShell context={{ ...context, partnerStatus }} activeTab={activeTab}>
+      <TripShell context={{ ...context, partnerStatus }} activeTab={activeTab} activeToolId={activeToolId}>
         <p>여행 내용</p>
       </TripShell>
     </ThemeProvider>
@@ -45,17 +46,33 @@ describe("TripShell", () => {
       .toHaveTextContent(expectedDay);
   });
 
-  it("renders four navigable trip tabs and marks only the active tab current", async () => {
+  it("renders four trip tabs plus direct admin management", async () => {
     await renderTripShell("today");
 
     const nav = screen.getByRole("navigation", { name: "여행 메뉴" });
-    expect(within(nav).getAllByRole("link")).toHaveLength(4);
+    expect(within(nav).getAllByRole("link")).toHaveLength(5);
     expect(within(nav).getByRole("link", { name: "오늘" }))
       .toHaveAttribute("aria-current", "page");
     expect(within(nav).getByRole("link", { name: "일정" }))
       .not.toHaveAttribute("aria-current");
+    expect(within(nav).getByRole("link", {
+      name: "관리자 페이지에서 초대·기기 관리 열기"
+    })).toHaveAttribute("href", "/trip/sydney-2026/tools/devices");
     expect(screen.getByRole("status", { name: "참여자 등록됨" })).toBeVisible();
   });
+
+  it.each(["partner-connect", "devices", "theme", "offline-sync"] as const)(
+    "marks management active for the %s settings route",
+    async (toolId) => {
+      await renderTripShell("tools", "connected", "sydney-2026", toolId);
+
+      const nav = screen.getByRole("navigation", { name: "여행 메뉴" });
+      expect(within(nav).getByRole("link", { name: "도구" })).not.toHaveAttribute("aria-current");
+      expect(within(nav).getByRole("link", {
+        name: "관리자 페이지에서 초대·기기 관리 열기"
+      })).toHaveAttribute("aria-current", "page");
+    }
+  );
 
   it.each([
     ["connected", "참여자 등록됨", "등록됨"],

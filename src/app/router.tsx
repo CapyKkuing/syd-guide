@@ -29,6 +29,22 @@ export const toolRouteIds = [
 
 export type ToolRouteId = typeof toolRouteIds[number];
 
+export const managementToolRouteIds = [
+  "partner-connect",
+  "devices",
+  "theme",
+  "offline-sync",
+] as const satisfies readonly ToolRouteId[];
+
+export function isManagementToolRoute(
+  toolId?: ToolRouteId
+): boolean {
+  return toolId !== undefined
+    && (managementToolRouteIds as readonly ToolRouteId[]).includes(toolId);
+}
+
+const ADMIN_ORIGIN = "https://couple-travel-guide-admin.yeonuunim521.workers.dev";
+
 function isToolRouteId(value: string): value is ToolRouteId {
   return (toolRouteIds as readonly string[]).includes(value);
 }
@@ -124,6 +140,21 @@ export function pathForTool(
   baseUrl = APP_BASE_URL
 ): string {
   return pathForApp(`/trip/${encodeURIComponent(tripId)}/tools/${toolId}`, baseUrl);
+}
+
+export function pathForAdminDevices(
+  tripId: string,
+  current: Pick<Location, "hostname" | "origin"> = window.location
+): string {
+  const path = pathForTool(tripId, "devices");
+  if (
+    current.hostname === "localhost"
+    || current.hostname === "127.0.0.1"
+    || current.origin === ADMIN_ORIGIN
+  ) {
+    return path;
+  }
+  return new URL(path, ADMIN_ORIGIN).toString();
 }
 
 export function pathForMemories(

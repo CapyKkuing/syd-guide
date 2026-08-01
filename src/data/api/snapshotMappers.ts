@@ -33,14 +33,14 @@ const toolGroups: ToolGroupView[] = [
   },
   {
     id: "planning",
-    title: "Planning & Settings",
+    title: "Planning",
     items: [
       { id: "checklist", label: "체크리스트", description: "함께 또는 개인 준비물을 관리합니다.", status: "available" },
       { id: "notes", label: "여행 메모", description: "공유 또는 개인 메모를 관리합니다.", status: "available" },
       { id: "tips", label: "주의사항", description: "여행 주의사항은 준비 중입니다.", status: "preview" },
       { id: "ai-connect", label: "AI 앱 연결", description: "민감정보를 제외한 질문을 만들고 선택한 AI를 엽니다.", status: "available" },
       { id: "partner-connect", label: "참여자 연결", description: "참여자별 기기를 연결합니다.", status: "preview" },
-      { id: "devices", label: "연결 기기 관리", description: "연결한 기기를 관리합니다.", status: "available" },
+      { id: "devices", label: "초대·기기 관리", description: "참여자 초대와 연결 기기를 한곳에서 관리합니다.", status: "available" },
       { id: "theme", label: "테마", description: "화면 테마를 선택합니다.", status: "available" },
       { id: "offline-sync", label: "오프라인·동기화 상태", description: "오프라인 상태를 확인합니다.", status: "available" }
     ]

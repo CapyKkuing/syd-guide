@@ -1,7 +1,14 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Button } from "@astryxdesign/core";
 import { ThemeControl } from "../app/theme/ThemeControl";
-import { pathForLibrary, pathForTrip, type TripTab } from "../app/router";
+import {
+  isManagementToolRoute,
+  pathForAdminDevices,
+  pathForLibrary,
+  pathForTrip,
+  type ToolRouteId,
+  type TripTab,
+} from "../app/router";
 import { useTripSwitcherFocus } from "../app/TripSwitcherFocus";
 import { AppLink } from "../components/AppLink";
 import { Icon, type IconName } from "../components/Icon";
@@ -36,13 +43,16 @@ function partnerStatusCopy(partnerStatus: TripContextViewModel["partnerStatus"])
 export function TripShell({
   context,
   activeTab,
+  activeToolId,
   children
 }: {
   context: TripContextViewModel;
   activeTab: TripTab;
+  activeToolId?: ToolRouteId;
   children: ReactNode;
 }) {
   const [switcherOpen, setSwitcherOpen] = useState(false);
+  const managementActive = isManagementToolRoute(activeToolId);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const switcherRef = useRef<HTMLDivElement>(null);
@@ -176,14 +186,23 @@ export function TripShell({
         {tripNavItems.map((item) => (
           <AppLink
             key={item.tab}
-            className={`trip-navigation__item${item.tab === activeTab ? " is-active" : ""}`}
+            className={`trip-navigation__item${item.tab === activeTab && !managementActive ? " is-active" : ""}`}
             href={pathForTrip(context.trip.id, item.tab)}
-            aria-current={item.tab === activeTab ? "page" : undefined}
+            aria-current={item.tab === activeTab && !managementActive ? "page" : undefined}
           >
             <Icon name={item.icon} />
             <span>{item.label}</span>
           </AppLink>
         ))}
+        <AppLink
+          aria-current={managementActive ? "page" : undefined}
+          aria-label="관리자 페이지에서 초대·기기 관리 열기"
+          className={`trip-navigation__item${managementActive ? " is-active" : ""}`}
+          href={pathForAdminDevices(context.trip.id)}
+        >
+          <Icon name="settings" />
+          <span>관리</span>
+        </AppLink>
       </nav>
     </div>
   );

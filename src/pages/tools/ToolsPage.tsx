@@ -7,10 +7,14 @@ import {
   VStack,
 } from "@astryxdesign/core";
 import type { ReactNode } from "react";
-import { pathForTool, pathForTrip, type ToolRouteId } from "../../app/router";
-import { ThemeControl } from "../../app/theme/ThemeControl";
+import {
+  isManagementToolRoute,
+  managementToolRouteIds,
+  pathForTool,
+  pathForTrip,
+  type ToolRouteId,
+} from "../../app/router";
 import { AppLink } from "../../components/AppLink";
-import { OfflineBanner } from "../../components/OfflineBanner";
 import type { ToolItemView, ToolsViewModel, TripWorkspace } from "../../data/contracts";
 import type { TripMutationController } from "../../services/mutations/controller";
 import { ActivityPanel } from "./activity/ActivityPanel";
@@ -20,6 +24,7 @@ import { ChecklistPanel } from "./checklist/ChecklistPanel";
 import { CurrencyTool } from "./currency/CurrencyTool";
 import { NotesPanel } from "./notes/NotesPanel";
 import { SearchPanel } from "./search/SearchPanel";
+import { ManagementPage } from "./ManagementPage";
 
 interface ToolsPageProps {
   activeToolId?: ToolRouteId;
@@ -104,14 +109,12 @@ function ToolLaunchCard({ item, tripId }: { item: ToolItemView; tripId: string }
 
 function ToolCard({
   controller,
-  deviceManagement,
   item,
   reload,
   tools,
   workspace
 }: {
   controller?: TripMutationController;
-  deviceManagement: ReactNode;
   item: ToolItemView;
   reload: () => void;
   tools: ToolsViewModel;
@@ -194,38 +197,6 @@ function ToolCard({
     );
   }
 
-  if (item.id === "devices") {
-    return (
-      <article className="tool-card tool-card--management" id="devices">
-        <div className="tool-card__heading">
-          <h1>{item.label}</h1>
-        </div>
-        <p>{item.description}</p>
-        <div className="tool-card__slot">{deviceManagement}</div>
-      </article>
-    );
-  }
-
-  if (item.id === "theme") {
-    return (
-      <article className="tool-card tool-card--management">
-        <div className="tool-card__heading"><h1>{item.label}</h1></div>
-        <p>{item.description}</p>
-        <ThemeControl />
-      </article>
-    );
-  }
-
-  if (item.id === "offline-sync") {
-    return (
-      <article className="tool-card tool-card--management">
-        <div className="tool-card__heading"><h1>{item.label}</h1></div>
-        <p>{item.description}</p>
-        <OfflineBanner />
-      </article>
-    );
-  }
-
   return (
     <article className="tool-card tool-card--preview">
       <div className="tool-card__heading"><h1>{item.label}</h1></div>
@@ -243,6 +214,12 @@ export function ToolsPage({
   workspace
 }: ToolsPageProps) {
   const availableTools = new Map(tools.groups.flatMap((group) => group.items).map((item) => [item.id, item]));
+  const travelerGroups = tools.groups.map((group) => ({
+    ...group,
+    items: group.items.filter((item) => !managementToolRouteIds.includes(
+      item.id as typeof managementToolRouteIds[number]
+    ))
+  })).filter((group) => group.items.length > 0);
   const selectedTool = activeToolId
     ? availableTools.get(activeToolId) ?? standaloneTools[activeToolId as keyof typeof standaloneTools]
     : undefined;
@@ -254,6 +231,10 @@ export function ToolsPage({
     }).filter((item): item is QuickToolItem => item !== null)
   }));
 
+  if (isManagementToolRoute(activeToolId)) {
+    return <ManagementPage deviceManagement={deviceManagement} />;
+  }
+
   if (activeToolId && selectedTool) {
     return (
       <section className="tools-page tools-detail-page" aria-label={`${selectedTool.label} 도구`}>
@@ -261,7 +242,6 @@ export function ToolsPage({
           <AppLink className="tools-detail-back" href={pathForTrip(tools.tripId, "tools")}>← 도구</AppLink>
           <ToolCard
             controller={mutationController}
-            deviceManagement={deviceManagement}
             item={selectedTool}
             reload={reload}
             tools={tools}
@@ -293,13 +273,13 @@ export function ToolsPage({
           </VStack>
         ) : null}
 
-        {tools.groups.length ? (
+        {travelerGroups.length ? (
           <VStack gap={6}>
             <VStack gap={1}>
               <Text color="accent" type="label">ALL TOOLS</Text>
               <Heading level={2}>전체 도구</Heading>
             </VStack>
-            {tools.groups.map((group) => (
+            {travelerGroups.map((group) => (
               <section className="tools-group" key={group.id} aria-labelledby={`tools-${group.id}-title`}>
                 <Heading id={`tools-${group.id}-title`} level={3}>{group.title}</Heading>
                 <Grid columns={{ minWidth: 220, max: 3 }} gap={3}>

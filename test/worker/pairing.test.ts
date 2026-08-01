@@ -144,6 +144,50 @@ describe("one-time device pairing", () => {
       "SELECT revoked_at FROM device_sessions"
     ).first<{ revoked_at: string }>();
     expect(revokedAt?.revoked_at).toBe(currentTime.toISOString());
+
+    const permanentDelete = await app.request(
+      `http://localhost/api/admin/devices/${body.devices[0]?.id}/permanent`,
+      {
+        method: "DELETE",
+        headers: {
+          Origin: "http://localhost",
+          "X-Dev-Principal": "owner",
+        },
+      },
+      bindings("admin")
+    );
+    expect(permanentDelete.status).toBe(204);
+    await expect(env.DB.prepare(
+      "SELECT COUNT(*) AS count FROM device_sessions"
+    ).first<{ count: number }>()).resolves.toEqual({ count: 0 });
+  });
+
+  it("refuses to permanently delete a device before it is revoked", async () => {
+    const invite = await issueInvite();
+    await claimInvite(invite.token, "Active Galaxy");
+    const device = await env.DB.prepare(
+      "SELECT id FROM device_sessions"
+    ).first<{ id: string }>();
+
+    const response = await app.request(
+      `http://localhost/api/admin/devices/${device?.id}/permanent`,
+      {
+        method: "DELETE",
+        headers: {
+          Origin: "http://localhost",
+          "X-Dev-Principal": "owner",
+        },
+      },
+      bindings("admin")
+    );
+
+    expect(response.status).toBe(409);
+    await expect(response.json()).resolves.toMatchObject({
+      error: { code: "DEVICE_STILL_ACTIVE" },
+    });
+    await expect(env.DB.prepare(
+      "SELECT COUNT(*) AS count FROM device_sessions"
+    ).first<{ count: number }>()).resolves.toEqual({ count: 1 });
   });
 
   it("does not allow a partner to use owner device APIs", async () => {

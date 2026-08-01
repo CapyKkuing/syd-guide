@@ -58,13 +58,15 @@ describe("ToolsPage", () => {
     }
     expect(screen.getByRole("heading", { name: "Travel Essentials" })).toBeVisible();
     expect(screen.getByRole("heading", { name: "Places" })).toBeVisible();
-    expect(screen.getByRole("heading", { name: "Planning & Settings" })).toBeVisible();
+    expect(screen.getByRole("heading", { name: "Planning" })).toBeVisible();
     for (const label of [
       "예약·바우처", "환율", "교통", "비상 연락처", "맛집", "카페", "저장 장소",
-      "체크리스트", "여행 메모", "주의사항", "AI 앱 연결", "참여자 연결",
-      "연결 기기 관리", "테마", "오프라인·동기화 상태"
+      "체크리스트", "여행 메모", "주의사항", "AI 앱 연결"
     ]) {
       expect(screen.getAllByRole("link", { name: `${label} 열기` })[0]).toBeVisible();
+    }
+    for (const label of ["참여자 연결", "초대·기기 관리", "테마", "오프라인·동기화 상태"]) {
+      expect(screen.queryByRole("link", { name: `${label} 열기` })).not.toBeInTheDocument();
     }
     expect(screen.queryByLabelText("환산 방향")).not.toBeInTheDocument();
     expect(screen.queryByText("기기 관리 테스트")).not.toBeInTheDocument();
@@ -91,10 +93,13 @@ describe("ToolsPage", () => {
     expect(screen.getByText("교통 안내는 준비 중입니다.")).toBeVisible();
   });
 
-  it("renders device management only on the devices route", async () => {
+  it("collects admin-only settings on the management route", async () => {
     await renderToolsPage("devices");
 
-    expect(screen.getByRole("heading", { level: 1, name: "연결 기기 관리" })).toBeVisible();
+    expect(screen.getByRole("heading", { level: 1, name: "관리" })).toBeVisible();
+    expect(screen.getByRole("heading", { name: "참여자·초대·기기" })).toBeVisible();
+    expect(screen.getByRole("heading", { name: "화면 설정" })).toBeVisible();
+    expect(screen.getByRole("heading", { name: "오프라인·동기화" })).toBeVisible();
     expect(screen.getByText("기기 관리 테스트")).toBeVisible();
   });
 
