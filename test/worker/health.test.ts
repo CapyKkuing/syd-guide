@@ -11,7 +11,7 @@ it("serves API health before static assets", async () => {
     "connect-src 'self' https://accounts.google.com https://www.googleapis.com"
   );
   expect(response.headers.get("content-security-policy")).toContain(
-    "https://cdn.jsdelivr.net https://huggingface.co https://us.aws.cdn.hf.co"
+    "https://cdn.jsdelivr.net https://open.er-api.com"
   );
   expect(response.headers.get("content-security-policy")).toContain(
     "script-src 'self' https://accounts.google.com https://cdn.jsdelivr.net"

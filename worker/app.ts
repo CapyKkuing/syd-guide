@@ -7,6 +7,7 @@ import { requireSameOrigin } from "./auth/origin";
 import { AuthError } from "./auth/principal";
 import type { AppEnv } from "./env";
 import { apiError } from "./http/errors";
+import { registerAiModelRoutes, type AiModelFetch } from "./routes/ai-model";
 import { registerPairingRoutes } from "./routes/pairing";
 import { registerParticipantRoutes } from "./routes/participants";
 import { registerSessionRoutes } from "./routes/session";
@@ -17,12 +18,18 @@ import { MutationError } from "./services/mutations";
 import { PairingError } from "./services/pairing";
 import { ParticipantError } from "./services/participants";
 
-export function createApp(overrides: Partial<AppDependencies> = {}) {
+interface AppOverrides extends Partial<AppDependencies> {
+  aiModelFetch?: AiModelFetch;
+}
+
+export function createApp(overrides: AppOverrides = {}) {
   const app = new Hono<AppEnv>();
-  const dependencies = { ...defaultDependencies, ...overrides };
+  const { aiModelFetch, ...accessOverrides } = overrides;
+  const dependencies = { ...defaultDependencies, ...accessOverrides };
 
   app.use("/api/*", requireSameOrigin);
   app.get("/api/health", (c) => c.json({ ok: true }));
+  registerAiModelRoutes(app, aiModelFetch);
   registerSessionRoutes(app, dependencies);
   registerParticipantRoutes(app, dependencies);
   registerPairingRoutes(app, dependencies);
