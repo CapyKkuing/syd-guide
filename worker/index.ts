@@ -13,7 +13,7 @@ const contentSecurityPolicy = [
   "img-src 'self' data: blob: https:",
   "manifest-src 'self'",
   "object-src 'none'",
-  "script-src 'self' https://accounts.google.com",
+  "script-src 'self' https://accounts.google.com https://cdn.jsdelivr.net",
   "style-src 'self' 'unsafe-inline'",
   "worker-src 'self' blob:",
 ].join("; ");

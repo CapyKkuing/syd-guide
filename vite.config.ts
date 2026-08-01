@@ -59,7 +59,6 @@ export default defineConfig(({ mode }) => {
         },
         workbox: {
           globPatterns: ["**/*.{js,css,html,png,svg,woff2}"],
-          globIgnores: ["**/transformers.web-*.js"],
           runtimeCaching: [
             {
               urlPattern: ({ url }) => url.pathname.startsWith("/api/"),
