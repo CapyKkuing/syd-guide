@@ -1,4 +1,5 @@
-import { useState, type FormEvent } from "react";
+import { DateInput } from "@astryxdesign/core/DateInput";
+import { useState, type ComponentProps, type FormEvent } from "react";
 import { BottomSheet } from "../../components/BottomSheet";
 import {
   tripInputSchema,
@@ -14,15 +15,9 @@ import {
   flightDraftToDetails,
   type FlightDraft
 } from "./flightDraft";
+import { DestinationField, TimeZoneField } from "./TripSearchFields";
 
-const destinationPresets: Record<string, string> = {
-  Sydney: "Australia/Sydney",
-  Tokyo: "Asia/Tokyo",
-  Seoul: "Asia/Seoul",
-  London: "Europe/London",
-  Paris: "Europe/Paris",
-  "New York": "America/New_York"
-};
+type DateInputValue = ComponentProps<typeof DateInput>["value"];
 
 type TripFormState = Omit<TripInput, "outboundFlight" | "returnFlight"> & {
   outboundFlight: FlightDraft | null;
@@ -115,7 +110,7 @@ export function TripForm({
     >
       <div className="trip-form__heading">
         <h2>{mode === "create" ? "새 여행 만들기" : "여행 수정"}</h2>
-        <p>둘이 함께 사용할 기본 여행 정보를 입력하세요.</p>
+        <p>함께 사용할 기본 여행 정보를 입력하세요.</p>
       </div>
       <form className="trip-form" onSubmit={submit}>
         <label>
@@ -130,66 +125,45 @@ export function TripForm({
             }))}
           />
         </label>
-        <label>
-          여행지
-          <input
-            required
-            maxLength={120}
-            list="trip-destinations"
-            value={input.destination}
-            onChange={(event) => {
-              const destination = event.target.value;
-              setInput((current) => ({
-                ...current,
-                destination,
-                timeZone: destinationPresets[destination] ?? current.timeZone
-              }));
-            }}
-          />
-          <datalist id="trip-destinations">
-            {Object.keys(destinationPresets).map((destination) => (
-              <option key={destination} value={destination} />
-            ))}
-          </datalist>
-        </label>
+        <DestinationField
+          destination={input.destination}
+          timeZone={input.timeZone}
+          onChange={(destination, timeZone) => setInput((current) => ({
+            ...current,
+            destination,
+            timeZone
+          }))}
+        />
         <div className="trip-form__row">
-          <label>
-            시작일
-            <input
-              required
-              type="date"
-              value={input.startDate}
-              onChange={(event) => setInput((current) => ({
-                ...current,
-                startDate: event.target.value
-              }))}
-            />
-          </label>
-          <label>
-            종료일
-            <input
-              required
-              type="date"
-              value={input.endDate}
-              onChange={(event) => setInput((current) => ({
-                ...current,
-                endDate: event.target.value
-              }))}
-            />
-          </label>
-        </div>
-        <label>
-          시간대
-          <input
-            required
-            value={input.timeZone}
-            onChange={(event) => setInput((current) => ({
+          <DateInput
+            label="시작일"
+            value={input.startDate ? input.startDate as DateInputValue : undefined}
+            onChange={(startDate) => setInput((current) => ({
               ...current,
-              timeZone: event.target.value
+              startDate: startDate ?? ""
             }))}
-            placeholder="예: Australia/Sydney"
+            max={input.endDate ? input.endDate as DateInputValue : undefined}
+            placeholder="시작일 선택"
+            format="system_date"
+            isRequired
           />
-        </label>
+          <DateInput
+            label="종료일"
+            value={input.endDate ? input.endDate as DateInputValue : undefined}
+            onChange={(endDate) => setInput((current) => ({
+              ...current,
+              endDate: endDate ?? ""
+            }))}
+            min={input.startDate ? input.startDate as DateInputValue : undefined}
+            placeholder="종료일 선택"
+            format="system_date"
+            isRequired
+          />
+        </div>
+        <TimeZoneField
+          value={input.timeZone}
+          onChange={(timeZone) => setInput((current) => ({ ...current, timeZone }))}
+        />
         <label>
           상태
           <select

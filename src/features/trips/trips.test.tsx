@@ -60,6 +60,16 @@ function summary(
   return { ...activeTrip, ...overrides };
 }
 
+async function selectTokyoDestination(dialog: HTMLElement) {
+  await userEvent.type(
+    within(dialog).getByRole("combobox", { name: /여행지/ }),
+    "Tokyo"
+  );
+  await userEvent.click(
+    await within(dialog).findByRole("option", { name: /도쿄.*Tokyo/ })
+  );
+}
+
 function libraryClient(options: {
   active?: TripLibrarySummary[];
   trash?: TripLibrarySummary[];
@@ -325,11 +335,10 @@ describe("shared trip library UI", () => {
     await userEvent.click(await screen.findByRole("button", { name: "새 여행 만들기" }));
     const dialog = screen.getByRole("dialog", { name: "새 여행 만들기" });
     await userEvent.type(within(dialog).getByRole("textbox", { name: "여행 제목" }), "도쿄 여행");
-    await userEvent.type(within(dialog).getByLabelText("여행지"), "Tokyo");
-    expect(within(dialog).getByRole("textbox", { name: "시간대" }))
-      .toHaveValue("Asia/Tokyo");
-    await userEvent.type(within(dialog).getByLabelText("시작일"), "2026-10-01");
-    await userEvent.type(within(dialog).getByLabelText("종료일"), "2026-10-04");
+    await selectTokyoDestination(dialog);
+    expect(within(dialog).getByText("Asia/Tokyo · 도쿄 · JST")).toBeVisible();
+    await userEvent.type(within(dialog).getByLabelText(/시작일/), "2026-10-01");
+    await userEvent.type(within(dialog).getByLabelText(/종료일/), "2026-10-04");
     await userEvent.click(within(dialog).getByRole("button", { name: "여행 만들기" }));
 
     expect(client.create).toHaveBeenCalledWith({
@@ -372,8 +381,8 @@ describe("shared trip library UI", () => {
     await userEvent.type(title, "수정 중인 시드니");
     await userEvent.click(within(dialog).getByRole("button", { name: "변경 저장" }));
 
-    expect(await within(dialog).findByRole("alert"))
-      .toHaveTextContent("다른 기기에서 여행이 수정되었습니다.");
+    expect(await within(dialog).findByText("다른 기기에서 여행이 수정되었습니다."))
+      .toBeVisible();
     expect(title).toHaveValue("수정 중인 시드니");
     expect(client.update).toHaveBeenCalledOnce();
     expect(client.update).toHaveBeenCalledWith(
@@ -416,8 +425,8 @@ describe("shared trip library UI", () => {
     await userEvent.type(title, "보존할 입력");
     await userEvent.click(within(dialog).getByRole("button", { name: "변경 저장" }));
 
-    expect(await within(dialog).findByRole("alert"))
-      .toHaveTextContent("다른 기기에서 여행이 수정되었습니다.");
+    expect(await within(dialog).findByText("다른 기기에서 여행이 수정되었습니다."))
+      .toBeVisible();
     await waitFor(() => expect(client.list).toHaveBeenCalledTimes(2));
     expect(title).toHaveValue("보존할 입력");
     await userEvent.click(within(dialog).getByRole("button", { name: "취소" }));
@@ -438,9 +447,9 @@ describe("shared trip library UI", () => {
     await userEvent.click(await screen.findByRole("button", { name: "새 여행 만들기" }));
     const dialog = screen.getByRole("dialog", { name: "새 여행 만들기" });
     await userEvent.type(within(dialog).getByRole("textbox", { name: "여행 제목" }), "도쿄 여행");
-    await userEvent.type(within(dialog).getByLabelText("여행지"), "Tokyo");
-    await userEvent.type(within(dialog).getByLabelText("시작일"), "2026-10-01");
-    await userEvent.type(within(dialog).getByLabelText("종료일"), "2026-10-04");
+    await selectTokyoDestination(dialog);
+    await userEvent.type(within(dialog).getByLabelText(/시작일/), "2026-10-01");
+    await userEvent.type(within(dialog).getByLabelText(/종료일/), "2026-10-04");
     const submit = within(dialog).getByRole("button", { name: "여행 만들기" });
 
     await userEvent.click(submit);
@@ -463,9 +472,9 @@ describe("shared trip library UI", () => {
     await userEvent.click(await screen.findByRole("button", { name: "새 여행 만들기" }));
     const dialog = screen.getByRole("dialog", { name: "새 여행 만들기" });
     await userEvent.type(within(dialog).getByRole("textbox", { name: "여행 제목" }), "도쿄 여행");
-    await userEvent.type(within(dialog).getByLabelText("여행지"), "Tokyo");
-    await userEvent.type(within(dialog).getByLabelText("시작일"), "2026-10-01");
-    await userEvent.type(within(dialog).getByLabelText("종료일"), "2026-10-04");
+    await selectTokyoDestination(dialog);
+    await userEvent.type(within(dialog).getByLabelText(/시작일/), "2026-10-01");
+    await userEvent.type(within(dialog).getByLabelText(/종료일/), "2026-10-04");
     await userEvent.click(within(dialog).getByRole("button", { name: "여행 만들기" }));
 
     expect(within(dialog).getByRole("button", { name: "취소" })).toBeDisabled();
@@ -479,7 +488,7 @@ describe("shared trip library UI", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "연결 기기" }));
     expect(screen.getByRole("dialog", { name: "연결 기기 관리" })).toHaveTextContent("기기 관리");
-    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.queryAllByRole("alert").every((alert) => !alert.textContent?.trim())).toBe(true);
   });
 
   it("does not refresh or update the library after a pending mutation unmounts", async () => {
@@ -494,9 +503,9 @@ describe("shared trip library UI", () => {
     await userEvent.click(await screen.findByRole("button", { name: "새 여행 만들기" }));
     const dialog = screen.getByRole("dialog", { name: "새 여행 만들기" });
     await userEvent.type(within(dialog).getByRole("textbox", { name: "여행 제목" }), "도쿄 여행");
-    await userEvent.type(within(dialog).getByLabelText("여행지"), "Tokyo");
-    await userEvent.type(within(dialog).getByLabelText("시작일"), "2026-10-01");
-    await userEvent.type(within(dialog).getByLabelText("종료일"), "2026-10-04");
+    await selectTokyoDestination(dialog);
+    await userEvent.type(within(dialog).getByLabelText(/시작일/), "2026-10-01");
+    await userEvent.type(within(dialog).getByLabelText(/종료일/), "2026-10-04");
     await userEvent.click(within(dialog).getByRole("button", { name: "여행 만들기" }));
 
     view.unmount();
@@ -512,9 +521,9 @@ describe("shared trip library UI", () => {
     await userEvent.click(await screen.findByRole("button", { name: "새 여행 만들기" }));
     const dialog = screen.getByRole("dialog", { name: "새 여행 만들기" });
     await userEvent.type(within(dialog).getByRole("textbox", { name: "여행 제목" }), "도쿄 여행");
-    await userEvent.type(within(dialog).getByLabelText("여행지"), "Tokyo");
-    await userEvent.type(within(dialog).getByLabelText("시작일"), "2026-10-01");
-    await userEvent.type(within(dialog).getByLabelText("종료일"), "2026-10-04");
+    await selectTokyoDestination(dialog);
+    await userEvent.type(within(dialog).getByLabelText(/시작일/), "2026-10-01");
+    await userEvent.type(within(dialog).getByLabelText(/종료일/), "2026-10-04");
     await userEvent.type(
       within(dialog).getByRole("textbox", { name: "대표 이미지 주소" }),
       "/images/tokyo.jpg"

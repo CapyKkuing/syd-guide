@@ -69,8 +69,10 @@ export function AirlineField({
         hasSearch
         searchPlaceholder="항공사명 또는 코드 검색"
         placeholder="항공사를 선택하세요"
-        description={matched ? `${matched.code} · ${matched.aliases[0]}` : "항공사명 또는 코드로 검색"}
       />
+      <p className="trip-form__field-hint">
+        {matched ? `${matched.code} · ${matched.aliases[0]}` : "항공사명 또는 코드로 검색"}
+      </p>
       {isManual ? (
         <TextInput
           label="항공사 직접 입력"
