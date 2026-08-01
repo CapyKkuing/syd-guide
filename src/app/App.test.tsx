@@ -53,7 +53,7 @@ describe("App routing", () => {
     window.history.replaceState(null, "", "/pair");
     render(<App pairToken="pair-token" />);
 
-    expect(screen.getByRole("heading", { name: "둘만의 여행에 연결" })).toBeVisible();
+    expect(screen.getByRole("heading", { name: "함께하는 여행에 연결" })).toBeVisible();
     expect(screen.getByRole("button", { name: "기기 연결" })).toBeVisible();
   });
 

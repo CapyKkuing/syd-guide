@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
-import { createInvite, type Invite } from "./api";
+import {
+  SegmentedControl,
+  SegmentedControlItem,
+} from "@astryxdesign/core";
+import { createInvite, type Invite, type Participant } from "./api";
 
 function remainingSeconds(expiresAt: string) {
   return Math.max(0, Math.ceil((Date.parse(expiresAt) - Date.now()) / 1000));
@@ -10,12 +14,17 @@ function duration(seconds: number) {
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 }
 
-export function InvitePanel() {
+export function InvitePanel({ participants }: { participants: Participant[] }) {
   const [invite, setInvite] = useState<Invite | null>(null);
   const [qr, setQr] = useState("");
   const [remaining, setRemaining] = useState(0);
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
+  const [memberId, setMemberId] = useState(participants[0]?.id ?? "");
+  const activeMemberId = participants.some((participant) => participant.id === memberId)
+    ? memberId
+    : participants[0]?.id ?? "";
+  const selected = participants.find((participant) => participant.id === activeMemberId);
 
   useEffect(() => {
     if (!invite) return;
@@ -37,7 +46,8 @@ export function InvitePanel() {
     setStatus("");
     setQr("");
     try {
-      setInvite(await createInvite());
+      if (!activeMemberId) return;
+      setInvite(await createInvite(activeMemberId));
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "초대를 만들지 못했습니다.");
     } finally {
@@ -54,15 +64,37 @@ export function InvitePanel() {
   return (
     <section className="pair-card" aria-labelledby="invite-title">
       <p className="eyebrow">ONE-TIME INVITE</p>
-      <h2 id="invite-title">파트너 기기 연결</h2>
-      <p>10분 동안 한 번만 사용할 수 있는 QR과 링크를 만듭니다.</p>
-      <button className="primary-button" onClick={create} disabled={loading}>
+      <h2 id="invite-title">참여자 기기 연결</h2>
+      <p>연결할 사람을 고른 뒤 10분 동안 한 번만 쓸 수 있는 초대를 만듭니다.</p>
+      {participants.length ? (
+        <SegmentedControl
+          label="기기를 연결할 참여자"
+          layout="fill"
+          onChange={(value) => {
+            setMemberId(value);
+            setInvite(null);
+            setQr("");
+          }}
+          value={activeMemberId}
+        >
+          {participants.map((participant) => (
+            <SegmentedControlItem
+              key={participant.id}
+              label={participant.displayName}
+              value={participant.id}
+            />
+          ))}
+        </SegmentedControl>
+      ) : (
+        <p className="form-status">먼저 참여자를 추가해 주세요.</p>
+      )}
+      <button className="primary-button" onClick={create} disabled={loading || !activeMemberId}>
         {loading ? "만드는 중…" : invite ? "새 초대 만들기" : "초대 만들기"}
       </button>
 
       {invite && (
         <div className="invite-result">
-          {qr && <img src={qr} alt="파트너 연결 QR 코드" width="240" height="240" />}
+          {qr && <img src={qr} alt={`${selected?.displayName ?? "참여자"} 연결 QR 코드`} width="240" height="240" />}
           <strong>남은 시간 {duration(remaining)}</strong>
           <label>
             초대 링크

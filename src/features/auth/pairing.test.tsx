@@ -36,12 +36,22 @@ describe("device pairing UI", () => {
       )
     );
 
-    render(<InvitePanel />);
+    render(<InvitePanel participants={[{
+      id: "partner",
+      displayName: "민지",
+      isActive: true,
+      isRepresentative: false,
+      deviceCount: 0,
+    }]} />);
     await userEvent.click(screen.getByRole("button", { name: "초대 만들기" }));
 
-    expect(await screen.findByRole("img", { name: "파트너 연결 QR 코드" })).toBeVisible();
+    expect(await screen.findByRole("img", { name: "민지 연결 QR 코드" })).toBeVisible();
     expect(screen.getByRole("textbox", { name: "초대 링크" })).toHaveValue(url);
     expect(qr.toDataURL).toHaveBeenCalledWith(url, { width: 240, margin: 1 });
+    expect(fetch).toHaveBeenCalledWith(
+      "/api/admin/invites",
+      expect.objectContaining({ body: JSON.stringify({ memberId: "partner" }) })
+    );
   });
 
   it("removes the token from the address before claiming the device", async () => {
@@ -102,6 +112,8 @@ describe("device pairing UI", () => {
         Response.json({
           devices: [{
             id: "device-1",
+            memberId: "partner",
+            memberName: "민지",
             deviceName: "Galaxy",
             lastSeenAt: "2026-07-27T00:00:00.000Z",
             expiresAt: "2026-10-25T00:00:00.000Z",
@@ -115,6 +127,7 @@ describe("device pairing UI", () => {
 
     render(<DeviceList />);
     expect(await screen.findByText("Galaxy")).toBeVisible();
+    expect(screen.getByText("사용자 민지")).toBeVisible();
     expect(screen.queryByText("must-not-render")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "연결 해제" })).toBeVisible();
   });

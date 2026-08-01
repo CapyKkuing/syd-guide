@@ -61,7 +61,7 @@ describe("ToolsPage", () => {
     expect(screen.getByRole("heading", { name: "Planning & Settings" })).toBeVisible();
     for (const label of [
       "예약·바우처", "환율", "교통", "비상 연락처", "맛집", "카페", "저장 장소",
-      "체크리스트", "여행 메모", "주의사항", "AI 앱 연결", "파트너 연결",
+      "체크리스트", "여행 메모", "주의사항", "AI 앱 연결", "참여자 연결",
       "연결 기기 관리", "테마", "오프라인·동기화 상태"
     ]) {
       expect(screen.getAllByRole("link", { name: `${label} 열기` })[0]).toBeVisible();

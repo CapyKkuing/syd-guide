@@ -192,7 +192,7 @@ export async function createTrip(
     ),
     env.DB.prepare(
       `INSERT INTO trip_members (trip_id, member_id, joined_at)
-       SELECT ?, id, ? FROM members WHERE id IN ('owner', 'partner')`
+       SELECT ?, id, ? FROM members WHERE is_active = 1`
     ).bind(id, timestamp),
   ]);
   const trip = await findTripForMember(env, id, principal.memberId);

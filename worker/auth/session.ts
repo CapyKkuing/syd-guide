@@ -32,7 +32,10 @@ export async function resolvePartnerSession(
   if (!token) return { ok: false, code: "SESSION_REQUIRED" };
 
   const session = await env.DB.prepare(
-    "SELECT id, member_id, last_seen_at, expires_at, revoked_at FROM device_sessions WHERE token_hash = ? AND member_id = 'partner'"
+    `SELECT d.id, d.member_id, d.last_seen_at, d.expires_at, d.revoked_at
+     FROM device_sessions d
+     INNER JOIN members m ON m.id = d.member_id
+     WHERE d.token_hash = ? AND m.role = 'partner' AND m.is_active = 1`
   )
     .bind(await hashToken(token))
     .first<SessionRow>();

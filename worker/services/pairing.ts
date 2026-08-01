@@ -16,6 +16,7 @@ export interface ClaimedInvite {
 
 type InviteRow = {
   id: string;
+  member_id: string;
   expires_at: string;
   used_at: string | null;
 };
@@ -35,6 +36,7 @@ const SESSION_LIFETIME = 90 * 24 * 60 * 60 * 1000;
 
 export async function issueInvite(
   env: Env,
+  memberId: string,
   now: Date
 ): Promise<IssuedInvite> {
   if (!env.PARTNER_ORIGIN) {
@@ -44,9 +46,9 @@ export async function issueInvite(
   const id = crypto.randomUUID();
   const expiresAt = new Date(now.getTime() + INVITE_LIFETIME).toISOString();
   await env.DB.prepare(
-    "INSERT INTO pair_invites (id, token_hash, created_by, expires_at, used_at, created_at) VALUES (?, ?, 'owner', ?, NULL, ?)"
+    "INSERT INTO pair_invites (id, token_hash, created_by, expires_at, used_at, created_at, member_id) VALUES (?, ?, 'owner', ?, NULL, ?, ?)"
   )
-    .bind(id, await hashToken(token), expiresAt, now.toISOString())
+    .bind(id, await hashToken(token), expiresAt, now.toISOString(), memberId)
     .run();
 
   const url = new URL("/pair", env.PARTNER_ORIGIN);
@@ -65,7 +67,7 @@ export async function claimInvite(
   }
   const tokenHash = await hashToken(token);
   const invite = await env.DB.prepare(
-    "SELECT id, expires_at, used_at FROM pair_invites WHERE token_hash = ?"
+    "SELECT id, member_id, expires_at, used_at FROM pair_invites WHERE token_hash = ?"
   )
     .bind(tokenHash)
     .first<InviteRow>();
@@ -92,7 +94,7 @@ export async function claimInvite(
         "UPDATE pair_invites SET used_at = ? WHERE id = ? AND used_at IS NULL AND expires_at > ?"
       ).bind(usedAt, invite.id, usedAt),
       env.DB.prepare(
-        "INSERT INTO device_sessions (id, member_id, invite_id, token_hash, device_name, last_seen_at, expires_at, revoked_at, created_at) SELECT ?, 'partner', id, ?, ?, ?, ?, NULL, ? FROM pair_invites WHERE id = ? AND used_at = ? AND expires_at > ?"
+        "INSERT INTO device_sessions (id, member_id, invite_id, token_hash, device_name, last_seen_at, expires_at, revoked_at, created_at) SELECT ?, member_id, id, ?, ?, ?, ?, NULL, ? FROM pair_invites WHERE id = ? AND used_at = ? AND expires_at > ? AND member_id = ?"
       ).bind(
         sessionId,
         await hashToken(sessionToken),
@@ -102,7 +104,8 @@ export async function claimInvite(
         usedAt,
         invite.id,
         usedAt,
-        usedAt
+        usedAt,
+        invite.member_id
       ),
     ]);
     if (results[0]?.meta.changes !== 1 || results[1]?.meta.changes !== 1) {

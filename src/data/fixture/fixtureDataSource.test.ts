@@ -174,7 +174,7 @@ describe("FixtureTravelGuideDataSource", () => {
           { label: "여행 메모", status: "available" },
           { label: "주의사항", status: "preview" },
           { label: "AI 앱 연결", status: "available" },
-          { label: "파트너 연결", status: "preview" },
+          { label: "참여자 연결", status: "preview" },
           { label: "연결 기기 관리", status: "available" },
           { label: "테마", status: "available" },
           { label: "오프라인·동기화 상태", status: "available" }

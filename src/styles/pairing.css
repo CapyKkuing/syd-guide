@@ -6,6 +6,50 @@
   margin: var(--space-5) 0 0;
 }
 
+.participant-setup {
+  margin: 0 auto;
+  padding: var(--space-4) 0;
+}
+
+.participant-setup h1,
+.participant-setup h3,
+.participant-setup p,
+.participant-manager h3,
+.participant-manager p {
+  margin: 0;
+}
+
+.participant-setup h1 {
+  max-width: none;
+  color: var(--text);
+  font-size: var(--text-3xl);
+  font-weight: 760;
+  letter-spacing: -0.04em;
+  line-height: 1.08;
+}
+
+.participant-person {
+  min-width: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
+}
+
+.participant-person .astryx-field,
+.participant-add-row .astryx-field {
+  width: 100%;
+}
+
+.pair-grid > .astryx-card:first-child {
+  grid-column: 1 / -1;
+}
+
+.pair-card .astryx-segmented-control {
+  width: 100%;
+  margin: var(--space-4) 0;
+}
+
 .pair-page {
   display: grid;
   min-height: 100vh;
@@ -165,5 +209,19 @@
 @media (max-width: 760px) {
   .pair-grid {
     grid-template-columns: 1fr;
+  }
+
+  .participant-person:has(> .astryx-button) {
+    flex-wrap: wrap;
+  }
+
+  .participant-person > .astryx-button,
+  .participant-add-row > .astryx-button {
+    width: 100%;
+  }
+
+  .participant-add-row {
+    align-items: stretch;
+    flex-direction: column;
   }
 }

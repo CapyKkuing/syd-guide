@@ -125,7 +125,7 @@ export function LibraryPage({
         <div>
           <p className="library-page__eyebrow">OUR TRIPS</p>
           <h1 id="library-title">여행 서재</h1>
-          <p>둘이 함께 만든 여행을 필요한 순간에 바로 꺼내 보세요.</p>
+          <p>함께 만든 여행을 필요한 순간에 바로 꺼내 보세요.</p>
         </div>
         <div className="library-page__actions">
           <button
@@ -223,7 +223,7 @@ export function LibraryPage({
           <StatusPanel
             kind="empty"
             title="저장된 여행이 없습니다"
-            description="첫 여행을 만들어 둘만의 계획을 시작하세요."
+            description="첫 여행을 만들어 함께 계획을 시작하세요."
             action={{ label: "다시 불러오기", onClick: library.retryActive }}
           />
           {createCard}

@@ -8,12 +8,14 @@ import { AuthError } from "./auth/principal";
 import type { AppEnv } from "./env";
 import { apiError } from "./http/errors";
 import { registerPairingRoutes } from "./routes/pairing";
+import { registerParticipantRoutes } from "./routes/participants";
 import { registerSessionRoutes } from "./routes/session";
 import { registerSyncRoutes, SyncError } from "./routes/sync";
 import { registerTripRoutes, TripError } from "./routes/trips";
 import { MediaError, registerMediaRoutes } from "./routes/media";
 import { MutationError } from "./services/mutations";
 import { PairingError } from "./services/pairing";
+import { ParticipantError } from "./services/participants";
 
 export function createApp(overrides: Partial<AppDependencies> = {}) {
   const app = new Hono<AppEnv>();
@@ -22,6 +24,7 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
   app.use("/api/*", requireSameOrigin);
   app.get("/api/health", (c) => c.json({ ok: true }));
   registerSessionRoutes(app, dependencies);
+  registerParticipantRoutes(app, dependencies);
   registerPairingRoutes(app, dependencies);
   registerTripRoutes(app, dependencies);
   registerMediaRoutes(app, dependencies);
@@ -35,6 +38,9 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
       return apiError(c, error.status, error.code, error.message);
     }
     if (error instanceof PairingError) {
+      return apiError(c, error.status, error.code, error.message);
+    }
+    if (error instanceof ParticipantError) {
       return apiError(c, error.status, error.code, error.message);
     }
     if (error instanceof TripError) {

@@ -1,5 +1,6 @@
 import { PairDevicePage } from "../features/auth/PairDevicePage";
 import { PairingManager } from "../features/auth/PairingManager";
+import { ParticipantSetupGate } from "../features/auth/ParticipantSetup";
 import {
   apiTripLibraryClient,
   createFixturePreviewTripLibraryClient,
@@ -122,10 +123,12 @@ function AppContent({
   if (route.name === "library") {
     return (
       <LibraryShell>
-        <LibraryPage
-          client={libraryClient}
-          deviceManagement={<PairingManager />}
-        />
+        <ParticipantSetupGate enabled={!isFixturePreview && !tripLibraryClient}>
+          <LibraryPage
+            client={libraryClient}
+            deviceManagement={<PairingManager />}
+          />
+        </ParticipantSetupGate>
       </LibraryShell>
     );
   }

@@ -24,9 +24,11 @@ async function issueInvite(): Promise<Invite> {
     {
       method: "POST",
       headers: {
+        "Content-Type": "application/json",
         Origin: "http://localhost",
         "X-Dev-Principal": "owner",
       },
+      body: JSON.stringify({ memberId: "partner" }),
     },
     bindings("admin")
   );
@@ -109,11 +111,18 @@ describe("one-time device pairing", () => {
     );
     expect(list.status).toBe(200);
     const body = (await list.json()) as {
-      devices: Array<{ id: string; deviceName: string; revokedAt: string | null }>;
+      devices: Array<{
+        id: string;
+        memberId: string;
+        memberName: string;
+        deviceName: string;
+        revokedAt: string | null;
+      }>;
     };
     expect(body.devices).toHaveLength(1);
     expect(body.devices[0]).toMatchObject({
       deviceName: "Galaxy",
+      memberId: "partner",
       revokedAt: null,
     });
     expect(body.devices[0]).not.toHaveProperty("tokenHash");

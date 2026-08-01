@@ -54,12 +54,12 @@ describe("TripShell", () => {
       .toHaveAttribute("aria-current", "page");
     expect(within(nav).getByRole("link", { name: "일정" }))
       .not.toHaveAttribute("aria-current");
-    expect(screen.getByRole("status", { name: "파트너 연결됨" })).toBeVisible();
+    expect(screen.getByRole("status", { name: "참여자 등록됨" })).toBeVisible();
   });
 
   it.each([
-    ["connected", "파트너 연결됨", "연결됨"],
-    ["not-connected", "파트너 연결 필요", "연결 필요"]
+    ["connected", "참여자 등록됨", "등록됨"],
+    ["not-connected", "참여자 등록 필요", "등록 필요"]
   ] as const)("renders distinct desktop and mobile copy for a %s partner state", async (partnerStatus, desktopCopy, mobileCopy) => {
     await renderTripShell("today", partnerStatus);
 

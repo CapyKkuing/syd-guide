@@ -6,11 +6,27 @@ export interface Invite {
 
 export interface Device {
   id: string;
+  memberId: string;
+  memberName: string;
   deviceName: string;
   lastSeenAt: string;
   expiresAt: string;
   revokedAt: string | null;
   createdAt: string;
+}
+
+export interface Participant {
+  id: string;
+  displayName: string;
+  isActive: boolean;
+  isRepresentative: boolean;
+  deviceCount: number;
+}
+
+export interface ParticipantRoster {
+  setupComplete: boolean;
+  representativeMemberId: string;
+  members: Participant[];
 }
 
 export interface SessionPrincipal {
@@ -48,12 +64,56 @@ async function json<T>(response: Response): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-export async function createInvite(): Promise<Invite> {
+export async function createInvite(memberId: string): Promise<Invite> {
   const response = await fetch("/api/admin/invites", {
     method: "POST",
-    headers: headers(true),
+    headers: headers(true, true),
+    body: JSON.stringify({ memberId }),
   });
   return (await json<{ invite: Invite }>(response)).invite;
+}
+
+export async function getParticipantRoster(): Promise<ParticipantRoster> {
+  const response = await fetch("/api/admin/participants", {
+    headers: headers(true),
+  });
+  return (await json<{ roster: ParticipantRoster }>(response)).roster;
+}
+
+export async function setupParticipants(
+  ownerName: string,
+  participantNames: string[]
+): Promise<ParticipantRoster> {
+  const response = await fetch("/api/admin/participants/setup", {
+    method: "POST",
+    headers: headers(true, true),
+    body: JSON.stringify({ ownerName, participantNames }),
+  });
+  return (await json<{ roster: ParticipantRoster }>(response)).roster;
+}
+
+export async function addParticipant(displayName: string): Promise<ParticipantRoster> {
+  const response = await fetch("/api/admin/participants", {
+    method: "POST",
+    headers: headers(true, true),
+    body: JSON.stringify({ displayName }),
+  });
+  return (await json<{ roster: ParticipantRoster }>(response)).roster;
+}
+
+export async function updateParticipant(
+  memberId: string,
+  input: { displayName?: string; isRepresentative?: true }
+): Promise<ParticipantRoster> {
+  const response = await fetch(
+    `/api/admin/participants/${encodeURIComponent(memberId)}`,
+    {
+      method: "PATCH",
+      headers: headers(true, true),
+      body: JSON.stringify(input),
+    }
+  );
+  return (await json<{ roster: ParticipantRoster }>(response)).roster;
 }
 
 export async function getPrincipal(): Promise<SessionPrincipal> {

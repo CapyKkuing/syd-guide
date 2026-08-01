@@ -1,18 +1,29 @@
 import { useEffect, useState } from "react";
-import { getPrincipal, type SessionPrincipal } from "./api";
+import {
+  getParticipantRoster,
+  getPrincipal,
+  type ParticipantRoster,
+  type SessionPrincipal,
+} from "./api";
 import { DeviceList } from "./DeviceList";
 import { InvitePanel } from "./InvitePanel";
+import { ParticipantManager } from "./ParticipantManager";
 
 export function PairingManager() {
   const [principal, setPrincipal] = useState<SessionPrincipal | null>(null);
   const [status, setStatus] = useState("권한을 확인하는 중…");
+  const [roster, setRoster] = useState<ParticipantRoster | null>(null);
 
   useEffect(() => {
     let active = true;
-    void getPrincipal().then(
-      (result) => {
+    void getPrincipal().then(async (result) => {
         if (!active) return;
         setPrincipal(result);
+        if (result.role === "owner") {
+          const nextRoster = await getParticipantRoster();
+          if (!active) return;
+          setRoster(nextRoster);
+        }
         setStatus("");
       },
       (error: unknown) => {
@@ -38,9 +49,16 @@ export function PairingManager() {
       </section>
     );
   }
+  if (!roster) {
+    return <p className="form-status pairing-status" role="status">참여자 명단을 불러오는 중…</p>;
+  }
+  const inviteParticipants = roster.members.filter(
+    (member) => member.isActive && member.id !== "owner"
+  );
   return (
     <div className="pair-grid">
-      <InvitePanel />
+      <ParticipantManager roster={roster} onChange={setRoster} />
+      <InvitePanel participants={inviteParticipants} />
       <DeviceList />
     </div>
   );

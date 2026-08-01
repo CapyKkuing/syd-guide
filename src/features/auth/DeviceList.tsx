@@ -21,7 +21,7 @@ export function DeviceList() {
       (result) => {
         if (!active) return;
         setDevices(result);
-        setStatus(result.length ? "" : "연결된 파트너 기기가 없습니다.");
+        setStatus(result.length ? "" : "연결된 참여자 기기가 없습니다.");
       },
       (error: unknown) => {
         if (active) {
@@ -39,7 +39,7 @@ export function DeviceList() {
       await removeDevice(device.id);
       const result = await getDevices();
       setDevices(result);
-      setStatus(result.length ? "" : "연결된 파트너 기기가 없습니다.");
+      setStatus(result.length ? "" : "연결된 참여자 기기가 없습니다.");
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "기기를 해제하지 못했습니다.");
     }
@@ -48,13 +48,14 @@ export function DeviceList() {
   return (
     <section className="pair-card" aria-labelledby="devices-title">
       <p className="eyebrow">CONNECTED DEVICES</p>
-      <h2 id="devices-title">파트너 기기</h2>
+      <h2 id="devices-title">참여자 기기</h2>
       {status && <p className="form-status" role="status">{status}</p>}
       <ul className="device-list">
         {devices.map((device) => (
           <li key={device.id}>
             <div>
               <strong>{device.deviceName}</strong>
+              <span>사용자 {device.memberName}</span>
               <span>마지막 사용 {date(device.lastSeenAt)}</span>
               <span>만료 {date(device.expiresAt)}</span>
             </div>

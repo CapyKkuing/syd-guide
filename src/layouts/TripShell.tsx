@@ -29,8 +29,8 @@ function dayNumber(context: TripContextViewModel): string {
 
 function partnerStatusCopy(partnerStatus: TripContextViewModel["partnerStatus"]) {
   return partnerStatus === "connected"
-    ? { desktop: "파트너 연결됨", mobile: "연결됨" }
-    : { desktop: "파트너 연결 필요", mobile: "연결 필요" };
+    ? { desktop: "참여자 등록됨", mobile: "등록됨" }
+    : { desktop: "참여자 등록 필요", mobile: "등록 필요" };
 }
 
 export function TripShell({
@@ -146,7 +146,7 @@ export function TripShell({
           ) : null}
         </div>
         <div className="trip-header__actions">
-          <span className="trip-avatar" aria-label={`${context.viewer.displayName} ${context.viewer.role === "owner" ? "관리자" : "파트너"}`}>
+          <span className="trip-avatar" aria-label={`${context.viewer.displayName} ${context.viewer.role === "owner" ? "관리자" : "참여자"}`}>
             {initials(context.viewer.displayName)}
           </span>
           <span

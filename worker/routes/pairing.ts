@@ -4,6 +4,7 @@ import { requireOwner } from "../auth/principal";
 import { listDevices, revokeDevice } from "../db/sessions";
 import type { AppEnv } from "../env";
 import { claimInvite, issueInvite, PairingError } from "../services/pairing";
+import { requireInvitableParticipant } from "../services/participants";
 
 export function registerPairingRoutes(
   app: Hono<AppEnv>,
@@ -11,7 +12,16 @@ export function registerPairingRoutes(
 ) {
   app.post("/api/admin/invites", async (c) => {
     await requireOwner(c, dependencies);
-    return c.json({ invite: await issueInvite(c.env, dependencies.now()) }, 201);
+    const body = await c.req.json<unknown>().catch(() => null);
+    const memberId = body && typeof body === "object" && "memberId" in body
+      && typeof body.memberId === "string" ? body.memberId : "";
+    if (!memberId || memberId.length > 100) {
+      throw new PairingError(400, "PARTICIPANT_ID_INVALID", "연결할 참여자를 선택해 주세요.");
+    }
+    await requireInvitableParticipant(c.env, memberId);
+    return c.json({
+      invite: await issueInvite(c.env, memberId, dependencies.now()),
+    }, 201);
   });
 
   app.get("/api/admin/devices", async (c) => {

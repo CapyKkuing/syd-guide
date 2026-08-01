@@ -136,8 +136,8 @@ describe("shared trip library API", () => {
         updatedBy: role,
         version: 1,
         syncVersion: 0,
-        journeyStartsAt: outboundFlight.actualDepartureAt,
-        journeyEndsAt: returnFlight.estimatedArrivalAt,
+        journeyStartsAt: outboundFlight.scheduledDepartureAt,
+        journeyEndsAt: returnFlight.scheduledArrivalAt,
         outboundFlight,
         returnFlight,
         representativeMediaId: null,
@@ -303,7 +303,7 @@ describe("shared trip library API", () => {
     });
   });
 
-  it("adds only the fixed owner and partner members to a new trip", async () => {
+  it("adds every active participant to a new trip", async () => {
     await env.DB.prepare(
       `INSERT INTO members
        (id, role, display_name, access_email, created_at)
@@ -320,6 +320,7 @@ describe("shared trip library API", () => {
       .bind(created.id)
       .all<{ member_id: string }>();
     expect(results).toEqual([
+      { member_id: "extra-partner" },
       { member_id: "owner" },
       { member_id: "partner" },
     ]);
