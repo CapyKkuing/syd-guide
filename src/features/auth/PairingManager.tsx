@@ -52,9 +52,7 @@ export function PairingManager() {
   if (!roster) {
     return <p className="form-status pairing-status" role="status">참여자 명단을 불러오는 중…</p>;
   }
-  const inviteParticipants = roster.members.filter(
-    (member) => member.isActive && member.id !== "owner"
-  );
+  const inviteParticipants = roster.members.filter((member) => member.isActive);
   return (
     <div className="pair-grid">
       <ParticipantManager roster={roster} onChange={setRoster} />

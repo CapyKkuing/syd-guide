@@ -50,6 +50,10 @@
   margin: var(--space-4) 0;
 }
 
+.pair-card .astryx-segmented-control-item {
+  white-space: nowrap;
+}
+
 .pair-page {
   display: grid;
   min-height: 100vh;

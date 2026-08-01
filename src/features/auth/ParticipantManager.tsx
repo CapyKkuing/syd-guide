@@ -13,6 +13,7 @@ import {
 import { useState } from "react";
 import {
   addParticipant,
+  deleteParticipant,
   updateParticipant,
   type ParticipantRoster,
 } from "./api";
@@ -27,6 +28,7 @@ export function ParticipantManager({
 }) {
   const [newName, setNewName] = useState("");
   const [status, setStatus] = useState("");
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const members = roster.members.filter((member) => member.isActive);
 
   async function add() {
@@ -49,6 +51,16 @@ export function ParticipantManager({
       onChange(await updateParticipant(memberId, { isRepresentative: true }));
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "대표자를 변경하지 못했습니다.");
+    }
+  }
+
+  async function remove(memberId: string) {
+    setStatus("");
+    try {
+      onChange(await deleteParticipant(memberId));
+      setDeleteTargetId(null);
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "참여자를 삭제하지 못했습니다.");
     }
   }
 
@@ -75,13 +87,40 @@ export function ParticipantManager({
                 </Text>
               </VStack>
             </StackItem>
-            {!member.isRepresentative ? (
-              <Button
-                clickAction={() => makeRepresentative(member.id)}
-                label={`${member.displayName} 대표자로 지정`}
-                size="sm"
-                variant="ghost"
-              >대표자로</Button>
+            {member.id !== "owner" ? (
+              <HStack align="center" gap={1} wrap="wrap">
+                {!member.isRepresentative ? (
+                  <Button
+                    clickAction={() => makeRepresentative(member.id)}
+                    label={`${member.displayName} 대표자로 지정`}
+                    size="sm"
+                    variant="ghost"
+                  >대표자로</Button>
+                ) : null}
+                {deleteTargetId === member.id ? (
+                  <>
+                    <Button
+                      clickAction={() => remove(member.id)}
+                      label={`${member.displayName} 삭제 확인`}
+                      size="sm"
+                      variant="ghost"
+                    >삭제 확인</Button>
+                    <Button
+                      clickAction={() => setDeleteTargetId(null)}
+                      label={`${member.displayName} 삭제 취소`}
+                      size="sm"
+                      variant="secondary"
+                    >취소</Button>
+                  </>
+                ) : (
+                  <Button
+                    clickAction={() => setDeleteTargetId(member.id)}
+                    label={`${member.displayName} 삭제`}
+                    size="sm"
+                    variant="ghost"
+                  >삭제</Button>
+                )}
+              </HStack>
             ) : null}
           </HStack>
         ))}

@@ -2,6 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ParticipantSetupGate } from "./ParticipantSetup";
+import { ParticipantManager } from "./ParticipantManager";
 
 const initialRoster = {
   setupComplete: false,
@@ -111,5 +112,32 @@ describe("participant first setup", () => {
         body: JSON.stringify({ ownerName: "연준", participantNames: ["민지"] }),
       })
     );
+  });
+});
+
+describe("participant management", () => {
+  it("requires confirmation before removing a participant", async () => {
+    const updatedRoster = {
+      ...initialRoster,
+      setupComplete: true,
+      members: initialRoster.members.map((member) =>
+        member.id === "partner" ? { ...member, isActive: false } : member
+      ),
+    };
+    const request = vi.fn().mockResolvedValue(Response.json({ roster: updatedRoster }));
+    const onChange = vi.fn();
+    vi.stubGlobal("fetch", request);
+
+    render(<ParticipantManager roster={initialRoster} onChange={onChange} />);
+    await userEvent.click(screen.getByRole("button", { name: "여자친구 삭제" }));
+    expect(screen.getByRole("button", { name: "여자친구 삭제 확인" })).toBeVisible();
+    await userEvent.click(screen.getByRole("button", { name: "여자친구 삭제 확인" }));
+
+    await waitFor(() => expect(onChange).toHaveBeenCalledWith(updatedRoster));
+    expect(request).toHaveBeenCalledWith(
+      "/api/admin/participants/partner",
+      expect.objectContaining({ method: "DELETE" })
+    );
+    expect(screen.queryByRole("button", { name: "나 삭제" })).not.toBeInTheDocument();
   });
 });

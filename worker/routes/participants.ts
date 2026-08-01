@@ -7,6 +7,7 @@ import {
   addParticipant,
   getParticipantRoster,
   ParticipantError,
+  removeParticipant,
   setupParticipants,
   updateParticipant,
 } from "../services/participants";
@@ -77,6 +78,17 @@ export function registerParticipantRoutes(
         c.env,
         memberId(c.req.param("id")),
         values,
+        dependencies.now()
+      ),
+    });
+  });
+
+  app.delete("/api/admin/participants/:id", async (c) => {
+    await requireOwner(c, dependencies);
+    return c.json({
+      roster: await removeParticipant(
+        c.env,
+        memberId(c.req.param("id")),
         dependencies.now()
       ),
     });

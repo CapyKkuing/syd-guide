@@ -159,9 +159,42 @@ export async function updateParticipant(
   return getParticipantRoster(env);
 }
 
+export async function removeParticipant(
+  env: Env,
+  memberId: string,
+  now: Date
+): Promise<ParticipantRoster> {
+  if (memberId === "owner") {
+    throw new ParticipantError(409, "OWNER_CANNOT_BE_REMOVED", "관리자는 삭제할 수 없습니다.");
+  }
+  const member = await env.DB.prepare(
+    "SELECT id FROM members WHERE id = ? AND is_active = 1"
+  ).bind(memberId).first<{ id: string }>();
+  if (!member) {
+    throw new ParticipantError(404, "PARTICIPANT_NOT_FOUND", "참여자를 찾을 수 없습니다.");
+  }
+  const timestamp = now.toISOString();
+  await env.DB.batch([
+    env.DB.prepare("UPDATE members SET is_active = 0 WHERE id = ?")
+      .bind(memberId),
+    env.DB.prepare("DELETE FROM trip_members WHERE member_id = ?")
+      .bind(memberId),
+    env.DB.prepare(
+      "UPDATE device_sessions SET revoked_at = COALESCE(revoked_at, ?) WHERE member_id = ?"
+    ).bind(timestamp, memberId),
+    env.DB.prepare(
+      "UPDATE pair_invites SET expires_at = ? WHERE member_id = ? AND used_at IS NULL AND expires_at > ?"
+    ).bind(timestamp, memberId, timestamp),
+    env.DB.prepare(
+      "UPDATE app_settings SET representative_member_id = 'owner', updated_at = ? WHERE id = 'app' AND representative_member_id = ?"
+    ).bind(timestamp, memberId),
+  ]);
+  return getParticipantRoster(env);
+}
+
 export async function requireInvitableParticipant(env: Env, memberId: string) {
   const member = await env.DB.prepare(
-    "SELECT id FROM members WHERE id = ? AND role = 'partner' AND is_active = 1"
+    "SELECT id FROM members WHERE id = ? AND is_active = 1"
   ).bind(memberId).first<{ id: string }>();
   if (!member) {
     throw new ParticipantError(404, "PARTICIPANT_NOT_FOUND", "연결할 참여자를 찾을 수 없습니다.");

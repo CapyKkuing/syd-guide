@@ -116,6 +116,14 @@ export async function updateParticipant(
   return (await json<{ roster: ParticipantRoster }>(response)).roster;
 }
 
+export async function deleteParticipant(memberId: string): Promise<ParticipantRoster> {
+  const response = await fetch(
+    `/api/admin/participants/${encodeURIComponent(memberId)}`,
+    { method: "DELETE", headers: headers(true) }
+  );
+  return (await json<{ roster: ParticipantRoster }>(response)).roster;
+}
+
 export async function getPrincipal(): Promise<SessionPrincipal> {
   const localPartner =
     isLocalHost() && localStorage.getItem("couple_dev_principal") === "partner";

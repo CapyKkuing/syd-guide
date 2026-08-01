@@ -18,7 +18,7 @@ function bindings(surface: Env["SURFACE"]): Env {
   };
 }
 
-async function issueInvite(): Promise<Invite> {
+async function issueInvite(memberId = "partner"): Promise<Invite> {
   const response = await app.request(
     "http://localhost/api/admin/invites",
     {
@@ -28,7 +28,7 @@ async function issueInvite(): Promise<Invite> {
         Origin: "http://localhost",
         "X-Dev-Principal": "owner",
       },
-      body: JSON.stringify({ memberId: "partner" }),
+      body: JSON.stringify({ memberId }),
     },
     bindings("admin")
   );
@@ -160,6 +160,34 @@ describe("one-time device pairing", () => {
     await expect(env.DB.prepare(
       "SELECT COUNT(*) AS count FROM device_sessions"
     ).first<{ count: number }>()).resolves.toEqual({ count: 0 });
+  });
+
+  it("allows unlimited invites per member and preserves the owner role in the installed app", async () => {
+    const firstInvite = await issueInvite("owner");
+    const secondInvite = await issueInvite("owner");
+    const first = await claimInvite(firstInvite.token, "Owner iPhone");
+    const second = await claimInvite(secondInvite.token, "Owner iPad");
+
+    expect(first.status).toBe(200);
+    expect(second.status).toBe(200);
+    const cookie = first.headers.get("set-cookie")?.split(";")[0];
+    const session = await app.request(
+      "https://partner.example/api/session",
+      { headers: { Cookie: cookie ?? "" } },
+      bindings("partner")
+    );
+    await expect(session.json()).resolves.toMatchObject({
+      principal: { memberId: "owner", role: "owner" },
+    });
+    const devices = await app.request(
+      "https://partner.example/api/admin/devices",
+      { headers: { Cookie: cookie ?? "" } },
+      bindings("partner")
+    );
+    expect(devices.status).toBe(200);
+    await expect(env.DB.prepare(
+      "SELECT COUNT(*) AS count FROM device_sessions WHERE member_id = 'owner'"
+    ).first<{ count: number }>()).resolves.toEqual({ count: 2 });
   });
 
   it("refuses to permanently delete a device before it is revoked", async () => {

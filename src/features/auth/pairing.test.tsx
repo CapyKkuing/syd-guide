@@ -176,6 +176,36 @@ describe("device pairing UI", () => {
     expect(screen.queryByRole("button", { name: "초대 만들기" })).not.toBeInTheDocument();
   });
 
+  it("lets the owner create an invite for an installed admin device", async () => {
+    const request = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url === "/api/session") {
+        return Response.json({ principal: { memberId: "owner", role: "owner" } });
+      }
+      if (url === "/api/admin/participants") {
+        return Response.json({ roster: {
+          setupComplete: true,
+          representativeMemberId: "owner",
+          members: [{
+            id: "owner",
+            displayName: "연준",
+            isActive: true,
+            isRepresentative: true,
+            deviceCount: 0,
+          }],
+        } });
+      }
+      if (url === "/api/admin/devices") return Response.json({ devices: [] });
+      return Response.json({}, { status: 404 });
+    });
+    vi.stubGlobal("fetch", request);
+
+    render(<PairingManager />);
+
+    expect(await screen.findByRole("radio", { name: "연준" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "초대 만들기" })).toBeEnabled();
+  });
+
   it("keeps path navigation working after the pair redirect", () => {
     window.history.replaceState(null, "", "/library");
     render(<RouteProbe />);
