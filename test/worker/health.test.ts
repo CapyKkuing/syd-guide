@@ -14,7 +14,7 @@ it("serves API health before static assets", async () => {
     "https://cdn.jsdelivr.net https://open.er-api.com"
   );
   expect(response.headers.get("content-security-policy")).toContain(
-    "script-src 'self' https://accounts.google.com https://cdn.jsdelivr.net"
+    "script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com https://cdn.jsdelivr.net"
   );
   expect(response.headers.get("referrer-policy")).toBe(
     "strict-origin-when-cross-origin"
