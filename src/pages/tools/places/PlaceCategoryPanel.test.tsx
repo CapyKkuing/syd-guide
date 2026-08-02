@@ -128,6 +128,8 @@ describe("PlaceCategoryPanel", () => {
     );
 
     await screen.findByText("★ 4.5 (1,000)");
+    expect(screen.getByRole("img", { name: "Quay 장소 사진" }))
+      .toHaveAttribute("src", "/images/quay.jpg");
     await userEvent.click(screen.getByRole("button", { name: "저장" }));
 
     expect(submit).toHaveBeenCalledWith(

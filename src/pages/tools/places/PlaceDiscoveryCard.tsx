@@ -44,7 +44,7 @@ export function PlaceDiscoveryCard({
   viewerMemberId: string;
 }) {
   const [discovery, setDiscovery] = useState<PlaceDiscoveryDetails | null>(null);
-  const [photoUrl, setPhotoUrl] = useState<string | null>(place.imageUrl);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(() => normalizeImageUrl(place.imageUrl));
   const [error, setError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -72,7 +72,7 @@ export function PlaceDiscoveryCard({
       objectUrl = URL.createObjectURL(blob);
       setPhotoUrl(objectUrl);
     }).catch(() => {
-      if (active && !place.imageUrl) setPhotoUrl(null);
+      if (active) setPhotoUrl(normalizeImageUrl(place.imageUrl));
     });
     return () => {
       active = false;
