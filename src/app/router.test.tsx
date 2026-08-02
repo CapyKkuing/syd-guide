@@ -109,16 +109,19 @@ describe("path routing", () => {
     expect(parseRoute("/trip/sydney-2026/tools/unknown")).toEqual({ name: "not-found" });
   });
 
-  it("routes saved places into the existing map", () => {
-    expect(pathForTool("시드니 / 2026", "saved-places")).toBe(
-      "/trip/%EC%8B%9C%EB%93%9C%EB%8B%88%20%2F%202026/map"
-    );
-    expect(parseRoute("/trip/sydney-2026/tools/saved-places")).toEqual({
-      name: "trip",
-      tripId: "sydney-2026",
-      tab: "map"
-    });
-  });
+  it.each(["restaurants", "cafes", "saved-places"] as const)(
+    "routes the moved %s collection into the place tab",
+    (toolId) => {
+      expect(pathForTool("시드니 / 2026", toolId)).toBe(
+        "/trip/%EC%8B%9C%EB%93%9C%EB%8B%88%20%2F%202026/map"
+      );
+      expect(parseRoute(`/trip/sydney-2026/tools/${toolId}`)).toEqual({
+        name: "trip",
+        tripId: "sydney-2026",
+        tab: "map"
+      });
+    }
+  );
 
   it("sends the guidebook management shortcut to the protected admin host", () => {
     expect(pathForAdminDevices("시드니 / 2026", {

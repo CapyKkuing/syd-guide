@@ -19,6 +19,7 @@ import {
   pathForPair,
   useRoute
 } from "./router";
+import { resolveRootStartPath } from "./rootStart";
 import { ThemeProvider } from "./theme/ThemeProvider";
 import { AstryxThemeBridge } from "./theme/AstryxThemeBridge";
 import { TripRoutePage } from "./TripRoutePage";
@@ -75,7 +76,18 @@ const syncRuntime = {
 };
 
 function RootRedirect() {
-  useEffect(() => navigateToLibrary(), []);
+  useEffect(() => {
+    let active = true;
+    void resolveRootStartPath(
+      window.navigator.onLine,
+      () => snapshotStore.latestTripId()
+    ).then((path) => {
+      if (active) navigate(path, true);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
   return (
     <StatusPanel
       kind="loading"

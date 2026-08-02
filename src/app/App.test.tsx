@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { fixtureTravelGuideDataSource } from "../data/fixture/fixtureDataSource";
 import { createFixturePreviewTripLibraryClient } from "../features/trips/api";
 import { App } from "./App";
+import { resolveRootStartPath } from "./rootStart";
 
 vi.mock("../features/auth/PairingManager", () => ({
   PairingManager: () => <p>기기 관리 테스트</p>
@@ -14,6 +15,13 @@ afterEach(() => {
 });
 
 describe("App routing", () => {
+  it("opens the latest cached trip when the installed app starts offline", async () => {
+    await expect(resolveRootStartPath(false, async () => "trip-one"))
+      .resolves.toBe("/trip/trip-one/today");
+    await expect(resolveRootStartPath(true, async () => "trip-one"))
+      .resolves.toBe("/library");
+  });
+
   it("renders the library at root without trip navigation", async () => {
     window.history.replaceState(null, "", "/");
     render(<App dataSource={fixtureTravelGuideDataSource} />);

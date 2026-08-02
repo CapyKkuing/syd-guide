@@ -1,3 +1,7 @@
+import {
+  SegmentedControl,
+  SegmentedControlItem,
+} from "@astryxdesign/core";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { MapPlaceView, ScheduleDayView } from "../../data/contracts";
 import { orderScheduleItems, placesInScheduleOrder } from "../../domain/scheduleOrder";
@@ -5,6 +9,11 @@ import type { TripMutationController } from "../../services/mutations/controller
 import { MapCanvas, type MapLoader } from "./MapCanvas";
 import { MapPlaceSheet } from "./MapPlaceSheet";
 import { PlaceEditorDialog } from "./PlaceEditorDialog";
+import {
+  PlaceHubPanel,
+  type PlaceHubCategory,
+  type PlaceHubMode,
+} from "./PlaceHubPanel";
 
 type CategoryFilter = "all" | MapPlaceView["category"];
 type StatusFilter = "all" | MapPlaceView["status"];
@@ -44,17 +53,21 @@ export function MapPage({
   mapLoader,
   mutationController,
   places,
+  tripId,
   viewerMemberId = ""
 }: {
   days: ScheduleDayView[];
   mapLoader?: MapLoader;
   mutationController?: TripMutationController;
   places: MapPlaceView[];
+  tripId: string;
   viewerMemberId?: string;
 }) {
+  const [viewMode, setViewMode] = useState<PlaceHubMode | "map">("saved");
+  const [hubCategory, setHubCategory] = useState<PlaceHubCategory>("all");
   const [search, setSearch] = useState("");
   const [dayDate, setDayDate] = useState("all");
-  const [category, setCategory] = useState<CategoryFilter>("all");
+  const [mapCategory, setMapCategory] = useState<CategoryFilter>("all");
   const [status, setStatus] = useState<StatusFilter>("all");
   const [selectedPlace, setSelectedPlace] = useState<MapPlaceView | null>(null);
   const [editingPlace, setEditingPlace] = useState<MapPlaceView | null | undefined>();
@@ -85,17 +98,17 @@ export function MapPage({
       : places;
     return orderedPlaces.filter((place) => (
       (dayDate === "all" || scheduledIds.has(place.id))
-      && (category === "all" || place.category === category)
+      && (mapCategory === "all" || place.category === mapCategory)
       && (status === "all" || place.status === status)
       && (!normalizedSearch || `${place.name} ${place.address}`.toLocaleLowerCase().includes(normalizedSearch))
     ));
-  }, [category, dayDate, days, places, search, status]);
+  }, [dayDate, days, mapCategory, places, search, status]);
 
   const dates = Array.from(new Set(days.map((day) => day.date)));
   const resetFilters = () => {
     setSearch("");
     setDayDate("all");
-    setCategory("all");
+    setMapCategory("all");
     setStatus("all");
   };
   const openPlace = useCallback(({ place, opener }: { place: MapPlaceView; opener: HTMLElement }) => {
@@ -107,8 +120,9 @@ export function MapPage({
     <section className="map-page" aria-labelledby="map-title">
       <header className="map-page__header">
         <div>
-          <h1 id="map-title">지도</h1>
-          <p>저장한 장소를 조건에 맞게 확인합니다.</p>
+          <p className="map-page__eyebrow">PLACE BOOK</p>
+          <h1 id="map-title">장소</h1>
+          <p>저장한 맛집과 카페를 바로 확인하고 길찾기를 시작하세요.</p>
         </div>
         <button
           className="primary-button"
@@ -120,6 +134,44 @@ export function MapPage({
         </button>
       </header>
 
+      <SegmentedControl
+        label="장소 화면"
+        layout="fill"
+        onChange={(value) => setViewMode(value as PlaceHubMode | "map")}
+        size="md"
+        value={viewMode}
+      >
+        <SegmentedControlItem label="내 저장" value="saved" />
+        <SegmentedControlItem label="추천" value="recommended" />
+        <SegmentedControlItem label="지도" value="map" />
+      </SegmentedControl>
+
+      {viewMode !== "map" ? (
+        <SegmentedControl
+          label="장소 분류"
+          layout="fill"
+          onChange={(value) => setHubCategory(value as PlaceHubCategory)}
+          size="sm"
+          value={hubCategory}
+        >
+          <SegmentedControlItem label="전체" value="all" />
+          <SegmentedControlItem label="맛집" value="restaurant" />
+          <SegmentedControlItem label="카페" value="cafe" />
+        </SegmentedControl>
+      ) : null}
+
+      {viewMode !== "map" ? (
+        <PlaceHubPanel
+          category={hubCategory}
+          controller={mutationController}
+          key={`${viewMode}-${hubCategory}`}
+          mode={viewMode}
+          places={places}
+          tripId={tripId}
+          viewerMemberId={viewerMemberId}
+        />
+      ) : (
+        <>
       <div className="map-filters">
         <label className="map-search">
           <span>장소 검색</span>
@@ -134,7 +186,7 @@ export function MapPage({
         </fieldset>
         <fieldset className="map-filter-group">
           <legend>분류</legend>
-          <div>{categories.map((option) => <button key={option.value} aria-pressed={category === option.value} className={category === option.value ? "is-selected" : undefined} onClick={() => setCategory(option.value)} type="button">{option.label}</button>)}</div>
+          <div>{categories.map((option) => <button key={option.value} aria-pressed={mapCategory === option.value} className={mapCategory === option.value ? "is-selected" : undefined} onClick={() => setMapCategory(option.value)} type="button">{option.label}</button>)}</div>
         </fieldset>
         <fieldset className="map-filter-group">
           <legend>장소 상태</legend>
@@ -177,6 +229,8 @@ export function MapPage({
           ) : null}
         </section>
       </div>
+        </>
+      )}
 
       {selectedPlace ? (
         <MapPlaceSheet
@@ -194,6 +248,7 @@ export function MapPage({
       {editingPlace !== undefined && mutationController ? (
         <PlaceEditorDialog
           controller={mutationController}
+          initialCategory={hubCategory === "all" ? undefined : hubCategory}
           onClose={() => setEditingPlace(undefined)}
           place={editingPlace}
           viewerMemberId={viewerMemberId}

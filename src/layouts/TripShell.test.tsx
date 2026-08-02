@@ -55,6 +55,8 @@ describe("TripShell", () => {
       .toHaveAttribute("aria-current", "page");
     expect(within(nav).getByRole("link", { name: "일정" }))
       .not.toHaveAttribute("aria-current");
+    expect(within(nav).getByRole("link", { name: "장소" }))
+      .not.toHaveAttribute("aria-current");
     expect(within(nav).getByRole("link", {
       name: "관리자 페이지에서 초대·기기 관리 열기"
     })).toHaveAttribute("href", "/trip/sydney-2026/tools/devices");

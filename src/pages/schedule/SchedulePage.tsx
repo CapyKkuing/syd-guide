@@ -106,32 +106,57 @@ export function SchedulePage({
     setSelectedPlace(place);
   }
 
-  async function reorderItems(sourceId: string, targetId: string) {
+  function reorderItems(sourceId: string, targetId: string) {
     if (!day || reordering) return;
     const nextItems = moveScheduleItem(items, sourceId, targetId);
     if (nextItems.map((item) => item.id).join("|") === items.map((item) => item.id).join("|")) return;
+    const moved = nextItems.find((item) => item.id === sourceId);
     setPendingOrder({ dayId: day.id, ids: nextItems.map((item) => item.id) });
     setReorderError("");
-    setReorderMessage("");
-    const moved = nextItems.find((item) => item.id === sourceId);
+    setReorderMessage(moved
+      ? `${moved.title} 순서를 바꿨습니다. 완료를 누르면 저장됩니다.`
+      : "일정 순서를 바꿨습니다. 완료를 누르면 저장됩니다.");
+  }
+
+  async function toggleReorderMode() {
+    if (!day || reordering) return;
+    if (!reorderMode) {
+      const waitingForSync = pendingOrder?.dayId === day.id
+        && pendingOrder.ids.join("|") !== serverOrderKey;
+      if (waitingForSync) {
+        setReorderMessage("이전 순서 변경을 동기화하는 중입니다.");
+        return;
+      }
+      setPendingOrder(null);
+      setReorderError("");
+      setReorderMessage("");
+      setReorderMode(true);
+      return;
+    }
+    if (!pendingOrder || pendingOrder.ids.join("|") === serverOrderKey) {
+      setReorderMode(false);
+      setReorderMessage("");
+      return;
+    }
+    const movedItems = items.filter((item, index) => item.position !== index + 1);
     if (!mutationController) {
-      setReorderMessage(moved ? `${moved.title} 순서를 미리 바꿨습니다.` : "일정 순서를 미리 바꿨습니다.");
+      setReorderMode(false);
+      setReorderMessage("일정 순서를 미리 바꿨습니다.");
       return;
     }
     setReordering(true);
     try {
-      const updates = nextItems.flatMap((item, index) => {
-        const position = index + 1;
-        return item.position === position ? [] : [{ item, position }];
-      });
-      await Promise.all(updates.map(({ item, position }) => mutationController.submit(
-        "schedule_item",
-        "update",
-        item.id,
-        item.version,
-        schedulePayload(item, position)
-      )));
-      setReorderMessage(moved ? `${moved.title} 순서를 저장했습니다.` : "일정 순서를 저장했습니다.");
+      for (const item of movedItems) {
+        await mutationController.submit(
+          "schedule_item",
+          "update",
+          item.id,
+          item.version,
+          schedulePayload(item, items.indexOf(item) + 1)
+        );
+      }
+      setReorderMode(false);
+      setReorderMessage("순서 변경을 저장했습니다. 연결 상태에 따라 곧 동기화됩니다.");
     } catch (caught) {
       setPendingOrder(null);
       setReorderError(caught instanceof Error ? caught.message : "일정 순서를 저장하지 못했습니다.");
@@ -157,17 +182,19 @@ export function SchedulePage({
 
       {!mutationController ? <Text color="secondary" type="supporting">미리보기에서는 일정 추가와 내용 수정만 제한됩니다.</Text> : null}
 
-      <TabList hasDivider layout="fill" onChange={(value) => {
-        setSelectedIndex(days.findIndex((candidate) => candidate.date === value));
-        setPendingOrder(null);
-        setReorderMode(false);
-        setReorderError("");
-        setReorderMessage("");
-      }} size="sm" value={day.date}>
-        {days.map((candidate) => (
-          <Tab key={candidate.date} label={candidate.dayLabel} value={candidate.date} />
-        ))}
-      </TabList>
+      <HStack className="schedule-day-tabs">
+        <TabList hasDivider layout="hug" onChange={(value) => {
+          setSelectedIndex(days.findIndex((candidate) => candidate.date === value));
+          setPendingOrder(null);
+          setReorderMode(false);
+          setReorderError("");
+          setReorderMessage("");
+        }} size="sm" value={day.date}>
+          {days.map((candidate) => (
+            <Tab key={candidate.date} label={candidate.dayLabel} value={candidate.date} />
+          ))}
+        </TabList>
+      </HStack>
 
       <SegmentedControl label="일정 보기 방식" layout="fill" onChange={(value) => {
         const nextView = value === "list" ? "list" : "map";
@@ -180,7 +207,7 @@ export function SchedulePage({
 
       <Card className="schedule-day-section" padding={4}>
         <VStack gap={3}>
-        <HStack align="center" justify="between">
+        <HStack align="center" className="schedule-day-header" justify="between">
           <VStack gap={1}>
             <Text color="accent" type="label">{day.dayLabel} · {day.date}</Text>
             <Heading level={2}>{day.headline}</Heading>
@@ -190,8 +217,9 @@ export function SchedulePage({
             {view === "list" && items.length > 1 ? (
               <Button
                 isDisabled={reordering}
+                isLoading={reordering}
                 label={reorderMode ? "순서 편집 완료" : "순서 편집"}
-                onClick={() => setReorderMode((current) => !current)}
+                onClick={() => void toggleReorderMode()}
                 size="sm"
                 variant="secondary"
               />

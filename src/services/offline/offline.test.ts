@@ -68,6 +68,30 @@ describe("offline IndexedDB stores", () => {
     });
   });
 
+  it("finds the most recently saved trip for an offline app start", async () => {
+    const { snapshots } = await createStores();
+    const older = createTripSnapshot();
+    const newer = {
+      ...createTripSnapshot(),
+      trip: { ...createTripSnapshot().trip, id: "trip-newer" }
+    };
+
+    await snapshots.put({
+      tripId: older.trip.id,
+      snapshot: older,
+      etag: null,
+      savedAt: "2026-07-28T12:00:00.000Z"
+    });
+    await snapshots.put({
+      tripId: newer.trip.id,
+      snapshot: newer,
+      etag: null,
+      savedAt: "2026-07-29T12:00:00.000Z"
+    });
+
+    expect(await snapshots.latestTripId()).toBe("trip-newer");
+  });
+
   it("caches a representative thumbnail without storing a Drive token", async () => {
     const { thumbnails } = await createStores();
     const blob = new Blob(["thumbnail"], { type: "image/webp" });

@@ -17,7 +17,7 @@ import type { TripContextViewModel } from "../data/contracts";
 const tripNavItems: Array<{ tab: TripTab; label: string; icon: IconName }> = [
   { tab: "today", label: "오늘", icon: "today" },
   { tab: "schedule", label: "일정", icon: "schedule" },
-  { tab: "map", label: "지도", icon: "map" },
+  { tab: "map", label: "장소", icon: "map" },
   { tab: "tools", label: "도구", icon: "tools" }
 ];
 

@@ -1,9 +1,8 @@
-import { act, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ToolRouteId } from "../../app/router";
 import { ThemeProvider } from "../../app/theme/ThemeProvider";
 import type { TripWorkspace } from "../../data/contracts";
-import { placesApi } from "../../services/places/api";
 import { createSampleDataSource } from "../../test/travelSamples";
 import { ToolsPage } from "./ToolsPage";
 
@@ -62,19 +61,17 @@ describe("ToolsPage", () => {
       expect(link).toHaveAttribute("href", "/trip/sydney-2026/tools/search");
     }
     expect(screen.getByRole("heading", { name: "Travel Essentials" })).toBeVisible();
-    expect(screen.getByRole("heading", { name: "Places" })).toBeVisible();
+    expect(screen.queryByRole("heading", { name: "Places" })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Planning" })).toBeVisible();
     for (const label of [
-      "예약·바우처", "환율", "교통", "비상 연락처", "맛집", "카페", "저장 장소",
+      "예약·바우처", "환율", "교통", "비상 연락처",
       "체크리스트", "여행 메모", "주의사항", "AI 앱 연결"
     ]) {
       expect(screen.getAllByRole("link", { name: `${label} 열기` })[0]).toBeVisible();
     }
-    expect(screen.getByRole("link", { name: "저장 장소 열기" })).toHaveAttribute(
-      "href",
-      "/trip/sydney-2026/map"
-    );
-    expect(screen.getByRole("link", { name: "저장 장소 열기" })).not.toHaveTextContent("준비 중");
+    for (const label of ["맛집", "카페", "저장 장소"]) {
+      expect(screen.queryByRole("link", { name: `${label} 열기` })).not.toBeInTheDocument();
+    }
     for (const label of ["참여자 연결", "초대·기기 관리", "테마", "오프라인·동기화 상태"]) {
       expect(screen.queryByRole("link", { name: `${label} 열기` })).not.toBeInTheDocument();
     }
@@ -105,34 +102,6 @@ describe("ToolsPage", () => {
       "https://transportnsw.info/plan"
     );
     expect(screen.getByRole("button", { name: "장소 추가" })).toBeDisabled();
-  });
-
-  it("opens separate restaurant and cafe collections", async () => {
-    vi.spyOn(placesApi, "getRecommendations").mockImplementation(async (_tripId, category) => ({
-      places: [category === "restaurant"
-        ? toolRecommendation("google-quay", "Quay")
-        : toolRecommendation("google-sample-coffee", "Sample Coffee")],
-      usage: [],
-    }));
-    let restaurants!: ReturnType<typeof render>;
-    await act(async () => {
-      restaurants = await renderToolsPage("restaurants");
-    });
-    expect(screen.getByRole("heading", { level: 1, name: "맛집" })).toBeVisible();
-    await screen.findByText("★ 4.5 (1,000)");
-    await screen.findByRole("button", { name: "추천 새로고침" });
-    expect(screen.getByRole("heading", { name: "Quay" })).toBeVisible();
-    expect(screen.queryByRole("heading", { name: "Sample Coffee" })).not.toBeInTheDocument();
-
-    restaurants.unmount();
-    await act(async () => {
-      await renderToolsPage("cafes");
-    });
-    expect(screen.getByRole("heading", { level: 1, name: "카페" })).toBeVisible();
-    await screen.findByText("★ 4.5 (1,000)");
-    await screen.findByRole("button", { name: "추천 새로고침" });
-    expect(screen.getByRole("heading", { name: "Sample Coffee" })).toBeVisible();
-    expect(screen.queryByRole("heading", { name: "Quay" })).not.toBeInTheDocument();
   });
 
   it("opens emergency contacts and offline travel tips", async () => {
@@ -176,27 +145,8 @@ describe("ToolsPage", () => {
   it("marks every required traveler tool as available", async () => {
     await renderToolsPage();
 
-    for (const label of ["교통", "비상 연락처", "맛집", "카페", "주의사항"]) {
+    for (const label of ["교통", "비상 연락처", "주의사항"]) {
       expect(screen.getByRole("link", { name: `${label} 열기` })).not.toHaveTextContent("준비 중");
     }
   });
 });
-
-function toolRecommendation(providerPlaceId: string, name: string) {
-  return {
-    provider: "google-places" as const,
-    providerPlaceId,
-    name,
-    address: `${name}, Sydney`,
-    latitude: -33.86,
-    longitude: 151.2,
-    mapUrl: `https://maps.google.com/?q=${providerPlaceId}`,
-    rating: 4.5,
-    userRatingCount: 1000,
-    openNow: true,
-    weekdayDescriptions: [],
-    phone: null,
-    websiteUrl: null,
-    photo: null,
-  };
-}

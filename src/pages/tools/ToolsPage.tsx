@@ -26,7 +26,6 @@ import { ChecklistPanel } from "./checklist/ChecklistPanel";
 import { CurrencyTool } from "./currency/CurrencyTool";
 import { EmergencyPanel } from "./emergency/EmergencyPanel";
 import { NotesPanel } from "./notes/NotesPanel";
-import { PlaceCategoryPanel } from "./places/PlaceCategoryPanel";
 import { SearchPanel } from "./search/SearchPanel";
 import { TipsPanel } from "./tips/TipsPanel";
 import { TransportPanel } from "./transport/TransportPanel";
@@ -52,6 +51,7 @@ const shortcutLabels: Record<string, string> = {
   search: "여행 검색",
   activity: "최근 변경"
 };
+const movedToPlaceTab = new Set(["restaurants", "cafes", "saved-places"]);
 const standaloneTools = {
   search: {
     id: "search",
@@ -217,24 +217,6 @@ function ToolCard({
     );
   }
 
-  if ((item.id === "restaurants" || item.id === "cafes") && workspace) {
-    const category = item.id === "restaurants" ? "restaurant" : "cafe";
-    return (
-      <article className="tool-card tool-card--wide" id={item.id}>
-        <div className="tool-card__heading"><h1>{item.label}</h1></div>
-        <p>{item.description}</p>
-        <PlaceCategoryPanel
-          category={category}
-          controller={controller}
-          emptyMessage={`${item.label} 장소를 추가해 여행 후보를 모아보세요.`}
-          places={workspace.mapPreview.places}
-          tripId={tools.tripId}
-          viewerMemberId={tools.viewerMemberId}
-        />
-      </article>
-    );
-  }
-
   if (item.id === "emergency" && workspace) {
     return (
       <article className="tool-card tool-card--wide" id="emergency">
@@ -288,8 +270,10 @@ export function ToolsPage({
   const availableTools = new Map(tools.groups.flatMap((group) => group.items).map((item) => [item.id, item]));
   const travelerGroups = tools.groups.map((group) => ({
     ...group,
-    items: group.items.filter((item) => !managementToolRouteIds.includes(
-      item.id as typeof managementToolRouteIds[number]
+    items: group.items.filter((item) => (
+      !managementToolRouteIds.includes(
+        item.id as typeof managementToolRouteIds[number]
+      ) && !movedToPlaceTab.has(item.id)
     ))
   })).filter((group) => group.items.length > 0);
   const selectedTool = activeToolId

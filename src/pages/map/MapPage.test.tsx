@@ -1,7 +1,8 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { MapPlaceView } from "../../data/contracts";
+import { placesApi } from "../../services/places/api";
 import { createSampleDataSource } from "../../test/travelSamples";
 import { MapPage } from "./MapPage";
 
@@ -29,7 +30,107 @@ async function getMapFixtures(tripId = "sydney-2026") {
   return { places: mapPreview.places, days: schedule.days };
 }
 
+async function renderMapMode({
+  days,
+  places,
+  tripId = "sydney-2026",
+}: {
+  days: Awaited<ReturnType<typeof getMapFixtures>>["days"];
+  places: MapPlaceView[];
+  tripId?: string;
+}) {
+  const result = render(<MapPage days={days} places={places} tripId={tripId} />);
+  await userEvent.click(screen.getByRole("radio", { name: "지도" }));
+  return result;
+}
+
 describe("MapPage", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("opens with saved restaurants and cafes together, then filters by category", async () => {
+    const { places, days } = await getMapFixtures();
+    const firstPlace = places.at(0);
+    if (!firstPlace) throw new Error("fixture place missing");
+    const savedPlaces: MapPlaceView[] = [
+      {
+        ...firstPlace,
+        id: "saved-restaurant",
+        name: "Quay",
+        category: "restaurant",
+        isSaved: true,
+      },
+      {
+        ...firstPlace,
+        id: "saved-cafe",
+        name: "Sample Coffee",
+        category: "cafe",
+        isSaved: true,
+      },
+      {
+        ...firstPlace,
+        id: "not-saved-cafe",
+        name: "Hidden Coffee",
+        category: "cafe",
+        isSaved: false,
+      },
+    ];
+    vi.spyOn(placesApi, "getDiscovery").mockResolvedValue({
+      details: null,
+      usage: [],
+    });
+
+    render(<MapPage days={days} places={savedPlaces} tripId="sydney-2026" />);
+
+    expect(screen.getByRole("heading", { level: 1, name: "장소" })).toBeVisible();
+    expect(screen.getByRole("radio", { name: "내 저장" })).toBeChecked();
+    expect(screen.getByRole("heading", { name: "Quay" })).toBeVisible();
+    expect(screen.getByRole("heading", { name: "Sample Coffee" })).toBeVisible();
+    expect(screen.queryByRole("heading", { name: "Hidden Coffee" })).not.toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: "길찾기" })).toHaveLength(2);
+
+    await userEvent.click(screen.getByRole("radio", { name: "카페" }));
+    expect(screen.queryByRole("heading", { name: "Quay" })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Sample Coffee" })).toBeVisible();
+  });
+
+  it("combines live restaurant and cafe recommendations and marks an already saved place", async () => {
+    const { places, days } = await getMapFixtures();
+    const firstPlace = places.at(0);
+    if (!firstPlace) throw new Error("fixture place missing");
+    const savedRestaurant: MapPlaceView = {
+      ...firstPlace,
+      id: "saved-quay",
+      name: "Quay",
+      category: "restaurant",
+      isSaved: true,
+      provider: "google-places",
+      providerPlaceId: "google-quay",
+    };
+    vi.spyOn(placesApi, "getDiscovery").mockResolvedValue({ details: null, usage: [] });
+    const recommendations = vi.spyOn(placesApi, "getRecommendations")
+      .mockImplementation(async (_tripId, category) => ({
+        places: category === "restaurant"
+          ? [recommendation("google-quay", "Quay")]
+          : [recommendation("google-sample-coffee", "Sample Coffee")],
+        usage: [],
+      }));
+
+    render(<MapPage days={days} places={[savedRestaurant]} tripId="sydney-2026" />);
+    await userEvent.click(screen.getByRole("radio", { name: "추천" }));
+
+    expect(await screen.findByRole("heading", { name: "Quay" })).toBeVisible();
+    expect(screen.getByRole("heading", { name: "Sample Coffee" })).toBeVisible();
+    const quayCard = screen.getByRole("heading", { name: "Quay" })
+      .closest(".place-discovery-card");
+    expect(quayCard).not.toBeNull();
+    expect(within(quayCard as HTMLElement).getByText("추천")).toBeVisible();
+    expect(within(quayCard as HTMLElement).getByText("내 저장")).toBeVisible();
+    expect(recommendations).toHaveBeenCalledWith("sydney-2026", "restaurant", false);
+    expect(recommendations).toHaveBeenCalledWith("sydney-2026", "cafe", false);
+  });
+
   it.each([
     ["sydney-2026", "2026-07-27", 1],
     ["sydney-2026", "2026-07-28", 2],
@@ -46,7 +147,7 @@ describe("MapPage", () => {
     expectedCount
   ) => {
     const { places, days } = await getMapFixtures(tripId);
-    render(<MapPage places={places} days={days} />);
+    await renderMapMode({ places, days, tripId });
 
     await userEvent.click(screen.getByRole("button", { name: day }));
 
@@ -56,7 +157,7 @@ describe("MapPage", () => {
   it("filters the place list by a case-insensitive name search and selected day, category, and status", async () => {
     const user = userEvent.setup();
     const { places, days } = await getMapFixtures();
-    render(<MapPage places={places} days={days} />);
+    await renderMapMode({ places, days });
 
     await user.type(screen.getByRole("searchbox", { name: "장소 검색" }), "opera");
     await user.click(screen.getByRole("button", { name: "2026-07-28" }));
@@ -71,7 +172,7 @@ describe("MapPage", () => {
   it("filters by address as well as name", async () => {
     const user = userEvent.setup();
     const { places, days } = await getMapFixtures();
-    render(<MapPage places={places} days={days} />);
+    await renderMapMode({ places, days });
 
     await user.type(screen.getByRole("searchbox", { name: "장소 검색" }), "BENNELONG POINT");
 
@@ -98,7 +199,7 @@ describe("MapPage", () => {
         position: 2 - index,
       })),
     };
-    render(<MapPage places={routePlaces} days={[reorderedDay]} />);
+    await renderMapMode({ places: routePlaces, days: [reorderedDay] });
 
     await userEvent.click(screen.getByRole("button", { name: reorderedDay.date }));
 
@@ -120,7 +221,7 @@ describe("MapPage", () => {
         ? { ...item, placeId: sharedPlace.id }
         : item),
     }));
-    render(<MapPage places={[sharedPlace]} days={linkedDays} />);
+    await renderMapMode({ places: [sharedPlace], days: linkedDays });
 
     await userEvent.click(screen.getByRole("button", { name: linkedDays[0]!.date }));
     expect(screen.getByText("1개 장소")).toBeVisible();
@@ -130,7 +231,7 @@ describe("MapPage", () => {
 
   it("shows an online map shell and an always-present semantic list fallback", async () => {
     const { places, days } = await getMapFixtures();
-    render(<MapPage places={places} days={days} />);
+    await renderMapMode({ places, days });
 
     expect(screen.getByLabelText("온라인 지도")).toBeVisible();
     expect(screen.getByRole("list", { name: "장소 목록" })).toBeVisible();
@@ -144,7 +245,7 @@ describe("MapPage", () => {
 
     try {
       const { places, days } = await getMapFixtures();
-      render(<MapPage places={places} days={days} />);
+      await renderMapMode({ places, days });
 
       expect(screen.getByRole("status")).toHaveTextContent("오프라인 — 저장된 장소 목록을 표시합니다");
       expect(screen.queryByLabelText("온라인 지도")).not.toBeInTheDocument();
@@ -167,7 +268,7 @@ describe("MapPage", () => {
       longitude: null
     };
 
-    render(<MapPage places={[coordinateLess]} days={days} />);
+    await renderMapMode({ places: [coordinateLess], days });
 
     expect(screen.getByRole("button", { name: /좌표 없는 장소, 숙소, 방문/ })).toBeVisible();
     expect(screen.queryByRole("button", { name: "좌표 없는 장소 상세 보기" }))
@@ -177,7 +278,7 @@ describe("MapPage", () => {
   it("resets an empty filtered result", async () => {
     const user = userEvent.setup();
     const { places, days } = await getMapFixtures();
-    render(<MapPage places={places} days={days} />);
+    await renderMapMode({ places, days });
 
     await user.type(screen.getByRole("searchbox", { name: "장소 검색" }), "없는 장소");
     expect(screen.getByText("조건에 맞는 장소가 없습니다")).toBeVisible();
@@ -190,7 +291,7 @@ describe("MapPage", () => {
   it("opens the place sheet from a semantic card, then returns focus", async () => {
     const user = userEvent.setup();
     const { places, days } = await getMapFixtures();
-    render(<MapPage places={places} days={days} />);
+    await renderMapMode({ places, days });
 
     const card = screen.getByRole("button", { name: /Sydney Opera House, 관광, 저장/ });
     await user.click(card);
@@ -210,7 +311,7 @@ describe("MapPage", () => {
       name: "Unsafe place",
       mapUrl: "https://google.com.evil.example/maps"
     };
-    render(<MapPage places={[unsafePlace]} days={days} />);
+    await renderMapMode({ places: [unsafePlace], days });
 
     await userEvent.click(screen.getByRole("button", { name: /Unsafe place, 숙소, 방문/ }));
     const dialog = within(screen.getByRole("dialog", { name: "장소 상세" }));
@@ -226,7 +327,7 @@ describe("MapPage", () => {
       { ...firstPlace, id: "outside-low", name: "Outside low", latitude: Number.NaN, longitude: 151 },
       { ...firstPlace, id: "outside-high", name: "Outside high", latitude: -33, longitude: Number.POSITIVE_INFINITY }
     ];
-    render(<MapPage places={invalidPlaces} days={days} />);
+    await renderMapMode({ places: invalidPlaces, days });
 
     expect(screen.getByRole("button", { name: /Outside low,/ })).toBeVisible();
     expect(screen.getByRole("button", { name: /Outside high,/ })).toBeVisible();
@@ -241,7 +342,7 @@ describe("MapPage", () => {
       { ...firstPlace, id: "duplicate-one", name: "Same name", address: "First address", latitude: -33.8, longitude: 151.1 },
       { ...firstPlace, id: "duplicate-two", name: "Same name", address: "Second address", latitude: -33.9, longitude: 151.2 }
     ];
-    render(<MapPage places={duplicates} days={days} />);
+    await renderMapMode({ places: duplicates, days });
 
     const firstCard = screen.getByRole("button", { name: /Same name, 숙소, 방문, First address/ });
     const secondCard = screen.getByRole("button", { name: /Same name, 숙소, 방문, Second address/ });
@@ -255,3 +356,22 @@ describe("MapPage", () => {
     expect(secondCard).toBeVisible();
   });
 });
+
+function recommendation(providerPlaceId: string, name: string) {
+  return {
+    provider: "google-places" as const,
+    providerPlaceId,
+    name,
+    address: `${name}, Sydney`,
+    latitude: -33.86,
+    longitude: 151.2,
+    mapUrl: `https://maps.google.com/?q=${providerPlaceId}`,
+    rating: 4.5,
+    userRatingCount: 1000,
+    openNow: true,
+    weekdayDescriptions: [],
+    phone: null,
+    websiteUrl: null,
+    photo: null,
+  };
+}

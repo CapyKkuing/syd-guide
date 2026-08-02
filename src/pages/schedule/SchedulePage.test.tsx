@@ -42,6 +42,9 @@ describe("SchedulePage", () => {
     const days = await getScheduleDays();
     render(<SchedulePage days={days} />);
 
+    expect(screen.getByRole("navigation", { name: "Tabs" })
+      .closest(".schedule-day-tabs")).not.toBeNull();
+
     const secondDay = screen.getByRole("button", { name: /DAY 02/ });
     await userEvent.click(secondDay);
 
@@ -259,6 +262,9 @@ describe("SchedulePage", () => {
       name: `${editableDay.items[0]!.title} 아래로 이동`,
     }));
 
+    expect(submit).not.toHaveBeenCalled();
+    await userEvent.click(screen.getByRole("button", { name: "순서 편집 완료" }));
+
     expect(submit).toHaveBeenCalledTimes(2);
     expect(submit).toHaveBeenCalledWith(
       "schedule_item",
@@ -274,6 +280,52 @@ describe("SchedulePage", () => {
       editableDay.items[1]!.version,
       expect.objectContaining({ position: 1 })
     );
+  });
+
+  it("moves an item directly from fourth to first with a mobile pointer drag", async () => {
+    const days = await getScheduleDays();
+    const sourceDay = days[0]!;
+    const baseItem = sourceDay.items[0]!;
+    const editableDay: ScheduleDayView = {
+      ...sourceDay,
+      id: "day-one",
+      items: Array.from({ length: 4 }, (_, index) => ({
+        ...baseItem,
+        id: `drag-item-${index + 1}`,
+        title: `드래그 일정 ${index + 1}`,
+        tripDayId: "day-one",
+        version: index + 1,
+        position: index + 1,
+      })),
+    };
+    const submit = vi.fn().mockResolvedValue({
+      entity: "schedule_item",
+      entityId: "updated",
+      version: 2,
+      syncVersion: -1,
+    });
+    render(<SchedulePage days={[editableDay]} mutationController={{ submit }} />);
+
+    await showFullSchedule();
+    await userEvent.click(screen.getByRole("button", { name: "순서 편집" }));
+
+    const list = screen.getByRole("list", { name: "일정 순서 편집" });
+    const rows = within(list).getAllByRole("listitem");
+    const fourth = editableDay.items[3]!;
+    const handle = screen.getByRole("button", { name: `${fourth.title} 끌어서 이동` });
+    Object.defineProperty(document, "elementFromPoint", {
+      configurable: true,
+      value: vi.fn(() => rows[0]!),
+    });
+
+    fireEvent.pointerDown(handle, { button: 0, pointerId: 7, clientX: 20, clientY: 500 });
+    fireEvent.pointerMove(handle, { pointerId: 7, clientX: 20, clientY: 200 });
+    fireEvent.pointerUp(handle, { pointerId: 7, clientX: 20, clientY: 200 });
+
+    expect(within(list).getAllByRole("listitem")[0]).toHaveTextContent(fourth.title);
+    expect(submit).not.toHaveBeenCalled();
+    await userEvent.click(screen.getByRole("button", { name: "순서 편집 완료" }));
+    expect(submit).toHaveBeenCalledTimes(4);
   });
 
   it("allows a local-only reorder preview with mobile move controls", async () => {
@@ -297,6 +349,8 @@ describe("SchedulePage", () => {
       .getAllByRole("listitem");
     expect(rows[0]).toHaveTextContent(secondItem.title);
     expect(rows[1]).toHaveTextContent(firstItem.title);
-    expect(screen.getByText(`${firstItem.title} 순서를 미리 바꿨습니다.`)).toBeVisible();
+    expect(screen.getByText(
+      `${firstItem.title} 순서를 바꿨습니다. 완료를 누르면 저장됩니다.`
+    )).toBeVisible();
   });
 });

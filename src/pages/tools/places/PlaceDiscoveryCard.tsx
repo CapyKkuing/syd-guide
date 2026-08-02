@@ -18,6 +18,7 @@ import type {
   PlaceProviderUsage,
 } from "../../../shared/places";
 import type { MutationPayloadMap } from "../../../shared/mutations";
+import { googleMapsDirectionsUrl } from "../../map/googleMapsLinks";
 
 export interface PlaceCardSelection {
   place: MapPlaceView;
@@ -142,6 +143,12 @@ export function PlaceDiscoveryCard({
   const openLabel = discovery?.openNow === null || discovery?.openNow === undefined
     ? null
     : discovery.openNow ? "영업 중" : "영업 종료";
+  const directionsUrl = googleMapsDirectionsUrl({
+    name: discovery?.name ?? place.name,
+    address: discovery?.address ?? place.address,
+    latitude: discovery?.latitude ?? place.latitude,
+    longitude: discovery?.longitude ?? place.longitude,
+  });
 
   return (
     <Card className="place-discovery-card" padding={0}>
@@ -181,12 +188,22 @@ export function PlaceDiscoveryCard({
         {discovery ? (
           <p className="google-maps-attribution" translate="no">Google Maps</p>
         ) : error ? <Text color="secondary" type="supporting">{error}</Text> : null}
-        <Button
-          label="상세 보기"
-          onClick={() => onOpen({ place, discovery, photoUrl, isTransient })}
-          size="sm"
-          variant="secondary"
-        />
+        <HStack className="place-discovery-card__actions" gap={2}>
+          <Button
+            label="상세 보기"
+            onClick={() => onOpen({ place, discovery, photoUrl, isTransient })}
+            size="sm"
+            variant="secondary"
+          />
+          <a
+            className="map-place-sheet__map-link place-discovery-card__directions"
+            href={directionsUrl}
+            rel="noreferrer noopener"
+            target="_blank"
+          >
+            길찾기
+          </a>
+        </HStack>
       </VStack>
     </Card>
   );

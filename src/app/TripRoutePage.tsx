@@ -149,6 +149,7 @@ export function TripRoutePage({
             days={workspace.data.schedule.days}
             mutationController={mutationController}
             places={workspace.data.mapPreview.places}
+            tripId={tripId}
             viewerMemberId={workspace.data.context.viewer.memberId}
           />
         ) : activeTab === "schedule" ? (

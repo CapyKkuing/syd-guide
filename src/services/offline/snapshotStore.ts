@@ -22,6 +22,13 @@ export class SnapshotStore {
     await database.put("snapshots", record);
   }
 
+  async latestTripId(): Promise<string | null> {
+    const database = await resolveTravelDatabase(this.databaseSource);
+    const records = await database.getAll("snapshots");
+    return records.sort((left, right) => right.savedAt.localeCompare(left.savedAt))[0]?.tripId
+      ?? null;
+  }
+
   async delete(tripId: string): Promise<void> {
     const database = await resolveTravelDatabase(this.databaseSource);
     await database.delete("snapshots", tripId);

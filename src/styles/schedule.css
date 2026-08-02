@@ -143,6 +143,23 @@
   padding-top: var(--space-4);
 }
 
+.schedule-day-tabs {
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: none;
+}
+
+.schedule-day-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.schedule-day-tabs .astryx-tab-list {
+  width: max-content;
+  min-width: max-content;
+}
+
 .schedule-detail__time,
 .schedule-detail h2 {
   margin: 0;
@@ -224,6 +241,11 @@
 }
 
 .schedule-day-section {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow: clip;
+  box-sizing: border-box;
   border: 1px solid var(--line);
   border-radius: var(--radius-xl);
   background: color-mix(in srgb, var(--surface) 92%, var(--accent-soft));
@@ -264,14 +286,24 @@
   margin: 0;
   padding: 0;
   list-style: none;
+  min-width: 0;
 }
 
 .schedule-reorder-item {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   background: var(--surface);
   cursor: grab;
   touch-action: pan-y;
+}
+
+.schedule-reorder-item > .astryx-stack > .astryx-button:first-child {
+  flex: 0 0 auto;
+  touch-action: none;
+  cursor: grab;
 }
 
 .schedule-reorder-item:active {
@@ -284,8 +316,32 @@
 }
 
 .schedule-reorder-item > .astryx-stack {
+  min-width: 0;
   width: 100%;
   padding: var(--space-2) var(--space-3);
+}
+
+@media (max-width: 620px) {
+  .schedule-day-header {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .schedule-day-header > .astryx-stack:first-child {
+    min-width: 0;
+    flex: 1 1 100%;
+  }
+
+  .schedule-day-header > .astryx-stack:last-child {
+    width: 100%;
+    min-width: 0;
+    justify-content: space-between;
+  }
+
+  .schedule-reorder-item > .astryx-stack {
+    gap: var(--space-1);
+    padding: var(--space-2);
+  }
 }
 
 .schedule-reorder-item__number {

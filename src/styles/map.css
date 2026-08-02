@@ -1,5 +1,7 @@
 .map-page {
   display: grid;
+  width: 100%;
+  min-width: 0;
   gap: var(--space-5);
   max-width: 1080px;
 }
@@ -10,6 +12,12 @@
 .map-empty p,
 .map-place-sheet h2 {
   margin: 0;
+}
+
+.map-page__eyebrow {
+  color: var(--accent-strong);
+  font-size: var(--text-sm);
+  font-weight: 800;
 }
 
 .map-place-sheet__photo {
@@ -133,6 +141,31 @@
 .map-page__content {
   display: grid;
   gap: var(--space-5);
+}
+
+.place-hub-panel,
+.place-hub-panel__grid {
+  width: 100%;
+  min-width: 0;
+}
+
+.place-hub-panel__heading,
+.place-provider-limit .astryx-stack-horizontal {
+  flex-wrap: wrap;
+}
+
+@media (max-width: 760px) {
+  .map-page {
+    min-width: 0;
+  }
+
+  .map-page__header {
+    flex-wrap: wrap;
+  }
+
+  .place-hub-panel__grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
 }
 
 .map-canvas-shell {

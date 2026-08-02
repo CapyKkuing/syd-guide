@@ -92,7 +92,7 @@ describe("TripRoutePage", () => {
 
   it.each([
     ["today", "오늘"],
-    ["map", "지도"],
+    ["map", "장소"],
     ["tools", "도구"]
   ] as const)("renders the semantic %s placeholder heading when ready", async (activeTab, heading) => {
     renderTripRoute(fixture, activeTab);

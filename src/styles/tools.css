@@ -1014,8 +1014,21 @@
 }
 
 .place-discovery-card__tokens,
-.place-discovery-card__meta {
+.place-discovery-card__meta,
+.place-discovery-card__body > .astryx-stack-horizontal {
   flex-wrap: wrap;
+}
+
+.place-discovery-card__actions {
+  align-items: stretch;
+}
+
+.place-discovery-card__actions > * {
+  flex: 1 1 0;
+}
+
+.place-discovery-card__directions {
+  padding-inline: var(--space-3);
 }
 
 .place-discovery-card__body h3,
