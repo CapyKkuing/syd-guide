@@ -84,7 +84,7 @@ export function MapPage({
       ? [...scheduledPlaces, ...places.filter((place) => !scheduledIds.has(place.id))]
       : places;
     return orderedPlaces.filter((place) => (
-      (dayDate === "all" || place.dayDate === dayDate)
+      (dayDate === "all" || scheduledIds.has(place.id))
       && (category === "all" || place.category === category)
       && (status === "all" || place.status === status)
       && (!normalizedSearch || `${place.name} ${place.address}`.toLocaleLowerCase().includes(normalizedSearch))

@@ -1,3 +1,5 @@
+import { sydneyRoutePlaces } from "./sydney-route-places.mjs";
+
 const IMPORT_KEY = "legacy-sydney-v1";
 const TRIP_ID = "legacy-sydney-2026";
 const IMPORTED_AT = "2026-07-28T00:00:00.000Z";
@@ -5,6 +7,9 @@ const guard =
   `WHERE NOT EXISTS (SELECT 1 FROM data_imports WHERE key = '${IMPORT_KEY}')`;
 
 export function renderLegacySql(data) {
+  const routePlaceByScheduleId = new Map(sydneyRoutePlaces.flatMap((place) =>
+    place.scheduleIds.map((scheduleId) => [scheduleId, place])
+  ));
   const statements = [
     "PRAGMA foreign_keys = ON;",
     "BEGIN TRANSACTION;",
@@ -26,6 +31,18 @@ export function renderLegacySql(data) {
     ])
   ];
 
+  for (const place of sydneyRoutePlaces) {
+    statements.push(insert("places", [
+      "id", "trip_id", "name", "category", "status", "address", "latitude",
+      "longitude", "map_url", "source_url", "image_url", "description",
+      "saved_by", "version", "updated_by", "updated_at"
+    ], [
+      place.id, TRIP_ID, place.name, place.category, "saved", place.address,
+      place.latitude, place.longitude, place.mapUrl, null, null, "일정 동선 장소",
+      "owner", 1, "owner", IMPORTED_AT
+    ]));
+  }
+
   for (const day of data.days) {
     statements.push(insert("trip_days", [
       "id", "trip_id", "day_date", "title", "position", "version",
@@ -34,12 +51,13 @@ export function renderLegacySql(data) {
       day.id, TRIP_ID, day.date, day.title, day.position, 1, "owner", IMPORTED_AT
     ]));
     for (const item of day.items) {
+      const routePlace = routePlaceByScheduleId.get(item.id);
       statements.push(insert("schedule_items", [
         "id", "trip_id", "trip_day_id", "place_id", "booking_id", "title",
         "starts_at", "ends_at", "memo", "travel_mode", "travel_note",
         "position", "is_fixed", "is_done", "version", "updated_by", "updated_at"
       ], [
-        item.id, TRIP_ID, day.id, null, null, item.title, item.startsAt, null,
+        item.id, TRIP_ID, day.id, routePlace?.id ?? null, null, item.title, item.startsAt, null,
         item.memo, null, "", item.position, 0, 0, 1, "owner", IMPORTED_AT
       ]));
     }

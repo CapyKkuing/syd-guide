@@ -99,6 +99,7 @@ export function SchedulePage({
 
   const nextItemId = items.find((item) => !item.isDone)?.id;
   const routePlaces = placesInScheduleOrder(items, places);
+  const locatedRoutePlaces = routePlaces.filter(hasCoordinates);
 
   function openPlace({ place, opener }: MapOpenRequest) {
     setPlaceReturnFocusTo(opener);
@@ -200,8 +201,12 @@ export function SchedulePage({
 
         {view === "map" ? (
           <VStack gap={3}>
-            {routePlaces.length ? (
-              <MapCanvas connectRoute loader={mapLoader} numberedMarkers onOpenPlace={openPlace} places={routePlaces} />
+            {locatedRoutePlaces.length ? (
+              <MapCanvas connectRoute loader={mapLoader} numberedMarkers onOpenPlace={openPlace} places={locatedRoutePlaces} />
+            ) : routePlaces.length ? (
+              <Card padding={4} variant="muted">
+                <Text type="body">연결한 장소에 지도 위치가 없습니다. 장소를 수정해 좌표를 입력해 주세요.</Text>
+              </Card>
             ) : (
               <Card padding={4} variant="muted">
                 <Text type="body">지도에 표시할 위치가 있는 장소를 일정에 연결해 주세요.</Text>
@@ -210,6 +215,11 @@ export function SchedulePage({
             <Text color="secondary" type="supporting">
               지도 핀을 누르면 장소 정보와 Google Maps 길찾기를 확인할 수 있습니다.
             </Text>
+            {locatedRoutePlaces.length > 0 && locatedRoutePlaces.length < routePlaces.length ? (
+              <Text color="secondary" type="supporting">
+                좌표가 없는 {routePlaces.length - locatedRoutePlaces.length}개 장소는 지도에서 제외됐습니다.
+              </Text>
+            ) : null}
           </VStack>
         ) : (
           <VStack gap={2}>
@@ -259,6 +269,7 @@ export function SchedulePage({
           item={editorItem}
           mutationController={mutationController}
           onClose={() => setEditorItem(undefined)}
+          places={places}
           timeZone={timeZone}
         />
       ) : null}
@@ -285,6 +296,11 @@ export function SchedulePage({
       ) : null}
     </VStack>
   );
+}
+
+function hasCoordinates(place: MapPlaceView): boolean {
+  return place.latitude !== null && place.longitude !== null
+    && Number.isFinite(place.latitude) && Number.isFinite(place.longitude);
 }
 
 function schedulePayload(

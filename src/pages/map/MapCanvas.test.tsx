@@ -30,6 +30,7 @@ describe("MapCanvas", () => {
     class FakeMap {
       remove = remove;
       addControl() {}
+      fitBounds() {}
     }
     class FakeMarker {
       setLngLat() { return this; }
@@ -51,10 +52,12 @@ describe("MapCanvas", () => {
     const markers: HTMLElement[] = [];
     const addSource = vi.fn();
     const addLayer = vi.fn();
+    const fitBounds = vi.fn();
     class FakeMap {
       addControl() {}
       addSource = addSource;
       addLayer = addLayer;
+      fitBounds = fitBounds;
       once(_event: string, listener: () => void) { listener(); }
       remove() {}
     }
@@ -103,5 +106,21 @@ describe("MapCanvas", () => {
       id: "schedule-route-line",
       source: "schedule-route",
     }));
+    expect(fitBounds).toHaveBeenCalledWith([
+      [secondPlace.longitude, place.latitude],
+      [place.longitude, secondPlace.latitude],
+    ], { duration: 0, maxZoom: 14, padding: 48 });
+  });
+
+  it("explains why a map has no markers", () => {
+    render(
+      <MapCanvas
+        loader={vi.fn()}
+        onOpenPlace={vi.fn()}
+        places={[{ ...place, latitude: null, longitude: null }]}
+      />
+    );
+
+    expect(screen.getByRole("status")).toHaveTextContent("지도에 표시할 좌표가 없습니다");
   });
 });

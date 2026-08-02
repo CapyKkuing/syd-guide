@@ -34,4 +34,24 @@ describe("PlaceEditorDialog", () => {
     );
     expect(onClose).toHaveBeenCalled();
   });
+
+  it("blocks an incomplete or out-of-range coordinate pair", async () => {
+    const submit = vi.fn();
+    render(
+      <PlaceEditorDialog
+        controller={{ submit }}
+        onClose={vi.fn()}
+        place={null}
+        viewerMemberId="owner"
+      />
+    );
+
+    await userEvent.type(screen.getByLabelText("장소 이름"), "잘못된 좌표");
+    await userEvent.type(screen.getByLabelText("위도"), "91");
+    await userEvent.type(screen.getByLabelText("경도"), "151");
+    await userEvent.click(screen.getByRole("button", { name: "저장" }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent("위도는 -90부터 90 사이");
+    expect(submit).not.toHaveBeenCalled();
+  });
 });

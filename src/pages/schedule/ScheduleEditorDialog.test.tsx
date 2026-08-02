@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import type { ScheduleDayView } from "../../data/contracts";
+import type { MapPlaceView, ScheduleDayView } from "../../data/contracts";
 import type { TripMutationController } from "../../services/mutations/controller";
 import { ScheduleEditorDialog } from "./ScheduleEditorDialog";
 
@@ -13,6 +13,25 @@ const day: ScheduleDayView = {
   headline: "하버 첫날",
   items: []
 };
+
+const places = [{
+  id: "place-opera",
+  version: 1,
+  name: "Sydney Opera House",
+  category: "attraction",
+  status: "saved",
+  dayDate: day.date,
+  latitude: -33.8568,
+  longitude: 151.2153,
+  address: "Bennelong Point",
+  description: "",
+  mapUrl: null,
+  sourceUrl: null,
+  imageUrl: null,
+  savedBy: "owner",
+  updatedAt: "2026-09-09T00:00:00.000Z",
+  votes: []
+}] satisfies MapPlaceView[];
 
 const item = {
   id: "schedule-opera",
@@ -56,12 +75,14 @@ describe("ScheduleEditorDialog", () => {
         item={null}
         mutationController={mutationController}
         onClose={onClose}
+        places={places}
         timeZone="Australia/Sydney"
       />
     );
 
     await userEvent.type(screen.getByLabelText("일정 제목"), "오페라 하우스");
     await userEvent.type(screen.getByLabelText("시작 시간"), "13:00");
+    await userEvent.selectOptions(screen.getByLabelText("연결 장소"), "place-opera");
     await userEvent.click(screen.getByRole("button", { name: "저장" }));
 
     expect(mutationController.submit).toHaveBeenCalledWith(
@@ -72,6 +93,7 @@ describe("ScheduleEditorDialog", () => {
       expect.objectContaining({
         tripDayId: "day-one",
         title: "오페라 하우스",
+        placeId: "place-opera",
         startsAt: "2026-09-10T13:00:00+10:00",
         position: 1
       })
@@ -90,6 +112,7 @@ describe("ScheduleEditorDialog", () => {
         item={null}
         mutationController={mutationController}
         onClose={vi.fn()}
+        places={places}
         timeZone="Australia/Sydney"
       />
     );
@@ -112,6 +135,7 @@ describe("ScheduleEditorDialog", () => {
         item={item}
         mutationController={mutationController}
         onClose={vi.fn()}
+        places={places}
         timeZone="Australia/Sydney"
       />
     );
@@ -143,6 +167,7 @@ describe("ScheduleEditorDialog", () => {
         item={item}
         mutationController={mutationController}
         onClose={vi.fn()}
+        places={places}
         timeZone="Australia/Sydney"
       />
     );

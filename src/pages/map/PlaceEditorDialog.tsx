@@ -6,17 +6,19 @@ import type { TripMutationController } from "../../services/mutations/controller
 
 export function PlaceEditorDialog({
   controller,
+  initialCategory = "attraction",
   onClose,
   place,
   viewerMemberId
 }: {
   controller: TripMutationController;
+  initialCategory?: MapPlaceView["category"];
   onClose: () => void;
   place: MapPlaceView | null;
   viewerMemberId: string;
 }) {
   const [name, setName] = useState(place?.name ?? "");
-  const [category, setCategory] = useState<MapPlaceView["category"]>(place?.category ?? "attraction");
+  const [category, setCategory] = useState<MapPlaceView["category"]>(place?.category ?? initialCategory);
   const [status, setStatus] = useState<MapPlaceView["status"]>(place?.status ?? "saved");
   const [address, setAddress] = useState(place?.address ?? "");
   const [description, setDescription] = useState(place?.description ?? "");
@@ -29,13 +31,18 @@ export function PlaceEditorDialog({
   async function submit(event: FormEvent) {
     event.preventDefault();
     setError("");
+    const coordinates = parseCoordinates(latitude, longitude);
+    if (coordinates.error) {
+      setError(coordinates.error);
+      return;
+    }
     const payload: MutationPayloadMap["place"] = {
       name: name.trim(),
       category,
       status,
       address: address.trim() || null,
-      latitude: numberOrNull(latitude),
-      longitude: numberOrNull(longitude),
+      latitude: coordinates.latitude,
+      longitude: coordinates.longitude,
       mapUrl: httpsOrNull(mapUrl),
       sourceUrl: place?.sourceUrl ?? null,
       imageUrl: place?.imageUrl ?? null,
@@ -96,10 +103,26 @@ export function PlaceEditorDialog({
   );
 }
 
-function numberOrNull(value: string): number | null {
-  if (!value.trim()) return null;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : null;
+function parseCoordinates(latitude: string, longitude: string): {
+  latitude: number | null;
+  longitude: number | null;
+  error?: string;
+} {
+  const latitudeValue = latitude.trim();
+  const longitudeValue = longitude.trim();
+  if (!latitudeValue && !longitudeValue) return { latitude: null, longitude: null };
+  if (!latitudeValue || !longitudeValue) {
+    return { latitude: null, longitude: null, error: "위도와 경도를 모두 입력해 주세요." };
+  }
+  const parsedLatitude = Number(latitudeValue);
+  const parsedLongitude = Number(longitudeValue);
+  if (!Number.isFinite(parsedLatitude) || parsedLatitude < -90 || parsedLatitude > 90) {
+    return { latitude: null, longitude: null, error: "위도는 -90부터 90 사이 숫자여야 합니다." };
+  }
+  if (!Number.isFinite(parsedLongitude) || parsedLongitude < -180 || parsedLongitude > 180) {
+    return { latitude: null, longitude: null, error: "경도는 -180부터 180 사이 숫자여야 합니다." };
+  }
+  return { latitude: parsedLatitude, longitude: parsedLongitude };
 }
 
 function httpsOrNull(value: string): string | null {

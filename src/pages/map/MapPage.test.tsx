@@ -108,6 +108,26 @@ describe("MapPage", () => {
     expect(cards[1]).toHaveAccessibleName(expect.stringContaining(routePlaces[0]!.name));
   });
 
+  it("shows a place on every day that links to it", async () => {
+    const { places, days } = await getMapFixtures();
+    const sharedPlace = places[0];
+    if (!sharedPlace || days.length < 2 || !days[0]?.items[0] || !days[1]?.items[0]) {
+      throw new Error("shared route fixtures missing");
+    }
+    const linkedDays = days.slice(0, 2).map((day) => ({
+      ...day,
+      items: day.items.map((item, index) => index === 0
+        ? { ...item, placeId: sharedPlace.id }
+        : item),
+    }));
+    render(<MapPage places={[sharedPlace]} days={linkedDays} />);
+
+    await userEvent.click(screen.getByRole("button", { name: linkedDays[0]!.date }));
+    expect(screen.getByText("1개 장소")).toBeVisible();
+    await userEvent.click(screen.getByRole("button", { name: linkedDays[1]!.date }));
+    expect(screen.getByText("1개 장소")).toBeVisible();
+  });
+
   it("shows an online map shell and an always-present semantic list fallback", async () => {
     const { places, days } = await getMapFixtures();
     render(<MapPage places={places} days={days} />);

@@ -72,6 +72,14 @@ export function MapCanvas({
       });
       map = createdMap;
       createdMap.addControl(new runtime.NavigationControl());
+      if (located.length > 1) {
+        const longitudes = located.map((place) => place.longitude!);
+        const latitudes = located.map((place) => place.latitude!);
+        createdMap.fitBounds([
+          [Math.min(...longitudes), Math.min(...latitudes)],
+          [Math.max(...longitudes), Math.max(...latitudes)],
+        ], { duration: 0, maxZoom: 14, padding: 48 });
+      }
       if (connectRoute && located.length > 1) {
         createdMap.once("load", () => {
           if (!active || !container.current) return;
@@ -139,6 +147,7 @@ export function MapCanvas({
     <div className="map-canvas-shell">
       <div aria-label="온라인 지도" className="map-canvas" ref={container} />
       {!navigator.onLine ? <p aria-label="오프라인 지도" role="status">오프라인에서는 장소 목록을 이용하세요.</p> : null}
+      {navigator.onLine && !hasLocatedPlaces ? <p role="status">지도에 표시할 좌표가 없습니다. 장소를 수정해 위치를 입력해 주세요.</p> : null}
       {navigator.onLine && hasLocatedPlaces && status === "loading" ? <p role="status">온라인 지도를 불러오는 중입니다.</p> : null}
       {navigator.onLine && hasLocatedPlaces && status === "error" ? <p aria-label="온라인 지도를 불러오지 못했습니다" role="status">온라인 지도를 불러오지 못했습니다. 장소 목록은 계속 사용할 수 있습니다.</p> : null}
     </div>

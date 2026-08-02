@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { BottomSheet } from "../../components/BottomSheet";
-import type { ScheduleDayView, ScheduleItemView } from "../../data/contracts";
+import type { MapPlaceView, ScheduleDayView, ScheduleItemView } from "../../data/contracts";
 import type {
   MutationPayloadMap
 } from "../../shared/mutations";
@@ -11,18 +11,21 @@ export function ScheduleEditorDialog({
   item,
   mutationController,
   onClose,
+  places,
   timeZone
 }: {
   day: ScheduleDayView;
   item: ScheduleItemView | null;
   mutationController: TripMutationController;
   onClose: () => void;
+  places: MapPlaceView[];
   timeZone: string;
 }) {
   const [title, setTitle] = useState(item?.title ?? "");
   const [startTime, setStartTime] = useState(item ? timeOf(item.startsAt) : "");
   const [endTime, setEndTime] = useState(item?.endsAt ? timeOf(item.endsAt) : "");
   const [memo, setMemo] = useState(item?.description ?? "");
+  const [placeId, setPlaceId] = useState(item?.placeId ?? "");
   const [travelMode, setTravelMode] = useState<
     "" | "walk" | "transit" | "drive" | "ferry"
   >(item?.travelMode ?? "");
@@ -39,7 +42,7 @@ export function ScheduleEditorDialog({
     try {
       const payload: MutationPayloadMap["schedule_item"] = {
         tripDayId: day.id,
-        placeId: item?.placeId ?? null,
+        placeId: placeId || null,
         bookingId: item?.bookingId ?? null,
         title: title.trim(),
         startsAt: zonedIso(day.date, startTime, timeZone),
@@ -123,6 +126,15 @@ export function ScheduleEditorDialog({
             />
           </label>
         </div>
+        <label>
+          <span>연결 장소</span>
+          <select onChange={(event) => setPlaceId(event.target.value)} value={placeId}>
+            <option value="">연결 안 함</option>
+            {places.map((place) => (
+              <option key={place.id} value={place.id}>{place.name}</option>
+            ))}
+          </select>
+        </label>
         <label>
           <span>메모</span>
           <textarea

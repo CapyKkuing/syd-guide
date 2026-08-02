@@ -64,5 +64,8 @@ test("renders an idempotent, quote-safe, byte-stable SQL seed", async () => {
     /WHERE NOT EXISTS \(SELECT 1 FROM data_imports WHERE key = 'legacy-sydney-v1'\)/
   );
   assert.match(first, /Mrs Macquarie''s Chair/);
+  assert.match(first, /route-opera-house/);
+  assert.match(first, /legacy-schedule-02-01', 'legacy-sydney-2026', 'legacy-day-02', 'route-opera-house'/);
+  assert.match(first, /legacy-schedule-01-02', 'legacy-sydney-2026', 'legacy-day-01', NULL/);
   assert.ok(first.endsWith("\n"));
 });
