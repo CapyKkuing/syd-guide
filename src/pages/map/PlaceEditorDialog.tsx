@@ -47,7 +47,11 @@ export function PlaceEditorDialog({
       sourceUrl: place?.sourceUrl ?? null,
       imageUrl: place?.imageUrl ?? null,
       description: description.trim(),
-      savedBy: place?.savedBy ?? viewerMemberId
+      savedBy: place?.savedBy ?? viewerMemberId,
+      isRecommended: place?.isRecommended ?? false,
+      isSaved: place?.isSaved ?? true,
+      provider: place?.provider ?? null,
+      providerPlaceId: place?.providerPlaceId ?? null
     };
     try {
       await controller.submit(

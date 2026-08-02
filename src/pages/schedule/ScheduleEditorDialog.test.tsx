@@ -27,8 +27,12 @@ const places = [{
   description: "",
   mapUrl: null,
   sourceUrl: null,
-  imageUrl: null,
-  savedBy: "owner",
+    imageUrl: null,
+    savedBy: "owner",
+    isRecommended: false,
+    isSaved: true,
+    provider: null,
+    providerPlaceId: null,
   updatedAt: "2026-09-09T00:00:00.000Z",
   votes: []
 }] satisfies MapPlaceView[];

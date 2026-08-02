@@ -12,6 +12,29 @@
   margin: 0;
 }
 
+.map-place-sheet__photo {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0 0 var(--space-4);
+}
+
+.map-place-sheet__photo img {
+  width: 100%;
+  max-height: 320px;
+  border-radius: var(--radius-lg);
+  object-fit: cover;
+}
+
+.map-place-sheet__photo figcaption {
+  color: var(--text-3);
+  font-size: var(--text-xs);
+}
+
+.map-place-sheet__photo a,
+.map-place-sheet dd a {
+  color: var(--accent-strong);
+}
+
 .map-page__header h1 {
   color: var(--text);
   font-size: var(--text-3xl);

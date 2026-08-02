@@ -86,6 +86,7 @@ export const entityRegistry = {
     columns: [
       "name", "category", "status", "address", "latitude", "longitude",
       "map_url", "source_url", "image_url", "description", "saved_by",
+      "is_recommended", "is_saved", "provider", "provider_place_id",
     ],
     payloadSchema: entitySchemas.place,
     values: (raw) => {
@@ -94,6 +95,8 @@ export const entityRegistry = {
         value.name, value.category, value.status, value.address, value.latitude,
         value.longitude, value.mapUrl, value.sourceUrl, value.imageUrl,
         value.description, value.savedBy,
+        Number(value.isRecommended ?? false), Number(value.isSaved ?? true),
+        value.provider ?? null, value.providerPlaceId ?? null,
       ];
     },
     parse: (row) => ({
@@ -109,6 +112,11 @@ export const entityRegistry = {
       imageUrl: row.image_url === null ? null : String(row.image_url),
       description: String(row.description),
       savedBy: row.saved_by === null ? null : String(row.saved_by),
+      isRecommended: bool(row.is_recommended),
+      isSaved: bool(row.is_saved),
+      provider: row.provider === null ? null : "google-places",
+      providerPlaceId: row.provider_place_id === null
+        ? null : String(row.provider_place_id),
     }),
   },
   booking: {

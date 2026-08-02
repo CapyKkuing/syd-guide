@@ -228,6 +228,7 @@ function ToolCard({
           controller={controller}
           emptyMessage={`${item.label} 장소를 추가해 여행 후보를 모아보세요.`}
           places={workspace.mapPreview.places}
+          tripId={tools.tripId}
           viewerMemberId={tools.viewerMemberId}
         />
       </article>

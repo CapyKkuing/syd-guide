@@ -35,11 +35,12 @@ export function renderLegacySql(data) {
     statements.push(insert("places", [
       "id", "trip_id", "name", "category", "status", "address", "latitude",
       "longitude", "map_url", "source_url", "image_url", "description",
-      "saved_by", "version", "updated_by", "updated_at"
+      "saved_by", "is_recommended", "is_saved", "provider",
+      "provider_place_id", "version", "updated_by", "updated_at"
     ], [
       place.id, TRIP_ID, place.name, place.category, "saved", place.address,
       place.latitude, place.longitude, place.mapUrl, null, null, "일정 동선 장소",
-      "owner", 1, "owner", IMPORTED_AT
+      "owner", 0, 1, null, null, 1, "owner", IMPORTED_AT
     ]));
   }
 
@@ -67,11 +68,12 @@ export function renderLegacySql(data) {
     statements.push(insert("places", [
       "id", "trip_id", "name", "category", "status", "address", "latitude",
       "longitude", "map_url", "source_url", "image_url", "description",
-      "saved_by", "version", "updated_by", "updated_at"
+      "saved_by", "is_recommended", "is_saved", "provider",
+      "provider_place_id", "version", "updated_by", "updated_at"
     ], [
       place.id, TRIP_ID, place.name, place.category, "saved", null, null, null,
-      place.mapUrl, null, place.imageUrl, place.description, "owner", 1,
-      "owner", IMPORTED_AT
+      place.mapUrl, null, place.imageUrl, place.description, null, 1, 0, null,
+      null, 1, "owner", IMPORTED_AT
     ]));
   }
 

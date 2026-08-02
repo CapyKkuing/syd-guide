@@ -53,6 +53,10 @@ export const entitySchemas = {
     imageUrl: imageUrl.nullable(),
     description: longText,
     savedBy: nullableId,
+    isRecommended: z.boolean().default(false),
+    isSaved: z.boolean().default(true),
+    provider: z.literal("google-places").nullable().default(null),
+    providerPlaceId: z.string().trim().min(1).max(255).nullable().default(null),
   }),
   booking: z.object({
     placeId: nullableId,

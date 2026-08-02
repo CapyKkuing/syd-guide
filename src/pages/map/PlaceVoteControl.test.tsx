@@ -19,6 +19,10 @@ const place = {
   sourceUrl: null,
   imageUrl: null,
   savedBy: "owner",
+  isRecommended: false,
+  isSaved: true,
+  provider: null,
+  providerPlaceId: null,
   updatedAt: "2026-07-28T00:00:00.000Z",
   votes: []
 } satisfies MapPlaceView;

@@ -39,6 +39,10 @@ export interface MutationPayloadMap {
     imageUrl: string | null;
     description: string;
     savedBy: string | null;
+    isRecommended?: boolean;
+    isSaved?: boolean;
+    provider?: "google-places" | null;
+    providerPlaceId?: string | null;
   };
   booking: {
     placeId: string | null;

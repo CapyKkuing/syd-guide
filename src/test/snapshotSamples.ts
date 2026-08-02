@@ -103,7 +103,11 @@ export function createTripSnapshot(): TripSnapshot {
         sourceUrl: null,
         imageUrl: null,
         description: "하버 명소",
-        savedBy: "owner"
+        savedBy: "owner",
+        isRecommended: false,
+        isSaved: true,
+        provider: null,
+        providerPlaceId: null
       }),
       entity({
         id: "place-dinner",
@@ -117,7 +121,11 @@ export function createTripSnapshot(): TripSnapshot {
         sourceUrl: null,
         imageUrl: null,
         description: "하버 디너",
-        savedBy: "partner"
+        savedBy: "partner",
+        isRecommended: true,
+        isSaved: true,
+        provider: null,
+        providerPlaceId: null
       }),
       entity({
         id: "place-bondi",
@@ -131,7 +139,11 @@ export function createTripSnapshot(): TripSnapshot {
         sourceUrl: null,
         imageUrl: null,
         description: "해변",
-        savedBy: "owner"
+        savedBy: "owner",
+        isRecommended: false,
+        isSaved: true,
+        provider: null,
+        providerPlaceId: null
       })
     ],
     bookings: [

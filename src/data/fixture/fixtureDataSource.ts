@@ -350,6 +350,10 @@ export class FixtureTravelGuideDataSource implements TravelGuideDataSource {
           sourceUrl: null,
           imageUrl: null,
           savedBy: "preview-owner",
+          isRecommended: false,
+          isSaved: true,
+          provider: null,
+          providerPlaceId: null,
           updatedAt: `${firstDay.date}T09:00:00`,
           votes: []
         },
@@ -368,6 +372,10 @@ export class FixtureTravelGuideDataSource implements TravelGuideDataSource {
           sourceUrl: null,
           imageUrl: null,
           savedBy: "preview-owner",
+          isRecommended: false,
+          isSaved: true,
+          provider: null,
+          providerPlaceId: null,
           updatedAt: `${secondDay.date}T09:00:00`,
           votes: []
         },
@@ -385,7 +393,11 @@ export class FixtureTravelGuideDataSource implements TravelGuideDataSource {
           mapUrl: "https://www.google.com/maps/search/?api=1&query=Sample+Coffee+Sydney",
           sourceUrl: null,
           imageUrl: null,
-          savedBy: "preview-owner",
+          savedBy: null,
+          isRecommended: true,
+          isSaved: false,
+          provider: null,
+          providerPlaceId: null,
           updatedAt: `${thirdDay.date}T09:00:00`,
           votes: []
         },
@@ -404,6 +416,10 @@ export class FixtureTravelGuideDataSource implements TravelGuideDataSource {
           sourceUrl: null,
           imageUrl: null,
           savedBy: "preview-owner",
+          isRecommended: true,
+          isSaved: true,
+          provider: null,
+          providerPlaceId: null,
           updatedAt: `${secondDay.date}T18:00:00`,
           votes: []
         }

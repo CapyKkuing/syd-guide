@@ -9,6 +9,7 @@ import type { AppEnv } from "./env";
 import { apiError } from "./http/errors";
 import { registerAiModelRoutes, type AiModelFetch } from "./routes/ai-model";
 import { registerPairingRoutes } from "./routes/pairing";
+import { PlacesError, registerPlacesRoutes } from "./routes/places";
 import { registerParticipantRoutes } from "./routes/participants";
 import { registerSessionRoutes } from "./routes/session";
 import { registerSyncRoutes, SyncError } from "./routes/sync";
@@ -17,14 +18,16 @@ import { MediaError, registerMediaRoutes } from "./routes/media";
 import { MutationError } from "./services/mutations";
 import { PairingError } from "./services/pairing";
 import { ParticipantError } from "./services/participants";
+import type { GooglePlacesFetch } from "./services/google-places";
 
 interface AppOverrides extends Partial<AppDependencies> {
   aiModelFetch?: AiModelFetch;
+  placesFetch?: GooglePlacesFetch;
 }
 
 export function createApp(overrides: AppOverrides = {}) {
   const app = new Hono<AppEnv>();
-  const { aiModelFetch, ...accessOverrides } = overrides;
+  const { aiModelFetch, placesFetch, ...accessOverrides } = overrides;
   const dependencies = { ...defaultDependencies, ...accessOverrides };
 
   app.use("/api/*", requireSameOrigin);
@@ -35,6 +38,7 @@ export function createApp(overrides: AppOverrides = {}) {
   registerPairingRoutes(app, dependencies);
   registerTripRoutes(app, dependencies);
   registerMediaRoutes(app, dependencies);
+  registerPlacesRoutes(app, dependencies, placesFetch);
   registerSyncRoutes(app, dependencies);
   app.all("/api/*", (c) =>
     apiError(c, 404, "NOT_FOUND", "API route not found")
@@ -67,6 +71,9 @@ export function createApp(overrides: AppOverrides = {}) {
         error.message,
         error.details
       );
+    }
+    if (error instanceof PlacesError) {
+      return apiError(c, error.status, error.code, error.message);
     }
     if (error instanceof MutationError || error instanceof SyncError) {
       return apiError(

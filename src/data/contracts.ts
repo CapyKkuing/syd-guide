@@ -141,6 +141,10 @@ export interface MapPlaceView {
   sourceUrl: string | null;
   imageUrl: string | null;
   savedBy: string | null;
+  isRecommended: boolean;
+  isSaved: boolean;
+  provider: "google-places" | null;
+  providerPlaceId: string | null;
   updatedAt: string;
   votes: Array<{
     id: string;

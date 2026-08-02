@@ -11,6 +11,7 @@ export interface Env {
   ACCESS_AUD?: string;
   DEV_AUTH?: "enabled";
   GOOGLE_DRIVE_CLIENT_ID?: string;
+  GOOGLE_PLACES_API_KEY?: string;
 }
 
 export type AppEnv = {

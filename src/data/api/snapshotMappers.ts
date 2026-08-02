@@ -243,6 +243,10 @@ function mapPlaces(snapshot: TripSnapshot): MapPlaceView[] {
       sourceUrl: place.sourceUrl,
       imageUrl: place.imageUrl,
       savedBy: place.savedBy,
+      isRecommended: place.isRecommended,
+      isSaved: place.isSaved,
+      provider: place.provider,
+      providerPlaceId: place.providerPlaceId,
       updatedAt: place.updatedAt,
       votes: snapshot.votes
         .filter((vote) => vote.targetType === "place" && vote.targetId === place.id)
