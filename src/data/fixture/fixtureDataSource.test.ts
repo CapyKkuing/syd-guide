@@ -167,15 +167,15 @@ describe("FixtureTravelGuideDataSource", () => {
         items: [
           { label: "예약·바우처", status: "available" },
           { label: "환율", status: "available" },
-          { label: "교통", status: "preview" },
-          { label: "비상 연락처", status: "preview" }
+          { label: "교통", status: "available" },
+          { label: "비상 연락처", status: "available" }
         ]
       },
       {
         id: "places",
         items: [
-          { label: "맛집", status: "preview" },
-          { label: "카페", status: "preview" },
+          { label: "맛집", status: "available" },
+          { label: "카페", status: "available" },
           { label: "저장 장소", status: "available" }
         ]
       },
@@ -184,7 +184,7 @@ describe("FixtureTravelGuideDataSource", () => {
         items: [
           { label: "체크리스트", status: "available" },
           { label: "여행 메모", status: "available" },
-          { label: "주의사항", status: "preview" },
+          { label: "주의사항", status: "available" },
           { label: "AI 앱 연결", status: "available" },
           { label: "참여자 연결", status: "preview" },
           { label: "초대·기기 관리", status: "available" },

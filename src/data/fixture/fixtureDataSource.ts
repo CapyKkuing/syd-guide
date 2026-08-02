@@ -180,16 +180,16 @@ function toolGroups(): ToolGroupView[] {
       items: [
         { id: "bookings", label: "예약·바우처", description: "예약 정보를 한곳에서 확인합니다.", status: "available" },
         { id: "exchange", label: "환율", description: "AUD와 KRW를 직접 환산합니다.", status: "available" },
-        { id: "transport", label: "교통", description: "교통 안내는 준비 중입니다.", status: "preview" },
-        { id: "emergency", label: "비상 연락처", description: "비상 연락처는 준비 중입니다.", status: "preview" }
+        { id: "transport", label: "교통", description: "공식 실시간 정보와 일정 이동 구간을 한곳에서 확인합니다.", status: "available" },
+        { id: "emergency", label: "비상 연락처", description: "호주 긴급번호와 영사관·숙소 연락 정보를 확인합니다.", status: "available" }
       ]
     },
     {
       id: "places",
       title: "Places",
       items: [
-        { id: "restaurants", label: "맛집", description: "맛집 목록은 준비 중입니다.", status: "preview" },
-        { id: "cafes", label: "카페", description: "카페 목록은 준비 중입니다.", status: "preview" },
+        { id: "restaurants", label: "맛집", description: "저장한 맛집을 검색하고 상세 정보와 길찾기를 확인합니다.", status: "available" },
+        { id: "cafes", label: "카페", description: "저장한 카페를 검색하고 상세 정보와 길찾기를 확인합니다.", status: "available" },
         { id: "saved-places", label: "저장 장소", description: "지도에서 저장한 장소를 확인하고 수정합니다.", status: "available" }
       ]
     },
@@ -199,7 +199,7 @@ function toolGroups(): ToolGroupView[] {
       items: [
         { id: "checklist", label: "체크리스트", description: "함께 또는 개인 준비물을 관리합니다.", status: "available" },
         { id: "notes", label: "여행 메모", description: "공유 또는 개인 메모를 관리합니다.", status: "available" },
-        { id: "tips", label: "주의사항", description: "여행 주의사항은 준비 중입니다.", status: "preview" },
+        { id: "tips", label: "주의사항", description: "교통·결제·자외선·비상 연락 핵심 정보를 확인합니다.", status: "available" },
         { id: "ai-connect", label: "AI 앱 연결", description: "민감정보를 제외한 질문을 만들고 선택한 AI를 엽니다.", status: "available" },
         { id: "partner-connect", label: "참여자 연결", description: "참여자별 기기를 연결합니다.", status: "preview" },
         { id: "devices", label: "초대·기기 관리", description: "참여자 초대와 연결 기기를 한곳에서 관리합니다.", status: "available" },

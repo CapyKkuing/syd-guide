@@ -24,8 +24,12 @@ import { AiLauncher } from "./ai/AiLauncher";
 import { BookingsPanel } from "./bookings/BookingsPanel";
 import { ChecklistPanel } from "./checklist/ChecklistPanel";
 import { CurrencyTool } from "./currency/CurrencyTool";
+import { EmergencyPanel } from "./emergency/EmergencyPanel";
 import { NotesPanel } from "./notes/NotesPanel";
+import { PlaceCategoryPanel } from "./places/PlaceCategoryPanel";
 import { SearchPanel } from "./search/SearchPanel";
+import { TipsPanel } from "./tips/TipsPanel";
+import { TransportPanel } from "./transport/TransportPanel";
 import { ManagementPage } from "./ManagementPage";
 
 interface ToolsPageProps {
@@ -196,6 +200,58 @@ function ToolCard({
 
   if (item.id === "activity") {
     return <ActivityPanel activity={tools.activity} reload={reload} />;
+  }
+
+  if (item.id === "transport" && workspace) {
+    return (
+      <article className="tool-card tool-card--wide" id="transport">
+        <div className="tool-card__heading"><h1>{item.label}</h1></div>
+        <p>{item.description}</p>
+        <TransportPanel
+          controller={controller}
+          days={workspace.schedule.days}
+          places={workspace.mapPreview.places}
+          viewerMemberId={tools.viewerMemberId}
+        />
+      </article>
+    );
+  }
+
+  if ((item.id === "restaurants" || item.id === "cafes") && workspace) {
+    const category = item.id === "restaurants" ? "restaurant" : "cafe";
+    return (
+      <article className="tool-card tool-card--wide" id={item.id}>
+        <div className="tool-card__heading"><h1>{item.label}</h1></div>
+        <p>{item.description}</p>
+        <PlaceCategoryPanel
+          category={category}
+          controller={controller}
+          emptyMessage={`${item.label} 장소를 추가해 여행 후보를 모아보세요.`}
+          places={workspace.mapPreview.places}
+          viewerMemberId={tools.viewerMemberId}
+        />
+      </article>
+    );
+  }
+
+  if (item.id === "emergency" && workspace) {
+    return (
+      <article className="tool-card tool-card--wide" id="emergency">
+        <div className="tool-card__heading"><h1>{item.label}</h1></div>
+        <p>{item.description}</p>
+        <EmergencyPanel places={workspace.mapPreview.places} />
+      </article>
+    );
+  }
+
+  if (item.id === "tips") {
+    return (
+      <article className="tool-card tool-card--wide" id="tips">
+        <div className="tool-card__heading"><h1>{item.label}</h1></div>
+        <p>{item.description}</p>
+        <TipsPanel notes={tools.notes} tripId={tools.tripId} />
+      </article>
+    );
   }
 
   if (item.status === "preview") {

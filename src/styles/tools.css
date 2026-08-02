@@ -790,6 +790,7 @@
 .tool-editor select,
 .tool-editor textarea,
 .tool-filter select,
+.tool-filter input,
 .tool-search-controls input,
 .tool-search-controls select,
 .ai-launcher textarea {
@@ -964,6 +965,49 @@
 .tool-search-results small,
 .activity-list time {
   color: var(--text-2);
+}
+
+.place-category-tool .tool-filter {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.place-category-tool .tool-filter span {
+  font-weight: 700;
+}
+
+.place-tool-card,
+.reference-card {
+  overflow-wrap: anywhere;
+}
+
+.reference-link,
+.reference-call {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--today-boundary);
+  border-radius: var(--radius-md);
+  color: var(--text);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.reference-link:hover,
+.reference-call:hover {
+  background: var(--surface-2);
+}
+
+.reference-call {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.emergency-priority .reference-call {
+  width: 100%;
 }
 
 @media (min-width: 761px) {

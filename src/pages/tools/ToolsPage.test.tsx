@@ -90,12 +90,45 @@ describe("ToolsPage", () => {
     expect(screen.queryByRole("heading", { name: "Travel Essentials" })).not.toBeInTheDocument();
   });
 
-  it("opens an unavailable tool on its own prepared-state page", async () => {
+  it("opens transport with live references and saved transport places", async () => {
     await renderToolsPage("transport");
 
     expect(screen.getByRole("heading", { level: 1, name: "교통" })).toBeVisible();
-    expect(screen.getByText("준비 중")).toBeVisible();
-    expect(screen.getByText("교통 안내는 준비 중입니다.")).toBeVisible();
+    expect(screen.getByRole("heading", { name: "공식 실시간 정보" })).toBeVisible();
+    expect(screen.getByRole("link", { name: "Transport NSW 여행 계획 공식 화면 열기" })).toHaveAttribute(
+      "href",
+      "https://transportnsw.info/plan"
+    );
+    expect(screen.getByRole("button", { name: "장소 추가" })).toBeDisabled();
+  });
+
+  it("opens separate restaurant and cafe collections", async () => {
+    const restaurants = await renderToolsPage("restaurants");
+    expect(screen.getByRole("heading", { level: 1, name: "맛집" })).toBeVisible();
+    expect(screen.getByRole("heading", { name: "Quay" })).toBeVisible();
+    expect(screen.queryByRole("heading", { name: "Sample Coffee" })).not.toBeInTheDocument();
+
+    restaurants.unmount();
+    await renderToolsPage("cafes");
+    expect(screen.getByRole("heading", { level: 1, name: "카페" })).toBeVisible();
+    expect(screen.getByRole("heading", { name: "Sample Coffee" })).toBeVisible();
+    expect(screen.queryByRole("heading", { name: "Quay" })).not.toBeInTheDocument();
+  });
+
+  it("opens emergency contacts and offline travel tips", async () => {
+    const emergency = await renderToolsPage("emergency");
+    expect(screen.getByRole("heading", { level: 1, name: "비상 연락처" })).toBeVisible();
+    expect(screen.getAllByRole("link", { name: "000 전화" })[0]).toHaveAttribute("href", "tel:000");
+    expect(screen.getByText("Meriton Sussex Street")).toBeVisible();
+
+    emergency.unmount();
+    await renderToolsPage("tips");
+    expect(screen.getByRole("heading", { level: 1, name: "주의사항" })).toBeVisible();
+    expect(screen.getByRole("heading", { name: "교통카드" })).toBeVisible();
+    expect(screen.getByRole("link", { name: "비상 연락처 열기" })).toHaveAttribute(
+      "href",
+      "/trip/sydney-2026/tools/emergency"
+    );
   });
 
   it("collects admin-only settings on the management route", async () => {
@@ -120,9 +153,11 @@ describe("ToolsPage", () => {
     expect(screen.getByRole("button", { name: "활동 새로고침" })).toBeVisible();
   });
 
-  it("keeps a preview badge on unavailable tool links", async () => {
+  it("marks every required traveler tool as available", async () => {
     await renderToolsPage();
 
-    expect(screen.getByRole("link", { name: "교통 열기" })).toHaveTextContent("준비 중");
+    for (const label of ["교통", "비상 연락처", "맛집", "카페", "주의사항"]) {
+      expect(screen.getByRole("link", { name: `${label} 열기` })).not.toHaveTextContent("준비 중");
+    }
   });
 });
