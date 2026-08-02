@@ -26,8 +26,8 @@ const toolGroups: ToolGroupView[] = [
     id: "places",
     title: "Places",
     items: [
-      { id: "restaurants", label: "맛집", description: "저장한 맛집을 검색하고 상세 정보와 길찾기를 확인합니다.", status: "available" },
-      { id: "cafes", label: "카페", description: "저장한 카페를 검색하고 상세 정보와 길찾기를 확인합니다.", status: "available" },
+      { id: "restaurants", label: "맛집", description: "Google 최신 추천과 저장한 맛집을 함께 확인합니다.", status: "available" },
+      { id: "cafes", label: "카페", description: "Google 최신 추천과 저장한 카페를 함께 확인합니다.", status: "available" },
       { id: "saved-places", label: "저장 장소", description: "지도에서 저장한 장소를 확인하고 수정합니다.", status: "available" }
     ]
   },

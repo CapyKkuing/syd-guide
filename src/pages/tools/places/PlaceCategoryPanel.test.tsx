@@ -1,6 +1,6 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { ThemeProvider } from "../../../app/theme/ThemeProvider";
 import type { MapPlaceView } from "../../../data/contracts";
 import { placesApi } from "../../../services/places/api";
@@ -12,6 +12,10 @@ const places = [
 ];
 
 describe("PlaceCategoryPanel", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it("keeps categories separate and creates with the selected category", async () => {
     const submit = vi.fn().mockResolvedValue({});
     render(
@@ -42,26 +46,13 @@ describe("PlaceCategoryPanel", () => {
   });
 
   it("shows recommended and saved markers together on real discovery cards", async () => {
-    vi.spyOn(placesApi, "getDiscovery").mockResolvedValue({
-      details: {
-        provider: "google-places",
-        providerPlaceId: "google-quay",
-        name: "Quay",
-        address: "Upper Level, Overseas Passenger Terminal",
-        latitude: -33.8587,
-        longitude: 151.2101,
-        mapUrl: "https://maps.google.com/?cid=1",
-        rating: 4.5,
-        userRatingCount: 1000,
-        openNow: true,
-        weekdayDescriptions: [],
-        phone: null,
-        websiteUrl: null,
-        photo: null,
-      },
+    vi.spyOn(placesApi, "getRecommendations").mockResolvedValue({
+      places: [
+        recommendation("google-quay", "Quay", 4.5, 1000),
+        recommendation("google-bennelong", "Bennelong", 4.7, 800),
+      ],
       usage: [
-        { sku: "text-search-enterprise", used: 1, limit: 800 },
-        { sku: "place-details-enterprise", used: 0, limit: 800 },
+        { sku: "nearby-search-enterprise", used: 1, limit: 800 },
         { sku: "place-photo", used: 0, limit: 800 },
       ],
     });
@@ -71,8 +62,11 @@ describe("PlaceCategoryPanel", () => {
           category="restaurant"
           emptyMessage="맛집 없음"
           places={[
-            place("restaurant", "Quay", { isRecommended: true, isSaved: true }),
-            place("restaurant", "Bennelong", { isRecommended: true, isSaved: false }),
+            place("restaurant", "Quay", {
+              isSaved: true,
+              provider: "google-places",
+              providerPlaceId: "google-quay",
+            }),
           ]}
           tripId="trip-1"
           viewerMemberId="owner"
@@ -80,34 +74,20 @@ describe("PlaceCategoryPanel", () => {
       </ThemeProvider>
     );
 
-    expect(await screen.findAllByText("★ 4.5 (1,000)")).toHaveLength(2);
+    expect(await screen.findByText("★ 4.5 (1,000)")).toBeVisible();
+    expect(screen.getByText("★ 4.7 (800)")).toBeVisible();
     const quayCard = screen.getByRole("heading", { name: "Quay" })
       .closest(".place-discovery-card");
     expect(quayCard).not.toBeNull();
     expect(within(quayCard as HTMLElement).getByText("추천")).toBeVisible();
     expect(within(quayCard as HTMLElement).getByText("내 저장")).toBeVisible();
-    expect(screen.getByText("사진 0/800")).toBeVisible();
+    expect(screen.getByText("검색 1/800 · 사진 0/800")).toBeVisible();
   });
 
-  it("saves a recommended place with provider data and a valid legacy image path", async () => {
+  it("saves only the provider id for a new live recommendation", async () => {
     const submit = vi.fn().mockResolvedValue({});
-    vi.spyOn(placesApi, "getDiscovery").mockResolvedValue({
-      details: {
-        provider: "google-places",
-        providerPlaceId: "google-quay",
-        name: "Quay",
-        address: "Upper Level, Overseas Passenger Terminal",
-        latitude: -33.8587,
-        longitude: 151.2101,
-        mapUrl: "https://maps.google.com/?cid=1",
-        rating: 4.5,
-        userRatingCount: 1000,
-        openNow: true,
-        weekdayDescriptions: [],
-        phone: null,
-        websiteUrl: null,
-        photo: null,
-      },
+    vi.spyOn(placesApi, "getRecommendations").mockResolvedValue({
+      places: [recommendation("google-quay", "Quay", 4.5, 1000)],
       usage: [],
     });
     render(
@@ -116,11 +96,7 @@ describe("PlaceCategoryPanel", () => {
           category="restaurant"
           controller={{ submit }}
           emptyMessage="맛집 없음"
-          places={[place("restaurant", "Quay", {
-            imageUrl: "images/quay.jpg",
-            isRecommended: true,
-            isSaved: false,
-          })]}
+          places={[]}
           tripId="trip-1"
           viewerMemberId="owner"
         />
@@ -128,26 +104,84 @@ describe("PlaceCategoryPanel", () => {
     );
 
     await screen.findByText("★ 4.5 (1,000)");
-    expect(screen.getByRole("img", { name: "Quay 장소 사진" }))
-      .toHaveAttribute("src", "/images/quay.jpg");
     await userEvent.click(screen.getByRole("button", { name: "저장" }));
 
     expect(submit).toHaveBeenCalledWith(
       "place",
-      "update",
-      "quay",
-      1,
+      "create",
+      expect.any(String),
+      null,
       expect.objectContaining({
-        imageUrl: "/images/quay.jpg",
-        isRecommended: true,
+        address: null,
+        imageUrl: null,
+        isRecommended: false,
         isSaved: true,
+        latitude: null,
+        longitude: null,
+        name: "내가 저장한 Google 장소",
         provider: "google-places",
         providerPlaceId: "google-quay",
         savedBy: "owner",
       })
     );
   });
+
+  it("sorts the current results without calling Google again", async () => {
+    const getRecommendations = vi.spyOn(placesApi, "getRecommendations").mockResolvedValue({
+      places: [
+        recommendation("popular", "Popular Place", 4.4, 2000),
+        recommendation("rated", "Rated Place", 4.9, 500),
+      ],
+      usage: [],
+    });
+    render(
+      <ThemeProvider>
+        <PlaceCategoryPanel
+          category="restaurant"
+          emptyMessage="맛집 없음"
+          places={[]}
+          tripId="trip-1"
+          viewerMemberId="owner"
+        />
+      </ThemeProvider>
+    );
+
+    await screen.findByRole("heading", { name: "Popular Place" });
+    expect(screen.getAllByRole("heading", { level: 3 }).map((heading) => heading.textContent))
+      .toEqual(["Popular Place", "Rated Place"]);
+    await userEvent.click(screen.getByRole("radio", { name: "평점순" }));
+    expect(screen.getAllByRole("heading", { level: 3 }).map((heading) => heading.textContent))
+      .toEqual(["Rated Place", "Popular Place"]);
+    await userEvent.click(screen.getByRole("radio", { name: "리뷰 많은순" }));
+    expect(screen.getAllByRole("heading", { level: 3 }).map((heading) => heading.textContent))
+      .toEqual(["Popular Place", "Rated Place"]);
+    expect(getRecommendations).toHaveBeenCalledOnce();
+  });
 });
+
+function recommendation(
+  providerPlaceId: string,
+  name: string,
+  rating: number,
+  userRatingCount: number
+) {
+  return {
+    provider: "google-places" as const,
+    providerPlaceId,
+    name,
+    address: `${name}, Sydney`,
+    latitude: -33.86,
+    longitude: 151.2,
+    mapUrl: `https://maps.google.com/?q=${providerPlaceId}`,
+    rating,
+    userRatingCount,
+    openNow: true,
+    weekdayDescriptions: [],
+    phone: null,
+    websiteUrl: null,
+    photo: null,
+  };
+}
 
 function place(
   category: MapPlaceView["category"],

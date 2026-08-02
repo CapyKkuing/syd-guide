@@ -14,6 +14,7 @@ import {
   getGooglePlacePhoto,
   GooglePlacesProviderError,
   searchGooglePlace,
+  searchGoogleRecommendations,
   type GooglePlacesFetch,
 } from "../services/google-places";
 
@@ -30,6 +31,7 @@ export class PlacesError extends Error {
 const idSchema = z.string().regex(/^[A-Za-z0-9-]{1,100}$/);
 const photoNameSchema = z.string().max(500)
   .regex(/^places\/[^/]+\/photos\/[^/]+$/);
+const recommendationCategorySchema = z.enum(["restaurant", "cafe"]);
 
 interface PlaceLookupRow {
   name: string;
@@ -43,6 +45,68 @@ export function registerPlacesRoutes(
   dependencies: AppDependencies,
   placesFetch: GooglePlacesFetch = fetch
 ) {
+  app.get("/api/trips/:id/places/recommendations", async (c) => {
+    const principal = await requirePrincipal(c, dependencies);
+    const tripId = validId(c.req.param("id"), "TRIP_ID_INVALID");
+    const category = recommendationCategorySchema.safeParse(c.req.query("category"));
+    if (!category.success) {
+      throw new PlacesError(400, "PLACE_CATEGORY_INVALID", "추천 장소 분류가 올바르지 않습니다.");
+    }
+    const trip = await findTripForMember(c.env, tripId, principal.memberId);
+    if (!trip || trip.deletedAt) {
+      throw new PlacesError(404, "TRIP_NOT_FOUND", "여행을 찾을 수 없습니다.");
+    }
+    const center = await findTripCenter(c.env, tripId);
+    if (!center) {
+      throw new PlacesError(
+        422,
+        "PLACE_DISCOVERY_LOCATION_REQUIRED",
+        "추천을 받으려면 위치가 입력된 장소가 하나 이상 필요합니다."
+      );
+    }
+    const apiKey = configuredApiKey(c.env);
+    if (!await reservePlaceProviderUsage(
+      c.env,
+      "nearby-search-enterprise",
+      dependencies.now()
+    )) {
+      throw new PlacesError(
+        429,
+        "PLACES_FREE_LIMIT_REACHED",
+        "이번 달 추천 검색 무료 보호 한도에 도달했습니다. 저장한 장소는 계속 사용할 수 있습니다."
+      );
+    }
+    try {
+      const places = await searchGoogleRecommendations(
+        apiKey,
+        category.data,
+        center,
+        placesFetch
+      );
+      c.header("Cache-Control", "private, no-store");
+      return c.json({
+        places,
+        usage: await listPlaceProviderUsage(c.env, dependencies.now()),
+      });
+    } catch (error) {
+      providerError(error);
+    }
+  });
+
+  app.get("/api/trips/:id/places/recommendation-photo", async (c) => {
+    const principal = await requirePrincipal(c, dependencies);
+    const tripId = validId(c.req.param("id"), "TRIP_ID_INVALID");
+    const trip = await findTripForMember(c.env, tripId, principal.memberId);
+    if (!trip || trip.deletedAt) {
+      throw new PlacesError(404, "TRIP_NOT_FOUND", "여행을 찾을 수 없습니다.");
+    }
+    const name = photoNameSchema.safeParse(c.req.query("name"));
+    if (!name.success) {
+      throw new PlacesError(400, "PLACE_PHOTO_INVALID", "장소 사진 정보가 올바르지 않습니다.");
+    }
+    return streamPlacePhoto(c.env, name.data, dependencies, placesFetch);
+  });
+
   app.get("/api/trips/:id/places/:placeId/discovery", async (c) => {
     const principal = await requirePrincipal(c, dependencies);
     const tripId = validId(c.req.param("id"), "TRIP_ID_INVALID");
@@ -102,30 +166,48 @@ export function registerPlacesRoutes(
     if (place.provider_place_id && place.provider_place_id !== providerPlaceId) {
       throw new PlacesError(400, "PLACE_PHOTO_MISMATCH", "장소와 사진 정보가 일치하지 않습니다.");
     }
-    const apiKey = configuredApiKey(c.env);
-    if (!await reservePlaceProviderUsage(c.env, "place-photo", dependencies.now())) {
-      throw new PlacesError(
-        429,
-        "PLACES_FREE_LIMIT_REACHED",
-        "이번 달 사진 무료 보호 한도에 도달했습니다."
-      );
-    }
-    try {
-      const photo = await getGooglePlacePhoto(
-        apiKey,
-        name.data,
-        placesFetch
-      );
-      return new Response(photo.body, {
-        headers: {
-          "Cache-Control": "private, no-store",
-          "Content-Type": photo.headers.get("Content-Type") ?? "image/jpeg",
-        },
-      });
-    } catch (error) {
-      providerError(error);
-    }
+    return streamPlacePhoto(c.env, name.data, dependencies, placesFetch);
   });
+}
+
+async function findTripCenter(env: AppEnv["Bindings"], tripId: string) {
+  const center = await env.DB.prepare(
+    `SELECT AVG(latitude) AS latitude, AVG(longitude) AS longitude
+     FROM places
+     WHERE trip_id = ? AND latitude IS NOT NULL AND longitude IS NOT NULL`
+  ).bind(tripId).first<{ latitude: number | null; longitude: number | null }>();
+  if (!center || center.latitude === null || center.longitude === null) return null;
+  return { latitude: Number(center.latitude), longitude: Number(center.longitude) };
+}
+
+async function streamPlacePhoto(
+  env: AppEnv["Bindings"],
+  name: string,
+  dependencies: AppDependencies,
+  placesFetch: GooglePlacesFetch
+) {
+  const apiKey = configuredApiKey(env);
+  const usage = await reservePlaceProviderUsage(env, "place-photo", dependencies.now());
+  if (!usage) {
+    throw new PlacesError(
+      429,
+      "PLACES_FREE_LIMIT_REACHED",
+      "이번 달 사진 무료 보호 한도에 도달했습니다."
+    );
+  }
+  try {
+    const photo = await getGooglePlacePhoto(apiKey, name, placesFetch);
+    return new Response(photo.body, {
+      headers: {
+        "Cache-Control": "private, no-store",
+        "Content-Type": photo.headers.get("Content-Type") ?? "image/jpeg",
+        "X-Place-Photo-Limit": String(usage.limit),
+        "X-Place-Photo-Used": String(usage.used),
+      },
+    });
+  } catch (error) {
+    providerError(error);
+  }
 }
 
 async function findPlace(env: AppEnv["Bindings"], tripId: string, placeId: string) {

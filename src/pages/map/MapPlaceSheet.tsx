@@ -14,6 +14,7 @@ export interface MapPlaceSheetProps {
   viewerMemberId: string;
   discovery?: PlaceDiscoveryDetails | null;
   photoUrl?: string | null;
+  hideManagement?: boolean;
 }
 
 const categoryLabels: Record<MapPlaceView["category"], string> = {
@@ -33,6 +34,7 @@ const statusLabels: Record<MapPlaceView["status"], string> = {
 export function MapPlaceSheet({
   controller,
   discovery,
+  hideManagement = false,
   onClose,
   onEdit,
   place,
@@ -62,6 +64,9 @@ export function MapPlaceSheet({
                     </a>
                   ) : index ? `, ${author.displayName}` : author.displayName
                 ))}
+                {discovery.photo.sourceUrl ? (
+                  <> · <a href={discovery.photo.sourceUrl} rel="noreferrer noopener" target="_blank">Google Maps에서 사진 보기</a></>
+                ) : null}
               </figcaption>
             ) : null}
           </figure>
@@ -78,13 +83,17 @@ export function MapPlaceSheet({
           {place.description ? <div><dt>설명</dt><dd>{place.description}</dd></div> : null}
         </dl>
         {discovery ? <p className="google-maps-attribution" translate="no">Google Maps</p> : null}
-        <p>투표: 꼭 가요 {voteTotals.must} · 괜찮아요 {voteTotals.okay} · 건너뛰기 {voteTotals.skip}</p>
-        <PlaceVoteControl controller={controller} place={place} viewerMemberId={viewerMemberId} />
+        {!hideManagement ? (
+          <>
+            <p>투표: 꼭 가요 {voteTotals.must} · 괜찮아요 {voteTotals.okay} · 건너뛰기 {voteTotals.skip}</p>
+            <PlaceVoteControl controller={controller} place={place} viewerMemberId={viewerMemberId} />
+          </>
+        ) : null}
         <div className="map-place-sheet__map-links">
           <a className="map-place-sheet__map-link" href={discovery?.mapUrl ?? mapsSearchUrl} rel="noreferrer noopener" target="_blank">최신 정보 보기</a>
           <a className="map-place-sheet__map-link" href={mapsDirectionsUrl} rel="noreferrer noopener" target="_blank">길찾기</a>
         </div>
-        {controller ? <button className="secondary-button" onClick={onEdit} type="button">장소 수정</button> : null}
+        {controller && !hideManagement ? <button className="secondary-button" onClick={onEdit} type="button">장소 수정</button> : null}
       </div>
     </BottomSheet>
   );

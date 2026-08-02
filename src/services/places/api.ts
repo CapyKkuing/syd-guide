@@ -1,12 +1,26 @@
-import type { PlaceDiscoveryResponse } from "../../shared/places";
+import type {
+  PlaceDiscoveryResponse,
+  PlaceRecommendationCategory,
+  PlaceRecommendationResponse,
+} from "../../shared/places";
 import { errorFromResponse } from "../api/errors";
 
 type Fetcher = typeof fetch;
 
+interface PlacePhotoResult {
+  blob: Blob;
+  usage: {
+    sku: "place-photo";
+    used: number;
+    limit: number;
+  };
+}
+
 export class PlacesApi {
   private readonly fetcher: Fetcher;
   private readonly discoveryRequests = new Map<string, Promise<PlaceDiscoveryResponse>>();
-  private readonly photoRequests = new Map<string, Promise<Blob>>();
+  private readonly recommendationRequests = new Map<string, Promise<PlaceRecommendationResponse>>();
+  private readonly photoRequests = new Map<string, Promise<PlacePhotoResult>>();
 
   constructor(fetcher: Fetcher = fetch) {
     this.fetcher = fetcher.bind(globalThis);
@@ -33,7 +47,31 @@ export class PlacesApi {
     return request;
   }
 
-  async getPhoto(tripId: string, placeId: string, name: string): Promise<Blob> {
+  async getRecommendations(
+    tripId: string,
+    category: PlaceRecommendationCategory,
+    refresh = false
+  ): Promise<PlaceRecommendationResponse> {
+    const key = `${tripId}:${category}`;
+    if (refresh) this.recommendationRequests.delete(key);
+    const existing = this.recommendationRequests.get(key);
+    if (existing) return existing;
+    const query = new URLSearchParams({ category });
+    const request = this.fetcher(
+      `/api/trips/${encodeURIComponent(tripId)}/places/recommendations?${query}`,
+      { credentials: "same-origin", headers: localHeaders() }
+    ).then(async (response) => {
+      if (!response.ok) throw await errorFromResponse(response);
+      return response.json() as Promise<PlaceRecommendationResponse>;
+    }).catch((error: unknown) => {
+      this.recommendationRequests.delete(key);
+      throw error;
+    });
+    this.recommendationRequests.set(key, request);
+    return request;
+  }
+
+  async getPhoto(tripId: string, placeId: string, name: string): Promise<PlacePhotoResult> {
     const key = `${tripId}:${placeId}:${name}`;
     const existing = this.photoRequests.get(key);
     if (existing) return existing;
@@ -43,7 +81,7 @@ export class PlacesApi {
       { credentials: "same-origin", headers: localHeaders() }
     ).then(async (response) => {
       if (!response.ok) throw await errorFromResponse(response);
-      return response.blob();
+      return photoResult(response);
     }).catch((error: unknown) => {
       this.photoRequests.delete(key);
       throw error;
@@ -51,6 +89,36 @@ export class PlacesApi {
     this.photoRequests.set(key, request);
     return request;
   }
+
+  async getRecommendationPhoto(tripId: string, name: string): Promise<PlacePhotoResult> {
+    const key = `${tripId}:recommendation:${name}`;
+    const existing = this.photoRequests.get(key);
+    if (existing) return existing;
+    const query = new URLSearchParams({ name });
+    const request = this.fetcher(
+      `/api/trips/${encodeURIComponent(tripId)}/places/recommendation-photo?${query}`,
+      { credentials: "same-origin", headers: localHeaders() }
+    ).then(async (response) => {
+      if (!response.ok) throw await errorFromResponse(response);
+      return photoResult(response);
+    }).catch((error: unknown) => {
+      this.photoRequests.delete(key);
+      throw error;
+    });
+    this.photoRequests.set(key, request);
+    return request;
+  }
+}
+
+async function photoResult(response: Response): Promise<PlacePhotoResult> {
+  return {
+    blob: await response.blob(),
+    usage: {
+      sku: "place-photo",
+      used: Number(response.headers.get("X-Place-Photo-Used") ?? 0),
+      limit: Number(response.headers.get("X-Place-Photo-Limit") ?? 800),
+    },
+  };
 }
 
 function localHeaders(): Headers {

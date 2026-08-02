@@ -137,6 +137,50 @@ describe("Google Places discovery API", () => {
     expect(placesFetch).toHaveBeenCalledOnce();
   });
 
+  it("returns up to twenty current recommendations in Google popularity order", async () => {
+    await seedPlace();
+    const placesFetch = vi.fn<typeof fetch>(async (input, init) => {
+      expect(String(input)).toBe("https://places.googleapis.com/v1/places:searchNearby");
+      expect(JSON.parse(String(init?.body))).toMatchObject({
+        includedPrimaryTypes: ["restaurant"],
+        locationRestriction: {
+          circle: {
+            center: { latitude: -33.8688, longitude: 151.2093 },
+            radius: 15000,
+          },
+        },
+        maxResultCount: 20,
+        rankPreference: "POPULARITY",
+      });
+      return Response.json({
+        places: [
+          googlePlace("popular-1", "Popular One", 4.4, 2500),
+          googlePlace("popular-2", "Popular Two", 4.8, 900),
+        ],
+      });
+    });
+    const app = createApp({ now: () => fixedNow, placesFetch });
+
+    const response = await app.request(
+      "http://localhost/api/trips/trip-places/places/recommendations?category=restaurant",
+      { headers: headers() },
+      bindings()
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+    await expect(response.json()).resolves.toMatchObject({
+      places: [
+        { providerPlaceId: "popular-1", name: "Popular One" },
+        { providerPlaceId: "popular-2", name: "Popular Two" },
+      ],
+      usage: expect.arrayContaining([
+        { sku: "nearby-search-enterprise", used: 1, limit: 800 },
+      ]),
+    });
+    expect(placesFetch).toHaveBeenCalledOnce();
+  });
+
   it("streams a real photo response without exposing the API key", async () => {
     await seedPlace("google-place-1");
     const placesFetch = vi.fn<typeof fetch>(async () => new Response(
@@ -154,6 +198,8 @@ describe("Google Places discovery API", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("Content-Type")).toBe("image/jpeg");
     expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+    expect(response.headers.get("X-Place-Photo-Used")).toBe("1");
+    expect(response.headers.get("X-Place-Photo-Limit")).toBe("800");
     expect(response.headers.get("X-Goog-Api-Key")).toBeNull();
     expect(new Uint8Array(await response.arrayBuffer())).toEqual(
       new Uint8Array([0xff, 0xd8, 0xff])
@@ -204,4 +250,39 @@ describe("Google Places discovery API", () => {
     });
     expect(placesFetch).not.toHaveBeenCalled();
   });
+
+  it("blocks recommendation calls before exceeding the free allowance", async () => {
+    await seedPlace();
+    await env.DB.prepare(
+      `INSERT INTO place_provider_usage (billing_month, sku, used_count, updated_at)
+       VALUES ('2026-08', 'nearby-search-enterprise', 800, ?)`
+    ).bind(fixedNow.toISOString()).run();
+    const placesFetch = vi.fn<typeof fetch>();
+    const app = createApp({ now: () => fixedNow, placesFetch });
+
+    const response = await app.request(
+      "http://localhost/api/trips/trip-places/places/recommendations?category=cafe",
+      { headers: headers() },
+      bindings()
+    );
+
+    expect(response.status).toBe(429);
+    await expect(response.json()).resolves.toMatchObject({
+      error: { code: "PLACES_FREE_LIMIT_REACHED" },
+    });
+    expect(placesFetch).not.toHaveBeenCalled();
+  });
 });
+
+function googlePlace(id: string, name: string, rating: number, userRatingCount: number) {
+  return {
+    id,
+    displayName: { text: name },
+    formattedAddress: `${name}, Sydney NSW`,
+    location: { latitude: -33.86, longitude: 151.2 },
+    googleMapsUri: `https://maps.google.com/?q=${id}`,
+    rating,
+    userRatingCount,
+    photos: [],
+  };
+}

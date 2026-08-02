@@ -1,5 +1,8 @@
 import { z } from "zod";
-import type { PlaceDiscoveryDetails } from "../../src/shared/places";
+import type {
+  PlaceDiscoveryDetails,
+  PlaceRecommendationCategory,
+} from "../../src/shared/places";
 
 const attributionSchema = z.object({
   displayName: z.string().default(""),
@@ -85,6 +88,35 @@ export async function searchGooglePlace(
     return null;
   }
   return mapPlace(place);
+}
+
+export async function searchGoogleRecommendations(
+  apiKey: string,
+  category: PlaceRecommendationCategory,
+  center: { latitude: number; longitude: number },
+  fetcher: GooglePlacesFetch
+): Promise<PlaceDiscoveryDetails[]> {
+  const response = await fetcher("https://places.googleapis.com/v1/places:searchNearby", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Goog-Api-Key": apiKey,
+      "X-Goog-FieldMask": fields.split(",").map((field) => `places.${field}`).join(","),
+    },
+    body: JSON.stringify({
+      includedPrimaryTypes: [category],
+      languageCode: "ko",
+      locationRestriction: {
+        circle: { center, radius: 15000 },
+      },
+      maxResultCount: 20,
+      rankPreference: "POPULARITY",
+    }),
+  });
+  if (!response.ok) throw new GooglePlacesProviderError(response.status);
+  const parsed = searchResponseSchema.safeParse(await response.json());
+  if (!parsed.success) throw new GooglePlacesProviderError(502);
+  return parsed.data.places.map(mapPlace);
 }
 
 export async function getGooglePlace(

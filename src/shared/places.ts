@@ -1,7 +1,10 @@
 export type PlaceProviderSku =
   | "text-search-enterprise"
   | "place-details-enterprise"
+  | "nearby-search-enterprise"
   | "place-photo";
+
+export type PlaceRecommendationCategory = "restaurant" | "cafe";
 
 export interface PlaceProviderUsage {
   sku: PlaceProviderSku;
@@ -36,5 +39,10 @@ export interface PlaceDiscoveryDetails {
 
 export interface PlaceDiscoveryResponse {
   details: PlaceDiscoveryDetails | null;
+  usage: PlaceProviderUsage[];
+}
+
+export interface PlaceRecommendationResponse {
+  places: PlaceDiscoveryDetails[];
   usage: PlaceProviderUsage[];
 }

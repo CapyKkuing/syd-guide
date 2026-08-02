@@ -976,6 +976,11 @@
   font-weight: 700;
 }
 
+.place-category-tool__heading,
+.place-category-tool__actions {
+  flex-wrap: wrap;
+}
+
 .place-tool-card,
 .reference-card {
   overflow-wrap: anywhere;

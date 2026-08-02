@@ -23,54 +23,70 @@ export interface PlaceCardSelection {
   place: MapPlaceView;
   discovery: PlaceDiscoveryDetails | null;
   photoUrl: string | null;
+  isTransient: boolean;
 }
 
 export function PlaceDiscoveryCard({
   controller,
+  initialDiscovery,
+  isRecommendation = false,
   onOpen,
   onUsage,
   place,
+  storedPlace,
   tripId,
   viewerMemberId,
 }: {
   controller?: TripMutationController;
+  initialDiscovery?: PlaceDiscoveryDetails | null;
+  isRecommendation?: boolean;
   // ESLint's base rule does not recognize TypeScript function-type arguments.
   // eslint-disable-next-line no-unused-vars
   onOpen: (selection: PlaceCardSelection) => void;
   // eslint-disable-next-line no-unused-vars
   onUsage: (usage: PlaceProviderUsage[]) => void;
   place: MapPlaceView;
+  storedPlace?: MapPlaceView;
   tripId: string;
   viewerMemberId: string;
 }) {
-  const [discovery, setDiscovery] = useState<PlaceDiscoveryDetails | null>(null);
+  const [loadedDiscovery, setLoadedDiscovery] = useState<PlaceDiscoveryDetails | null>(null);
+  const discovery = initialDiscovery !== undefined ? initialDiscovery : loadedDiscovery;
   const [photoUrl, setPhotoUrl] = useState<string | null>(() => normalizeImageUrl(place.imageUrl));
   const [error, setError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [savedOverride, setSavedOverride] = useState<boolean | null>(null);
+  const isTransient = !storedPlace;
+  const isSaved = savedOverride ?? storedPlace?.isSaved ?? place.isSaved;
 
   useEffect(() => {
+    if (initialDiscovery !== undefined) return;
     let active = true;
     void placesApi.getDiscovery(tripId, place.id).then((response) => {
       if (!active) return;
-      setDiscovery(response.details);
+      setLoadedDiscovery(response.details);
       onUsage(response.usage);
     }).catch((caught: unknown) => {
       if (!active) return;
       setError(caught instanceof ApiClientError && caught.code === "PLACES_FREE_LIMIT_REACHED"
-        ? "무료 사진 한도 도달"
+        ? "무료 조회 한도 도달"
         : "Google 정보 연결 전");
     });
     return () => { active = false; };
-  }, [onUsage, place.id, place.providerPlaceId, tripId]);
+  }, [initialDiscovery, onUsage, place.id, place.providerPlaceId, tripId]);
 
   useEffect(() => {
     if (!discovery?.photo) return;
     let active = true;
     let objectUrl: string | null = null;
-    void placesApi.getPhoto(tripId, place.id, discovery.photo.name).then((blob) => {
+    const photoRequest = isRecommendation
+      ? placesApi.getRecommendationPhoto(tripId, discovery.photo.name)
+      : placesApi.getPhoto(tripId, place.id, discovery.photo.name);
+    void photoRequest.then(({ blob, usage }) => {
       if (!active) return;
       objectUrl = URL.createObjectURL(blob);
       setPhotoUrl(objectUrl);
+      onUsage([usage]);
     }).catch(() => {
       if (active) setPhotoUrl(normalizeImageUrl(place.imageUrl));
     });
@@ -78,30 +94,40 @@ export function PlaceDiscoveryCard({
       active = false;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [discovery?.photo, place.id, place.imageUrl, tripId]);
+  }, [discovery?.photo, isRecommendation, onUsage, place.id, place.imageUrl, tripId]);
 
   async function toggleSaved() {
     if (!controller || isSaving) return;
     setIsSaving(true);
+    const persistent = storedPlace;
     const payload: MutationPayloadMap["place"] = {
-      name: place.name,
+      name: persistent?.name ?? "내가 저장한 Google 장소",
       category: place.category,
-      status: place.status,
-      address: place.address || null,
-      latitude: place.latitude,
-      longitude: place.longitude,
-      mapUrl: place.mapUrl,
-      sourceUrl: place.sourceUrl,
-      imageUrl: normalizeImageUrl(place.imageUrl),
-      description: place.description,
-      savedBy: place.isSaved ? null : viewerMemberId,
-      isRecommended: place.isRecommended,
-      isSaved: !place.isSaved,
-      provider: discovery ? "google-places" : place.provider,
-      providerPlaceId: discovery?.providerPlaceId ?? place.providerPlaceId,
+      status: persistent?.status ?? "saved",
+      address: persistent?.address || null,
+      latitude: persistent?.latitude ?? null,
+      longitude: persistent?.longitude ?? null,
+      mapUrl: persistent?.mapUrl ?? null,
+      sourceUrl: persistent?.sourceUrl ?? null,
+      imageUrl: normalizeImageUrl(persistent?.imageUrl ?? null),
+      description: persistent?.description ?? "",
+      savedBy: isSaved ? null : viewerMemberId,
+      isRecommended: false,
+      isSaved: !isSaved,
+      provider: discovery ? "google-places" : persistent?.provider ?? place.provider,
+      providerPlaceId: discovery?.providerPlaceId
+        ?? persistent?.providerPlaceId
+        ?? place.providerPlaceId,
     };
     try {
-      await controller.submit("place", "update", place.id, place.version, payload);
+      await controller.submit(
+        "place",
+        persistent ? "update" : "create",
+        persistent?.id ?? crypto.randomUUID(),
+        persistent?.version ?? null,
+        payload
+      );
+      setSavedOverride(!isSaved);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "저장 상태를 바꾸지 못했습니다.");
     } finally {
@@ -131,7 +157,7 @@ export function PlaceDiscoveryCard({
       <VStack className="place-discovery-card__body" gap={2}>
         <HStack className="place-discovery-card__tokens" gap={1}>
           {place.isRecommended ? <Token color="green" label="추천" size="sm" /> : null}
-          {place.isSaved ? <Token color="teal" label="내 저장" size="sm" /> : null}
+          {isSaved ? <Token color="teal" label="내 저장" size="sm" /> : null}
         </HStack>
         <HStack align="start" justify="between">
           <VStack gap={1}>
@@ -140,10 +166,10 @@ export function PlaceDiscoveryCard({
           </VStack>
           <Button
             isDisabled={!controller || isSaving}
-            label={place.isSaved ? "저장됨" : "저장"}
+            label={isSaved ? "저장됨" : "저장"}
             onClick={() => void toggleSaved()}
             size="sm"
-            variant={place.isSaved ? "secondary" : "primary"}
+            variant={isSaved ? "secondary" : "primary"}
           />
         </HStack>
         {rating || openLabel ? (
@@ -153,13 +179,11 @@ export function PlaceDiscoveryCard({
           </HStack>
         ) : null}
         {discovery ? (
-          <Text className="google-maps-attribution" color="secondary" type="supporting">
-            Google Maps
-          </Text>
+          <p className="google-maps-attribution" translate="no">Google Maps</p>
         ) : error ? <Text color="secondary" type="supporting">{error}</Text> : null}
         <Button
           label="상세 보기"
-          onClick={() => onOpen({ place, discovery, photoUrl })}
+          onClick={() => onOpen({ place, discovery, photoUrl, isTransient })}
           size="sm"
           variant="secondary"
         />

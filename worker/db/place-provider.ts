@@ -33,6 +33,7 @@ export async function listPlaceProviderUsage(
   return [
     "text-search-enterprise",
     "place-details-enterprise",
+    "nearby-search-enterprise",
     "place-photo",
   ].map((sku) => ({
     sku: sku as PlaceProviderSku,

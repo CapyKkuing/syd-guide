@@ -1,8 +1,9 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { act, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ToolRouteId } from "../../app/router";
 import { ThemeProvider } from "../../app/theme/ThemeProvider";
 import type { TripWorkspace } from "../../data/contracts";
+import { placesApi } from "../../services/places/api";
 import { createSampleDataSource } from "../../test/travelSamples";
 import { ToolsPage } from "./ToolsPage";
 
@@ -46,6 +47,10 @@ async function renderToolsPage(activeToolId?: ToolRouteId) {
 }
 
 describe("ToolsPage", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it("shows links to every tool without rendering their full panels on the hub", async () => {
     await renderToolsPage();
 
@@ -103,14 +108,29 @@ describe("ToolsPage", () => {
   });
 
   it("opens separate restaurant and cafe collections", async () => {
-    const restaurants = await renderToolsPage("restaurants");
+    vi.spyOn(placesApi, "getRecommendations").mockImplementation(async (_tripId, category) => ({
+      places: [category === "restaurant"
+        ? toolRecommendation("google-quay", "Quay")
+        : toolRecommendation("google-sample-coffee", "Sample Coffee")],
+      usage: [],
+    }));
+    let restaurants!: ReturnType<typeof render>;
+    await act(async () => {
+      restaurants = await renderToolsPage("restaurants");
+    });
     expect(screen.getByRole("heading", { level: 1, name: "맛집" })).toBeVisible();
+    await screen.findByText("★ 4.5 (1,000)");
+    await screen.findByRole("button", { name: "추천 새로고침" });
     expect(screen.getByRole("heading", { name: "Quay" })).toBeVisible();
     expect(screen.queryByRole("heading", { name: "Sample Coffee" })).not.toBeInTheDocument();
 
     restaurants.unmount();
-    await renderToolsPage("cafes");
+    await act(async () => {
+      await renderToolsPage("cafes");
+    });
     expect(screen.getByRole("heading", { level: 1, name: "카페" })).toBeVisible();
+    await screen.findByText("★ 4.5 (1,000)");
+    await screen.findByRole("button", { name: "추천 새로고침" });
     expect(screen.getByRole("heading", { name: "Sample Coffee" })).toBeVisible();
     expect(screen.queryByRole("heading", { name: "Quay" })).not.toBeInTheDocument();
   });
@@ -161,3 +181,22 @@ describe("ToolsPage", () => {
     }
   });
 });
+
+function toolRecommendation(providerPlaceId: string, name: string) {
+  return {
+    provider: "google-places" as const,
+    providerPlaceId,
+    name,
+    address: `${name}, Sydney`,
+    latitude: -33.86,
+    longitude: 151.2,
+    mapUrl: `https://maps.google.com/?q=${providerPlaceId}`,
+    rating: 4.5,
+    userRatingCount: 1000,
+    openNow: true,
+    weekdayDescriptions: [],
+    phone: null,
+    websiteUrl: null,
+    photo: null,
+  };
+}
