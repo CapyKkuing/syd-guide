@@ -233,6 +233,30 @@ describe("device pairing UI", () => {
     expect(screen.getByRole("button", { name: "초대 만들기" })).toBeEnabled();
   });
 
+  it("shows Access recovery when the participant roster request is blocked", async () => {
+    vi.stubGlobal("location", {
+      hostname: "couple-travel-guide-admin.example.com",
+      pathname: "/trip/sydney-2026/management",
+      search: "",
+      hash: "",
+    });
+    const request = vi.fn()
+      .mockResolvedValueOnce(Response.json({
+        principal: { memberId: "owner", role: "owner" },
+      }))
+      .mockRejectedValueOnce(new TypeError("Failed to fetch"));
+    vi.stubGlobal("fetch", request);
+
+    render(<PairingManager />);
+
+    const login = await screen.findByRole("link", { name: "관리자 다시 로그인" });
+    expect(login).toHaveAttribute(
+      "href",
+      "/api/session?continue=%2Ftrip%2Fsydney-2026%2Fmanagement"
+    );
+    expect(screen.queryByText("참여자 명단을 불러오는 중…")).not.toBeInTheDocument();
+  });
+
   it("keeps path navigation working after the pair redirect", () => {
     window.history.replaceState(null, "", "/library");
     render(<RouteProbe />);

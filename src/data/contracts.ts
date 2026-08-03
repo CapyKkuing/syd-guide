@@ -233,4 +233,10 @@ export type TripWorkspaceResource =
   | { status: "loading"; reload: () => void }
   | { status: "ready"; data: TripWorkspace; reload: () => void }
   | { status: "empty"; retry: () => void; reload: () => void }
-  | { status: "error"; message: string; retry: () => void; reload: () => void };
+  | {
+      status: "error";
+      code?: string;
+      message: string;
+      retry: () => void;
+      reload: () => void;
+    };

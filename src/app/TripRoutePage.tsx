@@ -26,6 +26,10 @@ import { SchedulePage } from "../pages/schedule/SchedulePage";
 import { MapPage } from "../pages/map/MapPage";
 import { ToolsPage } from "../pages/tools/ToolsPage";
 import { PairingManager } from "../features/auth/PairingManager";
+import {
+  getAdminLoginUrl,
+  isAdminAccessCode,
+} from "../features/auth/api";
 import type { MutableTravelGuideDataSource } from "../data/contracts";
 import {
   createTripMutationController,
@@ -110,7 +114,16 @@ export function TripRoutePage({
   if (workspace.status === "loading") {
     page = <StatusPanel kind="loading" title="여행 정보를 불러오는 중" description="잠시만 기다려 주세요." />;
   } else if (workspace.status === "error") {
-    page = <StatusPanel kind="error" title="여행 정보를 불러오지 못했습니다" description={workspace.message} action={{ label: "다시 시도", onClick: workspace.retry }} />;
+    page = isAdminAccessCode(workspace.code) ? (
+      <StatusPanel
+        action={{ label: "관리자 다시 로그인", href: getAdminLoginUrl() }}
+        description="Cloudflare Access 로그인을 다시 진행하면 원래 여행 화면으로 돌아옵니다."
+        kind="session-expired"
+        title="관리자 로그인이 필요합니다"
+      />
+    ) : (
+      <StatusPanel kind="error" title="여행 정보를 불러오지 못했습니다" description={workspace.message} action={{ label: "다시 시도", onClick: workspace.retry }} />
+    );
   } else if (workspace.status === "empty") {
     page = <StatusPanel kind="not-found" title="여행을 찾을 수 없습니다" description="새 여행의 내부 데이터는 다음 단계에서 연결됩니다. 기존 여행이라면 여행 서재에서 다시 선택해 주세요." action={{ label: "여행 서재로 이동", onClick: navigateToLibrary }} />;
   } else {

@@ -116,6 +116,48 @@ describe("authentication boundary", () => {
     ).resolves.toEqual({ access_email: "owner@example.com" });
   });
 
+  it("returns to the requested app screen after Access login", async () => {
+    const accessVerifier: AccessTokenVerifier = {
+      verify: async () => ({ email: "owner@example.com", sub: "access-user" }),
+    };
+    const response = await createApp({ accessVerifier, now: clock }).request(
+      "https://admin.example/api/session?continue=%2Ftrip%2Fsydney-2026%2Fmanagement",
+      { headers: { "Cf-Access-Jwt-Assertion": "signed-token" } },
+      bindings("admin", {
+        ADMIN_EMAIL: "owner@example.com",
+        ACCESS_TEAM_DOMAIN: "team.cloudflareaccess.com",
+        ACCESS_AUD: "audience",
+        DEV_AUTH: undefined,
+      })
+    );
+
+    expect(response.status).toBe(302);
+    expect(response.headers.get("location"))
+      .toBe("/trip/sydney-2026/management");
+  });
+
+  it("does not redirect Access login to an external origin", async () => {
+    const accessVerifier: AccessTokenVerifier = {
+      verify: async () => ({ email: "owner@example.com", sub: "access-user" }),
+    };
+    const response = await createApp({ accessVerifier, now: clock }).request(
+      "https://admin.example/api/session?continue=https%3A%2F%2Fevil.example%2Fsteal",
+      { headers: { "Cf-Access-Jwt-Assertion": "signed-token" } },
+      bindings("admin", {
+        ADMIN_EMAIL: "owner@example.com",
+        ACCESS_TEAM_DOMAIN: "team.cloudflareaccess.com",
+        ACCESS_AUD: "audience",
+        DEV_AUTH: undefined,
+      })
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("location")).toBeNull();
+    await expect(response.json()).resolves.toEqual({
+      principal: { memberId: "owner", role: "owner" },
+    });
+  });
+
   it("denies an Access identity that is not the configured owner", async () => {
     const accessVerifier: AccessTokenVerifier = {
       verify: async () => ({ email: "other@example.com", sub: "other-user" }),

@@ -146,6 +146,27 @@ describe("SnapshotTravelGuideDataSource", () => {
     expect(onSessionInvalid).toHaveBeenCalledTimes(1);
   });
 
+  it("keeps Access expiry separate from partner session revocation", async () => {
+    const snapshots = await createSnapshotStore();
+    const onSessionInvalid = vi.fn();
+    const source = new SnapshotTravelGuideDataSource(
+      {
+        getTripSnapshot: vi.fn().mockRejectedValue(new ApiClientError(
+          401,
+          "ACCESS_REQUIRED",
+          "Cloudflare Access required"
+        ))
+      },
+      async () => ({ memberId: "owner", role: "owner" }),
+      () => new Date(),
+      { snapshots, onSessionInvalid }
+    );
+
+    await expect(source.getToday("trip-one"))
+      .rejects.toMatchObject({ status: 401, code: "ACCESS_REQUIRED" });
+    expect(onSessionInvalid).not.toHaveBeenCalled();
+  });
+
   it("deduplicates concurrent snapshot reads for one trip", async () => {
     const snapshot = createTripSnapshot();
     const client = {

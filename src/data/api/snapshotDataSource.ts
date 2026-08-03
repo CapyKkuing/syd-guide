@@ -1,4 +1,8 @@
-import type { SessionPrincipal } from "../../features/auth/api";
+import {
+  isAdminAccessCode,
+  isAdminAccessError,
+  type SessionPrincipal,
+} from "../../features/auth/api";
 import type { TripSnapshot } from "../../shared/api";
 import type { ApiClient, SnapshotResult } from "../../services/api/client";
 import { ApiClientError } from "../../services/api/errors";
@@ -121,6 +125,7 @@ export class SnapshotTravelGuideDataSource implements MutableTravelGuideDataSour
       );
     } catch (error) {
       if (error instanceof ApiClientError && error.status === 401) {
+        if (isAdminAccessCode(error.code)) throw error;
         await Promise.all([
           this.snapshots?.clear(),
           this.snapshots?.clearPrincipal()
@@ -131,6 +136,7 @@ export class SnapshotTravelGuideDataSource implements MutableTravelGuideDataSour
       if (!canUseOfflineSnapshot(error)) throw error;
       const snapshot = cached?.snapshot ?? durable?.snapshot;
       if (!snapshot) {
+        if (isAdminAccessError(principalError)) throw principalError;
         throw new Error(
           "오프라인 저장 정보가 없습니다. 온라인에서 여행을 한 번 열어 주세요.",
           { cause: error }

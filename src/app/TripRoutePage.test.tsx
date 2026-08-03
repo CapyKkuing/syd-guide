@@ -75,6 +75,28 @@ describe("TripRoutePage", () => {
     expect(getTripContext).toHaveBeenCalledTimes(2);
   });
 
+  it("offers Access login without sending an admin to device pairing", async () => {
+    window.history.replaceState(
+      null,
+      "",
+      "/trip/sydney-2026/tools/devices"
+    );
+    const accessError = Object.assign(
+      new Error("Cloudflare Access required"),
+      { code: "ACCESS_REQUIRED" }
+    );
+    renderTripRoute(sourceWith({
+      getTripContext: () => Promise.reject(accessError),
+    }), "tools", "devices");
+
+    const login = await screen.findByRole("link", { name: "관리자 다시 로그인" });
+    expect(login).toHaveAttribute(
+      "href",
+      "/api/session?continue=%2Ftrip%2Fsydney-2026%2Ftools%2Fdevices"
+    );
+    expect(window.location.pathname).not.toBe("/pair");
+  });
+
   it("offers a library action when a trip is missing", async () => {
     window.history.replaceState(null, "", "/trip/missing/today");
     render(<App dataSource={sourceWith({

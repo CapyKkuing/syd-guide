@@ -2,7 +2,9 @@ export interface StatusPanelProps {
   kind: "loading" | "empty" | "error" | "not-found" | "session-expired";
   title: string;
   description: string;
-  action?: { label: string; onClick: () => void };
+  action?:
+    | { label: string; href: string }
+    | { label: string; onClick: () => void };
 }
 
 export function StatusPanel({ kind, title, description, action }: StatusPanelProps) {
@@ -14,9 +16,13 @@ export function StatusPanel({ kind, title, description, action }: StatusPanelPro
       <h2>{title}</h2>
       <p>{description}</p>
       {action ? (
-        <button className="primary-button" type="button" onClick={action.onClick}>
-          {action.label}
-        </button>
+        "href" in action ? (
+          <a className="primary-button" href={action.href}>{action.label}</a>
+        ) : (
+          <button className="primary-button" type="button" onClick={action.onClick}>
+            {action.label}
+          </button>
+        )
       ) : null}
     </section>
   );

@@ -14,8 +14,10 @@ import { useEffect, useState, type ReactNode } from "react";
 import { StatusPanel } from "../../components/StatusPanel";
 import {
   AuthRequestError,
+  getAdminLoginUrl,
   getParticipantRoster,
   getPrincipal,
+  isAdminAccessError,
   setupParticipants,
   type ParticipantRoster,
 } from "./api";
@@ -34,18 +36,19 @@ function recoveryFor(error: unknown) {
       message: "관리자에게 새 연결 링크를 요청해 이 기기를 다시 연결해 주세요.",
     };
   }
-  if (error instanceof AuthRequestError
-    && (error.code === "ACCESS_REQUIRED" || error.code === "ACCESS_INVALID")) {
+  if (isAdminAccessError(error)) {
     return {
       kind: "session-expired" as const,
       title: "관리자 로그인이 필요합니다",
       message: "관리자 페이지에서 Cloudflare Access 로그인을 다시 진행해 주세요.",
+      needsAdminLogin: true,
     };
   }
   return {
     kind: "error" as const,
     title: "참여자 설정을 불러오지 못했습니다",
     message: error instanceof Error ? error.message : "참여자 설정을 확인하지 못했습니다.",
+    needsAdminLogin: false,
   };
 }
 
@@ -197,6 +200,7 @@ export function ParticipantSetupGate({
         kind: "error" | "session-expired";
         title: string;
         message: string;
+        needsAdminLogin?: boolean;
       }
   >({ status: enabled ? "loading" : "ready", roster: null });
 
@@ -220,13 +224,15 @@ export function ParticipantSetupGate({
   if (state.status === "error") {
     return (
       <StatusPanel
-        action={{
-          label: "다시 확인",
-          onClick: () => {
-            setState({ status: "loading" });
-            setAttempt((current) => current + 1);
-          },
-        }}
+        action={state.needsAdminLogin
+          ? { label: "관리자 다시 로그인", href: getAdminLoginUrl() }
+          : {
+              label: "다시 확인",
+              onClick: () => {
+                setState({ status: "loading" });
+                setAttempt((current) => current + 1);
+              },
+            }}
         kind={state.kind}
         title={state.title}
         description={state.message}

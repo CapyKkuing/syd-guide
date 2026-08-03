@@ -28,6 +28,26 @@ const initialRoster = {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("participant first setup", () => {
+  it("opens the Access login flow when an admin session expires", async () => {
+    vi.stubGlobal("location", {
+      hostname: "couple-travel-guide-admin.example.com",
+      pathname: "/library",
+      search: "",
+      hash: "",
+    });
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("Failed to fetch")));
+
+    render(
+      <ParticipantSetupGate>
+        <p>여행 서재 내용</p>
+      </ParticipantSetupGate>
+    );
+
+    const login = await screen.findByRole("link", { name: "관리자 다시 로그인" });
+    expect(login).toHaveAttribute("href", "/api/session?continue=%2Flibrary");
+    expect(screen.queryByText("Failed to fetch")).not.toBeInTheDocument();
+  });
+
   it("shows reconnect guidance and retries an invalid device session", async () => {
     const request = vi.fn()
       .mockResolvedValueOnce(Response.json({

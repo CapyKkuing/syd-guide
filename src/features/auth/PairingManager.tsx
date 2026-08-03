@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import {
+  getAdminLoginUrl,
   getParticipantRoster,
   getPrincipal,
+  isAdminAccessError,
   type ParticipantRoster,
   type SessionPrincipal,
 } from "./api";
+import { StatusPanel } from "../../components/StatusPanel";
 import { DeviceList } from "./DeviceList";
 import { InvitePanel } from "./InvitePanel";
 import { ParticipantManager } from "./ParticipantManager";
@@ -13,10 +16,13 @@ export function PairingManager() {
   const [principal, setPrincipal] = useState<SessionPrincipal | null>(null);
   const [status, setStatus] = useState("권한을 확인하는 중…");
   const [roster, setRoster] = useState<ParticipantRoster | null>(null);
+  const [error, setError] = useState<unknown>(null);
 
   useEffect(() => {
     let active = true;
-    void getPrincipal().then(async (result) => {
+    void (async () => {
+      try {
+        const result = await getPrincipal();
         if (!active) return;
         setPrincipal(result);
         if (result.role === "owner") {
@@ -25,17 +31,28 @@ export function PairingManager() {
           setRoster(nextRoster);
         }
         setStatus("");
-      },
-      (error: unknown) => {
+      } catch (nextError) {
         if (active) {
-          setStatus(error instanceof Error ? error.message : "권한을 확인하지 못했습니다.");
+          setError(nextError);
+          setStatus(nextError instanceof Error ? nextError.message : "권한을 확인하지 못했습니다.");
         }
       }
-    );
+    })();
     return () => {
       active = false;
     };
   }, []);
+
+  if (isAdminAccessError(error)) {
+    return (
+      <StatusPanel
+        action={{ label: "관리자 다시 로그인", href: getAdminLoginUrl() }}
+        description="Cloudflare Access 로그인을 다시 진행하면 참여자·초대·기기 관리로 돌아옵니다."
+        kind="session-expired"
+        title="관리자 로그인이 필요합니다"
+      />
+    );
+  }
 
   if (!principal) {
     return <p className="form-status pairing-status" role="status">{status}</p>;

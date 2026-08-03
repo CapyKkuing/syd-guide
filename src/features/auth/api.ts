@@ -52,6 +52,45 @@ function isLocalHost() {
   );
 }
 
+function isAdminHost() {
+  return window.location.hostname.includes("-admin.");
+}
+
+async function request(input: RequestInfo | URL, init?: RequestInit) {
+  try {
+    return await fetch(input, init);
+  } catch (error) {
+    if (
+      error instanceof TypeError
+      && isAdminHost()
+      && navigator.onLine !== false
+    ) {
+      throw new AuthRequestError(
+        "ACCESS_REFRESH_REQUIRED",
+        "관리자 로그인이 만료되었습니다. 다시 로그인해 주세요."
+      );
+    }
+    throw error;
+  }
+}
+
+export function isAdminAccessCode(code: string | undefined) {
+  return code !== undefined && [
+    "ACCESS_REQUIRED",
+    "ACCESS_INVALID",
+    "ACCESS_REFRESH_REQUIRED",
+  ].includes(code);
+}
+
+export function isAdminAccessError(error: unknown) {
+  return error instanceof AuthRequestError && isAdminAccessCode(error.code);
+}
+
+export function getAdminLoginUrl() {
+  const continueTo = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  return `/api/session?continue=${encodeURIComponent(continueTo)}`;
+}
+
 function headers(admin: boolean, json = false) {
   const result = new Headers();
   if (json) result.set("Content-Type", "application/json");
@@ -78,7 +117,7 @@ async function json<T>(response: Response): Promise<T> {
 }
 
 export async function createInvite(memberId: string): Promise<Invite> {
-  const response = await fetch("/api/admin/invites", {
+  const response = await request("/api/admin/invites", {
     method: "POST",
     headers: headers(true, true),
     body: JSON.stringify({ memberId }),
@@ -87,7 +126,7 @@ export async function createInvite(memberId: string): Promise<Invite> {
 }
 
 export async function getParticipantRoster(): Promise<ParticipantRoster> {
-  const response = await fetch("/api/admin/participants", {
+  const response = await request("/api/admin/participants", {
     headers: headers(true),
   });
   return (await json<{ roster: ParticipantRoster }>(response)).roster;
@@ -97,7 +136,7 @@ export async function setupParticipants(
   ownerName: string,
   participantNames: string[]
 ): Promise<ParticipantRoster> {
-  const response = await fetch("/api/admin/participants/setup", {
+  const response = await request("/api/admin/participants/setup", {
     method: "POST",
     headers: headers(true, true),
     body: JSON.stringify({ ownerName, participantNames }),
@@ -106,7 +145,7 @@ export async function setupParticipants(
 }
 
 export async function addParticipant(displayName: string): Promise<ParticipantRoster> {
-  const response = await fetch("/api/admin/participants", {
+  const response = await request("/api/admin/participants", {
     method: "POST",
     headers: headers(true, true),
     body: JSON.stringify({ displayName }),
@@ -118,7 +157,7 @@ export async function updateParticipant(
   memberId: string,
   input: { displayName?: string; isRepresentative?: true }
 ): Promise<ParticipantRoster> {
-  const response = await fetch(
+  const response = await request(
     `/api/admin/participants/${encodeURIComponent(memberId)}`,
     {
       method: "PATCH",
@@ -130,7 +169,7 @@ export async function updateParticipant(
 }
 
 export async function deleteParticipant(memberId: string): Promise<ParticipantRoster> {
-  const response = await fetch(
+  const response = await request(
     `/api/admin/participants/${encodeURIComponent(memberId)}`,
     { method: "DELETE", headers: headers(true) }
   );
@@ -140,21 +179,21 @@ export async function deleteParticipant(memberId: string): Promise<ParticipantRo
 export async function getPrincipal(): Promise<SessionPrincipal> {
   const localPartner =
     isLocalHost() && localStorage.getItem("couple_dev_principal") === "partner";
-  const response = await fetch("/api/session", {
+  const response = await request("/api/session", {
     headers: headers(!localPartner),
   });
   return (await json<{ principal: SessionPrincipal }>(response)).principal;
 }
 
 export async function getDevices(): Promise<Device[]> {
-  const response = await fetch("/api/admin/devices", {
+  const response = await request("/api/admin/devices", {
     headers: headers(true),
   });
   return (await json<{ devices: Device[] }>(response)).devices;
 }
 
 export async function removeDevice(deviceId: string): Promise<void> {
-  const response = await fetch(
+  const response = await request(
     `/api/admin/devices/${encodeURIComponent(deviceId)}`,
     { method: "DELETE", headers: headers(true) }
   );
@@ -162,7 +201,7 @@ export async function removeDevice(deviceId: string): Promise<void> {
 }
 
 export async function deleteRevokedDevice(deviceId: string): Promise<void> {
-  const response = await fetch(
+  const response = await request(
     `/api/admin/devices/${encodeURIComponent(deviceId)}/permanent`,
     { method: "DELETE", headers: headers(true) }
   );
@@ -170,7 +209,7 @@ export async function deleteRevokedDevice(deviceId: string): Promise<void> {
 }
 
 export async function claimDevice(token: string, deviceName: string) {
-  const response = await fetch("/api/pair/claim", {
+  const response = await request("/api/pair/claim", {
     method: "POST",
     headers: headers(false, true),
     body: JSON.stringify({ token, deviceName }),

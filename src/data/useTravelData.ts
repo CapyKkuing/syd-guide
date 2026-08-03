@@ -11,10 +11,15 @@ export type Loadable<T> =
   | { status: "loading" }
   | { status: "ready"; data: T }
   | { status: "empty"; retry: () => void }
-  | { status: "error"; message: string; retry: () => void };
+  | { status: "error"; code?: string; message: string; retry: () => void };
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "여행 정보를 불러오지 못했습니다.";
+}
+
+function errorCode(error: unknown): string | undefined {
+  if (typeof error !== "object" || error === null || !("code" in error)) return undefined;
+  return typeof error.code === "string" ? error.code : undefined;
 }
 
 export function useTravelLibrary(
@@ -43,7 +48,15 @@ export function useTravelLibrary(
       })
       .catch((error: unknown) => {
         if (!cancelled) {
-          setResource({ dataSource, value: { status: "error", message: errorMessage(error), retry } });
+          setResource({
+            dataSource,
+            value: {
+              status: "error",
+              code: errorCode(error),
+              message: errorMessage(error),
+              retry,
+            },
+          });
         }
       });
 
@@ -104,7 +117,16 @@ export function useTripWorkspace(
       })
       .catch((error: unknown) => {
         if (!cancelled) {
-          setResource({ dataSource, tripId, value: { status: "error", message: errorMessage(error), retry: reload } });
+          setResource({
+            dataSource,
+            tripId,
+            value: {
+              status: "error",
+              code: errorCode(error),
+              message: errorMessage(error),
+              retry: reload,
+            },
+          });
         }
       });
 
