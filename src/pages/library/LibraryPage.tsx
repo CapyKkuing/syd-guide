@@ -52,18 +52,30 @@ function sessionRecovery(error: ApiRequestError) {
 export function LibraryPage({
   client,
   deviceManagement,
+  initialEditTripId,
   now = () => new Date()
 }: {
   client: TripLibraryClient;
   deviceManagement?: ReactNode;
+  initialEditTripId?: string | null;
   now?: () => Date;
 }) {
   const library = useTripLibrary(client);
   const [filter, setFilter] = useState<LibraryFilter>("all");
   const [dialog, setDialog] = useState<LibraryDialogState>(null);
+  const [initialEditClosed, setInitialEditClosed] = useState(false);
+  const initialEditTrip = !initialEditClosed && initialEditTripId
+    ? library.active.trips.find((item) => item.id === initialEditTripId)
+    : undefined;
+  const visibleDialog = dialog ?? (
+    initialEditTrip && !library.readOnlyReason
+      ? { kind: "edit" as const, trip: initialEditTrip, opener: null }
+      : null
+  );
 
   const closeDialog = () => {
     library.clearMutationError();
+    setInitialEditClosed(true);
     setDialog(null);
   };
 
@@ -240,7 +252,7 @@ export function LibraryPage({
       )}
 
       <LibraryDialogs
-        dialog={dialog}
+        dialog={visibleDialog}
         library={library}
         deviceManagement={deviceManagement}
         now={now()}

@@ -139,6 +139,7 @@ function AppContent({
           <LibraryPage
             client={libraryClient}
             deviceManagement={<PairingManager />}
+            initialEditTripId={new URLSearchParams(window.location.search).get("edit")}
           />
         </ParticipantSetupGate>
       </LibraryShell>

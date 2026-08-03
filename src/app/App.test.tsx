@@ -47,6 +47,23 @@ describe("App routing", () => {
     expect(window.location.pathname).toBe("/library");
   });
 
+  it("opens the selected trip editor from the pre-trip home action", async () => {
+    window.history.replaceState(null, "", "/trip/bondi-weekend/today");
+    const preview = createFixturePreviewTripLibraryClient(fixtureTravelGuideDataSource);
+    render(
+      <App
+        dataSource={fixtureTravelGuideDataSource}
+        tripLibraryClient={{ ...preview, readOnlyReason: undefined }}
+      />
+    );
+
+    await userEvent.click(
+      await screen.findByRole("link", { name: "여행 정보 편집" })
+    );
+
+    expect(await screen.findByRole("dialog", { name: "여행 수정" })).toBeVisible();
+  });
+
   it("renders all four trip routes in the TripShell", async () => {
     for (const tab of ["today", "schedule", "map", "tools"] as const) {
       window.history.replaceState(null, "", `/trip/sydney-2026/${tab}`);

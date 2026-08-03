@@ -129,6 +129,13 @@ export function pathForLibrary(baseUrl = APP_BASE_URL): string {
   return pathForApp("/library", baseUrl);
 }
 
+export function pathForLibraryEdit(
+  tripId: string,
+  baseUrl = APP_BASE_URL
+): string {
+  return `${pathForLibrary(baseUrl)}?edit=${encodeURIComponent(tripId)}`;
+}
+
 export function pathForPair(baseUrl = APP_BASE_URL): string {
   return pathForApp("/pair", baseUrl);
 }

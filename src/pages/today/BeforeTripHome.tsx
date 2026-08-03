@@ -1,4 +1,4 @@
-import { pathForLibrary, pathForTool } from "../../app/router";
+import { pathForLibrary, pathForLibraryEdit, pathForTool } from "../../app/router";
 import { AppLink } from "../../components/AppLink";
 import { ExpensePanel } from "./ExpensePanel";
 import { selectUrgentGaps } from "./homeSelectors";
@@ -28,7 +28,7 @@ export function BeforeTripHome({
           <h2 id="today-hero-title">{today.dDay === null ? "출발 준비" : `D-${today.dDay}`}</h2>
           <p className="today-hero__summary">{trip.title}</p>
           <p className="today-hero__detail">{trip.startDate} — {trip.endDate}</p>
-          <AppLink className="primary-button today-hero__action" href={pathForLibrary()}>여행 정보 편집</AppLink>
+          <AppLink className="primary-button today-hero__action" href={pathForLibraryEdit(trip.id)}>여행 정보 편집</AppLink>
         </div>
         <figure className="today-hero__visual">
           <img className="today-hero__cover" src={trip.coverImageUrl} alt={`${trip.destination} 여행 대표 사진`} />
