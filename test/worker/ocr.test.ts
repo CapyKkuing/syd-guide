@@ -94,6 +94,51 @@ describe("booking OCR", () => {
     expect(visionFetch).toHaveBeenCalledOnce();
   });
 
+  it("returns an editable PDF draft and reserves the five requested pages", async () => {
+    const visionFetch = vi.fn<typeof fetch>(async (input, init) => {
+      expect(String(input)).toBe("https://vision.googleapis.com/v1/files:annotate");
+      expect(JSON.parse(String(init?.body))).toMatchObject({
+        requests: [{
+          inputConfig: { mimeType: "application/pdf" },
+          features: [{ type: "DOCUMENT_TEXT_DETECTION" }],
+          pages: [1, 2, 3, 4, 5],
+        }],
+      });
+      return Response.json({
+        responses: [{
+          responses: [{
+            fullTextAnnotation: {
+              text: "Sydney Hotel\nConfirmation code: STAY7\n2026-10-08 15:00",
+            },
+          }],
+        }],
+      });
+    });
+    const app = createApp({
+      now: () => now,
+      visionFetch,
+      visionTokenProvider: async () => "test-token",
+    });
+
+    const response = await request(
+      new File(["voucher"], "voucher.pdf", { type: "application/pdf" }),
+      bindings(),
+      app
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      draft: {
+        bookingType: "lodging",
+        provider: "Sydney Hotel",
+        reservationCode: "STAY7",
+        startsAt: "2026-10-08T15:00",
+      },
+      usage: { used: 5, limit: 800 },
+    });
+    expect(visionFetch).toHaveBeenCalledOnce();
+  });
+
   it("blocks provider calls at the monthly page hard limit", async () => {
     await env.DB.prepare(
       "INSERT INTO vision_ocr_usage (billing_month, used_pages, updated_at) VALUES ('2026-08', 800, ?)"

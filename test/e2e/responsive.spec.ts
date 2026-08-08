@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import {
   createWorkspace,
   expectNoHorizontalOverflow,
+  mockEmptyPlaceDiscovery,
   mutate,
   unique
 } from "./helpers";
@@ -47,49 +48,112 @@ test("pre-trip gaps open their direct input surfaces without horizontal clipping
   await expectNoHorizontalOverflow(page);
 });
 
-test("target viewports keep primary routes inside the viewport", async ({
-  page
-}) => {
+test.describe("primary route viewport QA", () => {
+  test.use({ serviceWorkers: "block" });
+
+  test("target viewports keep primary routes inside the viewport", async ({
+    page
+  }) => {
+    const errors: string[] = [];
+    page.on("console", (message) => {
+      if (message.type() === "error") errors.push(message.text());
+    });
+    page.on("pageerror", (error) => errors.push(error.message));
+    await mockEmptyPlaceDiscovery(page);
+    const workspace = await createWorkspace(page.request, unique("responsive"));
+    await mutate(page.request, workspace.trip.id, {
+      entity: "place",
+      action: "create",
+      entityId: unique("responsive-place"),
+      baseVersion: null,
+      payload: {
+        name: "반응형 장소",
+        category: "cafe",
+        status: "saved",
+        address: "Sydney",
+        latitude: null,
+        longitude: null,
+        mapUrl: null,
+        sourceUrl: null,
+        imageUrl: null,
+        description: "",
+        savedBy: "owner"
+      }
+    });
+
+    for (const path of [
+      "/library",
+      `/trip/${workspace.trip.id}/today`,
+      `/trip/${workspace.trip.id}/schedule`,
+      `/trip/${workspace.trip.id}/map`,
+      `/trip/${workspace.trip.id}/tools`,
+      `/trip/${workspace.trip.id}/memories`
+    ]) {
+      await page.goto(path);
+      await expect(page.locator("main")).toBeVisible();
+      await page.waitForLoadState("networkidle");
+      await expect(page.locator("vite-error-overlay")).toHaveCount(0);
+      await expectNoHorizontalOverflow(page);
+    }
+
+    await page.goto(`/trip/${workspace.trip.id}/map`);
+    await page.getByRole("button", { name: "상세 보기" }).first().click();
+    const placeDetails = page.getByRole("dialog", { name: "장소 상세" });
+    await expect(placeDetails).toBeVisible();
+    await expect(placeDetails.getByRole("radio", { name: "꼭 가요" })).toHaveCount(0);
+    await expect(placeDetails.getByRole("radio", { name: "괜찮아요" })).toHaveCount(0);
+    await expect(placeDetails.getByRole("radio", { name: "건너뛰기" })).toHaveCount(0);
+    await expect(placeDetails.getByRole("link", { name: "길찾기" })).toBeVisible();
+    await expect(placeDetails.getByRole("button", { name: "장소 수정" })).toBeVisible();
+    await expectNoElementOverflow(placeDetails);
+    await expectNoHorizontalOverflow(page);
+    expect(errors).toEqual([]);
+  });
+});
+
+test("Phase 1C tool routes keep empty and reference states usable", async ({ page }) => {
   const errors: string[] = [];
   page.on("console", (message) => {
     if (message.type() === "error") errors.push(message.text());
   });
   page.on("pageerror", (error) => errors.push(error.message));
-  const workspace = await createWorkspace(page.request, unique("responsive"));
-  await mutate(page.request, workspace.trip.id, {
-    entity: "place",
-    action: "create",
-    entityId: unique("responsive-place"),
-    baseVersion: null,
-    payload: {
-      name: "반응형 장소",
-      category: "attraction",
-      status: "saved",
-      address: "Sydney",
-      latitude: null,
-      longitude: null,
-      mapUrl: null,
-      sourceUrl: null,
-      imageUrl: null,
-      description: "",
-      savedBy: "owner"
-    }
-  });
+  const workspace = await createWorkspace(page.request, unique("phase1c-tools"));
+  const toolPath = `/trip/${workspace.trip.id}/tools`;
 
-  for (const path of [
-    "/library",
-    `/trip/${workspace.trip.id}/today`,
-    `/trip/${workspace.trip.id}/schedule`,
-    `/trip/${workspace.trip.id}/map`,
-    `/trip/${workspace.trip.id}/tools`,
-    `/trip/${workspace.trip.id}/memories`
-  ]) {
-    await page.goto(path);
-    await expect(page.locator("main")).toBeVisible();
-    await page.waitForLoadState("networkidle");
-    await expect(page.locator("vite-error-overlay")).toHaveCount(0);
-    await expectNoHorizontalOverflow(page);
+  await page.goto(`${toolPath}/transport`);
+  await expect(page.getByRole("heading", { level: 1, name: "교통" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Transport NSW 여행 계획 공식 화면 열기" }))
+    .toHaveAttribute("href", "https://transportnsw.info/plan");
+  await expect(page.getByText("일정에서 이동 수단을 지정하면 여기에 모아 보여줍니다."))
+    .toBeVisible();
+  await expect(page.getByText("공항, 역, 선착장 같은 교통 장소를 추가해 두세요."))
+    .toBeVisible();
+  await expectNoHorizontalOverflow(page);
+
+  await page.goto(`${toolPath}/emergency`);
+  await expect(page.getByRole("heading", { level: 1, name: "비상 연락처" })).toBeVisible();
+  const callLinks = page.getByRole("link", { name: /전화$/ });
+  await expect(callLinks.first()).toBeVisible();
+  for (const call of await callLinks.all()) {
+    await expect(call).toHaveAttribute("href", /^tel:/);
   }
+  await expect(page.getByRole("link", { name: "공식 출처" }).first())
+    .toHaveAttribute("href", /^https:\/\//);
+  await expect(page.getByText("구급·택시 요청에 쓸 숙소 주소를 지도에서 저장해 두세요."))
+    .toBeVisible();
+  await expectNoHorizontalOverflow(page);
+
+  await page.goto(`${toolPath}/tips`);
+  await expect(page.getByText(/온라인에서 서버의 최신 내용/)).toBeVisible();
+  await expect(page.getByRole("link", { name: "준비 체크리스트 열기" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "비상 연락처 열기" })).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+
+  await page.goto(`${toolPath}/bookings`);
+  await expect(page.getByText("아직 보관한 예약이 없어요.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "예약 추가" })).toBeEnabled();
+  await expectNoHorizontalOverflow(page);
+
   expect(errors).toEqual([]);
 });
 

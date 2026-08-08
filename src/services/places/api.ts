@@ -2,6 +2,7 @@ import type {
   PlaceDiscoveryResponse,
   PlaceRecommendationCategory,
   PlaceRecommendationResponse,
+  PlaceProviderUsage,
 } from "../../shared/places";
 import { errorFromResponse } from "../api/errors";
 
@@ -35,6 +36,7 @@ export class PlacesApi {
   private readonly discoveryRequests = new Map<string, Promise<PlaceDiscoveryResponse>>();
   private readonly recommendationRequests = new Map<string, Promise<PlaceRecommendationResponse>>();
   private readonly photoRequests = new Map<string, Promise<PlacePhotoResult>>();
+  private readonly usage = new Map<PlaceProviderUsage["sku"], PlaceProviderUsage>();
 
   constructor(fetcher: Fetcher = fetch) {
     this.fetcher = fetcher.bind(globalThis);
@@ -46,7 +48,7 @@ export class PlacesApi {
   ): Promise<PlaceDiscoveryResponse> {
     const key = `${tripId}:${placeId}`;
     const existing = this.discoveryRequests.get(key);
-    if (existing) return existing;
+    if (existing) return existing.then((response) => this.withCumulativeUsage(response));
     const request = this.fetcher(
       `/api/trips/${encodeURIComponent(tripId)}/places/${encodeURIComponent(placeId)}/discovery`,
       { credentials: "same-origin", headers: localHeaders() }
@@ -58,7 +60,7 @@ export class PlacesApi {
       throw error;
     });
     this.discoveryRequests.set(key, request);
-    return request;
+    return request.then((response) => this.withCumulativeUsage(response));
   }
 
   async getRecommendations(
@@ -69,7 +71,7 @@ export class PlacesApi {
     const key = `${tripId}:${category}`;
     if (refresh) this.recommendationRequests.delete(key);
     const existing = this.recommendationRequests.get(key);
-    if (existing) return existing;
+    if (existing) return existing.then((response) => this.withCumulativeUsage(response));
     const query = new URLSearchParams({ category });
     const request = this.fetcher(
       `/api/trips/${encodeURIComponent(tripId)}/places/recommendations?${query}`,
@@ -82,7 +84,7 @@ export class PlacesApi {
       throw error;
     });
     this.recommendationRequests.set(key, request);
-    return request;
+    return request.then((response) => this.withCumulativeUsage(response));
   }
 
   async getPhoto(
@@ -93,7 +95,7 @@ export class PlacesApi {
   ): Promise<PlacePhotoResult> {
     const key = `${tripId}:${name}`;
     const existing = this.photoRequests.get(key);
-    if (existing) return existing;
+    if (existing) return existing.then((result) => this.withCumulativePhotoUsage(result));
     if (options.automatic && !this.reserveAutomaticPhotoRequest(tripId, key)) {
       throw new AutomaticPlacePhotoLimitError();
     }
@@ -109,7 +111,7 @@ export class PlacesApi {
       throw error;
     });
     this.photoRequests.set(key, request);
-    return request;
+    return request.then((result) => this.withCumulativePhotoUsage(result));
   }
 
   async getRecommendationPhoto(
@@ -119,7 +121,7 @@ export class PlacesApi {
   ): Promise<PlacePhotoResult> {
     const key = `${tripId}:${name}`;
     const existing = this.photoRequests.get(key);
-    if (existing) return existing;
+    if (existing) return existing.then((result) => this.withCumulativePhotoUsage(result));
     if (options.automatic && !this.reserveAutomaticPhotoRequest(tripId, key)) {
       throw new AutomaticPlacePhotoLimitError();
     }
@@ -135,7 +137,7 @@ export class PlacesApi {
       throw error;
     });
     this.photoRequests.set(key, request);
-    return request;
+    return request.then((result) => this.withCumulativePhotoUsage(result));
   }
 
   private reserveAutomaticPhotoRequest(tripId: string, key: string) {
@@ -144,6 +146,23 @@ export class PlacesApi {
     requests.add(key);
     this.automaticPhotoRequests.set(tripId, requests);
     return true;
+  }
+
+  private withCumulativeUsage<T extends { usage: PlaceProviderUsage[] }>(response: T): T {
+    return { ...response, usage: response.usage.map((item) => this.rememberUsage(item)) };
+  }
+
+  private withCumulativePhotoUsage(result: PlacePhotoResult): PlacePhotoResult {
+    return { ...result, usage: this.rememberUsage(result.usage) };
+  }
+
+  private rememberUsage<T extends PlaceProviderUsage>(next: T): T {
+    const current = this.usage.get(next.sku);
+    const latest = current && current.used > next.used
+      ? { ...next, used: current.used, limit: current.limit }
+      : next;
+    this.usage.set(next.sku, latest);
+    return latest;
   }
 }
 

@@ -57,6 +57,51 @@ describe("PlacesApi automatic photo limit", () => {
   });
 });
 
+describe("PlacesApi cumulative usage", () => {
+  it("does not return a lower SKU count from a late or cached recommendation response", async () => {
+    let releaseFirstCafe: () => void = () => {};
+    const firstCafe = new Promise<Response>((resolve) => {
+      releaseFirstCafe = () => resolve(recommendationResponse(145));
+    });
+    let cafeRequests = 0;
+    const fetcher = vi.fn((input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("category=cafe")) {
+        cafeRequests += 1;
+        if (cafeRequests === 1) return firstCafe;
+        return Promise.resolve(recommendationResponse(150));
+      }
+      return Promise.resolve(recommendationResponse(149));
+    });
+    const api = new PlacesApi(fetcher);
+
+    const lateCafe = api.getRecommendations("trip-one", "cafe");
+    const restaurant = await api.getRecommendations("trip-one", "restaurant");
+    expect(nearbyUsage(restaurant)).toBe(149);
+
+    releaseFirstCafe();
+    expect(nearbyUsage(await lateCafe)).toBe(149);
+    expect(nearbyUsage(await api.getRecommendations("trip-one", "cafe"))).toBe(149);
+    expect(nearbyUsage(await api.getRecommendations("trip-one", "cafe", true))).toBe(150);
+  });
+});
+
+function recommendationResponse(nearbyUsed: number) {
+  return Response.json({
+    places: [],
+    usage: [
+      { sku: "text-search-enterprise", used: 0, limit: 800 },
+      { sku: "place-details-enterprise", used: 0, limit: 800 },
+      { sku: "nearby-search-enterprise", used: nearbyUsed, limit: 800 },
+      { sku: "place-photo", used: 0, limit: 800 },
+    ],
+  });
+}
+
+function nearbyUsage(response: Awaited<ReturnType<PlacesApi["getRecommendations"]>>) {
+  return response.usage.find((item) => item.sku === "nearby-search-enterprise")?.used;
+}
+
 function photoName(index: number) {
   return `places/place-${index}/photos/photo-${index}`;
 }

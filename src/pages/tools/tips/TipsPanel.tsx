@@ -12,7 +12,7 @@ export function TipsPanel({ notes, tripId }: { notes: NoteView[]; tripId: string
 
   return (
     <VStack className="travel-reference-tool" gap={4}>
-      <Text color="secondary" type="body">여행 중 바로 확인할 핵심 주의사항입니다. 네트워크가 없어도 저장된 내용이 보입니다.</Text>
+      <Text color="secondary" type="body">여행 중 바로 확인할 핵심 주의사항입니다. 온라인에서 서버의 최신 내용을 보여줍니다.</Text>
       {tips.map((tip) => (
         <Card className="reference-card" key={tip.id} padding={3}>
           <VStack gap={2}>

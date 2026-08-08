@@ -54,7 +54,18 @@ describe("readJpegCapturedAt", () => {
       .toBe("2026-08-02T09:20:00+10:00");
   });
 
+  it("preserves valid positive and negative boundary timezone offsets", () => {
+    expect(readJpegCapturedAt(jpegWithExifDate("2026:08:02 09:20:00", "+23:59")))
+      .toBe("2026-08-02T09:20:00+23:59");
+    expect(readJpegCapturedAt(jpegWithExifDate("2026:08:02 09:20:00", "-23:59")))
+      .toBe("2026-08-02T09:20:00-23:59");
+  });
+
   it("returns null when a photo has no usable JPEG EXIF timestamp", () => {
+    expect(readJpegCapturedAt(jpegWithExifDate("2026:08:02 09:20:00", "")))
+      .toBeNull();
+    expect(readJpegCapturedAt(jpegWithExifDate("2026:08:02 09:20:00", "+24:00")))
+      .toBeNull();
     expect(readJpegCapturedAt(Uint8Array.from([0x89, 0x50, 0x4e, 0x47])))
       .toBeNull();
     expect(readJpegCapturedAt(Uint8Array.from([0xff, 0xd8, 0xff, 0xd9])))

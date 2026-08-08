@@ -6,7 +6,7 @@ import {
   unique
 } from "./helpers";
 
-test("owner and partner share schedule, place, booking, checklist, note, and vote edits", async ({
+test("owner and partner share schedule, place, booking, checklist, and note edits", async ({
   browser,
   page
 }) => {
@@ -58,7 +58,9 @@ test("owner and partner share schedule, place, booking, checklist, note, and vot
 
   await page.goto(`/trip/${workspace.trip.id}/map`);
   await page.getByRole("button", { name: "상세 보기" }).click();
-  await page.getByRole("radio", { name: "꼭 가요" }).check();
+  const placeDetails = page.getByRole("dialog", { name: "장소 상세" });
+  await expect(placeDetails.getByRole("radio", { name: "꼭 가요" })).toHaveCount(0);
+  await expect(placeDetails.getByRole("link", { name: "길찾기" })).toBeVisible();
 
   await partner.page.goto(`/trip/${workspace.trip.id}/schedule`);
   await partner.page.getByRole("radio", { name: "전체 일정" }).check();

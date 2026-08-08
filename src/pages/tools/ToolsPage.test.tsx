@@ -97,6 +97,8 @@ describe("ToolsPage", () => {
 
     expect(screen.getByRole("heading", { level: 1, name: "교통" })).toBeVisible();
     expect(screen.getByRole("heading", { name: "공식 실시간 정보" })).toBeVisible();
+    expect(screen.getByRole("heading", { name: "일정 이동 구간" })).toBeVisible();
+    expect(screen.getByRole("heading", { name: "저장한 교통 장소" })).toBeVisible();
     expect(screen.getByRole("link", { name: "Transport NSW 여행 계획 공식 화면 열기" })).toHaveAttribute(
       "href",
       "https://transportnsw.info/plan"
@@ -107,12 +109,19 @@ describe("ToolsPage", () => {
   it("opens emergency contacts and travel tips", async () => {
     const emergency = await renderToolsPage("emergency");
     expect(screen.getByRole("heading", { level: 1, name: "비상 연락처" })).toBeVisible();
-    expect(screen.getAllByRole("link", { name: "000 전화" })[0]).toHaveAttribute("href", "tel:000");
+    for (const call of screen.getAllByRole("link", { name: /전화$/ })) {
+      expect(call).toHaveAttribute("href", expect.stringMatching(/^tel:/));
+    }
+    for (const source of screen.getAllByRole("link", { name: "공식 출처" })) {
+      expect(source).toHaveAttribute("href", expect.stringMatching(/^https:\/\//));
+    }
     expect(screen.getByText("Meriton Sussex Street")).toBeVisible();
 
     emergency.unmount();
     await renderToolsPage("tips");
     expect(screen.getByRole("heading", { level: 1, name: "주의사항" })).toBeVisible();
+    expect(screen.getByText(/서버의 최신 내용/)).toBeVisible();
+    expect(screen.queryByText(/네트워크가 없어도/)).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "교통카드" })).toBeVisible();
     expect(screen.getByRole("link", { name: "비상 연락처 열기" })).toHaveAttribute(
       "href",

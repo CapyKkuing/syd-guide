@@ -122,6 +122,16 @@ export async function stripDevPrincipal(page: Page): Promise<void> {
   });
 }
 
+export async function mockEmptyPlaceDiscovery(page: Page): Promise<void> {
+  await page.route("**/api/trips/*/places/*/discovery", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ details: null, usage: [] })
+    });
+  });
+}
+
 export async function createPairedPartner(
   browser: Browser,
   ownerRequest: APIRequestContext,

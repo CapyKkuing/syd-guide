@@ -1,10 +1,9 @@
-import { Button, Heading, HStack, Text, VStack } from "@astryxdesign/core";
+import { Button, Heading, HStack, VStack } from "@astryxdesign/core";
 import { BottomSheet } from "../../components/BottomSheet";
 import type { MapPlaceView } from "../../data/contracts";
 import type { TripMutationController } from "../../services/mutations/controller";
 import type { PlaceDiscoveryDetails } from "../../shared/places";
 import { googleMapsDirectionsUrl, googleMapsSearchUrl } from "./googleMapsLinks";
-import { PlaceVoteControl } from "./PlaceVoteControl";
 
 export interface MapPlaceSheetProps {
   place: MapPlaceView;
@@ -12,7 +11,6 @@ export interface MapPlaceSheetProps {
   onEdit: () => void;
   returnFocusTo: HTMLElement | null;
   controller?: TripMutationController;
-  viewerMemberId: string;
   discovery?: PlaceDiscoveryDetails | null;
   photoUrl?: string | null;
   hideManagement?: boolean;
@@ -40,16 +38,10 @@ export function MapPlaceSheet({
   onEdit,
   place,
   photoUrl,
-  returnFocusTo,
-  viewerMemberId
+  returnFocusTo
 }: MapPlaceSheetProps) {
   const mapsSearchUrl = googleMapsSearchUrl(place);
   const mapsDirectionsUrl = googleMapsDirectionsUrl(place);
-  const voteTotals = {
-    must: place.votes.filter((vote) => vote.choice === "must").length,
-    okay: place.votes.filter((vote) => vote.choice === "okay").length,
-    skip: place.votes.filter((vote) => vote.choice === "skip").length
-  };
   return (
     <BottomSheet ariaLabel="장소 상세" onClose={onClose} returnFocusTo={returnFocusTo}>
       <VStack className="map-place-sheet" gap={4}>
@@ -84,14 +76,6 @@ export function MapPlaceSheet({
           {place.description ? <VStack as="div" gap={1}><dt>설명</dt><dd>{place.description}</dd></VStack> : null}
         </dl>
         {discovery ? <p className="google-maps-attribution" translate="no">Google Maps</p> : null}
-        {!hideManagement ? (
-          <VStack className="map-place-sheet__vote" gap={2}>
-            <Text color="secondary" hasTabularNumbers type="supporting">
-              함께 고른 결과 · 꼭 가요 {voteTotals.must} · 괜찮아요 {voteTotals.okay} · 건너뛰기 {voteTotals.skip}
-            </Text>
-            <PlaceVoteControl controller={controller} place={place} viewerMemberId={viewerMemberId} />
-          </VStack>
-        ) : null}
         <HStack className="map-place-sheet__map-links" gap={2}>
           <a className="map-place-sheet__map-link" href={discovery?.mapUrl ?? mapsSearchUrl} rel="noreferrer noopener" target="_blank">최신 정보 보기</a>
           <a className="map-place-sheet__map-link" href={mapsDirectionsUrl} rel="noreferrer noopener" target="_blank">길찾기</a>

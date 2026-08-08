@@ -195,11 +195,11 @@ function normalizeExifDate(
 ): string | null {
   const match = /^(\d{4}):(\d{2}):(\d{2}) (\d{2}):(\d{2}):(\d{2})$/.exec(value);
   if (!match) return null;
+  if (!offset || !/^[+-](?:0\d|1\d|2[0-3]):[0-5]\d$/.test(offset)) {
+    return null;
+  }
   const [, year, month, day, hour, minute, second] = match;
-  const normalizedOffset = offset && /^[+-](?:0\d|1\d|2[0-3]):[0-5]\d$/.test(offset)
-    ? offset
-    : "";
-  const iso = `${year}-${month}-${day}T${hour}:${minute}:${second}${normalizedOffset}`;
+  const iso = `${year}-${month}-${day}T${hour}:${minute}:${second}${offset}`;
   return Number.isNaN(Date.parse(iso)) ? null : iso;
 }
 

@@ -296,7 +296,6 @@ export function PlaceCategoryPanel({
           photoUrl={selected.photoUrl}
           place={selected.place}
           returnFocusTo={returnFocusTo}
-          viewerMemberId={viewerMemberId}
         />
       ) : null}
       {editingPlace !== undefined && controller ? (

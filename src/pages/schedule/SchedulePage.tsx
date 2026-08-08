@@ -311,7 +311,6 @@ export function SchedulePage({
           }}
           place={selectedPlace}
           returnFocusTo={placeReturnFocusTo}
-          viewerMemberId={viewerMemberId}
         />
       ) : null}
       {editingPlace !== undefined && mutationController ? (

@@ -257,7 +257,6 @@ export function MapPage({
           }}
           place={selectedPlace}
           returnFocusTo={returnFocusTo}
-          viewerMemberId={viewerMemberId}
         />
       ) : null}
       {editingPlace !== undefined && mutationController ? (

@@ -114,7 +114,13 @@ describe("protected bookings", () => {
     );
   });
 
-  it("stores the selected check-in status with the booking", async () => {
+  it.each([
+    ["예약됨", "booked"],
+    ["체크인 전", "check_in_pending"],
+    ["체크인 완료", "checked_in"],
+    ["이용 완료", "used"],
+    ["취소", "cancelled"],
+  ] as const)("stores the %s usage status with the booking", async (_label, usageStatus) => {
     const submit = vi.fn().mockResolvedValue({});
     render(
       <BookingEditorDialog
@@ -127,7 +133,7 @@ describe("protected bookings", () => {
     );
     await userEvent.type(screen.getByLabelText("예약처"), "Qantas");
     await userEvent.type(screen.getByLabelText("시작 일시"), "2026-09-10T10:00");
-    await userEvent.selectOptions(screen.getByLabelText("이용 상태"), "checked_in");
+    await userEvent.selectOptions(screen.getByLabelText("이용 상태"), usageStatus);
     await userEvent.click(screen.getByRole("button", { name: "저장" }));
 
     expect(submit).toHaveBeenCalledWith(
@@ -135,7 +141,7 @@ describe("protected bookings", () => {
       "create",
       expect.any(String),
       null,
-      expect.objectContaining({ usageStatus: "checked_in" }),
+      expect.objectContaining({ usageStatus }),
     );
   });
 
@@ -256,6 +262,39 @@ describe("protected bookings", () => {
     await userEvent.clear(screen.getByLabelText("예약처"));
     await userEvent.type(screen.getByLabelText("예약처"), "직접 수정한 항공사");
     expect(screen.getByLabelText("예약처")).toHaveValue("직접 수정한 항공사");
+  });
+
+  it.each([
+    "OCR 연결 전입니다. 직접 입력은 계속 가능합니다.",
+    "이번 달 OCR 무료 보호 한도에 도달했습니다. 직접 입력해 주세요.",
+  ])("keeps manual entry editable after OCR fallback: %s", async (message) => {
+    const documentRuntime: BookingDocumentRuntime = {
+      upload: vi.fn(),
+      download: vi.fn(),
+      remove: vi.fn(),
+    };
+    vi.spyOn(ocrApiClient, "bookingDraft").mockRejectedValue(new Error(message));
+    render(
+      <BookingEditorDialog
+        booking={null}
+        controller={{ submit: vi.fn() }}
+        documentRuntime={documentRuntime}
+        onClose={vi.fn()}
+        places={[]}
+        timeZone="Australia/Sydney"
+        tripId="trip-1"
+      />
+    );
+
+    await userEvent.upload(
+      screen.getByLabelText("예약 사진·PDF"),
+      new File(["ticket"], "ticket.jpg", { type: "image/jpeg" })
+    );
+    await userEvent.click(screen.getByRole("button", { name: "OCR로 자동 입력" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(message);
+    await userEvent.type(screen.getByLabelText("예약처"), "직접 입력한 예약처");
+    expect(screen.getByLabelText("예약처")).toHaveValue("직접 입력한 예약처");
   });
 
   it("keeps an uploaded voucher when the booking saves but schedule linking fails", async () => {
