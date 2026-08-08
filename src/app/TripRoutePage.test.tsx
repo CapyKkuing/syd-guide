@@ -6,7 +6,6 @@ import type { TravelGuideDataSource } from "../data/contracts";
 import { FixtureTravelGuideDataSource } from "../data/fixture/fixtureDataSource";
 import { TripRoutePage } from "./TripRoutePage";
 import { App } from "./App";
-import type { SyncRuntime } from "../services/sync/SyncProvider";
 import type { ToolRouteId } from "./router";
 
 const fixture = new FixtureTravelGuideDataSource(() => new Date("2026-07-28T00:00:00.000Z"));
@@ -246,16 +245,19 @@ describe("TripRoutePage", () => {
     );
 
     await userEvent.click(await screen.findByRole("button", { name: "일정 추가" }));
+    const todayReadsBeforeMutation = getToday.mock.calls.length;
+    const scheduleReadsBeforeMutation = getSchedule.mock.calls.length;
     await userEvent.type(screen.getByLabelText("일정 제목"), "새 일정");
     await userEvent.type(screen.getByLabelText("시작 시간"), "18:00");
     await userEvent.click(screen.getByRole("button", { name: "저장" }));
 
-    await waitFor(() => expect(getToday).toHaveBeenCalledTimes(2));
-    expect(getSchedule).toHaveBeenCalledTimes(2);
-    expect(invalidateTrip).toHaveBeenCalledWith("sydney-2026");
+    await waitFor(() => expect(getToday)
+      .toHaveBeenCalledTimes(todayReadsBeforeMutation + 1));
+    expect(getSchedule).toHaveBeenCalledTimes(scheduleReadsBeforeMutation + 1);
+    expect(invalidateTrip).toHaveBeenCalledWith("sydney-2026", 8);
   });
 
-  it("keeps identity-dependent controls read-only for an offline fallback workspace", async () => {
+  it("keeps identity-dependent controls read-only for a preview workspace", async () => {
     const dataSource = {
       ...sourceWith({
         getTripContext: async (tripId) => {
@@ -264,7 +266,7 @@ describe("TripRoutePage", () => {
             ...context,
             viewer: {
               ...context.viewer,
-              access: "offline-readonly" as const
+              access: "readonly" as const
             }
           } : null;
         }
@@ -291,42 +293,16 @@ describe("TripRoutePage", () => {
     expect(mutationTransport.mutate).not.toHaveBeenCalled();
   });
 
-  it("mounts trip sync around the existing tools UI", async () => {
+  it("mounts online refresh around the existing tools UI", async () => {
     const dataSource = {
       ...sourceWith({}),
       invalidateTrip: vi.fn()
     };
-    const runtime: SyncRuntime = {
-      engine: {
-        flush: vi.fn()
-          .mockResolvedValueOnce({
-            sent: 1,
-            conflict: false,
-            sessionInvalid: false,
-            syncVersion: 8
-          })
-          .mockResolvedValue({
-            sent: 0,
-            conflict: false,
-            sessionInvalid: false,
-            syncVersion: null
-          }),
-        keepMine: vi.fn(),
-        useLatest: vi.fn()
-      },
-      outbox: {
-        counts: vi.fn().mockResolvedValue({ queued: 2, conflicts: 0 }),
-        listForTrip: vi.fn().mockResolvedValue([]),
-        subscribe: vi.fn().mockImplementation(() => () => undefined)
-      }
-    };
-
     render(
       <ThemeProvider>
         <TripRoutePage
           activeTab="tools"
           dataSource={dataSource}
-          syncRuntime={runtime}
           toolId="offline-sync"
           tripId="sydney-2026"
         />
@@ -334,11 +310,11 @@ describe("TripRoutePage", () => {
     );
 
     expect(await screen.findByRole("heading", { level: 1, name: "관리" })).toBeVisible();
-    expect(screen.getByRole("heading", { level: 2, name: "오프라인·동기화" })).toBeVisible();
-    await waitFor(() => expect(runtime.engine.flush).toHaveBeenCalledWith("sydney-2026"));
-    expect(await screen.findByText("대기 2건")).toBeVisible();
+    expect(screen.getByRole("heading", { level: 2, name: "온라인 동기화" })).toBeVisible();
+    await waitFor(() => expect(dataSource.invalidateTrip).toHaveBeenCalledWith("sydney-2026"));
+    expect(await screen.findByText("다른 기기 변경은 최대 5초 안에 반영됩니다.")).toBeVisible();
     await waitFor(() =>
-      expect(screen.getByText(/마지막 동기화/)).not.toHaveTextContent("없음")
+      expect(screen.getByText(/마지막 확인/)).not.toHaveTextContent("없음")
     );
   });
 });

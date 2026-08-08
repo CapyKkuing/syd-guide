@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import type { Expense, PublicMember, SettlementTransfer } from "../../shared/entities";
 import type { TripMutationController } from "../../services/mutations/controller";
-import { useSyncStatus } from "../../services/sync/SyncContext";
 import { calculateSettlements, type SettlementCurrency } from "./settlement";
 
 export function SettlementPanel({
@@ -18,48 +17,20 @@ export function SettlementPanel({
   const [resolvedExpenseIds, setResolvedExpenseIds] = useState<string[]>([]);
   const [optimisticTransfers, setOptimisticTransfers] = useState<Record<string, SettlementTransfer>>({});
   const [error, setError] = useState("");
-  const sync = useSyncStatus();
-  const queuedCompletionIds = useMemo(() => new Set(
-    (sync?.pendingMutations ?? [])
-      .filter((mutation) => mutation.action === "complete")
-      .map((mutation) => mutation.entityId)
-  ), [sync?.pendingMutations]);
-  const queuedTransfers = useMemo(() => (sync?.pendingMutations ?? [])
-    .filter((mutation) => mutation.action === "create_group")
-    .flatMap((mutation) => mutation.payload.transfers.map((transfer) => ({
-      id: transfer.entityId,
-      tripId: "pending",
-      settlementGroupId: mutation.entityId,
-      expenseIds: mutation.payload.expenseIds,
-      currency: mutation.payload.currency,
-      fromMemberId: transfer.fromMemberId,
-      toMemberId: transfer.toMemberId,
-      amountMinor: transfer.amountMinor,
-      status: "pending" as const,
-      completedAt: null,
-      version: 0,
-      updatedBy: "pending",
-      updatedAt: "",
-    }))), [sync?.pendingMutations]);
   const displayTransfers = useMemo(
     () => {
       const serverIds = new Set(transfers.map((transfer) => transfer.id));
       const optimistic = Object.values(optimisticTransfers)
         .filter((transfer) => !serverIds.has(transfer.id));
-      const knownIds = new Set([
-        ...serverIds,
-        ...optimistic.map((transfer) => transfer.id),
-      ]);
       return [
         ...transfers.map((transfer) => {
           const optimistic = optimisticTransfers[transfer.id];
           return optimistic && optimistic.version > transfer.version ? optimistic : transfer;
         }),
         ...optimistic,
-        ...queuedTransfers.filter((transfer) => !knownIds.has(transfer.id)),
       ];
     },
-    [optimisticTransfers, queuedTransfers, transfers],
+    [optimisticTransfers, transfers],
   );
   const activeExpenseIds = useMemo(() => new Set(
     displayTransfers.filter((transfer) => transfer.status === "pending")
@@ -151,15 +122,11 @@ export function SettlementPanel({
                 disabled={
                   !controller?.completeSettlementTransfer
                   || transfer.status === "completed"
-                  || transfer.version === 0
-                  || queuedCompletionIds.has(transfer.id)
                 }
                 onClick={() => void completeTransfer(transfer, group)}
                 type="button"
               >
-                {transfer.version === 0 || queuedCompletionIds.has(transfer.id)
-                  ? "동기화 대기"
-                  : transfer.status === "completed" ? "송금 완료됨" : "송금 완료"}
+                {transfer.status === "completed" ? "송금 완료됨" : "송금 완료"}
               </button>
             </p>
           ))}

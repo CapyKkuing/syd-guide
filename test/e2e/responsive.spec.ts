@@ -152,7 +152,7 @@ test("reduced motion and light, dark, and system themes are applied", async ({
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
 });
 
-test("PWA manifest and service worker are active", async ({ page }) => {
+test("PWA manifest remains installable while offline caches are disabled", async ({ page }) => {
   await page.goto("/library");
   const manifestHref = await page.locator('link[rel="manifest"]').getAttribute("href");
   expect(manifestHref).toBeTruthy();
@@ -166,4 +166,6 @@ test("PWA manifest and service worker are active", async ({ page }) => {
   await expect.poll(() => page.evaluate(async () =>
     (await navigator.serviceWorker.getRegistrations()).length
   )).toBeGreaterThan(0);
+  await expect.poll(() => page.evaluate(() => caches.keys()))
+    .toEqual([]);
 });

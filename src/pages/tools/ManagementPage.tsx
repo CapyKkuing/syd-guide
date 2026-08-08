@@ -39,8 +39,8 @@ export function ManagementPage({
           <section className="management-setting-card" aria-labelledby="management-sync-title">
             <VStack gap={3}>
               <VStack gap={1}>
-                <Heading id="management-sync-title" level={2}>오프라인·동기화</Heading>
-                <Text color="secondary" type="body">현재 연결 상태와 저장된 여행 정보 상태를 확인합니다.</Text>
+                <Heading id="management-sync-title" level={2}>온라인 동기화</Heading>
+                <Text color="secondary" type="body">서버 연결 상태와 마지막 자동 확인 시각을 확인합니다.</Text>
               </VStack>
               <OfflineBanner />
             </VStack>

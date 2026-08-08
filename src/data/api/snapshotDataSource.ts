@@ -1,12 +1,10 @@
 import {
   isAdminAccessCode,
-  isAdminAccessError,
   type SessionPrincipal,
 } from "../../features/auth/api";
 import type { TripSnapshot } from "../../shared/api";
 import type { ApiClient, SnapshotResult } from "../../services/api/client";
 import { ApiClientError } from "../../services/api/errors";
-import type { SnapshotStore } from "../../services/offline/snapshotStore";
 import type {
   MapPreviewViewModel,
   MutableTravelGuideDataSource,
@@ -19,11 +17,9 @@ import type {
 } from "../contracts";
 import { mapSnapshotToWorkspace } from "./snapshotMappers";
 import type { TripMedia, TripMediaStorage } from "../../shared/media";
-import {
-  isScheduleReorderRequest,
-  type MutationRequest,
-  type SyncMutationRequest,
-} from "../../shared/mutations";
+
+const ONLINE_LOAD_ERROR =
+  "인터넷 연결이 필요합니다. 연결을 확인한 뒤 다시 시도해 주세요.";
 
 type CacheEntry = {
   snapshot: TripSnapshot | null;
@@ -38,83 +34,24 @@ export class SnapshotTravelGuideDataSource implements MutableTravelGuideDataSour
   private readonly client: Pick<ApiClient, "getTripSnapshot">;
   private readonly principalLoader: () => Promise<SessionPrincipal>;
   private readonly clock: () => Date;
-  private readonly snapshots?: SnapshotStore;
   private readonly onSessionInvalid: () => void | Promise<void>;
 
   constructor(
     client: Pick<ApiClient, "getTripSnapshot">,
     principalLoader: () => Promise<SessionPrincipal>,
     clock: () => Date = () => new Date(),
-    offline: {
-      snapshots: SnapshotStore;
+    options: {
       onSessionInvalid?: () => void | Promise<void>;
     } | undefined = undefined
   ) {
     this.client = client;
     this.principalLoader = principalLoader;
     this.clock = clock;
-    this.snapshots = offline?.snapshots;
-    this.onSessionInvalid = offline?.onSessionInvalid ?? (() => undefined);
+    this.onSessionInvalid = options?.onSessionInvalid ?? (() => undefined);
   }
 
   async listTrips(): Promise<TripSummaryViewModel[]> {
     return [];
-  }
-
-  async applyLocalMutation(
-    tripId: string,
-    mutation: SyncMutationRequest,
-    updatedAt: string
-  ): Promise<void> {
-    const cached = this.cache.get(tripId);
-    const durable = cached?.snapshot ? undefined : await this.snapshots?.get(tripId);
-    const snapshot = cached?.snapshot ?? durable?.snapshot;
-    if (!snapshot) return;
-    if (isScheduleReorderRequest(mutation)) {
-      const positions = new Map(
-        mutation.payload.items.map((item) => [item.entityId, item])
-      );
-      const currentItems = snapshot.scheduleItems.filter((item) => positions.has(item.id));
-      if (
-        currentItems.length !== positions.size
-        || currentItems.some((item) => item.version !== positions.get(item.id)?.baseVersion)
-      ) return;
-      const nextSnapshot = {
-        ...snapshot,
-        scheduleItems: snapshot.scheduleItems.map((item) => {
-          const reordered = positions.get(item.id);
-          return reordered
-            ? {
-                ...item,
-                position: reordered.position,
-                version: item.version + 1,
-                updatedAt,
-              }
-            : item;
-        }),
-      };
-      const etag = cached?.etag ?? durable?.etag ?? null;
-      this.cache.set(tripId, { snapshot: nextSnapshot, etag, workspace: null });
-      await this.snapshots?.put({ tripId, snapshot: nextSnapshot, etag, savedAt: updatedAt });
-      return;
-    }
-    if (!isScheduleItemUpdate(mutation)) return;
-    const current = snapshot.scheduleItems.find((item) => item.id === mutation.entityId);
-    if (!current || current.version !== mutation.baseVersion) return;
-    const nextSnapshot = {
-      ...snapshot,
-      scheduleItems: snapshot.scheduleItems.map((item) => item.id === mutation.entityId
-        ? {
-            ...item,
-            ...mutation.payload,
-            version: item.version + 1,
-            updatedAt,
-          }
-        : item),
-    };
-    const etag = cached?.etag ?? durable?.etag ?? null;
-    this.cache.set(tripId, { snapshot: nextSnapshot, etag, workspace: null });
-    await this.snapshots?.put({ tripId, snapshot: nextSnapshot, etag, savedAt: updatedAt });
   }
 
   invalidateTrip(tripId: string, minimumSyncVersion?: number): void {
@@ -169,53 +106,28 @@ export class SnapshotTravelGuideDataSource implements MutableTravelGuideDataSour
 
   private async load(tripId: string): Promise<TripWorkspace | null> {
     const cached = this.cache.get(tripId);
-    const durable = await this.snapshots?.get(tripId);
-    let principal: SessionPrincipal | null = null;
-    let principalError: unknown;
-    try {
-      principal = await this.loadPrincipal();
-    } catch (error) {
-      principalError = error;
-    }
+    const principal = await this.loadPrincipal();
     let result;
     try {
       result = await this.loadFreshSnapshot(
         tripId,
-        cached?.etag ?? durable?.etag ?? undefined,
-        cached?.snapshot ?? durable?.snapshot ?? null
+        cached?.etag ?? undefined,
+        cached?.snapshot ?? null
       );
     } catch (error) {
       if (error instanceof ApiClientError && error.status === 401) {
         if (isAdminAccessCode(error.code)) throw error;
-        await Promise.all([
-          this.snapshots?.clear(),
-          this.snapshots?.clearPrincipal()
-        ]);
         await this.onSessionInvalid();
         throw error;
       }
-      if (!canUseOfflineSnapshot(error)) throw error;
-      const snapshot = cached?.snapshot ?? durable?.snapshot;
-      if (!snapshot) {
-        if (isAdminAccessError(principalError)) throw principalError;
-        throw new Error(
-          "오프라인 저장 정보가 없습니다. 온라인에서 여행을 한 번 열어 주세요.",
-          { cause: error }
-        );
+      if (error instanceof TypeError
+        || (error instanceof ApiClientError && error.status === 503)) {
+        throw new Error(ONLINE_LOAD_ERROR, { cause: error });
       }
-      const workspace = mapSnapshotToWorkspace(snapshot, principal, this.clock());
-      this.cache.set(tripId, {
-        snapshot,
-        etag: cached?.etag ?? durable?.etag ?? null,
-        workspace
-      });
-      return workspace;
-    }
-    if (!principal) {
-      throw principalError ?? new Error("사용자 정보를 불러오지 못했습니다.");
+      throw error;
     }
     const snapshot = result.notModified
-      ? cached?.snapshot ?? durable?.snapshot ?? null
+      ? cached?.snapshot ?? null
       : result.snapshot;
     if (!snapshot) {
       if (result.notModified) throw new Error("저장된 여행 snapshot이 없습니다.");
@@ -233,12 +145,6 @@ export class SnapshotTravelGuideDataSource implements MutableTravelGuideDataSour
       snapshot,
       etag: result.etag,
       workspace
-    });
-    await this.snapshots?.put({
-      tripId,
-      snapshot,
-      etag: result.etag,
-      savedAt: now.toISOString()
     });
     return workspace;
   }
@@ -266,12 +172,11 @@ export class SnapshotTravelGuideDataSource implements MutableTravelGuideDataSour
 
   private async loadPrincipal(): Promise<SessionPrincipal> {
     try {
-      const principal = await this.principalLoader();
-      await this.snapshots?.savePrincipal(principal);
-      return principal;
+      return await this.principalLoader();
     } catch (error) {
-      const principal = await this.snapshots?.getPrincipal();
-      if (principal) return principal;
+      if (error instanceof TypeError) {
+        throw new Error(ONLINE_LOAD_ERROR, { cause: error });
+      }
       throw error;
     }
   }
@@ -284,17 +189,4 @@ function snapshotSyncVersion(
   return result.notModified
     ? fallbackSnapshot?.syncVersion ?? -1
     : result.snapshot?.syncVersion ?? Number.MAX_SAFE_INTEGER;
-}
-
-function canUseOfflineSnapshot(error: unknown): boolean {
-  return error instanceof TypeError
-    || (error instanceof ApiClientError && error.status === 503);
-}
-
-function isScheduleItemUpdate(
-  mutation: SyncMutationRequest
-): mutation is MutationRequest<"schedule_item"> & { action: "update"; payload: NonNullable<MutationRequest<"schedule_item">["payload"]> } {
-  return mutation.entity === "schedule_item"
-    && mutation.action === "update"
-    && mutation.payload !== null;
 }

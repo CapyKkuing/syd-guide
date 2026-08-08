@@ -15,10 +15,8 @@ afterEach(() => {
 });
 
 describe("App routing", () => {
-  it("opens the latest cached trip when the installed app starts offline", async () => {
-    await expect(resolveRootStartPath(false, async () => "trip-one"))
-      .resolves.toBe("/trip/trip-one/today");
-    await expect(resolveRootStartPath(true, async () => "trip-one"))
+  it("always opens the online library instead of a cached trip", async () => {
+    await expect(resolveRootStartPath())
       .resolves.toBe("/library");
   });
 

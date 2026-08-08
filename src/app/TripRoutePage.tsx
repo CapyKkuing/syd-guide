@@ -35,10 +35,7 @@ import {
   createTripMutationController,
   type MutationTransport
 } from "../services/mutations/controller";
-import {
-  SyncProvider,
-  type SyncRuntime
-} from "../services/sync/SyncProvider";
+import { SyncProvider } from "../services/sync/SyncProvider";
 import type { MediaApi } from "../services/media/api";
 import type { MediaStorageProviderClient } from "../services/media/provider";
 import type { MediaThumbnailStore } from "../services/offline/mediaThumbnailStore";
@@ -54,7 +51,6 @@ import type { TripMedia } from "../shared/media";
 export function TripRoutePage({
   dataSource,
   mutationTransport,
-  syncRuntime,
   mediaApi,
   mediaProvider,
   mediaThumbnailStore,
@@ -65,7 +61,6 @@ export function TripRoutePage({
 }: {
   dataSource: TravelGuideDataSource;
   mutationTransport?: MutationTransport;
-  syncRuntime?: SyncRuntime;
   mediaApi?: MediaApi;
   mediaProvider?: MediaStorageProviderClient;
   mediaThumbnailStore?: MediaThumbnailStore;
@@ -180,11 +175,7 @@ export function TripRoutePage({
             activeToolId={toolId}
             deviceManagement={mutationTransport && hasVerifiedIdentity
               ? <PairingManager />
-              : <p>
-                {workspace.data.context.viewer.access === "offline-readonly"
-                  ? "오프라인 사용자 확인 전에는 기기를 관리할 수 없습니다."
-                  : "읽기 전용 미리보기에서는 기기를 관리할 수 없습니다."}
-              </p>}
+              : <p>읽기 전용 미리보기에서는 기기를 관리할 수 없습니다.</p>}
             mutationController={mutationController}
             mediaApi={hasVerifiedIdentity ? mediaApi : undefined}
             mediaProvider={mediaProvider}
@@ -197,11 +188,10 @@ export function TripRoutePage({
     );
   }
 
-  return syncRuntime && mutableDataSource ? (
+  return mutableDataSource ? (
     <SyncProvider
       dataSource={mutableDataSource}
       reload={workspace.reload}
-      runtime={syncRuntime}
       tripId={tripId}
     >
       {page}

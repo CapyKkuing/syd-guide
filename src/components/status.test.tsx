@@ -52,13 +52,19 @@ describe("StatusPanel", () => {
 describe("OfflineBanner", () => {
   it("follows browser online and offline events", () => {
     render(<OfflineBanner />);
-    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "온라인 전용 — 서버에 바로 저장합니다."
+    );
 
     act(() => window.dispatchEvent(new Event("offline")));
-    expect(screen.getByRole("status")).toHaveTextContent("오프라인 — 저장된 여행 데이터를 표시합니다");
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "인터넷 연결이 필요합니다. 연결 전에는 조회와 편집을 사용할 수 없습니다."
+    );
 
     act(() => window.dispatchEvent(new Event("online")));
-    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "온라인 전용 — 서버에 바로 저장합니다."
+    );
   });
 
   it("renders immediately when the browser is already offline", () => {
@@ -67,7 +73,9 @@ describe("OfflineBanner", () => {
 
     try {
       render(<OfflineBanner />);
-      expect(screen.getByRole("status")).toHaveTextContent("오프라인 — 저장된 여행 데이터를 표시합니다");
+      expect(screen.getByRole("status")).toHaveTextContent(
+        "인터넷 연결이 필요합니다. 연결 전에는 조회와 편집을 사용할 수 없습니다."
+      );
     } finally {
       if (original) Object.defineProperty(window.navigator, "onLine", original);
       else Reflect.deleteProperty(window.navigator, "onLine");

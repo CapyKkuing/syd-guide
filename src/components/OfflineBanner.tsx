@@ -3,11 +3,11 @@ import { useSyncStatus } from "../services/sync/SyncContext";
 
 export function OfflineBanner() {
   const sync = useSyncStatus();
-  if (sync) return <ConnectedOfflineBanner sync={sync} />;
-  return <PreviewOfflineBanner />;
+  if (sync) return <ConnectedStatus sync={sync} />;
+  return <PreviewConnectionStatus />;
 }
 
-function ConnectedOfflineBanner({
+function ConnectedStatus({
   sync
 }: {
   sync: NonNullable<ReturnType<typeof useSyncStatus>>;
@@ -15,11 +15,10 @@ function ConnectedOfflineBanner({
   return (
     <div className="offline-banner">
       <div className="offline-banner__status" role="status">
-        <strong>{sync.online ? "온라인" : "오프라인"}</strong>
-        <span>대기 {sync.queued}건</span>
-        <span>충돌 {sync.conflicts}건</span>
+        <strong>{sync.online ? "온라인 자동 동기화" : "인터넷 연결 필요"}</strong>
+        <span>다른 기기 변경은 최대 5초 안에 반영됩니다.</span>
         <span>
-          마지막 동기화 {sync.lastSync
+          마지막 확인 {sync.lastSync
             ? new Intl.DateTimeFormat("ko-KR", {
               hour: "2-digit",
               minute: "2-digit"
@@ -33,13 +32,13 @@ function ConnectedOfflineBanner({
         onClick={() => void sync.syncNow()}
         type="button"
       >
-        {sync.syncing ? "동기화 중" : "지금 동기화"}
+        {sync.syncing ? "확인 중" : "최신 내용 확인"}
       </button>
     </div>
   );
 }
 
-function PreviewOfflineBanner() {
+function PreviewConnectionStatus() {
   const [offline, setOffline] = useState(() => !window.navigator.onLine);
 
   useEffect(() => {
@@ -53,6 +52,11 @@ function PreviewOfflineBanner() {
     };
   }, []);
 
-  if (!offline) return null;
-  return <p className="offline-banner" role="status">오프라인 — 저장된 여행 데이터를 표시합니다</p>;
+  return (
+    <p className="offline-banner" role="status">
+      {offline
+        ? "인터넷 연결이 필요합니다. 연결 전에는 조회와 편집을 사용할 수 없습니다."
+        : "온라인 전용 — 서버에 바로 저장합니다."}
+    </p>
+  );
 }

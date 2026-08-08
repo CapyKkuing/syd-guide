@@ -189,7 +189,7 @@ describe("FixtureTravelGuideDataSource", () => {
           { label: "참여자 연결", status: "preview" },
           { label: "초대·기기 관리", status: "available" },
           { label: "테마", status: "available" },
-          { label: "오프라인·동기화 상태", status: "available" }
+          { label: "온라인 동기화 상태", status: "available" }
         ]
       }
     ]);

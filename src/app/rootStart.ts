@@ -1,12 +1,5 @@
-import { pathForLibrary, pathForTrip } from "./router";
+import { pathForLibrary } from "./router";
 
-export async function resolveRootStartPath(
-  online: boolean,
-  latestTripId: () => Promise<string | null>
-): Promise<string> {
-  if (!online) {
-    const tripId = await latestTripId();
-    if (tripId) return pathForTrip(tripId, "today");
-  }
+export async function resolveRootStartPath(): Promise<string> {
   return pathForLibrary();
 }

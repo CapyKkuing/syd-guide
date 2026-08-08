@@ -1,72 +1,45 @@
 import {
   useCallback,
   useEffect,
+  useRef,
   useState,
   type ReactNode
 } from "react";
 import type { MutableTravelGuideDataSource } from "../../data/contracts";
-import type { SyncMutationRequest } from "../../shared/mutations";
-import type { OutboxRecord } from "../offline/database";
-import type { OutboxStore } from "../offline/outboxStore";
-import { ConflictDialog } from "./ConflictDialog";
+import { StatusPanel } from "../../components/StatusPanel";
 import { SyncContext } from "./SyncContext";
-import type { SyncEngine } from "./syncEngine";
-
-export interface SyncRuntime {
-  engine: Pick<SyncEngine, "flush" | "keepMine" | "useLatest">;
-  outbox: Pick<OutboxStore, "counts" | "listForTrip" | "subscribe">;
-}
 
 export function SyncProvider({
   children,
-  createId = () => crypto.randomUUID(),
   dataSource,
+  pollIntervalMs = 5_000,
   reload,
-  runtime,
   tripId
 }: {
   children: ReactNode;
-  createId?: () => string;
   dataSource: Pick<MutableTravelGuideDataSource, "invalidateTrip">;
+  pollIntervalMs?: number;
   reload: () => void;
-  runtime: SyncRuntime;
   tripId: string;
 }) {
   const [online, setOnline] = useState(() => window.navigator.onLine);
-  const [queued, setQueued] = useState(0);
-  const [conflicts, setConflicts] = useState(0);
   const [lastSync, setLastSync] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
-  const [pendingMutations, setPendingMutations] = useState<SyncMutationRequest[]>([]);
-  const [resolving, setResolving] = useState(false);
-  const [conflict, setConflict] = useState<OutboxRecord | null>(null);
-
-  const refreshStatus = useCallback(async () => {
-    const [counts, records] = await Promise.all([
-      runtime.outbox.counts(tripId),
-      runtime.outbox.listForTrip(tripId)
-    ]);
-    setQueued(counts.queued);
-    setConflicts(counts.conflicts);
-    setPendingMutations(records.map((record) => record.mutation));
-    setConflict(records.find((record) => record.state === "conflict") ?? null);
-  }, [runtime.outbox, tripId]);
+  const refreshInProgress = useRef(false);
 
   const syncNow = useCallback(async () => {
-    if (!window.navigator.onLine) return;
+    if (!window.navigator.onLine || refreshInProgress.current) return;
+    refreshInProgress.current = true;
     setSyncing(true);
     try {
-      const result = await runtime.engine.flush(tripId);
-      await refreshStatus();
-      if (result.sent > 0) {
-        dataSource.invalidateTrip(tripId, result.syncVersion ?? undefined);
-        reload();
-        setLastSync(new Date().toISOString());
-      }
+      dataSource.invalidateTrip(tripId);
+      reload();
+      setLastSync(new Date().toISOString());
     } finally {
+      refreshInProgress.current = false;
       setSyncing(false);
     }
-  }, [dataSource, refreshStatus, reload, runtime.engine, tripId]);
+  }, [dataSource, reload, tripId]);
 
   useEffect(() => {
     const isReady = () =>
@@ -76,72 +49,56 @@ export function SyncProvider({
       void syncNow();
     };
     const goOffline = () => setOnline(false);
-    const syncWhenVisible = () => {
+    const syncWhenActive = () => {
       if (isReady()) void syncNow();
     };
 
-    void Promise.resolve().then(() =>
-      isReady() ? syncNow() : refreshStatus()
-    );
-    const unsubscribe = runtime.outbox.subscribe(() => void refreshStatus());
-    const interval = window.setInterval(syncWhenVisible, 15_000);
+    if (isReady()) void syncNow();
+    const interval = window.setInterval(syncWhenActive, pollIntervalMs);
     window.addEventListener("online", goOnline);
     window.addEventListener("offline", goOffline);
-    document.addEventListener("visibilitychange", syncWhenVisible);
+    window.addEventListener("focus", syncWhenActive);
+    document.addEventListener("visibilitychange", syncWhenActive);
 
     return () => {
-      unsubscribe();
       window.clearInterval(interval);
       window.removeEventListener("online", goOnline);
       window.removeEventListener("offline", goOffline);
-      document.removeEventListener("visibilitychange", syncWhenVisible);
+      window.removeEventListener("focus", syncWhenActive);
+      document.removeEventListener("visibilitychange", syncWhenActive);
     };
-  }, [refreshStatus, runtime.outbox, syncNow]);
+  }, [pollIntervalMs, syncNow]);
 
-  const useLatest = useCallback(async () => {
-    if (!conflict) return;
-    setResolving(true);
-    try {
-      await runtime.engine.useLatest(tripId, conflict.idempotencyKey);
-      dataSource.invalidateTrip(tripId);
-      await refreshStatus();
-      reload();
-    } finally {
-      setResolving(false);
-    }
-  }, [conflict, dataSource, refreshStatus, reload, runtime.engine, tripId]);
+  const status = {
+    online,
+    lastSync,
+    syncing,
+    syncNow,
+  };
 
-  const keepMine = useCallback(async () => {
-    if (!conflict) return;
-    setResolving(true);
-    try {
-      await runtime.engine.keepMine(conflict.idempotencyKey, createId());
-      await refreshStatus();
-      await syncNow();
-    } finally {
-      setResolving(false);
-    }
-  }, [conflict, createId, refreshStatus, runtime.engine, syncNow]);
+  if (!online) {
+    return (
+      <SyncContext.Provider value={status}>
+        <StatusPanel
+          action={{
+            label: "연결 다시 확인",
+            onClick: () => {
+              const connected = window.navigator.onLine;
+              setOnline(connected);
+              if (connected) void syncNow();
+            },
+          }}
+          description="이 앱은 온라인 전용입니다. 연결 전에는 여행 조회와 편집을 사용할 수 없습니다."
+          kind="error"
+          title="인터넷 연결이 필요합니다"
+        />
+      </SyncContext.Provider>
+    );
+  }
 
   return (
-    <SyncContext.Provider value={{
-      online,
-      queued,
-      conflicts,
-      lastSync,
-      syncing,
-      pendingMutations,
-      syncNow
-    }}>
+    <SyncContext.Provider value={status}>
       {children}
-      {conflict ? (
-        <ConflictDialog
-          onKeepMine={keepMine}
-          onUseLatest={useLatest}
-          pending={resolving || syncing}
-          record={conflict}
-        />
-      ) : null}
     </SyncContext.Provider>
   );
 }

@@ -35,6 +35,9 @@ export default defineConfig(({ mode }) => {
       ...(mode === "github-pages" ? [] : [cloudflare()]),
       VitePWA({
         registerType: "autoUpdate",
+        strategies: "injectManifest",
+        srcDir: "src",
+        filename: "sw.js",
         manifest: {
           name: "우리만의 여행 가이드북",
           short_name: "여행 가이드",
@@ -57,21 +60,8 @@ export default defineConfig(({ mode }) => {
             }
           ]
         },
-        workbox: {
-          globPatterns: ["**/*.{js,css,html,png,svg,woff2}"],
-          navigateFallbackDenylist: [/^\/api\//, /^\/cdn-cgi\//],
-          runtimeCaching: [
-            {
-              urlPattern: ({ url }) => url.pathname.startsWith("/api/"),
-              handler: "NetworkOnly"
-            },
-            {
-              urlPattern: ({ url }) =>
-                /\/assets\/transformers\.web-[^/]+\.js$/.test(url.pathname),
-              handler: "CacheFirst",
-              options: { cacheName: "on-device-ai-runtime" }
-            }
-          ]
+        injectManifest: {
+          globPatterns: []
         }
       }),
       ...(mode === "github-pages" ? [pagesSpaFallback()] : [])

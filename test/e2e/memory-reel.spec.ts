@@ -191,19 +191,10 @@ async function seedLocalReel(
 
     function openDatabase(): Promise<IDBDatabase> {
       return new Promise((resolve, reject) => {
-        const request = indexedDB.open("couple-travel-guide", 3);
+        const request = indexedDB.open("couple-travel-guide", 4);
         request.onerror = () => reject(request.error);
         request.onupgradeneeded = () => {
           const database = request.result;
-          if (!database.objectStoreNames.contains("snapshots")) {
-            database.createObjectStore("snapshots", { keyPath: "tripId" });
-          }
-          if (!database.objectStoreNames.contains("outbox")) {
-            const outbox = database.createObjectStore("outbox", {
-              keyPath: "idempotencyKey",
-            });
-            outbox.createIndex("by-trip-created", ["tripId", "createdAt"]);
-          }
           if (!database.objectStoreNames.contains("settings")) {
             database.createObjectStore("settings", { keyPath: "key" });
           }
@@ -234,7 +225,7 @@ async function seedLocalReel(
 async function saveReel(page: Page, reel: TravelReel): Promise<void> {
   await page.evaluate(async (savedReel) => {
     const database = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open("couple-travel-guide", 3);
+      const request = indexedDB.open("couple-travel-guide", 4);
       request.onerror = () => reject(request.error);
       request.onsuccess = () => resolve(request.result);
     });
@@ -251,7 +242,7 @@ async function saveReel(page: Page, reel: TravelReel): Promise<void> {
 async function savedReelDuration(page: Page, tripId: string): Promise<number> {
   return page.evaluate(async (id) => {
     const database = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open("couple-travel-guide", 3);
+      const request = indexedDB.open("couple-travel-guide", 4);
       request.onerror = () => reject(request.error);
       request.onsuccess = () => resolve(request.result);
     });

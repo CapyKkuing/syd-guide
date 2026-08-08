@@ -12,7 +12,7 @@ import {
   TextInput,
   VStack,
 } from "@astryxdesign/core";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { MapPlaceView, ScheduleDayView } from "../../data/contracts";
 import { orderScheduleItems, placesInScheduleOrder } from "../../domain/scheduleOrder";
 import type { TripMutationController } from "../../services/mutations/controller";
@@ -81,17 +81,6 @@ export function MapPage({
   const [selectedPlace, setSelectedPlace] = useState<MapPlaceView | null>(null);
   const [editingPlace, setEditingPlace] = useState<MapPlaceView | null | undefined>();
   const [returnFocusTo, setReturnFocusTo] = useState<HTMLElement | null>(null);
-  const [online, setOnline] = useState(() => window.navigator.onLine);
-
-  useEffect(() => {
-    const updateOnlineStatus = () => setOnline(window.navigator.onLine);
-    window.addEventListener("online", updateOnlineStatus);
-    window.addEventListener("offline", updateOnlineStatus);
-    return () => {
-      window.removeEventListener("online", updateOnlineStatus);
-      window.removeEventListener("offline", updateOnlineStatus);
-    };
-  }, []);
 
   const filteredPlaces = useMemo(() => {
     const normalizedSearch = search.trim().toLocaleLowerCase();
@@ -222,17 +211,13 @@ export function MapPage({
           </HStack>
 
       <section className="map-page__content">
-        {online ? (
-          <MapCanvas
-            connectRoute={dayDate !== "all"}
-            loader={mapLoader}
-            numberedMarkers={dayDate !== "all"}
-            onOpenPlace={openPlace}
-            places={filteredPlaces}
-          />
-        ) : (
-          <p className="map-offline-status" role="status">오프라인 — 저장된 장소 목록을 표시합니다.</p>
-        )}
+        <MapCanvas
+          connectRoute={dayDate !== "all"}
+          loader={mapLoader}
+          numberedMarkers={dayDate !== "all"}
+          onOpenPlace={openPlace}
+          places={filteredPlaces}
+        />
         <VStack as="section" className="map-place-list-section" gap={3} aria-labelledby="map-list-title">
           <Heading id="map-list-title" level={2}>장소 목록</Heading>
           <List aria-label="장소 목록" density="spacious">

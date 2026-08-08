@@ -2,9 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
 import type { Expense, PublicMember } from "../../shared/entities";
-import type { SettlementGroupCreateRequest } from "../../shared/mutations";
 import type { TripMutationController } from "../../services/mutations/controller";
-import { SyncContext } from "../../services/sync/SyncContext";
 import { SettlementPanel } from "./SettlementPanel";
 
 const members: PublicMember[] = [
@@ -74,45 +72,6 @@ describe("SettlementPanel", () => {
       .toHaveLength(2);
   });
 
-  it("restores one queued group and blocks duplicate creation while offline", () => {
-    const pending: SettlementGroupCreateRequest = {
-      idempotencyKey: "batch-key",
-      entity: "settlement_transfer",
-      action: "create_group",
-      entityId: "group-one",
-      baseVersion: null,
-      payload: {
-        expenseIds: ["expense-shared"],
-        currency: "AUD",
-        transfers: [
-          { entityId: "transfer-one", fromMemberId: "partner", toMemberId: "owner", amountMinor: 10_000 },
-          { entityId: "transfer-two", fromMemberId: "friend", toMemberId: "owner", amountMinor: 10_000 },
-        ],
-      },
-    };
-    render(
-      <SyncContext.Provider value={{
-        online: false,
-        queued: 1,
-        conflicts: 0,
-        lastSync: null,
-        syncing: false,
-        pendingMutations: [pending],
-        syncNow: vi.fn(),
-      }}>
-        <SettlementPanel
-          expenses={[expense]}
-          members={members}
-          transfers={[]}
-        />
-      </SyncContext.Provider>
-    );
-
-    expect(screen.getAllByRole("button", { name: "동기화 대기" })).toHaveLength(2);
-    expect(screen.queryByRole("button", { name: "정산 송금 만들기" }))
-      .not.toBeInTheDocument();
-  });
-
   it("replaces an optimistic transfer after the synced server version arrives", async () => {
     const controller: TripMutationController = {
       submit: vi.fn(),
@@ -120,9 +79,9 @@ describe("SettlementPanel", () => {
       createSettlementGroup: vi.fn().mockResolvedValue({
         entity: "settlement_transfer",
         entityId: "group-one",
-        version: 0,
-        syncVersion: -1,
-        transfers: [{ entityId: "transfer-one", version: 0 }],
+        version: 1,
+        syncVersion: 2,
+        transfers: [{ entityId: "transfer-one", version: 1 }],
       }),
     };
     const travelers = members.slice(0, 2);
@@ -136,7 +95,7 @@ describe("SettlementPanel", () => {
     );
 
     await userEvent.click(screen.getByRole("button", { name: "정산 송금 만들기" }));
-    expect(screen.getByRole("button", { name: "동기화 대기" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "송금 완료" })).toBeEnabled();
 
     view.rerender(
       <SettlementPanel

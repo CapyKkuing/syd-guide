@@ -2,7 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 const baseURL = "http://localhost:4173";
 const responsiveTest = /responsive\.spec\.ts/;
-const androidOfflineTest = /android-offline\.spec\.ts/;
+const androidOnlineTest = /android-online\.spec\.ts/;
 const e2eStatePath = process.env.E2E_STATE_PATH ?? `.tmp/e2e-state-${Date.now()}`;
 
 process.env.E2E_STATE_PATH = e2eStatePath;
@@ -55,7 +55,7 @@ export default defineConfig({
     },
     {
       name: "android-chromium",
-      testMatch: [responsiveTest, androidOfflineTest],
+      testMatch: [responsiveTest, androidOnlineTest],
       use: {
         browserName: "chromium",
         viewport: { width: 390, height: 844 },

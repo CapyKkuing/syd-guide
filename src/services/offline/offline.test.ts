@@ -1,13 +1,34 @@
-import { deleteDB } from "idb";
+import { deleteDB, openDB, type DBSchema } from "idb";
 import { afterEach, describe, expect, it } from "vitest";
-import type { MutationRequest } from "../../shared/mutations";
-import { createTripSnapshot } from "../../test/snapshotSamples";
-import { openTravelDatabase, type TravelDatabase } from "./database";
-import { OutboxStore } from "./outboxStore";
-import { SettingsStore } from "./settingsStore";
-import { SnapshotStore } from "./snapshotStore";
-import { MediaThumbnailStore } from "./mediaThumbnailStore";
 import { ReelStore } from "../../features/memories/reel/reelStore";
+import { openTravelDatabase, type TravelDatabase } from "./database";
+import { MediaThumbnailStore } from "./mediaThumbnailStore";
+import { SettingsStore } from "./settingsStore";
+
+interface LegacyDatabaseSchema extends DBSchema {
+  snapshots: {
+    key: string;
+    value: { tripId: string };
+  };
+  outbox: {
+    key: string;
+    value: { idempotencyKey: string };
+    indexes: { "by-trip-created": [string, string] };
+  };
+  settings: {
+    key: string;
+    value: { key: string; value: unknown };
+  };
+  mediaThumbnails: {
+    key: string;
+    value: { mediaId: string };
+    indexes: { "by-trip": string };
+  };
+  reels: {
+    key: string;
+    value: { tripId: string };
+  };
+}
 
 const databases: TravelDatabase[] = [];
 const names: string[] = [];
@@ -18,9 +39,7 @@ async function createStores() {
   databases.push(database);
   names.push(name);
   return {
-    outbox: new OutboxStore(database),
     settings: new SettingsStore(database),
-    snapshots: new SnapshotStore(database),
     thumbnails: new MediaThumbnailStore(database),
     reels: new ReelStore(database)
   };
@@ -31,68 +50,45 @@ afterEach(async () => {
   await Promise.all(names.splice(0).map((name) => deleteDB(name)));
 });
 
-function mutation(idempotencyKey: string, entityId: string): MutationRequest<"note"> {
-  return {
-    idempotencyKey,
-    entity: "note",
-    action: "create",
-    entityId,
-    baseVersion: null,
-    payload: {
-      targetType: "trip",
-      targetId: null,
-      visibility: "shared",
-      body: entityId,
-      attachmentUrl: null
-    }
-  };
-}
-
-describe("offline IndexedDB stores", () => {
-  it("persists one coherent snapshot with its ETag", async () => {
-    const { snapshots } = await createStores();
-    const snapshot = createTripSnapshot();
-
-    await snapshots.put({
-      tripId: snapshot.trip.id,
-      snapshot,
-      etag: "\"trip-trip-one-7\"",
-      savedAt: "2026-07-28T12:00:00.000Z"
+describe("device-local IndexedDB stores", () => {
+  it("removes legacy trip snapshots, outbox entries, and the offline principal", async () => {
+    const name = `couple-travel-guide-legacy-${crypto.randomUUID()}`;
+    names.push(name);
+    const legacy = await openDB<LegacyDatabaseSchema>(name, 3, {
+      upgrade(database) {
+        database.createObjectStore("snapshots", { keyPath: "tripId" });
+        const outbox = database.createObjectStore("outbox", {
+          keyPath: "idempotencyKey"
+        });
+        outbox.createIndex("by-trip-created", ["tripId", "createdAt"]);
+        database.createObjectStore("settings", { keyPath: "key" });
+        const thumbnails = database.createObjectStore("mediaThumbnails", {
+          keyPath: "mediaId"
+        });
+        thumbnails.createIndex("by-trip", "tripId");
+        database.createObjectStore("reels", { keyPath: "tripId" });
+      }
     });
+    await legacy.put("settings", {
+      key: "session-principal",
+      value: { memberId: "owner", role: "owner" }
+    });
+    await legacy.put("settings", { key: "ai-provider", value: "device" });
+    legacy.close();
 
-    expect(await snapshots.get(snapshot.trip.id)).toEqual({
-      tripId: snapshot.trip.id,
-      snapshot,
-      etag: "\"trip-trip-one-7\"",
-      savedAt: "2026-07-28T12:00:00.000Z"
+    const database = await openTravelDatabase(name);
+    databases.push(database);
+
+    expect(database.objectStoreNames.contains("snapshots")).toBe(false);
+    expect(database.objectStoreNames.contains("outbox")).toBe(false);
+    expect(await database.get("settings", "session-principal")).toBeUndefined();
+    expect(await database.get("settings", "ai-provider")).toEqual({
+      key: "ai-provider",
+      value: "device"
     });
   });
 
-  it("finds the most recently saved trip for an offline app start", async () => {
-    const { snapshots } = await createStores();
-    const older = createTripSnapshot();
-    const newer = {
-      ...createTripSnapshot(),
-      trip: { ...createTripSnapshot().trip, id: "trip-newer" }
-    };
-
-    await snapshots.put({
-      tripId: older.trip.id,
-      snapshot: older,
-      etag: null,
-      savedAt: "2026-07-28T12:00:00.000Z"
-    });
-    await snapshots.put({
-      tripId: newer.trip.id,
-      snapshot: newer,
-      etag: null,
-      savedAt: "2026-07-29T12:00:00.000Z"
-    });
-
-    expect(await snapshots.latestTripId()).toBe("trip-newer");
-  });
-
-  it("caches a representative thumbnail without storing a Drive token", async () => {
+  it("keeps representative thumbnails without storing a Drive token", async () => {
     const { thumbnails } = await createStores();
     const blob = new Blob(["thumbnail"], { type: "image/webp" });
 
@@ -103,15 +99,11 @@ describe("offline IndexedDB stores", () => {
     expect(await cached?.text()).toBe("thumbnail");
   });
 
-  it("stores reel scene metadata without photo bytes or object URLs", async () => {
+  it("keeps reel scene metadata without photo bytes or object URLs", async () => {
     const { reels } = await createStores();
     const reel = {
       tripId: "trip-one",
-      scenes: [{
-        id: "scene-media-one",
-        mediaId: "media-one",
-        durationMs: 3_000
-      }],
+      scenes: [{ id: "scene-media-one", mediaId: "media-one", durationMs: 3_000 }],
       excludedMediaIds: ["media-two"],
       durationMs: 3_000,
       mode: "edited" as const
@@ -123,22 +115,7 @@ describe("offline IndexedDB stores", () => {
     expect(JSON.stringify(await reels.get("trip-one"))).not.toContain("blob:");
   });
 
-  it("stores only the minimum offline principal identity", async () => {
-    const { snapshots } = await createStores();
-
-    await snapshots.savePrincipal({
-      memberId: "partner",
-      role: "partner",
-      sessionId: "must-not-be-durable"
-    });
-
-    expect(await snapshots.getPrincipal()).toEqual({
-      memberId: "partner",
-      role: "partner"
-    });
-  });
-
-  it("persists local tool settings without writing prompt content", async () => {
+  it("keeps device-only tool settings without prompt history", async () => {
     const { settings } = await createStores();
 
     await settings.set("ai-provider", "gemini");
@@ -153,52 +130,5 @@ describe("offline IndexedDB stores", () => {
       fetchedAt: "2026-07-28T12:00:00.000Z"
     });
     expect(await settings.get("ai-prompt-history")).toBeUndefined();
-  });
-
-  it("lists queued mutations in creation order without changing their idempotency keys", async () => {
-    const { outbox } = await createStores();
-    const second = mutation("same-key-two", "note-two");
-    const first = mutation("same-key-one", "note-one");
-
-    await outbox.enqueue("trip-one", second, "2026-07-28T12:00:02.000Z");
-    await outbox.enqueue("trip-one", first, "2026-07-28T12:00:01.000Z");
-
-    expect((await outbox.listForTrip("trip-one")).map((record) => ({
-      key: record.idempotencyKey,
-      state: record.state,
-      attempts: record.attempts
-    }))).toEqual([
-      { key: "same-key-one", state: "queued", attempts: 0 },
-      { key: "same-key-two", state: "queued", attempts: 0 }
-    ]);
-  });
-
-  it("atomically replaces a conflict with one new queued mutation", async () => {
-    const { outbox } = await createStores();
-    const conflicting = mutation("conflict-key", "note-one");
-    const replacement = {
-      ...conflicting,
-      idempotencyKey: "replacement-key",
-      baseVersion: 4
-    };
-    await outbox.enqueue("trip-one", conflicting, "2026-07-28T12:00:00.000Z");
-    await outbox.markConflict("conflict-key", "VERSION_CONFLICT", {
-      id: "note-one",
-      version: 4
-    });
-
-    await outbox.replaceConflict(
-      "conflict-key",
-      replacement,
-      "2026-07-28T12:01:00.000Z"
-    );
-
-    expect(await outbox.get("conflict-key")).toBeUndefined();
-    expect(await outbox.get("replacement-key")).toMatchObject({
-      mutation: replacement,
-      state: "queued",
-      attempts: 0,
-      conflictCurrent: null
-    });
   });
 });

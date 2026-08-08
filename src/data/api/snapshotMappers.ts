@@ -42,7 +42,7 @@ const toolGroups: ToolGroupView[] = [
       { id: "partner-connect", label: "참여자 연결", description: "참여자별 기기를 연결합니다.", status: "preview" },
       { id: "devices", label: "초대·기기 관리", description: "참여자 초대와 연결 기기를 한곳에서 관리합니다.", status: "available" },
       { id: "theme", label: "테마", description: "화면 테마를 선택합니다.", status: "available" },
-      { id: "offline-sync", label: "오프라인·동기화 상태", description: "오프라인 상태를 확인합니다.", status: "available" }
+      { id: "offline-sync", label: "온라인 동기화 상태", description: "서버 연결과 최신 확인 상태를 확인합니다.", status: "available" }
     ]
   }
 ];
@@ -98,7 +98,7 @@ export function mapSnapshotToWorkspace(
         memberId: viewerMemberId,
         displayName: viewer?.displayName ?? "여행자",
         role: viewerRole,
-        access: principal ? "full" : "offline-readonly"
+        access: principal ? "full" : "readonly"
       },
       partnerStatus: snapshot.members.length > 1
         ? "connected"

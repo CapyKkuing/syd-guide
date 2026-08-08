@@ -12,7 +12,6 @@ import type {
 } from "../shared/entities";
 import type { ExperiencePhase } from "../domain/tripPhase";
 import type { TripMedia, TripMediaStorage } from "../shared/media";
-import type { SyncMutationRequest } from "../shared/mutations";
 
 export type TripPhase = "upcoming" | "active" | "completed";
 export type ScheduleKind =
@@ -50,7 +49,7 @@ export interface TripContextViewModel {
     memberId: string;
     displayName: string;
     role: "owner" | "partner";
-    access: "full" | "offline-readonly";
+    access: "full" | "readonly";
   };
   partnerStatus: "connected" | "not-connected";
 }
@@ -228,8 +227,6 @@ export interface TravelGuideDataSource {
 }
 
 export interface MutableTravelGuideDataSource extends TravelGuideDataSource {
-  // eslint-disable-next-line no-unused-vars
-  applyLocalMutation(tripId: string, mutation: SyncMutationRequest, updatedAt: string): Promise<void>;
   // eslint-disable-next-line no-unused-vars
   invalidateTrip(tripId: string, minimumSyncVersion?: number): void;
 }

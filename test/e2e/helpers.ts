@@ -208,48 +208,6 @@ export async function getSnapshot(
   return response.json() as Promise<TripSnapshot>;
 }
 
-export async function flushOutbox(
-  page: Page,
-  tripId: string,
-  expectedStatus = 200
-) {
-  await expect.poll(() => outboxCount(page, tripId)).toBeGreaterThan(0);
-  const responsePromise = page.waitForResponse((response) =>
-    response.request().method() === "POST"
-      && response.url().endsWith(`/api/trips/${tripId}/mutations`)
-  );
-  await page.evaluate(() => window.dispatchEvent(new Event("online")));
-  const response = await responsePromise;
-  expect(response.status()).toBe(expectedStatus);
-  if (expectedStatus === 200) {
-    await expect.poll(() => outboxCount(page, tripId)).toBe(0);
-  }
-  return response;
-}
-
-export async function outboxCount(page: Page, tripId: string): Promise<number> {
-  return page.evaluate(async (expectedTripId) => {
-    const database = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open("couple-travel-guide");
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve(request.result);
-    });
-    try {
-      const records = await new Promise<Array<{ tripId: string }>>(
-        (resolve, reject) => {
-          const request = database.transaction("outbox").objectStore("outbox").getAll();
-          request.onerror = () => reject(request.error);
-          request.onsuccess = () =>
-            resolve(request.result as Array<{ tripId: string }>);
-        }
-      );
-      return records.filter((record) => record.tripId === expectedTripId).length;
-    } finally {
-      database.close();
-    }
-  }, tripId);
-}
-
 export async function expectNoHorizontalOverflow(page: Page): Promise<void> {
   const dimensions = await page.evaluate(() => ({
     viewport: window.innerWidth,

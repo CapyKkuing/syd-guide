@@ -27,10 +27,6 @@ import { TripSwitcherFocusProvider } from "./TripSwitcherFocus";
 import { useEffect, useMemo } from "react";
 import { apiClient } from "../services/api/client";
 import { openTravelDatabase, type TravelDatabase } from "../services/offline/database";
-import { OutboxStore } from "../services/offline/outboxStore";
-import { SnapshotStore } from "../services/offline/snapshotStore";
-import { createOutboxMutationTransport } from "../services/mutations/controller";
-import { SyncEngine } from "../services/sync/syncEngine";
 import { mediaApiClient } from "../services/media/api";
 import { GoogleDriveProvider } from "../services/media/googleDriveProvider";
 import { MediaThumbnailStore } from "../services/offline/mediaThumbnailStore";
@@ -46,42 +42,19 @@ const database = () => {
   databasePromise ??= openTravelDatabase();
   return databasePromise;
 };
-const snapshotStore = new SnapshotStore(database);
-const outboxStore = new OutboxStore(database);
 const mediaThumbnailStore = new MediaThumbnailStore(database);
 const googleDriveProvider = new GoogleDriveProvider();
-const clearOfflineSession = async () => {
-  await Promise.all([
-    outboxStore.clear(),
-    snapshotStore.clear(),
-    snapshotStore.clearPrincipal()
-  ]);
-  navigate(pathForPair(), true);
-};
 const snapshotTravelGuideDataSource = new SnapshotTravelGuideDataSource(
   apiClient,
   getPrincipal,
   () => new Date(),
-  { snapshots: snapshotStore, onSessionInvalid: clearOfflineSession }
+  { onSessionInvalid: () => navigate(pathForPair(), true) }
 );
-const outboxMutationTransport = createOutboxMutationTransport(outboxStore);
-const syncRuntime = {
-  outbox: outboxStore,
-  engine: new SyncEngine({
-    outbox: outboxStore,
-    snapshots: snapshotStore,
-    transport: apiClient,
-    onSessionInvalid: () => navigate(pathForPair(), true)
-  })
-};
 
 function RootRedirect() {
   useEffect(() => {
     let active = true;
-    void resolveRootStartPath(
-      window.navigator.onLine,
-      () => snapshotStore.latestTripId()
-    ).then((path) => {
+    void resolveRootStartPath().then((path) => {
       if (active) navigate(path, true);
     });
     return () => {
@@ -150,8 +123,7 @@ function AppContent({
     return (
       <TripRoutePage
         dataSource={dataSource}
-        mutationTransport={isFixturePreview ? undefined : outboxMutationTransport}
-        syncRuntime={isFixturePreview ? undefined : syncRuntime}
+        mutationTransport={isFixturePreview ? undefined : apiClient}
         tripId={route.tripId}
         activeTab={route.name === "trip" ? route.tab : "today"}
         toolId={route.name === "trip" ? route.toolId : undefined}

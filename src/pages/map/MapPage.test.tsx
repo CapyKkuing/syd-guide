@@ -289,23 +289,6 @@ describe("MapPage", () => {
     await waitFor(() => expect(screen.queryByText("온라인 지도를 불러오는 중입니다.")).not.toBeInTheDocument());
   });
 
-  it("hides the map canvas offline while keeping every saved place available", async () => {
-    const original = Object.getOwnPropertyDescriptor(window.navigator, "onLine");
-    Object.defineProperty(window.navigator, "onLine", { configurable: true, value: false });
-
-    try {
-      const { places, days } = await getMapFixtures();
-      await renderMapMode({ places, days });
-
-      expect(screen.getByText("오프라인 — 저장된 장소 목록을 표시합니다.")).toBeVisible();
-      expect(screen.queryByLabelText("온라인 지도")).not.toBeInTheDocument();
-      expect(screen.getByRole("region", { name: "장소 목록" })).toHaveTextContent("Sydney Opera House");
-    } finally {
-      if (original) Object.defineProperty(window.navigator, "onLine", original);
-      else Reflect.deleteProperty(window.navigator, "onLine");
-    }
-  });
-
   it("keeps a coordinate-less place in the list without inventing a marker", async () => {
     const { places, days } = await getMapFixtures();
     const firstPlace = places.at(0);
