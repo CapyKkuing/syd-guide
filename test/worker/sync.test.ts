@@ -5,6 +5,7 @@ import { runSettlementGroupBatch } from "../../worker/db/mutation-store";
 import type { Env } from "../../worker/env";
 import type { Trip } from "../../src/shared/entities";
 import type {
+  ScheduleReorderRequest,
   SettlementGroupCreateRequest,
   SettlementTransferCompleteRequest,
 } from "../../src/shared/mutations";
@@ -284,6 +285,126 @@ describe("versioned trip sync API", () => {
         "SELECT sync_version FROM trips WHERE id = ?"
       ).bind(trip.id).first<{ sync_version: number }>()
     ).resolves.toEqual({ sync_version: 1 });
+  });
+
+  it("reorders one day atomically, replays once, and rejects a stale whole order", async () => {
+    const trip = await seedTrip();
+    expect((await postMutation(trip.id, {
+      idempotencyKey: "schedule-day-key",
+      entity: "trip_day",
+      action: "create",
+      entityId: "schedule-day",
+      baseVersion: null,
+      payload: { dayDate: "2026-09-10", title: "DAY 01", position: 1 },
+    })).status).toBe(200);
+    const itemIds = ["schedule-1", "schedule-2", "schedule-3", "schedule-4"];
+    for (const [index, entityId] of itemIds.entries()) {
+      const response = await postMutation(trip.id, {
+        idempotencyKey: `schedule-create-${index + 1}`,
+        entity: "schedule_item",
+        action: "create",
+        entityId,
+        baseVersion: null,
+        payload: {
+          tripDayId: "schedule-day",
+          placeId: null,
+          bookingId: null,
+          title: `일정 ${index + 1}`,
+          startsAt: null,
+          endsAt: null,
+          memo: "",
+          travelMode: null,
+          travelNote: index === 3 ? "QA-ANDROID-OFFLINE" : "",
+          position: index + 1,
+          isFixed: false,
+          isDone: false,
+        },
+      });
+      expect(response.status).toBe(200);
+    }
+    const reorder: ScheduleReorderRequest = {
+      idempotencyKey: "schedule-reorder-key",
+      entity: "schedule_item",
+      action: "reorder",
+      entityId: "schedule-day",
+      baseVersion: null,
+      payload: {
+        items: [
+          { entityId: "schedule-4", baseVersion: 1, position: 1 },
+          { entityId: "schedule-1", baseVersion: 1, position: 2 },
+          { entityId: "schedule-2", baseVersion: 1, position: 3 },
+          { entityId: "schedule-3", baseVersion: 1, position: 4 },
+        ],
+      },
+    };
+
+    const firstResponse = await postMutation(trip.id, reorder);
+    const replayResponse = await postMutation(trip.id, reorder);
+    const first = await firstResponse.json();
+    const replay = await replayResponse.json();
+
+    expect(firstResponse.status).toBe(200);
+    expect(replayResponse.status).toBe(200);
+    expect(replay).toEqual(first);
+    expect(first).toEqual({
+      entity: "schedule_item",
+      entityId: "schedule-day",
+      syncVersion: 6,
+      items: reorder.payload.items.map((item) => ({
+        entityId: item.entityId,
+        version: 2,
+      })),
+    });
+    const reordered = await env.DB.prepare(
+      `SELECT id, position, version, travel_note FROM schedule_items
+       WHERE trip_id = ? AND trip_day_id = ? ORDER BY position`
+    ).bind(trip.id, "schedule-day").all<{
+      id: string;
+      position: number;
+      version: number;
+      travel_note: string;
+    }>();
+    expect(reordered.results).toEqual([
+      { id: "schedule-4", position: 1, version: 2, travel_note: "QA-ANDROID-OFFLINE" },
+      { id: "schedule-1", position: 2, version: 2, travel_note: "" },
+      { id: "schedule-2", position: 3, version: 2, travel_note: "" },
+      { id: "schedule-3", position: 4, version: 2, travel_note: "" },
+    ]);
+
+    const staleResponse = await postMutation(trip.id, {
+      ...reorder,
+      idempotencyKey: "schedule-reorder-stale",
+      payload: {
+        items: reorder.payload.items.map((item, index) => ({
+          ...item,
+          position: 4 - index,
+        })),
+      },
+    });
+    expect(staleResponse.status).toBe(409);
+    await expect(staleResponse.json()).resolves.toMatchObject({
+      error: {
+        code: "VERSION_CONFLICT",
+        details: {
+          current: {
+            tripDayId: "schedule-day",
+            items: expect.arrayContaining([
+              expect.objectContaining({ entityId: "schedule-4", version: 2 }),
+            ]),
+          },
+        },
+      },
+    });
+    const unchanged = await env.DB.prepare(
+      `SELECT id FROM schedule_items
+       WHERE trip_id = ? AND trip_day_id = ? ORDER BY position`
+    ).bind(trip.id, "schedule-day").all<{ id: string }>();
+    expect(unchanged.results.map((item) => item.id)).toEqual([
+      "schedule-4",
+      "schedule-1",
+      "schedule-2",
+      "schedule-3",
+    ]);
   });
 
   it("creates a three-person settlement group once with one sync increment and receipt", async () => {

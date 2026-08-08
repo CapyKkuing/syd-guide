@@ -1,7 +1,9 @@
 import type {
+  ScheduleReorderRequest,
   SyncMutationRequest,
   SyncMutationSuccess,
 } from "../../shared/mutations";
+import { isScheduleReorderRequest } from "../../shared/mutations";
 import { ApiClientError } from "../api/errors";
 import type { OutboxStore } from "../offline/outboxStore";
 import type { SnapshotStore } from "../offline/snapshotStore";
@@ -16,6 +18,7 @@ export interface SyncFlushResult {
   sent: number;
   conflict: boolean;
   sessionInvalid: boolean;
+  syncVersion: number | null;
 }
 
 export class SyncEngine {
@@ -62,11 +65,19 @@ export class SyncEngine {
   async keepMine(
     idempotencyKey: string,
     replacementKey: string,
-    createdAt = new Date().toISOString()
+    createdAt?: string
   ): Promise<void> {
     const record = await this.outbox.get(idempotencyKey);
     if (!record || record.state !== "conflict") {
       throw new Error("다시 보낼 충돌 항목이 없습니다.");
+    }
+    if (isScheduleReorderRequest(record.mutation)) {
+      await this.outbox.replaceConflict(
+        idempotencyKey,
+        rebaseScheduleReorder(record.mutation, record.conflictCurrent, replacementKey),
+        createdAt ?? record.createdAt
+      );
+      return;
     }
     if (
       record.mutation.action === "create_group"
@@ -82,20 +93,22 @@ export class SyncEngine {
       ...record.mutation,
       idempotencyKey: replacementKey,
       baseVersion: version
-    }, createdAt);
+    }, createdAt ?? record.createdAt);
   }
 
   private async run(tripId: string): Promise<SyncFlushResult> {
     const records = await this.outbox.listForTrip(tripId);
     let sent = 0;
+    let syncVersion: number | null = null;
 
     for (const record of records) {
       if (record.state === "conflict") {
-        return { sent, conflict: true, sessionInvalid: false };
+        return { sent, conflict: true, sessionInvalid: false, syncVersion };
       }
       await this.outbox.markSending(record.idempotencyKey);
       try {
-        await this.transport.mutate(tripId, record.mutation);
+        const result = await this.transport.mutate(tripId, record.mutation);
+        syncVersion = Math.max(syncVersion ?? -1, result.syncVersion);
         await this.outbox.remove(record.idempotencyKey);
         sent += 1;
       } catch (error) {
@@ -106,7 +119,7 @@ export class SyncEngine {
             this.snapshots.clearPrincipal()
           ]);
           await this.onSessionInvalid();
-          return { sent, conflict: false, sessionInvalid: true };
+          return { sent, conflict: false, sessionInvalid: true, syncVersion };
         }
         if (
           error instanceof ApiClientError
@@ -118,17 +131,17 @@ export class SyncEngine {
             error.code,
             conflictCurrent(error.details)
           );
-          return { sent, conflict: true, sessionInvalid: false };
+          return { sent, conflict: true, sessionInvalid: false, syncVersion };
         }
         await this.outbox.markQueued(
           record.idempotencyKey,
           errorCode(error)
         );
-        return { sent, conflict: false, sessionInvalid: false };
+        return { sent, conflict: false, sessionInvalid: false, syncVersion };
       }
     }
 
-    return { sent, conflict: false, sessionInvalid: false };
+    return { sent, conflict: false, sessionInvalid: false, syncVersion };
   }
 }
 
@@ -148,4 +161,34 @@ function currentVersion(current: unknown): number | null {
     && "version" in current && typeof current.version === "number"
     ? current.version
     : null;
+}
+
+function rebaseScheduleReorder(
+  mutation: ScheduleReorderRequest,
+  current: unknown,
+  replacementKey: string
+): ScheduleReorderRequest {
+  if (!current || typeof current !== "object" || !("items" in current)
+    || !Array.isArray(current.items)) {
+    throw new Error("최신 일정 버전을 확인할 수 없습니다.");
+  }
+  const versions = new Map<string, number>();
+  for (const item of current.items) {
+    if (!item || typeof item !== "object"
+      || !("entityId" in item) || typeof item.entityId !== "string"
+      || !("version" in item) || typeof item.version !== "number") continue;
+    versions.set(item.entityId, item.version);
+  }
+  const items = mutation.payload.items.map((item) => {
+    const version = versions.get(item.entityId);
+    if (version === undefined) {
+      throw new Error("최신 일정 버전을 확인할 수 없습니다.");
+    }
+    return { ...item, baseVersion: version };
+  });
+  return {
+    ...mutation,
+    idempotencyKey: replacementKey,
+    payload: { items },
+  };
 }

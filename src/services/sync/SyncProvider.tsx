@@ -59,7 +59,7 @@ export function SyncProvider({
       const result = await runtime.engine.flush(tripId);
       await refreshStatus();
       if (result.sent > 0) {
-        dataSource.invalidateTrip(tripId);
+        dataSource.invalidateTrip(tripId, result.syncVersion ?? undefined);
         reload();
         setLastSync(new Date().toISOString());
       }

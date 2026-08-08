@@ -19,7 +19,11 @@ import type {
 } from "../contracts";
 import { mapSnapshotToWorkspace } from "./snapshotMappers";
 import type { TripMedia, TripMediaStorage } from "../../shared/media";
-import type { MutationRequest, SyncMutationRequest } from "../../shared/mutations";
+import {
+  isScheduleReorderRequest,
+  type MutationRequest,
+  type SyncMutationRequest,
+} from "../../shared/mutations";
 
 type CacheEntry = {
   snapshot: TripSnapshot | null;
@@ -62,11 +66,39 @@ export class SnapshotTravelGuideDataSource implements MutableTravelGuideDataSour
     mutation: SyncMutationRequest,
     updatedAt: string
   ): Promise<void> {
-    if (!isScheduleItemUpdate(mutation)) return;
     const cached = this.cache.get(tripId);
     const durable = cached?.snapshot ? undefined : await this.snapshots?.get(tripId);
     const snapshot = cached?.snapshot ?? durable?.snapshot;
     if (!snapshot) return;
+    if (isScheduleReorderRequest(mutation)) {
+      const positions = new Map(
+        mutation.payload.items.map((item) => [item.entityId, item])
+      );
+      const currentItems = snapshot.scheduleItems.filter((item) => positions.has(item.id));
+      if (
+        currentItems.length !== positions.size
+        || currentItems.some((item) => item.version !== positions.get(item.id)?.baseVersion)
+      ) return;
+      const nextSnapshot = {
+        ...snapshot,
+        scheduleItems: snapshot.scheduleItems.map((item) => {
+          const reordered = positions.get(item.id);
+          return reordered
+            ? {
+                ...item,
+                position: reordered.position,
+                version: item.version + 1,
+                updatedAt,
+              }
+            : item;
+        }),
+      };
+      const etag = cached?.etag ?? durable?.etag ?? null;
+      this.cache.set(tripId, { snapshot: nextSnapshot, etag, workspace: null });
+      await this.snapshots?.put({ tripId, snapshot: nextSnapshot, etag, savedAt: updatedAt });
+      return;
+    }
+    if (!isScheduleItemUpdate(mutation)) return;
     const current = snapshot.scheduleItems.find((item) => item.id === mutation.entityId);
     if (!current || current.version !== mutation.baseVersion) return;
     const nextSnapshot = {

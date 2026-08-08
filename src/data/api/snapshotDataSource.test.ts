@@ -140,6 +140,56 @@ describe("SnapshotTravelGuideDataSource", () => {
     });
   });
 
+  it("persists one queued schedule reorder atomically for an offline cold start", async () => {
+    const snapshot = createTripSnapshot();
+    const dayItems = snapshot.scheduleItems.filter((item) => item.tripDayId === "day-one");
+    expect(dayItems).toHaveLength(2);
+    const snapshots = await createSnapshotStore();
+    await snapshots.put({
+      tripId: snapshot.trip.id,
+      snapshot,
+      etag: "\"trip-one-7\"",
+      savedAt: "2026-07-28T12:00:00.000Z"
+    });
+    const source = new SnapshotTravelGuideDataSource(
+      {
+        getTripSnapshot: vi.fn().mockRejectedValue(new TypeError("Failed to fetch"))
+      },
+      async () => {
+        throw new TypeError("Failed to fetch");
+      },
+      () => new Date("2026-09-10T01:00:00.000Z"),
+      { snapshots }
+    );
+
+    await source.applyLocalMutation(snapshot.trip.id, {
+      idempotencyKey: "offline-schedule-reorder",
+      entity: "schedule_item",
+      action: "reorder",
+      entityId: "day-one",
+      baseVersion: null,
+      payload: {
+        items: [
+          { entityId: dayItems[0]!.id, baseVersion: dayItems[0]!.version, position: 1 },
+          { entityId: dayItems[1]!.id, baseVersion: dayItems[1]!.version, position: 2 },
+        ],
+      },
+    }, "2026-08-08T12:00:00.000Z");
+
+    const durable = await snapshots.get(snapshot.trip.id);
+    const reordered = durable?.snapshot.scheduleItems
+      .filter((item) => item.tripDayId === "day-one")
+      .sort((left, right) => left.position - right.position);
+    expect(reordered?.map((item) => item.id)).toEqual([
+      dayItems[0]!.id,
+      dayItems[1]!.id,
+    ]);
+    expect(reordered?.map((item) => item.version)).toEqual([
+      dayItems[0]!.version + 1,
+      dayItems[1]!.version + 1,
+    ]);
+  });
+
   it("opens a durable snapshot offline when legacy storage has no principal", async () => {
     const snapshot = createTripSnapshot();
     const snapshots = await createSnapshotStore();

@@ -143,6 +143,28 @@ export interface MutationSuccess {
   syncVersion: number;
 }
 
+export interface ScheduleReorderRequest {
+  idempotencyKey: string;
+  entity: "schedule_item";
+  action: "reorder";
+  entityId: string;
+  baseVersion: null;
+  payload: {
+    items: Array<{
+      entityId: string;
+      baseVersion: number;
+      position: number;
+    }>;
+  };
+}
+
+export interface ScheduleReorderMutationSuccess {
+  entity: "schedule_item";
+  entityId: string;
+  syncVersion: number;
+  items: Array<{ entityId: string; version: number }>;
+}
+
 export interface SettlementGroupCreateRequest {
   idempotencyKey: string;
   entity: "settlement_transfer";
@@ -177,9 +199,19 @@ export interface SettlementTransferCompleteRequest {
 
 export type SyncMutationRequest =
   | MutationRequest
+  | ScheduleReorderRequest
   | SettlementGroupCreateRequest
   | SettlementTransferCompleteRequest;
-export type SyncMutationSuccess = MutationSuccess | SettlementGroupMutationSuccess;
+export type SyncMutationSuccess =
+  | MutationSuccess
+  | ScheduleReorderMutationSuccess
+  | SettlementGroupMutationSuccess;
+
+export function isScheduleReorderRequest(
+  request: SyncMutationRequest
+): request is ScheduleReorderRequest {
+  return request.action === "reorder";
+}
 
 export function isSettlementGroupCreateRequest(
   request: SyncMutationRequest

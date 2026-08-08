@@ -5,6 +5,8 @@ import type {
 import type {
   MutationPayloadMap,
   MutationRequest,
+  ScheduleReorderMutationSuccess,
+  ScheduleReorderRequest,
   SettlementGroupCreateRequest,
   SettlementTransferCompleteRequest,
 } from "../../src/shared/mutations";
@@ -184,6 +186,94 @@ export async function runMutationBatch(
     ),
   ]);
   return Number(results[0]?.meta.changes ?? 0) === 1
+    && Number(results[3]?.meta.changes ?? 0) === 1;
+}
+
+export async function runScheduleReorderBatch(
+  env: Env,
+  tripId: string,
+  principal: Principal,
+  mutation: ScheduleReorderRequest,
+  timestamp: string
+): Promise<boolean> {
+  const itemsJson = JSON.stringify(mutation.payload.items);
+  const itemCount = mutation.payload.items.length;
+  const resultJson = JSON.stringify({
+    entity: "schedule_item",
+    entityId: mutation.entityId,
+    items: mutation.payload.items.map((item) => ({
+      entityId: item.entityId,
+      version: item.baseVersion + 1,
+    })),
+  } satisfies Omit<ScheduleReorderMutationSuccess, "syncVersion">);
+  const results = await env.DB.batch([
+    env.DB.prepare(
+      `UPDATE schedule_items
+       SET position = (
+         SELECT CAST(json_extract(requested.value, '$.position') AS INTEGER)
+         FROM json_each(?) requested
+         WHERE json_extract(requested.value, '$.entityId') = schedule_items.id
+       ), version = version + 1, updated_by = ?, updated_at = ?
+       WHERE trip_id = ? AND trip_day_id = ?
+         AND id IN (
+           SELECT json_extract(requested.value, '$.entityId') FROM json_each(?) requested
+         )
+         AND (
+           SELECT COUNT(*)
+           FROM schedule_items current
+           JOIN json_each(?) requested
+             ON current.id = json_extract(requested.value, '$.entityId')
+           WHERE current.trip_id = ? AND current.trip_day_id = ?
+             AND current.version = CAST(
+               json_extract(requested.value, '$.baseVersion') AS INTEGER
+             )
+         ) = ?`
+    ).bind(
+      itemsJson,
+      principal.memberId,
+      timestamp,
+      tripId,
+      mutation.entityId,
+      itemsJson,
+      itemsJson,
+      tripId,
+      mutation.entityId,
+      itemCount
+    ),
+    env.DB.prepare(
+      `UPDATE trips SET sync_version = sync_version + 1
+       WHERE id = ? AND changes() = ?`
+    ).bind(tripId, itemCount),
+    env.DB.prepare(
+      `INSERT INTO activity_logs (
+        id, trip_id, member_id, entity_type, entity_id, action, summary,
+        created_at
+      )
+      SELECT ?, ?, ?, 'schedule_item', ?, 'update', ?, ? WHERE changes() = 1`
+    ).bind(
+      crypto.randomUUID(),
+      tripId,
+      principal.memberId,
+      mutation.entityId,
+      `일정 ${itemCount}건 순서 변경`,
+      timestamp
+    ),
+    env.DB.prepare(
+      `INSERT INTO mutation_receipts (
+        idempotency_key, trip_id, member_id, result_json, created_at
+      )
+      SELECT ?, ?, ?, json_set(?, '$.syncVersion',
+        (SELECT sync_version FROM trips WHERE id = ?)), ? WHERE changes() = 1`
+    ).bind(
+      mutation.idempotencyKey,
+      tripId,
+      principal.memberId,
+      resultJson,
+      tripId,
+      timestamp
+    ),
+  ]);
+  return Number(results[0]?.meta.changes ?? 0) === itemCount
     && Number(results[3]?.meta.changes ?? 0) === 1;
 }
 

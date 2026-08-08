@@ -1,7 +1,4 @@
-import type {
-  MutationRequest,
-  SyncMutationRequest,
-} from "../../shared/mutations";
+import type { SyncMutationRequest } from "../../shared/mutations";
 import {
   resolveTravelDatabase,
   type OutboxRecord,
@@ -92,7 +89,7 @@ export class OutboxStore {
 
   async replaceConflict(
     idempotencyKey: string,
-    mutation: MutationRequest,
+    mutation: SyncMutationRequest,
     createdAt = new Date().toISOString()
   ): Promise<void> {
     const database = await resolveTravelDatabase(this.databaseSource);

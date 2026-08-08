@@ -72,6 +72,103 @@ test("offline snapshot remains readable and queued edit flushes on reconnect", a
   await context.setOffline(false);
 });
 
+test("schedule reorder keeps the complete device order after one conflict choice", async ({
+  context,
+  page
+}) => {
+  const workspace = await createWorkspace(page.request, unique("conflict-schedule"));
+  const itemIds = Array.from({ length: 4 }, (_, index) =>
+    unique(`conflict-schedule-item-${index + 1}`)
+  );
+  const payloads = itemIds.map((_, index) => ({
+    tripDayId: workspace.tripDayId,
+    placeId: null,
+    bookingId: null,
+    title: `충돌 일정 ${index + 1}`,
+    startsAt: `2026-10-08T${String(9 + index).padStart(2, "0")}:00:00+11:00`,
+    endsAt: null,
+    memo: "",
+    travelMode: "walk" as const,
+    travelNote: index === 3 ? "QA-ANDROID-OFFLINE" : "",
+    position: index + 1,
+    isFixed: false,
+    isDone: false
+  }));
+  for (const [index, entityId] of itemIds.entries()) {
+    await mutate(page.request, workspace.trip.id, {
+      entity: "schedule_item",
+      action: "create",
+      entityId,
+      baseVersion: null,
+      payload: payloads[index]!
+    });
+  }
+
+  await page.goto(`/trip/${workspace.trip.id}/schedule`);
+  await page.getByRole("radio", { name: "전체 일정" }).click();
+  await expect.poll(() => page.locator("main ul button").allTextContents()).toEqual([
+    "충돌 일정 1",
+    "충돌 일정 2",
+    "충돌 일정 3",
+    "충돌 일정 4 · QA-ANDROID-OFFLINE"
+  ]);
+
+  for (const [index, entityId] of itemIds.entries()) {
+    await mutate(page.request, workspace.trip.id, {
+      entity: "schedule_item",
+      action: "update",
+      entityId,
+      baseVersion: 1,
+      payload: payloads[index]!
+    });
+  }
+
+  await context.setOffline(true);
+  await page.evaluate(() => window.dispatchEvent(new Event("offline")));
+  await page.getByRole("button", { name: "순서 편집" }).click();
+  for (let index = 0; index < 3; index += 1) {
+    await page.getByRole("button", { name: "충돌 일정 4 위로 이동" }).click();
+  }
+  await page.getByRole("button", { name: "순서 편집 완료" }).click();
+  await expect.poll(() => outboxCount(page, workspace.trip.id)).toBe(1);
+
+  const conflictResponse = page.waitForResponse((candidate) =>
+    candidate.request().method() === "POST"
+      && candidate.url().endsWith(`/api/trips/${workspace.trip.id}/mutations`)
+      && candidate.status() === 409
+  );
+  await context.setOffline(false);
+  await page.evaluate(() => window.dispatchEvent(new Event("online")));
+  await conflictResponse;
+
+  const conflict = page.getByRole("dialog", { name: "동기화 충돌" });
+  await expect(conflict).toBeVisible();
+  await conflict.getByRole("button", { name: "내 수정 유지" }).click();
+
+  await expect(conflict).toHaveCount(0);
+  await expect.poll(() => outboxCount(page, workspace.trip.id)).toBe(0);
+  await page.reload();
+  await page.getByRole("radio", { name: "전체 일정" }).click();
+  await expect.poll(() => page.locator("main ul button").allTextContents()).toEqual([
+    "충돌 일정 4 · QA-ANDROID-OFFLINE",
+    "충돌 일정 1",
+    "충돌 일정 2",
+    "충돌 일정 3"
+  ]);
+
+  const snapshot = await getSnapshot(page.request, workspace.trip.id, "owner");
+  const reordered = snapshot.scheduleItems
+    .filter((item) => item.tripDayId === workspace.tripDayId)
+    .sort((left, right) => left.position - right.position);
+  expect(reordered.map((item) => item.id)).toEqual([
+    itemIds[3],
+    itemIds[0],
+    itemIds[1],
+    itemIds[2]
+  ]);
+  expect(reordered[0]?.travelNote).toBe("QA-ANDROID-OFFLINE");
+});
+
 for (const choice of ["latest", "mine"] as const) {
   test(`conflict dialog resolves with ${choice}`, async ({ page }) => {
     const workspace = await createWorkspace(page.request, unique(`conflict-${choice}`));

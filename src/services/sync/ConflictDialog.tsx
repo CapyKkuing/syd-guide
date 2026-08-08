@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { EntityKind } from "../../shared/entities";
-import type { MutationRequest } from "../../shared/mutations";
+import type { SyncMutationRequest } from "../../shared/mutations";
 import type { OutboxRecord } from "../offline/database";
 
 export function ConflictDialog({
@@ -96,10 +96,12 @@ function entityLabel(entity: EntityKind): string {
   return labels[entity];
 }
 
-function actionLabel(action: MutationRequest["action"]): string {
+function actionLabel(action: SyncMutationRequest["action"]): string {
   return action === "create" ? "추가"
     : action === "update" ? "수정"
-      : "삭제";
+      : action === "delete" ? "삭제"
+        : action === "reorder" ? "순서 변경"
+          : "변경";
 }
 
 function safeSummary(entity: EntityKind, value: unknown): string {
@@ -108,6 +110,7 @@ function safeSummary(entity: EntityKind, value: unknown): string {
     return joinSummary(stringField(value, "title"), stringField(value, "dayDate"));
   }
   if (entity === "schedule_item") {
+    if (Array.isArray(value.items)) return `일정 ${value.items.length}개 순서`;
     return joinSummary(stringField(value, "title"), stringField(value, "startsAt"));
   }
   if (entity === "place") {
@@ -130,6 +133,9 @@ function safeSummary(entity: EntityKind, value: unknown): string {
 }
 
 function versionLabel(value: unknown): string {
+  if (isRecord(value) && Array.isArray(value.items)) {
+    return `항목 ${value.items.length}개`;
+  }
   return isRecord(value) && typeof value.version === "number"
     ? String(value.version)
     : "확인 불가";

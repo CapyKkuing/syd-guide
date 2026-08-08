@@ -15,7 +15,6 @@ import {
 import { useMemo, useState } from "react";
 import type { MapPlaceView, ScheduleDayView, ScheduleItemView } from "../../data/contracts";
 import { moveScheduleItem, orderScheduleItems, placesInScheduleOrder } from "../../domain/scheduleOrder";
-import type { MutationPayloadMap } from "../../shared/mutations";
 import type { TripMutationController } from "../../services/mutations/controller";
 import { MapCanvas, type MapLoader, type MapOpenRequest } from "../map/MapCanvas";
 import { MapPlaceSheet } from "../map/MapPlaceSheet";
@@ -138,7 +137,6 @@ export function SchedulePage({
       setReorderMessage("");
       return;
     }
-    const movedItems = items.filter((item, index) => item.position !== index + 1);
     if (!mutationController) {
       setReorderMode(false);
       setReorderMessage("일정 순서를 미리 바꿨습니다.");
@@ -146,15 +144,17 @@ export function SchedulePage({
     }
     setReordering(true);
     try {
-      for (const item of movedItems) {
-        await mutationController.submit(
-          "schedule_item",
-          "update",
-          item.id,
-          item.version,
-          schedulePayload(item, items.indexOf(item) + 1)
-        );
+      if (!mutationController.reorderScheduleItems) {
+        throw new Error("일정 순서 저장 기능을 사용할 수 없습니다.");
       }
+      await mutationController.reorderScheduleItems(
+        day.id,
+        items.map((item, index) => ({
+          entityId: item.id,
+          baseVersion: item.version,
+          position: index + 1,
+        }))
+      );
       setReorderMode(false);
       setReorderMessage("순서 변경을 저장했습니다. 연결 상태에 따라 곧 동기화됩니다.");
     } catch (caught) {
@@ -329,24 +329,4 @@ export function SchedulePage({
 function hasCoordinates(place: MapPlaceView): boolean {
   return place.latitude !== null && place.longitude !== null
     && Number.isFinite(place.latitude) && Number.isFinite(place.longitude);
-}
-
-function schedulePayload(
-  item: ScheduleItemView,
-  position: number
-): MutationPayloadMap["schedule_item"] {
-  return {
-    tripDayId: item.tripDayId,
-    placeId: item.placeId,
-    bookingId: item.bookingId,
-    title: item.title,
-    startsAt: item.startsAt,
-    endsAt: item.endsAt,
-    memo: item.description,
-    travelMode: item.travelMode,
-    travelNote: item.travelNote ?? "",
-    position,
-    isFixed: item.isFixed,
-    isDone: item.isDone,
-  };
 }

@@ -17,7 +17,8 @@ function createRuntime(overrides: {
       flush: vi.fn().mockResolvedValue({
         sent: 0,
         conflict: records.length > 0,
-        sessionInvalid: false
+        sessionInvalid: false,
+        syncVersion: null,
       }),
       keepMine: vi.fn().mockResolvedValue(undefined),
       useLatest: vi.fn().mockResolvedValue(undefined)
@@ -162,6 +163,20 @@ describe("SyncProvider", () => {
       "replacement-key"
     );
     expect(runtime.engine.flush).toHaveBeenCalledTimes(2);
+  });
+
+  it("requires the newest successful sync version before reloading", async () => {
+    const runtime = createRuntime();
+    vi.mocked(runtime.engine.flush).mockResolvedValue({
+      sent: 1,
+      conflict: false,
+      sessionInvalid: false,
+      syncVersion: 14,
+    });
+    const invalidateTrip = vi.fn();
+    render(<Harness invalidateTrip={invalidateTrip} runtime={runtime} />);
+
+    await waitFor(() => expect(invalidateTrip).toHaveBeenCalledWith("sydney-2026", 14));
   });
 });
 

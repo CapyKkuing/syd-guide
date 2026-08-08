@@ -148,6 +148,59 @@ describe("createTripMutationController", () => {
     expect(reload).toHaveBeenCalledTimes(1);
   });
 
+  it("queues one atomic schedule reorder and applies every position locally", async () => {
+    const enqueue = vi.fn().mockResolvedValue(undefined);
+    const transport = createOutboxMutationTransport(
+      { enqueue },
+      () => new Date("2026-08-08T12:00:00.000Z")
+    );
+    const dataSource = {
+      applyLocalMutation: vi.fn().mockResolvedValue(undefined),
+      invalidateTrip: vi.fn(),
+    };
+    const reload = vi.fn();
+    const controller = createTripMutationController({
+      tripId: "trip-one",
+      transport,
+      dataSource,
+      reload,
+      createId: () => "schedule-reorder-key",
+      clock: () => new Date("2026-08-08T12:00:00.000Z")
+    });
+    const items = [
+      { entityId: "item-four", baseVersion: 1, position: 1 },
+      { entityId: "item-one", baseVersion: 2, position: 2 },
+    ];
+
+    const result = await controller.reorderScheduleItems?.("day-one", items);
+
+    const mutation = {
+      idempotencyKey: "schedule-reorder-key",
+      entity: "schedule_item" as const,
+      action: "reorder" as const,
+      entityId: "day-one",
+      baseVersion: null,
+      payload: { items },
+    };
+    expect(enqueue).toHaveBeenCalledTimes(1);
+    expect(enqueue).toHaveBeenCalledWith(
+      "trip-one",
+      mutation,
+      "2026-08-08T12:00:00.000Z"
+    );
+    expect(dataSource.applyLocalMutation).toHaveBeenCalledWith(
+      "trip-one",
+      mutation,
+      "2026-08-08T12:00:00.000Z"
+    );
+    expect(result?.items).toEqual([
+      { entityId: "item-four", version: 2 },
+      { entityId: "item-one", version: 3 },
+    ]);
+    expect(dataSource.invalidateTrip).toHaveBeenCalledWith("trip-one", -1);
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
   it("queues a three-person settlement as one stable outbox record", async () => {
     const enqueue = vi.fn().mockResolvedValue(undefined);
     const transport = createOutboxMutationTransport(

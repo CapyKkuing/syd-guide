@@ -4,6 +4,8 @@ import type { Principal } from "../../src/shared/entities";
 import type {
   MutationRequest,
   MutationSuccess,
+  ScheduleReorderMutationSuccess,
+  ScheduleReorderRequest,
   SettlementGroupCreateRequest,
   SettlementGroupMutationSuccess,
   SettlementTransferCompleteRequest,
@@ -16,6 +18,7 @@ import {
 } from "../db/mutation-queries";
 import {
   runMutationBatch,
+  runScheduleReorderBatch,
   runSettlementGroupBatch,
   runSettlementTransferCompleteBatch,
 } from "../db/mutation-store";
@@ -69,6 +72,21 @@ const settlementGroupSchema = z.object({
   }),
 });
 
+const scheduleReorderSchema = z.object({
+  idempotencyKey: idSchema,
+  entity: z.literal("schedule_item"),
+  action: z.literal("reorder"),
+  entityId: idSchema,
+  baseVersion: z.null(),
+  payload: z.object({
+    items: z.array(z.object({
+      entityId: idSchema,
+      baseVersion: z.number().int().positive(),
+      position: z.number().int().nonnegative(),
+    })).min(1).max(200),
+  }),
+});
+
 const settlementCompleteSchema = z.object({
   idempotencyKey: idSchema,
   entity: z.literal("settlement_transfer"),
@@ -118,6 +136,31 @@ function parseSettlementComplete(input: unknown): SettlementTransferCompleteRequ
     );
   }
   return parsed.data;
+}
+
+function parseScheduleReorder(input: unknown): ScheduleReorderRequest {
+  const parsed = scheduleReorderSchema.safeParse(input);
+  if (!parsed.success) {
+    throw new MutationError(
+      400,
+      "MUTATION_INPUT_INVALID",
+      "일정 순서 변경 요청이 올바르지 않습니다."
+    );
+  }
+  const mutation = parsed.data;
+  const entityIds = new Set(mutation.payload.items.map((item) => item.entityId));
+  const positions = new Set(mutation.payload.items.map((item) => item.position));
+  if (
+    entityIds.size !== mutation.payload.items.length
+    || positions.size !== mutation.payload.items.length
+  ) {
+    throw new MutationError(
+      400,
+      "MUTATION_INPUT_INVALID",
+      "일정 순서 변경 요청이 올바르지 않습니다."
+    );
+  }
+  return mutation;
 }
 
 export function parseMutation(input: unknown): MutationRequest {
@@ -282,6 +325,122 @@ export async function applyMutation(
       mutation.idempotencyKey
     ).catch(() => null);
     if (stored) return receiptResult(stored, tripId, principal.memberId) as MutationSuccess;
+    throw error;
+  }
+}
+
+interface CurrentScheduleItem {
+  entityId: string;
+  tripDayId: string;
+  position: number;
+  version: number;
+}
+
+async function currentScheduleItems(
+  env: Env,
+  tripId: string,
+  mutation: ScheduleReorderRequest
+): Promise<CurrentScheduleItem[]> {
+  const result = await env.DB.prepare(
+    `SELECT id AS entityId, trip_day_id AS tripDayId, position, version
+     FROM schedule_items
+     WHERE trip_id = ?
+       AND id IN (
+         SELECT json_extract(requested.value, '$.entityId')
+         FROM json_each(?) requested
+       )
+     ORDER BY position, id`
+  ).bind(tripId, JSON.stringify(mutation.payload.items)).all<CurrentScheduleItem>();
+  return result.results;
+}
+
+function scheduleReorderConflict(
+  mutation: ScheduleReorderRequest,
+  current: CurrentScheduleItem[]
+): MutationError {
+  return new MutationError(
+    409,
+    "VERSION_CONFLICT",
+    "다른 기기에서 일정 순서가 수정되었습니다.",
+    {
+      current: {
+        tripDayId: mutation.entityId,
+        items: current,
+      },
+    }
+  );
+}
+
+function scheduleVersionsMatch(
+  mutation: ScheduleReorderRequest,
+  current: CurrentScheduleItem[]
+): boolean {
+  if (
+    current.length !== mutation.payload.items.length
+    || current.some((item) => item.tripDayId !== mutation.entityId)
+  ) return false;
+  const versions = new Map(current.map((item) => [item.entityId, item.version]));
+  return mutation.payload.items.every(
+    (item) => versions.get(item.entityId) === item.baseVersion
+  );
+}
+
+async function applyScheduleReorder(
+  env: Env,
+  tripId: string,
+  principal: Principal,
+  input: unknown,
+  now: Date
+): Promise<ScheduleReorderMutationSuccess> {
+  if (!(await mutationQueries.hasMembership(env, tripId, principal.memberId))) {
+    throw new MutationError(
+      404,
+      "TRIP_NOT_FOUND",
+      "여행을 찾을 수 없습니다."
+    );
+  }
+  const mutation = parseScheduleReorder(input);
+  const previous = await mutationQueries.findReceipt(env, mutation.idempotencyKey);
+  if (previous) {
+    return receiptResult(previous, tripId, principal.memberId) as ScheduleReorderMutationSuccess;
+  }
+  const current = await currentScheduleItems(env, tripId, mutation);
+  if (!scheduleVersionsMatch(mutation, current)) {
+    throw scheduleReorderConflict(mutation, current);
+  }
+
+  try {
+    const applied = await runScheduleReorderBatch(
+      env,
+      tripId,
+      principal,
+      mutation,
+      now.toISOString()
+    );
+    const stored = await mutationQueries.findReceipt(env, mutation.idempotencyKey);
+    if (stored) {
+      return receiptResult(stored, tripId, principal.memberId) as ScheduleReorderMutationSuccess;
+    }
+    if (!applied) {
+      throw scheduleReorderConflict(
+        mutation,
+        await currentScheduleItems(env, tripId, mutation)
+      );
+    }
+    throw new Error("Schedule reorder receipt missing");
+  } catch (error) {
+    if (error instanceof MutationError) throw error;
+    const stored = await mutationQueries.findReceipt(
+      env,
+      mutation.idempotencyKey
+    ).catch(() => null);
+    if (stored) {
+      return receiptResult(stored, tripId, principal.memberId) as ScheduleReorderMutationSuccess;
+    }
+    const authoritative = await currentScheduleItems(env, tripId, mutation);
+    if (!scheduleVersionsMatch(mutation, authoritative)) {
+      throw scheduleReorderConflict(mutation, authoritative);
+    }
     throw error;
   }
 }
@@ -495,6 +654,14 @@ export function applySyncMutation(
   input: unknown,
   now: Date
 ): Promise<SyncMutationSuccess> {
+  if (
+    input !== null
+    && typeof input === "object"
+    && "action" in input
+    && input.action === "reorder"
+  ) {
+    return applyScheduleReorder(env, tripId, principal, input, now);
+  }
   if (
     input !== null
     && typeof input === "object"

@@ -4,6 +4,8 @@ import type {
   MutationPayloadMap,
   MutationRequest,
   MutationSuccess,
+  ScheduleReorderMutationSuccess,
+  ScheduleReorderRequest,
   SettlementGroupCreateRequest,
   SettlementGroupMutationSuccess,
   SettlementTransferCompleteRequest,
@@ -24,9 +26,17 @@ export interface SettlementTransferDraft {
   amountMinor: number;
 }
 
+export interface ScheduleReorderItemDraft {
+  entityId: string;
+  baseVersion: number;
+  position: number;
+}
+
 export interface TripMutationController {
   // eslint-disable-next-line no-unused-vars
   submit<K extends EntityKind>(entity: K, action: MutationRequest<K>["action"], entityId: string, baseVersion: number | null, payload: MutationPayloadMap[K] | null): Promise<MutationSuccess>;
+  // eslint-disable-next-line no-unused-vars
+  reorderScheduleItems?(tripDayId: string, items: ScheduleReorderItemDraft[]): Promise<ScheduleReorderMutationSuccess>;
   // eslint-disable-next-line no-unused-vars
   createSettlementGroup?(expenseIds: string[], currency: string, transfers: SettlementTransferDraft[]): Promise<SettlementGroupMutationSuccess>;
   // eslint-disable-next-line no-unused-vars
@@ -49,6 +59,17 @@ export function createOutboxMutationTransport(
           transfers: mutation.payload.transfers.map((transfer) => ({
             entityId: transfer.entityId,
             version: 0,
+          })),
+        };
+      }
+      if (mutation.action === "reorder") {
+        return {
+          entity: "schedule_item" as const,
+          entityId: mutation.entityId,
+          syncVersion: -1,
+          items: mutation.payload.items.map((item) => ({
+            entityId: item.entityId,
+            version: item.baseVersion + 1,
           })),
         };
       }
@@ -95,8 +116,28 @@ export function createTripMutationController({
         payload
       };
       const result = await transport.mutate(tripId, mutation);
-      if ("transfers" in result) {
+      if ("transfers" in result || "items" in result) {
         throw new Error("단건 변경에서 정산 묶음 결과를 받았습니다.");
+      }
+      if (result.syncVersion < 0) {
+        await dataSource.applyLocalMutation?.(tripId, mutation, clock().toISOString());
+      }
+      dataSource.invalidateTrip(tripId, result.syncVersion);
+      reload();
+      return result;
+    },
+    async reorderScheduleItems(tripDayId, items) {
+      const mutation: ScheduleReorderRequest = {
+        idempotencyKey: createId(),
+        entity: "schedule_item",
+        action: "reorder",
+        entityId: tripDayId,
+        baseVersion: null,
+        payload: { items },
+      };
+      const result = await transport.mutate(tripId, mutation);
+      if (!("items" in result)) {
+        throw new Error("일정 순서 변경 결과를 확인하지 못했습니다.");
       }
       if (result.syncVersion < 0) {
         await dataSource.applyLocalMutation?.(tripId, mutation, clock().toISOString());
@@ -139,7 +180,7 @@ export function createTripMutationController({
         payload: { settlementGroupId },
       };
       const result = await transport.mutate(tripId, mutation);
-      if ("transfers" in result) {
+      if ("transfers" in result || "items" in result) {
         throw new Error("송금 완료에서 정산 묶음 결과를 받았습니다.");
       }
       dataSource.invalidateTrip(tripId, result.syncVersion);

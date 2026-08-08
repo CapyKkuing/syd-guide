@@ -125,7 +125,7 @@
 | 실행 단위 | 상태 | 완료된 범위 | 남은 범위 |
 |---|---|---|---|
 | Phase 0 관리자 인증 | 운영 검증 일부 대기 | 코드·테스트·push·두 Worker 배포, 참여자·초대·기기 확인 | 최신 관리자 PWA 여행 편집창 최종 확인 |
-| Phase 1A 모바일 일정 | 부분 완료 | 날짜 이동, 모바일 드래그, 화살표, 충돌 보강, 이동 메모 입력·수정, 로컬 모바일 화면 검증 | 실제 설치폰 재검증 |
+| Phase 1A 모바일 일정 | 부분 완료 | 날짜 이동, 모바일 드래그, 화살표, 충돌 보강, 이동 메모 입력·수정, 로컬 모바일 화면 검증<br>2026-08-08 일정 순서 변경을 하루 단위 원자 mutation으로 묶고 snapshot·syncVersion을 연결해 2차 충돌 보정과 전체 자동 회귀를 완료했다. | 최신 보정 배포 뒤 Android 실기기 재검증, 이어서 iPhone 전체 오프라인 검증 |
 | Phase 1B 장소 허브 | 진행 중 | ~~A안 통합 피드, 저장·추천 중복 통합, 필터·정렬, 지도 전환, 상세·투표·편집 UI 통일, 390·1440px 로컬 QA, 800회 하드 리밋 자동 증명, GAP-04 A안 확정~~<br>~~A안 통합 피드, 저장·추천 중복 통합, 필터·정렬, 지도 전환, 목록·상세·투표·편집 UI 보정, 390·1440px 로컬 QA, 800회 하드 리밋 자동 증명, GAP-04 A안 확정. 지도 보기 헤더·검색·필터·장소 목록 UI 통일은 미완료~~<br>~~2026-08-03 지도 보기 헤더·검색·필터·결과·장소 목록 UI 통일과 390·1440px 로컬 QA를 완료했다.~~<br>위 로컬 범위와 운영 정적 bundle의 통합 피드 UI 표식, 운영 D1의 장소·SKU 사용량을 읽기 전용으로 확인했다.<br>2026-08-08 `GAP-29` 장소 식별 충돌을 보정하고 같은 이름·다른 Google Place가 합쳐지지 않는 회귀 테스트와 전체 자동 게이트를 통과했다. | 운영 인증 세션에서 실제 추천·사진·중복 병합·필터·정렬·길찾기, 800회 차단, 실제 설치폰의 장소·지도 터치 QA |
 | Phase 1C 필수 도구 | 진행 중 | ~~기존 교통·비상·주의사항·예약·비용 화면, 다인 정산·예약 체크인 로컬 구현·자동 검증~~<br>~~위 범위와 `0017`·`0018` 운영 D1 적용~~<br>~~위 범위, `0017`·`0018` 운영 D1 적용, `GAP-25` 정산 묶음 원자 생성·완료와 멱등 재시도 로컬 구현·자동·390px 화면 검증~~<br>2026-08-08 `GAP-30` 비용별 정산 묶음 원자 소유권, 동시·재시도 멱등성, 동기화 뒤 송금 완료 활성화를 보정했다. Google Vision OCR 공통 초안·Worker provider 경계·월 800페이지 차단·수동 입력 fallback도 로컬 구현·mock 자동 검증했다. | ~~운영 D1 적용·화면 QA, OCR 공급업체 승인·연동, 전체 상태별 QA~~<br>정산·예약 운영 실데이터·화면 QA, `0021`·`0022` 운영 migration, Vision API·Secret·실제 OCR 호출, 설치폰 상태별 QA |
 | Phase 1D 여행 전·중·후·관리 | 진행 중 | ~~수동 항공편·비용 알림·Drive·AI·릴·관리 기반, 항공편·숙소·여권 직접 입력과 기본 체크리스트, 대표사진 자르기·밝기 로컬 구현·자동·390px 화면 검증, JPEG EXIF 촬영시각 추출·릴 정렬 자동 검증~~<br>~~위 범위와 최초 설정 대표자 선택 로컬 구현·자동·390px 화면 검증~~<br>2026-08-08 현지 날짜 변경 비용 알림, 수동 비용 fallback, Drive PDF 미리보기·오류·object URL 정리, 대표사진·EXIF·릴·관리 회귀를 메인 Sol 자동 게이트로 재검증했다. | ~~대표사진 migration 운영 적용, 실제 설치폰 EXIF 확인, 최초 대표자 선택, 전체 회귀~~<br>대표사진 migration 운영 적용, Drive 원본 checksum, 실제 설치폰 EXIF·최초 대표자 선택·PWA 설치 확인 |
@@ -133,7 +133,11 @@
 
 ~~현재 승인 범위는 Phase 1 로컬 코드·테스트·화면 QA다. Phase 단위 commit은 Phase 1의 합의된 작업을 모두 완료한 뒤 진행한다. push, migration, Secret, 외부 API 설정, 배포는 각각 별도 승인을 받는다.~~
 
-2026-08-08 사용자 승인 범위인 Phase 1 commit·push·사용자·관리자 Worker 배포까지 완료했다. migration·Secret 제외는 유지했다. 다음 실행 단위는 기존 설치 Android PWA가 새 service worker를 받은 뒤 `GAP-31`을 실제 기기에서 재검증하고, 통과하면 iPhone 검증으로 이어가는 것이다.
+~~2026-08-08 사용자 승인 범위인 Phase 1 commit·push·사용자·관리자 Worker 배포까지 완료했다. migration·Secret 제외는 유지했다. 다음 실행 단위는 기존 설치 Android PWA가 새 service worker를 받은 뒤 `GAP-31`을 실제 기기에서 재검증하고, 통과하면 iPhone 검증으로 이어가는 것이다.~~
+
+~~2026-08-08 `GAP-31` 2차 Android 실패의 로컬 보정과 자동 회귀를 완료했다. 최신 보정의 commit·push·사용자·관리자 Worker 배포는 새 승인을 기다리며, migration·Secret 제외는 유지한다. 배포 뒤 Android에서 `기기 내용 유지` → 서버 동기화 → 재조회 → 앱 재실행 순서를 다시 확인하고 통과하면 iPhone 검증으로 이어간다.~~
+
+2026-08-08 사용자가 `GAP-31` 2차 보정의 commit·push·사용자·관리자 Worker 배포를 승인했다. migration·Secret은 제외한다. 깨끗한 commit archive로 두 Worker를 배포한 뒤 Android에서 `기기 내용 유지` → 서버 동기화 → 재조회 → 앱 재실행 순서를 다시 확인하고, 통과하면 iPhone 검증으로 이어간다.
 
 ### 요구사항 불일치·미구현 원장
 
@@ -171,7 +175,7 @@
 | GAP-28 | ~~반응형 E2E의 추억 릴 화면에서 Drive 미리보기 요청이 422 콘솔 오류를 냄~~<br>전체 경로 E2E에서 좌표 없는 장소 허브가 맛집·카페 추천 API를 자동 호출해 422 콘솔 오류 2건을 누적함 | ~~2026-08-03 Phase 1A~1C 공통 반응형 E2E에서 desktop Chromium·Android Chromium 모두 발견. 1A~1C 화면 자체의 콘솔 오류는 0건.~~<br>2026-08-03 실패 지점이 마지막 추억 화면이라 Drive로 잘못 분류했다. Worker의 유일한 422 경로와 E2E fixture를 대조해 장소 추천 `PLACE_DISCOVERY_LOCATION_REQUIRED` 2회 호출이 실제 원인임을 확인했다. | ~~Drive 연결 전 빈 추억 릴 화면이 요청을 보내지 않거나, 예상되는 빈 응답을 콘솔 오류 없이 수동 미리보기 흐름으로 처리함~~<br>좌표가 입력된 장소가 없으면 Google 추천 호출을 보내지 않고 안내와 비활성 새로고침을 표시한다. 장소·도구 대상 테스트 29건, typecheck, lint, build, desktop Chromium·Android Chromium·iPhone WebKit 반응형 E2E 3건, 내부 브라우저 콘솔 오류 0건을 통과했다. | ~~Phase 1D 보정~~<br>Phase 1B 보정 완료 |
 | GAP-29 | 같은 이름의 서로 다른 Google 장소를 한 장소로 합치지 않음 | ~~2026-08-08 Sol High 감사에서 불일치 발견. `PlaceHubPanel`과 `PlaceCategoryPanel`이 공급업체 ID가 달라도 이름만 같으면 저장 장소와 추천 장소를 합쳐 서로 다른 지점을 덮어쓸 수 있음~~<br>2026-08-08 로컬 구현·자동 검증. 양쪽 provider ID가 있으면 ID가 같을 때만 합치고, ID가 없을 때만 이름과 주소 또는 좌표 일치까지 요구한다. 같은 이름·다른 ID 회귀 테스트 통과 | 양쪽에 공급업체 ID가 있으면 ID가 같은 경우만 합친다. 구형 저장 데이터처럼 ID가 없을 때만 이름과 주소 또는 좌표까지 일치하는 경우에 한해 합치며, 같은 이름·다른 지점 회귀 테스트를 통과한다. | Phase 1B 보정 |
 | GAP-30 | 같은 비용에 정산 송금 묶음이 동시에 중복 생성되지 않음 | ~~2026-08-08 Sol High 감사에서 불일치 발견. 서로 다른 idempotency key를 사용한 동시 요청이 batch 전 조회를 함께 통과하면 같은 비용에 두 pending 정산 묶음이 생성될 수 있음~~<br>2026-08-08 로컬 구현·자동 검증. `settlement_expense_claims` 원자 소유권을 같은 D1 batch에 넣고 동시 다른 key 중 하나만 성공, 같은 key 재시도와 완료 재시도는 멱등, 실패 후 재시도는 성공함을 검증 | D1 원자 경계에서 비용별 활성 정산 묶음 하나만 소유하도록 보장하고 서로 다른 key의 동시 요청 중 하나만 성공하는 회귀 테스트를 통과한다. | Phase 1C 보정 |
-| GAP-31 | Android 설치 PWA에서 일정 순서·이동 메모의 오프라인 snapshot과 재연결 동기화 유지 | ~~2026-08-08 실기기 불일치. 온라인 순서 변경은 앱 종료 뒤 비행기 모드 cold start에서 이전 순서로 돌아가고, 오프라인 이동 메모 수정은 기기에 저장되지 않으며 재연결 때 동기화 오류가 반복 표시됨~~<br>2026-08-08 로컬 구현·자동 검증 완료. outbox 승인 직후 일정 변경을 memory·IndexedDB snapshot에 반영하고 기기 entity version을 1 증가시켜 뒤이은 오프라인 변경이 같은 version 흐름을 잇게 했다. desktop과 390×844 Android Chromium에서 순서 변경 → 앱 cold start 오프라인 → 이동 메모 `QA-ANDROID-OFFLINE` 저장·재실행 → 재연결 동기화 E2E를 통과했다. 실제 설치 PWA 재검증은 배포 뒤 대기 | 온라인 저장 직후 기기 snapshot이 갱신되고, 오프라인 메모 수정이 화면·snapshot·outbox에 한 번 기록되며, 재연결 뒤 서버에 한 번 반영되고 충돌 알림이 반복되지 않는다. Android 실기기 재검증과 회귀 테스트를 통과한다. | Phase 1A 보정 |
+| GAP-31 | Android 설치 PWA에서 일정 순서·이동 메모의 오프라인 snapshot과 재연결 동기화 유지 | ~~2026-08-08 실기기 불일치. 온라인 순서 변경은 앱 종료 뒤 비행기 모드 cold start에서 이전 순서로 돌아가고, 오프라인 이동 메모 수정은 기기에 저장되지 않으며 재연결 때 동기화 오류가 반복 표시됨~~<br>~~2026-08-08 로컬 구현·자동 검증 완료. outbox 승인 직후 일정 변경을 memory·IndexedDB snapshot에 반영하고 기기 entity version을 1 증가시켜 뒤이은 오프라인 변경이 같은 version 흐름을 잇게 했다. desktop과 390×844 Android Chromium에서 순서 변경 → 앱 cold start 오프라인 → 이동 메모 `QA-ANDROID-OFFLINE` 저장·재실행 → 재연결 동기화 E2E를 통과했다. 실제 설치 PWA 재검증은 배포 뒤 대기~~<br>~~2026-08-08 배포 후 Android 2차 실기기 검증 실패로 재오픈. 이동 메모는 유지되지만 충돌에서 `기기 내용 유지`를 선택한 뒤 일정 4번이 1번으로 잠시 이동했다가 서버 순서로 되돌아간다. 기존 자동 검증은 충돌 선택 뒤 전체 일정 묶음이 서버 snapshot 재적용 후에도 유지되는 경로를 증명하지 못했다.~~<br>2026-08-08 2차 로컬 보정·자동 검증 완료. 일정 4→1 변경을 네 개의 개별 update가 아닌 하루 단위 원자 mutation 한 건으로 저장하고, 충돌 시 모든 일정 version을 함께 재기준화하며 성공 응답의 syncVersion으로 snapshot 재조회를 보호한다. `기기 내용 유지` 뒤 서버 재조회에서도 4→1 순서와 메모 유지·충돌 1회 종료를 확인했고, Android cold start·오프라인 메모·재연결과 전체 E2E 42건을 통과했다. 실제 설치 PWA 재검증은 최신 보정 배포 뒤 대기한다. | 온라인 저장 직후 기기 snapshot이 갱신되고, 오프라인 메모 수정이 화면·snapshot·outbox에 한 번 기록되며, `기기 내용 유지` 선택 뒤 일정 묶음 순서가 서버 동기화·재조회·앱 재실행 후에도 유지되고 충돌 알림이 반복되지 않는다. Android 실기기 재검증과 회귀 테스트를 통과한다. | ~~Phase 1A 보정 재개~~<br>Phase 1A 배포·Android 운영 재검증 대기 |
 
 ### 엄격한 V1 진행률 기준
 
@@ -271,7 +275,9 @@
 
 > ~~상태: **부분 완료·실기기 보완 필요**. 날짜 이동, 모바일 드래그, 화살표, 충돌 보강과 이동 메모 입력·수정의 로컬 구현·자동·화면 검증은 끝났다. 2026-08-03 사용자가 휴대폰에서 일정 순서 변경과 이동 메모 수동 검증 완료를 보고했다. Android·iPhone 양쪽과 오프라인 재연결 동기화 증거 전에는 1A를 완료 처리하지 않는다.~~
 >
-> 상태: **부분 완료·운영 재검증 필요**. GAP-31의 기기 snapshot·version 연결을 로컬 보정했고 desktop과 Android Chromium의 cold start·오프라인 수정·재연결 E2E를 통과했다. 실제 설치 Android 재검증과 iPhone 전체 오프라인 증거 전에는 1A를 완료 처리하지 않는다.
+> ~~상태: **부분 완료·운영 재검증 필요**. GAP-31의 기기 snapshot·version 연결을 로컬 보정했고 desktop과 Android Chromium의 cold start·오프라인 수정·재연결 E2E를 통과했다. 실제 설치 Android 재검증과 iPhone 전체 오프라인 증거 전에는 1A를 완료 처리하지 않는다.~~
+>
+> 상태: **부분 완료·2차 보정 배포 대기**. GAP-31의 일정 순서 변경을 하루 단위 원자 mutation으로 바꾸고 충돌 재기준화와 syncVersion 기반 snapshot 재조회까지 보정했다. desktop 충돌 선택, Android Chromium cold start·오프라인 메모·재연결, 전체 E2E 42건을 통과했다. 최신 보정의 commit·push·두 Worker 배포와 실제 설치 Android·iPhone 증거 전에는 1A를 완료 처리하지 않는다.
 
 - 320px·390px·430px에서 화면 전체 가로 스크롤이 생기지 않는다.
 - 날짜 탭은 좌우 스와이프로 이동할 수 있다.
@@ -292,7 +298,8 @@
 - 사용자 운영 일정 화면을 438px에서 읽기 전용으로 확인했다. 페이지 가로 넘침은 0이고 MapLibre 지도, DAY 01의 일정 5개, 고정 하단 탭이 정상 표시됐다.
 - 전체 일정의 순서 편집 화면에서 드래그 가능한 항목 5개와 각 항목의 위·아래 이동 버튼을 확인했다. 브라우저 경고·오류는 0건이었다.
 - ~~운영 데이터의 순서·메모는 변경하지 않았다. Android·iPhone 설치 PWA의 완전 종료·비행기 모드 재실행·오프라인 수정·재연결 동기화는 사용자 실기기 증거 대기 상태다.~~
-- 2026-08-08 Android 설치 PWA에서 순서 복원·오프라인 메모 유실·반복 동기화 오류를 확인했다. GAP-31 로컬 보정과 desktop·Android Chromium 자동 검증은 끝났으며, 운영 배포 뒤 동일 Android 실기기 재검증과 iPhone 검증이 남았다.
+- ~~2026-08-08 Android 설치 PWA에서 순서 복원·오프라인 메모 유실·반복 동기화 오류를 확인했다. GAP-31 로컬 보정과 desktop·Android Chromium 자동 검증은 끝났으며, 운영 배포 뒤 동일 Android 실기기 재검증과 iPhone 검증이 남았다.~~
+- 2026-08-08 2차 Android 검증에서 메모는 유지됐지만 `기기 내용 유지` 뒤 일정 순서가 서버 상태로 되돌아가는 문제를 확인했다. 하루 일정 전체를 한 번에 저장·충돌 해결하는 원자 mutation으로 재보정했고 desktop 충돌 E2E, Android cold-start E2E, 전체 E2E 42건을 통과했다. 최신 배포 뒤 같은 Android 재검증과 iPhone 검증이 남았다.
 
 주요 확인 파일:
 
@@ -688,7 +695,9 @@ npm run build
 
 ~~2026-08-08 현재 **Phase 1B·1C·1D 로컬 구현·Sol High 통합 회귀 게이트**를 통과했다. `typecheck`, `lint`, frontend 476건, Worker 90건, production build, E2E 39건을 통과했고 E2E는 1440·320·390·393·430px를 포함한다. 다음 실행 단위는 Phase 1A 실제 설치폰 일정·오프라인 재연결 검증과 Phase 1 운영 migration·Secret·실데이터 QA이며, commit·push·migration·Secret·외부 API·배포는 계속 별도 승인이다.~~
 
-2026-08-08 Phase 1 제품 코드와 `GAP-31` 보정을 `923f8e2`로 commit·push하고 사용자·관리자 Worker를 배포했다. migration·Secret은 제외했다. 다음 실행 단위는 Android PWA 업데이트 뒤 일정 순서·오프라인 이동 메모·재연결 동기화를 실제 기기에서 재검증하고, 통과하면 iPhone에서 같은 시나리오를 검증하는 것이다.
+~~2026-08-08 Phase 1 제품 코드와 `GAP-31` 보정을 `923f8e2`로 commit·push하고 사용자·관리자 Worker를 배포했다. migration·Secret은 제외했다. 다음 실행 단위는 Android PWA 업데이트 뒤 일정 순서·오프라인 이동 메모·재연결 동기화를 실제 기기에서 재검증하고, 통과하면 iPhone에서 같은 시나리오를 검증하는 것이다.~~
+
+2026-08-08 `GAP-31` 2차 로컬 보정과 Sol High 전체 회귀를 완료했다. 다음 승인 단위는 이 보정의 commit·push·사용자·관리자 Worker 배포이며 migration·Secret은 제외한다. 배포가 끝나면 Android에서 충돌의 `기기 내용 유지` 선택 뒤 4→1 순서·메모가 서버 재조회·앱 재실행 후에도 유지되고 충돌 알림이 반복되지 않는지 확인한 뒤 iPhone으로 이어간다.
 
 ~~실제 설치폰 일정 QA를 Phase 1B 운영 장소 QA보다 먼저 수행한다.~~
 
@@ -700,9 +709,13 @@ npm run build
 
 **2026-08-08 Phase 1A Android 실기기 결과:** 온라인 일정 순서 변경과 이동 메모 저장은 동작했지만, 앱 종료 뒤 비행기 모드 cold start에서는 일정 순서가 이전 상태로 복원됐다. 오프라인 이동 메모 수정은 로컬에 유지되지 않았고 재연결 때 동기화 오류가 여러 번 표시됐다. `GAP-31`로 등록하고 다음 실행 단위를 snapshot·outbox·version 충돌의 근본 원인 보정으로 변경한다. iPhone 검증은 Android 보정 뒤로 유지한다.
 
-**2026-08-08 GAP-31 로컬 보정 결과:** outbox에 적재한 일정 update를 기기 snapshot에 즉시 투영하고 version을 연결해 앱 종료 뒤에도 순서·이동 메모가 유지되게 했다. frontend 67파일 478건, Worker 10파일 90건, typecheck·lint·production build, 기존 desktop offline-conflict E2E 4건, 신규 desktop·390×844 Android Chromium cold-start E2E 2건을 통과했다. 실제 설치 Android 재검증은 commit·push·사용자·관리자 Worker 배포 승인 뒤 진행하며, migration·Secret은 이 보정에 필요하지 않다.
+~~**2026-08-08 GAP-31 로컬 보정 결과:** outbox에 적재한 일정 update를 기기 snapshot에 즉시 투영하고 version을 연결해 앱 종료 뒤에도 순서·이동 메모가 유지되게 했다. frontend 67파일 478건, Worker 10파일 90건, typecheck·lint·production build, 기존 desktop offline-conflict E2E 4건, 신규 desktop·390×844 Android Chromium cold-start E2E 2건을 통과했다. 실제 설치 Android 재검증은 commit·push·사용자·관리자 Worker 배포 승인 뒤 진행하며, migration·Secret은 이 보정에 필요하지 않다.~~
 
 **2026-08-08 Phase 1 commit·배포 결과:** `923f8e2`를 `main`에 push하고 깨끗한 commit archive에서 사용자 version `d8142a51-152a-4a4d-90e1-c4d80a261636`, 관리자 version `540a31cc-dac4-4807-a174-258549f09b06`를 배포했다. 처음 dirty worktree에서 만든 배포에는 로컬 목업 파일이 정적 자산으로 포함된 것을 발견해 즉시 폐기하고 깨끗한 archive로 다시 배포했다. 최종 mockup 경로는 제품 SPA 또는 관리자 Access 로그인으로 응답하며 목업을 제공하지 않는다. HTTP no-cache 응답으로 새 사용자 bundle을 확인했지만 현재 브라우저 세션은 이전 service worker cache를 유지하므로 실제 새 화면의 운영 QA는 설치 PWA 업데이트 뒤 대기한다. 운영 D1 migration과 Secret은 변경하지 않았다.
+
+~~**2026-08-08 GAP-31 2차 Android 실기기 실패와 재작업 범위:** 배포본에서 이동 메모는 앱 재실행 뒤 유지됐다. 그러나 충돌 팝업의 `기기 내용 유지`를 선택하면 일정 4번이 1번으로 잠시 이동한 뒤 전체 일정 화면에서 원래 서버 순서로 되돌아갔다. 따라서 기존 snapshot 즉시 투영 보정은 메모에는 유효했지만 충돌 선택 뒤 여러 일정 update로 구성된 순서 변경 전체를 보존하지 못한 부분 구현으로 판정한다. 이번 로컬 범위는 충돌 선택 처리, 일정 순서 묶음 outbox, snapshot 병합과 서버 재조회 순서를 추적하고 실패 회귀 테스트를 먼저 추가한 뒤 최소 수정하는 것이다. 완료 기준은 `기기 내용 유지` 선택 → 서버 동기화 → snapshot 재조회 → 앱 재실행 뒤에도 4→1 순서와 메모가 유지되고 충돌 팝업이 반복되지 않는 자동 증거다. commit·push·Worker 배포는 수정 검증 뒤 별도 승인받으며 migration·Secret은 범위에서 제외한다.~~
+
+**2026-08-08 GAP-31 2차 로컬 보정 결과:** 일정 4→1 변경을 네 개의 독립 schedule update에서 하루 단위 원자 reorder 한 건으로 변경했다. Worker는 모든 대상 version이 일치할 때만 위치를 한 batch로 저장하고, 충돌의 `기기 내용 유지`는 전체 일정 version을 함께 재기준화한다. 성공 응답의 syncVersion도 snapshot 무효화에 전달해 오래된 서버 재조회가 최신 기기 순서를 덮지 못하게 했다. 메모·제목 같은 비순서 필드는 reorder가 쓰지 않는다. `typecheck`, `lint`, frontend 67파일 482건, Worker 10파일 91건, production build, desktop 충돌 E2E 4건, Android cold-start E2E 1건, 전체 Playwright 42건을 통과했다. ~~최신 보정의 commit·push·사용자·관리자 Worker 배포는 별도 승인 대기이며 migration·Secret은 필요하지 않다.~~<br>사용자가 commit·push·사용자·관리자 Worker 배포를 승인했다. migration·Secret 제외를 유지하고 깨끗한 commit archive 배포를 진행한다.
 
 ### 2026-08-03 · GAP-03 지도 보기 UI 통일 실행
 

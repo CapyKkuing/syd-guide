@@ -49,7 +49,7 @@ test("schedule order and travel note survive an offline cold start and reconnect
     await page.getByRole("button", { name: "오프라인 일정 4 위로 이동" }).click();
   }
   await page.getByRole("button", { name: "순서 편집 완료" }).click();
-  await expect.poll(() => outboxCount(page, workspace.trip.id)).toBe(4);
+  await expect.poll(() => outboxCount(page, workspace.trip.id)).toBe(1);
 
   await context.setOffline(true);
   await page.reload();
@@ -66,7 +66,7 @@ test("schedule order and travel note survive an offline cold start and reconnect
   await page.getByRole("button", { name: "일정 수정" }).click();
   await page.getByLabel("이동 메모").fill("QA-ANDROID-OFFLINE");
   await page.getByRole("button", { name: "저장" }).click();
-  await expect.poll(() => outboxCount(page, workspace.trip.id)).toBe(5);
+  await expect.poll(() => outboxCount(page, workspace.trip.id)).toBe(2);
   await page.reload();
   await page.evaluate(() => window.dispatchEvent(new Event("offline")));
   await page.getByRole("radio", { name: "전체 일정" }).click();

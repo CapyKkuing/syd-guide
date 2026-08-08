@@ -302,12 +302,14 @@ describe("TripRoutePage", () => {
           .mockResolvedValueOnce({
             sent: 1,
             conflict: false,
-            sessionInvalid: false
+            sessionInvalid: false,
+            syncVersion: 8
           })
           .mockResolvedValue({
             sent: 0,
             conflict: false,
-            sessionInvalid: false
+            sessionInvalid: false,
+            syncVersion: null
           }),
         keepMine: vi.fn(),
         useLatest: vi.fn()

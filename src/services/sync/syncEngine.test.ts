@@ -2,6 +2,7 @@ import { deleteDB } from "idb";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type {
   MutationRequest,
+  ScheduleReorderRequest,
   SettlementGroupCreateRequest,
   SyncMutationRequest,
 } from "../../shared/mutations";
@@ -78,6 +79,22 @@ function settlementGroup(): SettlementGroupCreateRequest {
   };
 }
 
+function scheduleReorder(): ScheduleReorderRequest {
+  return {
+    idempotencyKey: "schedule-reorder-key",
+    entity: "schedule_item",
+    action: "reorder",
+    entityId: "day-one",
+    baseVersion: null,
+    payload: {
+      items: [
+        { entityId: "item-four", baseVersion: 1, position: 1 },
+        { entityId: "item-one", baseVersion: 2, position: 2 },
+      ],
+    },
+  };
+}
+
 describe("SyncEngine", () => {
   it("replays mutations in creation order with the same idempotency keys", async () => {
     const { outbox, snapshots } = await setup();
@@ -93,7 +110,12 @@ describe("SyncEngine", () => {
     expect(transport.mutate.mock.calls.map((call) => call[1].idempotencyKey))
       .toEqual(["same-key-one", "same-key-two"]);
     expect(await outbox.listForTrip("trip-one")).toEqual([]);
-    expect(result).toEqual({ sent: 2, conflict: false, sessionInvalid: false });
+    expect(result).toEqual({
+      sent: 2,
+      conflict: false,
+      sessionInvalid: false,
+      syncVersion: 8,
+    });
   });
 
   it("retries a network failure on the next trigger without changing its key", async () => {
@@ -289,6 +311,47 @@ describe("SyncEngine", () => {
         idempotencyKey: "replacement-key",
         baseVersion: 4
       }
+    });
+  });
+
+  it("rebases every item in one conflicted schedule reorder and preserves queue order", async () => {
+    const { outbox, snapshots } = await setup();
+    const conflicting = scheduleReorder();
+    await outbox.enqueue("trip-one", conflicting, "2026-07-28T12:00:00.000Z");
+    await outbox.enqueue(
+      "trip-one",
+      mutation("later-key", "note-one"),
+      "2026-07-28T12:00:01.000Z"
+    );
+    await outbox.markConflict("schedule-reorder-key", "VERSION_CONFLICT", {
+      tripDayId: "day-one",
+      items: [
+        { entityId: "item-four", version: 5, position: 4 },
+        { entityId: "item-one", version: 6, position: 1 },
+      ],
+    });
+    const engine = new SyncEngine({
+      outbox,
+      snapshots,
+      transport: { mutate: vi.fn() }
+    });
+
+    await engine.keepMine("schedule-reorder-key", "replacement-key");
+
+    const records = await outbox.listForTrip("trip-one");
+    expect(records.map((record) => record.idempotencyKey)).toEqual([
+      "replacement-key",
+      "later-key",
+    ]);
+    expect(records[0]?.mutation).toEqual({
+      ...conflicting,
+      idempotencyKey: "replacement-key",
+      payload: {
+        items: [
+          { entityId: "item-four", baseVersion: 5, position: 1 },
+          { entityId: "item-one", baseVersion: 6, position: 2 },
+        ],
+      },
     });
   });
 });

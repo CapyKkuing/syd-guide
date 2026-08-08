@@ -249,10 +249,16 @@ describe("SchedulePage", () => {
       version: 2,
       syncVersion: 9,
     });
+    const reorderScheduleItems = vi.fn().mockResolvedValue({
+      entity: "schedule_item",
+      entityId: editableDay.id,
+      syncVersion: 9,
+      items: editableDay.items.map((item) => ({ entityId: item.id, version: item.version + 1 })),
+    });
     render(
       <SchedulePage
         days={[editableDay]}
-        mutationController={{ submit }}
+        mutationController={{ submit, reorderScheduleItems }}
       />
     );
 
@@ -265,21 +271,12 @@ describe("SchedulePage", () => {
     expect(submit).not.toHaveBeenCalled();
     await userEvent.click(screen.getByRole("button", { name: "순서 편집 완료" }));
 
-    expect(submit).toHaveBeenCalledTimes(2);
-    expect(submit).toHaveBeenCalledWith(
-      "schedule_item",
-      "update",
-      editableDay.items[0]!.id,
-      editableDay.items[0]!.version,
-      expect.objectContaining({ position: 2 })
-    );
-    expect(submit).toHaveBeenCalledWith(
-      "schedule_item",
-      "update",
-      editableDay.items[1]!.id,
-      editableDay.items[1]!.version,
-      expect.objectContaining({ position: 1 })
-    );
+    expect(submit).not.toHaveBeenCalled();
+    expect(reorderScheduleItems).toHaveBeenCalledTimes(1);
+    expect(reorderScheduleItems).toHaveBeenCalledWith(editableDay.id, [
+      { entityId: editableDay.items[1]!.id, baseVersion: editableDay.items[1]!.version, position: 1 },
+      { entityId: editableDay.items[0]!.id, baseVersion: editableDay.items[0]!.version, position: 2 },
+    ]);
   });
 
   it("moves an item directly from fourth to first with a mobile pointer drag", async () => {
@@ -304,7 +301,18 @@ describe("SchedulePage", () => {
       version: 2,
       syncVersion: -1,
     });
-    render(<SchedulePage days={[editableDay]} mutationController={{ submit }} />);
+    const reorderScheduleItems = vi.fn().mockResolvedValue({
+      entity: "schedule_item",
+      entityId: editableDay.id,
+      syncVersion: -1,
+      items: editableDay.items.map((item) => ({ entityId: item.id, version: item.version + 1 })),
+    });
+    render(
+      <SchedulePage
+        days={[editableDay]}
+        mutationController={{ submit, reorderScheduleItems }}
+      />
+    );
 
     await showFullSchedule();
     await userEvent.click(screen.getByRole("button", { name: "순서 편집" }));
@@ -325,7 +333,14 @@ describe("SchedulePage", () => {
     expect(within(list).getAllByRole("listitem")[0]).toHaveTextContent(fourth.title);
     expect(submit).not.toHaveBeenCalled();
     await userEvent.click(screen.getByRole("button", { name: "순서 편집 완료" }));
-    expect(submit).toHaveBeenCalledTimes(4);
+    expect(submit).not.toHaveBeenCalled();
+    expect(reorderScheduleItems).toHaveBeenCalledTimes(1);
+    expect(reorderScheduleItems).toHaveBeenCalledWith(editableDay.id, [
+      { entityId: "drag-item-4", baseVersion: 4, position: 1 },
+      { entityId: "drag-item-1", baseVersion: 1, position: 2 },
+      { entityId: "drag-item-2", baseVersion: 2, position: 3 },
+      { entityId: "drag-item-3", baseVersion: 3, position: 4 },
+    ]);
   });
 
   it("allows a local-only reorder preview with mobile move controls", async () => {
