@@ -93,6 +93,8 @@
 
 - 2026-08-08 GAP-32 온라인 전용 커밋 `65d7238`을 `main`에 push하고 깨끗한 commit archive에서 사용자 Worker version `42986ea7-0d26-46c8-a520-0a94bdfe4988`, 관리자 Worker version `a012c07f-c9b5-42db-b71a-4ecc5a4a6b50`을 배포했다. 운영 D1 migration과 Secret은 변경하지 않았다. 사용자 운영 HTML의 `/assets/index-BIaUeo1L.js`와 `sw.js`가 archive와 일치하고 root·health·manifest·bundle·service worker는 HTTP 200, 관리자 root·health는 Cloudflare Access HTTP 302를 반환했다. 실제 설치 Android·iPhone 온라인 동기화 사용자 검증은 남아 있다.
 
+- 2026-08-09 GAP-33~36 Phase 1 통합 제품 커밋 `09bd90c`를 `main`에 push하고 깨끗한 detached worktree에서 두 Worker를 배포했다. 사용자 deployment `6da85a55-8349-4a77-8990-1ef4706c0b3b`·version `0bea4daa-7145-4545-90ce-12e9aa14aa87`, 관리자 deployment `f6b0b7fc-ac67-4155-9b6e-6a0c92280dfa`·version `3abceac2-12c8-4e24-85c8-3d36d88f5d51`이 각각 100% 트래픽을 처리한다. 사용자 root·health·manifest·service worker·bundle은 HTTP 200이고 `/assets/index-BjK0HTMt.js` SHA-256 `9AC521CE72D7750622ACF64517F322FE6F4B52D92E27461B607CF63C7A655A37`, `sw.js` SHA-256 `87B2FA71D38B2ABA8ADF3C38CCC4EC91802156446D7ACF72BC9F0C85686F5C50`가 clean build와 일치한다. 관리자 root·health는 Cloudflare Access HTTP 302와 승인된 Access host를 반환했다. 운영 D1 migration, Secret, 환경·인증 설정, Google Vision·Places 실제 호출은 실행하지 않았다.
+
 - ~~`0017_settlement_transfers.sql`, `0018_booking_checkin_status.sql`, `0019_default_checklist.sql`, `0020_trip_media_preview.sql`은 현재 worktree에만 있고 운영 D1에 적용되지 않았다. 따라서 정산·예약·체크리스트·대표사진 상태는 모두 `로컬 구현`으로만 기록한다.~~
 
   2026-08-03 운영 D1 읽기 전용 확인 결과 `0017_settlement_transfers.sql`과 `0018_booking_checkin_status.sql`은 적용됐다. `0019_default_checklist.sql`과 `0020_trip_media_preview.sql`만 운영 미적용이다. 정산·예약은 운영 schema 적용 상태지만 실제 데이터·화면 QA 전에는 완료 처리하지 않는다.
@@ -185,7 +187,9 @@
 
 2026-08-08 커밋 `65d7238` push와 사용자 Worker `42986ea7-0d26-46c8-a520-0a94bdfe4988`, 관리자 Worker `a012c07f-c9b5-42db-b71a-4ecc5a4a6b50` 배포를 완료했다. migration·Secret은 변경하지 않았고 운영 bundle·service worker·health·Access 보호 응답을 archive와 대조했다. 다음 실행 단위는 Android·iPhone 설치 PWA의 온라인 저장·5초 다중 기기 반영·오프라인 차단·재연결 즉시 갱신 사용자 검증이다.
 
-2026-08-09 현재 실행 단위는 `GAP-33~36` Phase 1B·1C·1D 로컬 통합 회귀다. 로컬 제품·테스트·계획서 병합과 전체 자동·브라우저 검증까지만 승인됐고, 운영 증거는 기존 기록과 분리한다.
+~~2026-08-09 현재 실행 단위는 `GAP-33~36` Phase 1B·1C·1D 로컬 통합 회귀다. 로컬 제품·테스트·계획서 병합과 전체 자동·브라우저 검증까지만 승인됐고, 운영 증거는 기존 기록과 분리한다.~~
+
+2026-08-09 `GAP-33~36` 제품 커밋 `09bd90c` push와 사용자·관리자 Worker 배포, 운영 정적 자산·health·Access 보호 검증을 완료했다. migration·Secret·환경·인증 설정과 실제 provider 호출은 제외했다. 남은 실행 단위는 `GAP-34` 운영 사용량 단조 증가 표시, Phase 1B 운영 실데이터·800회 경계·설치폰 장소/지도, Phase 1C 운영 정산·예약 데이터와 `0021`·`0022` migration·Vision OCR·설치폰 상태, Phase 1D 대표사진 migration·Drive checksum·실제 JPEG EXIF·대표자/PWA, Phase 1A Android·iPhone 설치 PWA 사용자 QA다.
 
 ### 요구사항 불일치·미구현 원장
 
@@ -889,6 +893,8 @@ npm run build
 ~~2026-08-08 기존 Phase 1 배포 이력은 유지한다. 최신 `GAP-32` 온라인 전용 전환은 로컬 구현·검증만 승인됐고 아직 commit·push·배포되지 않았다. 실제 Android·iPhone 온라인 전용 PWA와 운영 실데이터 QA가 끝나기 전에는 Phase 1 전체를 `완료`로 확대하지 않는다.~~
 
 2026-08-08 `GAP-32` 커밋 `65d7238` push와 두 Worker 배포·운영 정적/API 검증을 완료했다. 실제 Android·iPhone 온라인 전용 PWA 사용자 QA와 나머지 운영 실데이터 QA가 끝나기 전에는 Phase 1 전체를 `완료`로 확대하지 않는다.
+
+2026-08-09 `GAP-33~36` 커밋 `09bd90c` push와 두 Worker 배포·운영 정적 자산·health·Access 검증을 완료했다. 운영 D1 migration·Secret·환경·인증 설정·실제 provider 호출은 실행하지 않았다. `GAP-34` 운영 표시, 운영 실데이터·한도 경계, Android·iPhone 설치 PWA, 실제 JPEG·Drive 원본·대표자·OCR 검증이 끝나기 전에는 Phase 1 전체를 `완료`로 확대하지 않는다.
 
 ## 13. 컨텍스트 압축 후 복구 체크리스트
 
