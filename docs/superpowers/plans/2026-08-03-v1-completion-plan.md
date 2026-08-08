@@ -83,6 +83,8 @@
 
 - 2026-08-08 GAP-31 2차 보정 커밋 `3976489`를 `main`에 push하고 깨끗한 commit archive에서 사용자 Worker version `81c7c99b-b193-439d-8913-9a3a39b563db`, 관리자 Worker version `8203f626-e0b2-4df1-bdcd-e8019484ff1a`를 배포했다. 운영 D1 migration과 Secret은 변경하지 않았다. 사용자 운영 HTML은 archive와 같은 `/assets/index-DtSkE_Bo.js`를 반환했고 root·health·manifest·service worker·bundle은 HTTP 200, 관리자 root·health는 Cloudflare Access HTTP 302를 반환했다. 실제 설치 Android의 일정 4→1·메모·충돌 재검증은 남아 있다.
 
+- 2026-08-08 GAP-32 온라인 전용 커밋 `65d7238`을 `main`에 push하고 깨끗한 commit archive에서 사용자 Worker version `42986ea7-0d26-46c8-a520-0a94bdfe4988`, 관리자 Worker version `a012c07f-c9b5-42db-b71a-4ecc5a4a6b50`을 배포했다. 운영 D1 migration과 Secret은 변경하지 않았다. 사용자 운영 HTML의 `/assets/index-BIaUeo1L.js`와 `sw.js`가 archive와 일치하고 root·health·manifest·bundle·service worker는 HTTP 200, 관리자 root·health는 Cloudflare Access HTTP 302를 반환했다. 실제 설치 Android·iPhone 온라인 동기화 사용자 검증은 남아 있다.
+
 - ~~`0017_settlement_transfers.sql`, `0018_booking_checkin_status.sql`, `0019_default_checklist.sql`, `0020_trip_media_preview.sql`은 현재 worktree에만 있고 운영 D1에 적용되지 않았다. 따라서 정산·예약·체크리스트·대표사진 상태는 모두 `로컬 구현`으로만 기록한다.~~
 
   2026-08-03 운영 D1 읽기 전용 확인 결과 `0017_settlement_transfers.sql`과 `0018_booking_checkin_status.sql`은 적용됐다. `0019_default_checklist.sql`과 `0020_trip_media_preview.sql`만 운영 미적용이다. 정산·예약은 운영 schema 적용 상태지만 실제 데이터·화면 QA 전에는 완료 처리하지 않는다.
@@ -149,7 +151,7 @@
 | 실행 단위 | 상태 | 완료된 범위 | 남은 범위 |
 |---|---|---|---|
 | Phase 0 관리자 인증 | 운영 검증 일부 대기 | 코드·테스트·push·두 Worker 배포, 참여자·초대·기기 확인 | 최신 관리자 PWA 여행 편집창 최종 확인 |
-| Phase 1A 모바일 일정 | 방향 변경 로컬 검증 완료·운영 미배포 | 날짜 이동, 모바일 드래그, 화살표, 이동 메모 입력·수정, 서버 직접 저장, 5초 자동 재조회, 오프라인 편집 차단, network-only 서비스 워커를 구현했다. 기존 오프라인 충돌 보정 이력은 `GAP-31`에 보존한다. `typecheck`·lint·build, frontend 460건, Worker 91건, 실제 브라우저 E2E 41건이 통과했다. | commit·push·두 Worker 배포 뒤 Android·iPhone 설치 PWA에서 온라인 저장·다른 기기 5초 이내 반영·오프라인 차단·재연결 즉시 갱신 확인 |
+| Phase 1A 모바일 일정 | ~~방향 변경 로컬 검증 완료·운영 미배포~~<br>온라인 전용 운영 배포 완료·실기기 QA 대기 | 날짜 이동, 모바일 드래그, 화살표, 이동 메모 입력·수정, 서버 직접 저장, 5초 자동 재조회, 오프라인 편집 차단, network-only 서비스 워커를 구현했다. 기존 오프라인 충돌 보정 이력은 `GAP-31`에 보존한다. `typecheck`·lint·build, frontend 460건, Worker 91건, 실제 브라우저 E2E 41건이 통과했다. 커밋 `65d7238` push와 두 Worker 배포·운영 정적/API 대조를 완료했다. | Android·iPhone 설치 PWA에서 온라인 저장·다른 기기 5초 이내 반영·오프라인 차단·재연결 즉시 갱신 확인 |
 | Phase 1B 장소 허브 | 진행 중 | ~~A안 통합 피드, 저장·추천 중복 통합, 필터·정렬, 지도 전환, 상세·투표·편집 UI 통일, 390·1440px 로컬 QA, 800회 하드 리밋 자동 증명, GAP-04 A안 확정~~<br>~~A안 통합 피드, 저장·추천 중복 통합, 필터·정렬, 지도 전환, 목록·상세·투표·편집 UI 보정, 390·1440px 로컬 QA, 800회 하드 리밋 자동 증명, GAP-04 A안 확정. 지도 보기 헤더·검색·필터·장소 목록 UI 통일은 미완료~~<br>~~2026-08-03 지도 보기 헤더·검색·필터·결과·장소 목록 UI 통일과 390·1440px 로컬 QA를 완료했다.~~<br>위 로컬 범위와 운영 정적 bundle의 통합 피드 UI 표식, 운영 D1의 장소·SKU 사용량을 읽기 전용으로 확인했다.<br>2026-08-08 `GAP-29` 장소 식별 충돌을 보정하고 같은 이름·다른 Google Place가 합쳐지지 않는 회귀 테스트와 전체 자동 게이트를 통과했다. | 운영 인증 세션에서 실제 추천·사진·중복 병합·필터·정렬·길찾기, 800회 차단, 실제 설치폰의 장소·지도 터치 QA |
 | Phase 1C 필수 도구 | 진행 중 | ~~기존 교통·비상·주의사항·예약·비용 화면, 다인 정산·예약 체크인 로컬 구현·자동 검증~~<br>~~위 범위와 `0017`·`0018` 운영 D1 적용~~<br>~~위 범위, `0017`·`0018` 운영 D1 적용, `GAP-25` 정산 묶음 원자 생성·완료와 멱등 재시도 로컬 구현·자동·390px 화면 검증~~<br>2026-08-08 `GAP-30` 비용별 정산 묶음 원자 소유권, 동시·재시도 멱등성, 동기화 뒤 송금 완료 활성화를 보정했다. Google Vision OCR 공통 초안·Worker provider 경계·월 800페이지 차단·수동 입력 fallback도 로컬 구현·mock 자동 검증했다. | ~~운영 D1 적용·화면 QA, OCR 공급업체 승인·연동, 전체 상태별 QA~~<br>정산·예약 운영 실데이터·화면 QA, `0021`·`0022` 운영 migration, Vision API·Secret·실제 OCR 호출, 설치폰 상태별 QA |
 | Phase 1D 여행 전·중·후·관리 | 진행 중 | ~~수동 항공편·비용 알림·Drive·AI·릴·관리 기반, 항공편·숙소·여권 직접 입력과 기본 체크리스트, 대표사진 자르기·밝기 로컬 구현·자동·390px 화면 검증, JPEG EXIF 촬영시각 추출·릴 정렬 자동 검증~~<br>~~위 범위와 최초 설정 대표자 선택 로컬 구현·자동·390px 화면 검증~~<br>2026-08-08 현지 날짜 변경 비용 알림, 수동 비용 fallback, Drive PDF 미리보기·오류·object URL 정리, 대표사진·EXIF·릴·관리 회귀를 메인 Sol 자동 게이트로 재검증했다. | ~~대표사진 migration 운영 적용, 실제 설치폰 EXIF 확인, 최초 대표자 선택, 전체 회귀~~<br>대표사진 migration 운영 적용, Drive 원본 checksum, 실제 설치폰 EXIF·최초 대표자 선택·PWA 설치 확인 |
@@ -167,9 +169,11 @@
 
 ~~2026-08-08 최신 사용자 결정에 따라 다음 실행 단위는 `GAP-32`다. snapshot·outbox·충돌 선택을 제품 실행 경로에서 제거하고 서버 직접 저장·5초 자동 재조회·오프라인 차단·기존 서비스 워커 캐시 해제를 로컬 구현·검증한다. commit·push·배포는 결과 보고 뒤 별도 승인받는다.~~
 
-2026-08-08 `GAP-32` 로컬 구현·자동·실제 브라우저 검증을 완료했다. 다음 실행 단위는 별도 승인 후 commit·push·사용자·관리자 Worker 배포이며 운영 migration·Secret은 필요하지 않다. 배포 뒤 Android·iPhone 설치 PWA의 온라인 저장·다중 기기 자동 반영·오프라인 차단·재연결 갱신을 사용자가 확인한다.
+~~2026-08-08 `GAP-32` 로컬 구현·자동·실제 브라우저 검증을 완료했다. 다음 실행 단위는 별도 승인 후 commit·push·사용자·관리자 Worker 배포이며 운영 migration·Secret은 필요하지 않다. 배포 뒤 Android·iPhone 설치 PWA의 온라인 저장·다중 기기 자동 반영·오프라인 차단·재연결 갱신을 사용자가 확인한다.~~
 
-2026-08-08 사용자가 `GAP-32` commit·push·사용자·관리자 Worker 배포를 승인했다. 운영 migration·Secret은 제외하고 깨끗한 commit archive로 두 Worker를 배포한 뒤 운영 정적·API 응답을 검증한다.
+~~2026-08-08 사용자가 `GAP-32` commit·push·사용자·관리자 Worker 배포를 승인했다. 운영 migration·Secret은 제외하고 깨끗한 commit archive로 두 Worker를 배포한 뒤 운영 정적·API 응답을 검증한다.~~
+
+2026-08-08 커밋 `65d7238` push와 사용자 Worker `42986ea7-0d26-46c8-a520-0a94bdfe4988`, 관리자 Worker `a012c07f-c9b5-42db-b71a-4ecc5a4a6b50` 배포를 완료했다. migration·Secret은 변경하지 않았고 운영 bundle·service worker·health·Access 보호 응답을 archive와 대조했다. 다음 실행 단위는 Android·iPhone 설치 PWA의 온라인 저장·5초 다중 기기 반영·오프라인 차단·재연결 즉시 갱신 사용자 검증이다.
 
 ### 요구사항 불일치·미구현 원장
 
@@ -208,7 +212,7 @@
 | GAP-29 | 같은 이름의 서로 다른 Google 장소를 한 장소로 합치지 않음 | ~~2026-08-08 Sol High 감사에서 불일치 발견. `PlaceHubPanel`과 `PlaceCategoryPanel`이 공급업체 ID가 달라도 이름만 같으면 저장 장소와 추천 장소를 합쳐 서로 다른 지점을 덮어쓸 수 있음~~<br>2026-08-08 로컬 구현·자동 검증. 양쪽 provider ID가 있으면 ID가 같을 때만 합치고, ID가 없을 때만 이름과 주소 또는 좌표 일치까지 요구한다. 같은 이름·다른 ID 회귀 테스트 통과 | 양쪽에 공급업체 ID가 있으면 ID가 같은 경우만 합친다. 구형 저장 데이터처럼 ID가 없을 때만 이름과 주소 또는 좌표까지 일치하는 경우에 한해 합치며, 같은 이름·다른 지점 회귀 테스트를 통과한다. | Phase 1B 보정 |
 | GAP-30 | 같은 비용에 정산 송금 묶음이 동시에 중복 생성되지 않음 | ~~2026-08-08 Sol High 감사에서 불일치 발견. 서로 다른 idempotency key를 사용한 동시 요청이 batch 전 조회를 함께 통과하면 같은 비용에 두 pending 정산 묶음이 생성될 수 있음~~<br>2026-08-08 로컬 구현·자동 검증. `settlement_expense_claims` 원자 소유권을 같은 D1 batch에 넣고 동시 다른 key 중 하나만 성공, 같은 key 재시도와 완료 재시도는 멱등, 실패 후 재시도는 성공함을 검증 | D1 원자 경계에서 비용별 활성 정산 묶음 하나만 소유하도록 보장하고 서로 다른 key의 동시 요청 중 하나만 성공하는 회귀 테스트를 통과한다. | Phase 1C 보정 |
 | GAP-31 | Android 설치 PWA에서 일정 순서·이동 메모의 오프라인 snapshot과 재연결 동기화 유지 | ~~2026-08-08 실기기 불일치. 온라인 순서 변경은 앱 종료 뒤 비행기 모드 cold start에서 이전 순서로 돌아가고, 오프라인 이동 메모 수정은 기기에 저장되지 않으며 재연결 때 동기화 오류가 반복 표시됨~~<br>~~2026-08-08 로컬 구현·자동 검증 완료. outbox 승인 직후 일정 변경을 memory·IndexedDB snapshot에 반영하고 기기 entity version을 1 증가시켜 뒤이은 오프라인 변경이 같은 version 흐름을 잇게 했다. desktop과 390×844 Android Chromium에서 순서 변경 → 앱 cold start 오프라인 → 이동 메모 `QA-ANDROID-OFFLINE` 저장·재실행 → 재연결 동기화 E2E를 통과했다. 실제 설치 PWA 재검증은 배포 뒤 대기~~<br>~~2026-08-08 배포 후 Android 2차 실기기 검증 실패로 재오픈. 이동 메모는 유지되지만 충돌에서 `기기 내용 유지`를 선택한 뒤 일정 4번이 1번으로 잠시 이동했다가 서버 순서로 되돌아간다. 기존 자동 검증은 충돌 선택 뒤 전체 일정 묶음이 서버 snapshot 재적용 후에도 유지되는 경로를 증명하지 못했다.~~<br>~~2026-08-08 2차 로컬 보정·자동 검증 완료. 일정 4→1 변경을 네 개의 개별 update가 아닌 하루 단위 원자 mutation 한 건으로 저장하고, 충돌 시 모든 일정 version을 함께 재기준화하며 성공 응답의 syncVersion으로 snapshot 재조회를 보호한다. `기기 내용 유지` 뒤 서버 재조회에서도 4→1 순서와 메모 유지·충돌 1회 종료를 확인했고, Android cold start·오프라인 메모·재연결과 전체 E2E 42건을 통과했다. 커밋 `3976489` push와 두 Worker 배포·운영 정적 응답 검증을 완료했다.~~<br>2026-08-08 실제 Android에서 다시 순서가 서버 상태로 되돌아가 사용자가 오프라인 기능 폐기를 결정했다. **폐기 승인**으로 닫고 `GAP-32`에 대체 구현을 기록한다. | ~~온라인 저장 직후 기기 snapshot이 갱신되고, 오프라인 메모 수정이 화면·snapshot·outbox에 한 번 기록되며, `기기 내용 유지` 선택 뒤 일정 묶음 순서가 서버 동기화·재조회·앱 재실행 후에도 유지되고 충돌 알림이 반복되지 않는다. Android 실기기 재검증과 회귀 테스트를 통과한다.~~<br>완료 조건 폐기. 이력만 보존 | ~~Phase 1A Android 운영 재검증 대기~~<br>GAP-32로 대체 |
-| GAP-32 | 오프라인 기능 제거와 온라인 전용 서버 동기화 | ~~2026-08-08 사용자 승인·로컬 구현 중~~<br>2026-08-08 사용자 방향 승인·로컬 구현·자동·실제 브라우저 검증 완료, 운영 미배포 | snapshot·outbox·충돌 선택이 제품 실행 경로에서 사용되지 않는다. 오프라인이면 여행 조회·편집을 차단하고 명확한 연결 안내를 표시한다. 온라인 변경은 Worker 성공 뒤 최신 snapshot을 즉시 다시 받고, 다른 열린 기기는 5초 이내 또는 화면 복귀 즉시 갱신한다. 새 network-only 서비스 워커는 기존 Cache Storage를 지우고 fetch cache를 만들지 않으며 manifest·설치 진입은 유지한다. IndexedDB를 v4로 올려 기존 snapshot·outbox·오프라인 사용자 정보를 삭제하되 기기 AI·환율 설정, 사진 썸네일, 여행 릴 데이터는 유지한다. `typecheck`·lint·build, frontend 460건, Worker 91건, 1440·320·390·393·430px 실제 브라우저 E2E 41건이 통과했다. 운영 배포와 Android·iPhone 설치 PWA 사용자 확인 뒤 완료 처리한다. | Phase 1A·3 보정 |
+| GAP-32 | 오프라인 기능 제거와 온라인 전용 서버 동기화 | ~~2026-08-08 사용자 승인·로컬 구현 중~~<br>~~2026-08-08 사용자 방향 승인·로컬 구현·자동·실제 브라우저 검증 완료, 운영 미배포~~<br>2026-08-08 커밋·push·사용자·관리자 Worker 배포·운영 정적/API 검증 완료, 실기기 사용자 QA 대기 | snapshot·outbox·충돌 선택이 제품 실행 경로에서 사용되지 않는다. 오프라인이면 여행 조회·편집을 차단하고 명확한 연결 안내를 표시한다. 온라인 변경은 Worker 성공 뒤 최신 snapshot을 즉시 다시 받고, 다른 열린 기기는 5초 이내 또는 화면 복귀 즉시 갱신한다. 새 network-only 서비스 워커는 기존 Cache Storage를 지우고 fetch cache를 만들지 않으며 manifest·설치 진입은 유지한다. IndexedDB를 v4로 올려 기존 snapshot·outbox·오프라인 사용자 정보를 삭제하되 기기 AI·환율 설정, 사진 썸네일, 여행 릴 데이터는 유지한다. `typecheck`·lint·build, frontend 460건, Worker 91건, 1440·320·390·393·430px 실제 브라우저 E2E 41건이 통과했다. 커밋 `65d7238`과 두 Worker 운영 bundle·service worker 검증도 완료했다. Android·iPhone 설치 PWA 사용자 확인 뒤 완료 처리한다. | Phase 1A·3 보정 |
 
 ### 엄격한 V1 진행률 기준
 
@@ -314,7 +318,9 @@
 >
 > ~~상태: **부분 완료·2차 보정 운영 배포 완료, Android 재검증 대기**. 커밋 `3976489` push와 사용자·관리자 Worker 배포·운영 정적 응답 검증을 완료했다. 실제 설치 Android에서 충돌 선택 뒤 일정 순서·메모·재실행을 확인하고 iPhone까지 통과하기 전에는 1A를 완료 처리하지 않는다.~~
 >
-> 상태: **온라인 전용 로컬 구현·자동·브라우저 검증 완료, 운영 미배포**. `GAP-31`은 폐기 승인으로 닫았고 `GAP-32`에서 서버 직접 저장·5초 재조회·오프라인 차단을 구현했다. 배포 뒤 Android·iPhone 설치 PWA 사용자 확인 전에는 1A를 완료 처리하지 않는다.
+> ~~상태: **온라인 전용 로컬 구현·자동·브라우저 검증 완료, 운영 미배포**. `GAP-31`은 폐기 승인으로 닫았고 `GAP-32`에서 서버 직접 저장·5초 재조회·오프라인 차단을 구현했다. 배포 뒤 Android·iPhone 설치 PWA 사용자 확인 전에는 1A를 완료 처리하지 않는다.~~
+>
+> 상태: **온라인 전용 운영 배포 완료, Android·iPhone 사용자 QA 대기**. 커밋 `65d7238`과 두 Worker 운영 정적/API 대조를 완료했다. 실제 설치 PWA 확인 전에는 1A를 완료 처리하지 않는다.
 
 - 320px·390px·430px에서 화면 전체 가로 스크롤이 생기지 않는다.
 - 날짜 탭은 좌우 스와이프로 이동할 수 있다.
@@ -773,7 +779,7 @@ npm run build
 
 ~~2026-08-08 현재 실행 단위는 `GAP-32 온라인 전용 동기화 전환`이다. 제품 앱 조립에서 snapshot store·outbox transport·SyncEngine·ConflictDialog를 제거하고 ApiClient 직접 mutation과 5초 자동 snapshot 재조회로 바꾼다. 서비스 워커는 fetch cache 없는 network-only 모드로 교체하고 activate 시 기존 캐시를 해제한다. 네트워크 단절 시 전체 여행 화면을 온라인 필요 상태로 대체한다. 로컬 자동·390px 화면 QA 뒤 결과를 보고하고 commit·push·두 Worker 배포 승인을 별도로 기다린다. migration·Secret은 필요하지 않다.~~
 
-2026-08-08 `GAP-32` 로컬 구현·검증 완료. 제품 실행 경로의 snapshot store·outbox transport·SyncEngine·ConflictDialog를 제거하고 ApiClient 직접 mutation, 성공 직후 최신 snapshot 재조회, 5초 주기·focus·visibility·재연결 갱신으로 전환했다. 네트워크 단절 시 여행 조회·편집 전체를 온라인 필요 상태로 대체하고, PWA 설치용 service worker는 network-only로 유지하면서 activate 시 기존 Cache Storage를 지운다. IndexedDB v4 업그레이드에서 기존 snapshot·outbox·오프라인 사용자 정보만 제거하고 기기 AI·환율 설정, 사진 썸네일, 여행 릴은 보존한다. `typecheck`·lint·production build, frontend 460건, Worker 91건, 1440·320·390·393·430px 실제 브라우저 E2E 41건이 통과했다. ~~다음 실행 단위는 별도 승인 후 commit·push·사용자·관리자 Worker 배포다. migration·Secret은 필요하지 않다.~~<br>사용자가 commit·push·사용자·관리자 Worker 배포를 승인했다. 운영 migration·Secret은 제외한다.
+2026-08-08 `GAP-32` 로컬 구현·검증 완료. 제품 실행 경로의 snapshot store·outbox transport·SyncEngine·ConflictDialog를 제거하고 ApiClient 직접 mutation, 성공 직후 최신 snapshot 재조회, 5초 주기·focus·visibility·재연결 갱신으로 전환했다. 네트워크 단절 시 여행 조회·편집 전체를 온라인 필요 상태로 대체하고, PWA 설치용 service worker는 network-only로 유지하면서 activate 시 기존 Cache Storage를 지운다. IndexedDB v4 업그레이드에서 기존 snapshot·outbox·오프라인 사용자 정보만 제거하고 기기 AI·환율 설정, 사진 썸네일, 여행 릴은 보존한다. `typecheck`·lint·production build, frontend 460건, Worker 91건, 1440·320·390·393·430px 실제 브라우저 E2E 41건이 통과했다. ~~다음 실행 단위는 별도 승인 후 commit·push·사용자·관리자 Worker 배포다. migration·Secret은 필요하지 않다.~~<br>~~사용자가 commit·push·사용자·관리자 Worker 배포를 승인했다. 운영 migration·Secret은 제외한다.~~<br>커밋 `65d7238` push와 사용자 Worker `42986ea7-0d26-46c8-a520-0a94bdfe4988`, 관리자 Worker `a012c07f-c9b5-42db-b71a-4ecc5a4a6b50` 배포·운영 정적/API 대조를 완료했다. migration·Secret은 변경하지 않았다. 다음은 Android·iPhone 설치 PWA 사용자 QA다.
 
 ~~실제 설치폰 일정 QA를 Phase 1B 운영 장소 QA보다 먼저 수행한다.~~
 
@@ -860,7 +866,9 @@ npm run build
 
 ~~2026-08-08 Phase 1 commit·push·두 Worker 배포는 사용자 승인 아래 완료했다. migration·Secret은 제외 상태를 유지한다. 실제 Android·iPhone 설치 PWA 검증과 운영 실데이터 QA가 끝나기 전에는 Phase 1 전체를 `완료`로 확대하지 않는다.~~
 
-2026-08-08 기존 Phase 1 배포 이력은 유지한다. 최신 `GAP-32` 온라인 전용 전환은 로컬 구현·검증만 승인됐고 아직 commit·push·배포되지 않았다. 실제 Android·iPhone 온라인 전용 PWA와 운영 실데이터 QA가 끝나기 전에는 Phase 1 전체를 `완료`로 확대하지 않는다.
+~~2026-08-08 기존 Phase 1 배포 이력은 유지한다. 최신 `GAP-32` 온라인 전용 전환은 로컬 구현·검증만 승인됐고 아직 commit·push·배포되지 않았다. 실제 Android·iPhone 온라인 전용 PWA와 운영 실데이터 QA가 끝나기 전에는 Phase 1 전체를 `완료`로 확대하지 않는다.~~
+
+2026-08-08 `GAP-32` 커밋 `65d7238` push와 두 Worker 배포·운영 정적/API 검증을 완료했다. 실제 Android·iPhone 온라인 전용 PWA 사용자 QA와 나머지 운영 실데이터 QA가 끝나기 전에는 Phase 1 전체를 `완료`로 확대하지 않는다.
 
 ## 13. 컨텍스트 압축 후 복구 체크리스트
 
