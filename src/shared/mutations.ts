@@ -59,6 +59,7 @@ export interface MutationPayloadMap {
     endsAt: string | null;
     reservationCode: string | null;
     paymentStatus: "unpaid" | "partial" | "paid" | "refunded";
+    usageStatus?: "booked" | "check_in_pending" | "checked_in" | "used" | "cancelled";
     externalUrl: string | null;
     documentUrl: string | null;
     documentFile?: BookingDocument | null;
@@ -102,6 +103,16 @@ export interface MutationPayloadMap {
     isSettled: boolean;
     memo: string;
   };
+  settlement_transfer: {
+    settlementGroupId: string;
+    expenseIds: string[];
+    currency: string;
+    fromMemberId: string;
+    toMemberId: string;
+    amountMinor: number;
+    status: "pending" | "completed";
+    completedAt: string | null;
+  };
   note: {
     targetType: "trip" | "schedule_item" | "place" | "booking";
     targetId: string | null;
@@ -130,6 +141,50 @@ export interface MutationSuccess {
   entityId: string;
   version: number;
   syncVersion: number;
+}
+
+export interface SettlementGroupCreateRequest {
+  idempotencyKey: string;
+  entity: "settlement_transfer";
+  action: "create_group";
+  entityId: string;
+  baseVersion: null;
+  payload: {
+    expenseIds: string[];
+    currency: string;
+    transfers: Array<{
+      entityId: string;
+      fromMemberId: string;
+      toMemberId: string;
+      amountMinor: number;
+    }>;
+  };
+}
+
+export interface SettlementGroupMutationSuccess extends MutationSuccess {
+  entity: "settlement_transfer";
+  transfers: Array<{ entityId: string; version: number }>;
+}
+
+export interface SettlementTransferCompleteRequest {
+  idempotencyKey: string;
+  entity: "settlement_transfer";
+  action: "complete";
+  entityId: string;
+  baseVersion: number;
+  payload: { settlementGroupId: string };
+}
+
+export type SyncMutationRequest =
+  | MutationRequest
+  | SettlementGroupCreateRequest
+  | SettlementTransferCompleteRequest;
+export type SyncMutationSuccess = MutationSuccess | SettlementGroupMutationSuccess;
+
+export function isSettlementGroupCreateRequest(
+  request: SyncMutationRequest
+): request is SettlementGroupCreateRequest {
+  return request.action === "create_group";
 }
 
 export interface VersionConflict<K extends EntityKind = EntityKind> {

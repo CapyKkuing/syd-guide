@@ -58,7 +58,7 @@ describe("participant setup", () => {
 
     const response = await request("/api/admin/participants/setup", {
       method: "POST",
-      body: JSON.stringify({ ownerName: "연준", participantNames: [] }),
+      body: JSON.stringify({ ownerName: "연준", participantNames: [], representativeIndex: 0 }),
     });
 
     expect(response.status).toBe(200);
@@ -92,7 +92,7 @@ describe("participant setup", () => {
 
     const response = await request("/api/admin/participants/setup", {
       method: "POST",
-      body: JSON.stringify({ ownerName: "연준", participantNames: [] }),
+      body: JSON.stringify({ ownerName: "연준", participantNames: [], representativeIndex: 0 }),
     });
 
     expect(response.status).toBe(200);
@@ -110,6 +110,7 @@ describe("participant setup", () => {
       body: JSON.stringify({
         ownerName: "연준",
         participantNames: ["민지", "수현"],
+        representativeIndex: 2,
       }),
     });
 
@@ -122,7 +123,9 @@ describe("participant setup", () => {
       };
     };
     expect(body.roster.setupComplete).toBe(true);
-    expect(body.roster.representativeMemberId).toBe("owner");
+    const representative = body.roster.members.find((member) => member.displayName === "수현");
+    expect(representative).toBeDefined();
+    expect(body.roster.representativeMemberId).toBe(representative?.id);
     expect(body.roster.members).toEqual(expect.arrayContaining([
       expect.objectContaining({ id: "owner", displayName: "연준" }),
       expect.objectContaining({ id: "partner", displayName: "민지" }),
@@ -133,7 +136,11 @@ describe("participant setup", () => {
   it("adds a participant and changes only the travel representative", async () => {
     await request("/api/admin/participants/setup", {
       method: "POST",
-      body: JSON.stringify({ ownerName: "연준", participantNames: ["민지"] }),
+      body: JSON.stringify({
+        ownerName: "연준",
+        participantNames: ["민지"],
+        representativeIndex: 0,
+      }),
     });
     const tripResponse = await request("/api/trips", {
       method: "POST",
@@ -178,7 +185,11 @@ describe("participant setup", () => {
   it("removes a participant while preserving history and revoking access", async () => {
     await request("/api/admin/participants/setup", {
       method: "POST",
-      body: JSON.stringify({ ownerName: "연준", participantNames: ["민지"] }),
+      body: JSON.stringify({
+        ownerName: "연준",
+        participantNames: ["민지"],
+        representativeIndex: 0,
+      }),
     });
     const tripResponse = await request("/api/trips", {
       method: "POST",

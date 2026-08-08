@@ -6,6 +6,7 @@ import type { BookingDocumentRuntime } from "../../../services/media/bookingDocu
 import { BookingDocumentPreview } from "./BookingDocumentPreview";
 
 const payments = { unpaid: "미결제", partial: "일부 결제", paid: "결제 완료", refunded: "환불" };
+const usages = { booked: "예약됨", check_in_pending: "체크인 전", checked_in: "체크인 완료", used: "이용 완료", cancelled: "취소" };
 const bookingTypes = {
   flight: "항공", lodging: "숙소", ticket: "입장권", tour: "투어",
   transport: "교통", restaurant: "식당", other: "기타"
@@ -39,6 +40,10 @@ export function BookingDetailSheet({
           <div>
             <dt>결제 상태</dt>
             <dd>{payments[booking.paymentStatus]}</dd>
+          </div>
+          <div>
+            <dt>이용 상태</dt>
+            <dd>{usages[booking.usageStatus ?? "booked"]}</dd>
           </div>
           {placeName ? <div><dt>연결 장소</dt><dd>{placeName}</dd></div> : null}
           {booking.memo ? <div><dt>메모</dt><dd>{booking.memo}</dd></div> : null}

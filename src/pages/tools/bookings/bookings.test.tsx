@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { BookingView } from "../../../data/contracts";
 import type { ScheduleItemView } from "../../../data/contracts";
 import type { BookingDocumentRuntime } from "../../../services/media/bookingDocumentRuntime";
+import { ocrApiClient } from "../../../services/ocr/api";
 import { BookingsPanel } from "./BookingsPanel";
 import { ReservationCode } from "./ReservationCode";
 import { BookingEditorDialog } from "./BookingEditorDialog";
@@ -24,6 +25,21 @@ const bookings: BookingView[] = [
 ];
 
 describe("protected bookings", () => {
+  it("opens direct lodging entry with the lodging type selected", () => {
+    render(
+      <BookingEditorDialog
+        booking={null}
+        controller={{ submit: vi.fn() }}
+        initialBookingType="lodging"
+        onClose={vi.fn()}
+        places={[]}
+        timeZone="Australia/Sydney"
+      />
+    );
+
+    expect(screen.getByLabelText("예약 종류")).toHaveValue("lodging");
+  });
+
   it("highlights the earliest booking before departure and today's booking during travel", () => {
     const { rerender } = render(
       <BookingsPanel bookings={bookings} experiencePhase="before" places={[]} timeZone="Australia/Sydney" />
@@ -92,8 +108,34 @@ describe("protected bookings", () => {
       null,
       expect.objectContaining({
         provider: "Qantas",
-        reservationCode: "QF-PRIVATE"
+        reservationCode: "QF-PRIVATE",
+        usageStatus: "booked",
       })
+    );
+  });
+
+  it("stores the selected check-in status with the booking", async () => {
+    const submit = vi.fn().mockResolvedValue({});
+    render(
+      <BookingEditorDialog
+        booking={null}
+        controller={{ submit }}
+        onClose={vi.fn()}
+        places={[]}
+        timeZone="Australia/Sydney"
+      />
+    );
+    await userEvent.type(screen.getByLabelText("예약처"), "Qantas");
+    await userEvent.type(screen.getByLabelText("시작 일시"), "2026-09-10T10:00");
+    await userEvent.selectOptions(screen.getByLabelText("이용 상태"), "checked_in");
+    await userEvent.click(screen.getByRole("button", { name: "저장" }));
+
+    expect(submit).toHaveBeenCalledWith(
+      "booking",
+      "create",
+      expect.any(String),
+      null,
+      expect.objectContaining({ usageStatus: "checked_in" }),
     );
   });
 
@@ -170,6 +212,50 @@ describe("protected bookings", () => {
       scheduleItem.version,
       expect.objectContaining({ bookingId: bookingCall?.[2] }),
     ]);
+  });
+
+  it("applies an OCR result as an editable draft only after the user requests it", async () => {
+    const documentRuntime: BookingDocumentRuntime = {
+      upload: vi.fn(),
+      download: vi.fn(),
+      remove: vi.fn(),
+    };
+    vi.spyOn(ocrApiClient, "bookingDraft").mockResolvedValue({
+      draft: {
+        bookingType: "flight",
+        provider: "Qantas Airways",
+        reservationCode: "QF7ABC",
+        startsAt: "2026-10-08T09:30",
+        endsAt: null,
+      },
+      rawText: "Qantas Airways boarding pass",
+      usage: { used: 1, limit: 800 },
+    });
+    render(
+      <BookingEditorDialog
+        booking={null}
+        controller={{ submit: vi.fn() }}
+        documentRuntime={documentRuntime}
+        onClose={vi.fn()}
+        places={[]}
+        timeZone="Australia/Sydney"
+        tripId="trip-1"
+      />
+    );
+    const file = new File(["ticket"], "ticket.jpg", { type: "image/jpeg" });
+
+    await userEvent.upload(screen.getByLabelText("예약 사진·PDF"), file);
+    expect(screen.getByLabelText("예약처")).toHaveValue("");
+    await userEvent.click(screen.getByRole("button", { name: "OCR로 자동 입력" }));
+
+    expect(await screen.findByText(/자동 인식 초안을 적용했습니다/)).toBeVisible();
+    expect(screen.getByLabelText("예약처")).toHaveValue("Qantas Airways");
+    expect(screen.getByLabelText("예약 종류")).toHaveValue("flight");
+    expect(screen.getByLabelText("시작 일시")).toHaveValue("2026-10-08T09:30");
+    expect(screen.getByLabelText("예약번호")).toHaveValue("QF7ABC");
+    await userEvent.clear(screen.getByLabelText("예약처"));
+    await userEvent.type(screen.getByLabelText("예약처"), "직접 수정한 항공사");
+    expect(screen.getByLabelText("예약처")).toHaveValue("직접 수정한 항공사");
   });
 
   it("keeps an uploaded voucher when the booking saves but schedule linking fails", async () => {
@@ -265,5 +351,74 @@ describe("protected bookings", () => {
 
     expect(documentRuntime.download).toHaveBeenCalledWith(booking.documentFile);
     expect(await screen.findByAltText("ticket.jpg 미리보기")).toBeVisible();
+  });
+
+  it("previews a Drive PDF and releases its object URL when closed", async () => {
+    const createObjectUrl = vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:voucher-pdf");
+    const revokeObjectUrl = vi.spyOn(URL, "revokeObjectURL");
+    const documentRuntime: BookingDocumentRuntime = {
+      upload: vi.fn(),
+      download: vi.fn().mockResolvedValue(new Blob(["pdf"], {
+        type: "application/pdf",
+      })),
+      remove: vi.fn(),
+    };
+    const booking = {
+      ...bookings[1]!,
+      documentFile: {
+        provider: "google-drive" as const,
+        providerObjectId: "voucher-pdf",
+        originalName: "voucher.pdf",
+        mimeType: "application/pdf" as const,
+      },
+    };
+    const { unmount } = render(
+      <BookingsPanel
+        bookings={[booking]}
+        documentRuntime={documentRuntime}
+        places={[]}
+        timeZone="Australia/Sydney"
+      />
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "예약 정보 보기" }));
+    await userEvent.click(screen.getByRole("button", { name: "Drive 미리보기" }));
+
+    expect(await screen.findByTitle("voucher.pdf 미리보기")).toBeVisible();
+    expect(createObjectUrl).toHaveBeenCalledOnce();
+    unmount();
+    expect(revokeObjectUrl).toHaveBeenCalledWith("blob:voucher-pdf");
+  });
+
+  it("keeps manual booking details available when Drive preview fails", async () => {
+    const documentRuntime: BookingDocumentRuntime = {
+      upload: vi.fn(),
+      download: vi.fn().mockRejectedValue(new Error("Drive 파일을 불러오지 못했습니다.")),
+      remove: vi.fn(),
+    };
+    const booking = {
+      ...bookings[1]!,
+      documentFile: {
+        provider: "google-drive" as const,
+        providerObjectId: "missing-voucher",
+        originalName: "missing.pdf",
+        mimeType: "application/pdf" as const,
+      },
+    };
+    render(
+      <BookingsPanel
+        bookings={[booking]}
+        documentRuntime={documentRuntime}
+        places={[]}
+        timeZone="Australia/Sydney"
+      />
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "예약 정보 보기" }));
+    await userEvent.click(screen.getByRole("button", { name: "Drive 미리보기" }));
+
+    expect(await screen.findByText("Drive 파일을 불러오지 못했습니다.")).toBeVisible();
+    expect(screen.getByRole("heading", { level: 2, name: "오페라하우스 투어" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Drive 미리보기" })).toBeEnabled();
   });
 });

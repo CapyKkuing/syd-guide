@@ -116,6 +116,7 @@ function ToolLaunchCard({ item, tripId }: { item: ToolItemView; tripId: string }
 }
 
 function ToolCard({
+  action,
   controller,
   item,
   mediaApi,
@@ -124,6 +125,7 @@ function ToolCard({
   tools,
   workspace
 }: {
+  action?: string | null;
   controller?: TripMutationController;
   item: ToolItemView;
   mediaApi?: MediaApi;
@@ -149,6 +151,7 @@ function ToolCard({
           timeZone={tools.timeZone}
           tripId={tools.tripId}
           viewerRole={workspace?.context.viewer.role}
+          initialBookingType={action === "create-lodging" ? "lodging" : undefined}
         />
       </article>
     );
@@ -159,7 +162,13 @@ function ToolCard({
       <article className="tool-card tool-card--wide" id="checklist">
         <div className="tool-card__heading"><h1>{item.label}</h1></div>
         <p>{item.description}</p>
-        <ChecklistPanel controller={controller} items={tools.checkItems} members={tools.members} viewerMemberId={tools.viewerMemberId} />
+        <ChecklistPanel
+          controller={controller}
+          initialAction={action === "edit-passport" ? "edit-passport" : undefined}
+          items={tools.checkItems}
+          members={tools.members}
+          viewerMemberId={tools.viewerMemberId}
+        />
       </article>
     );
   }
@@ -267,6 +276,7 @@ export function ToolsPage({
   tools,
   workspace
 }: ToolsPageProps) {
+  const action = new URLSearchParams(window.location.search).get("action");
   const availableTools = new Map(tools.groups.flatMap((group) => group.items).map((item) => [item.id, item]));
   const travelerGroups = tools.groups.map((group) => ({
     ...group,
@@ -297,6 +307,7 @@ export function ToolsPage({
         <VStack gap={4}>
           <AppLink className="tools-detail-back" href={pathForTrip(tools.tripId, "tools")}>← 도구</AppLink>
           <ToolCard
+            action={action}
             controller={mutationController}
             item={selectedTool}
             mediaApi={mediaApi}

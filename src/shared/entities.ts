@@ -18,6 +18,7 @@ export type EntityKind =
   | "booking"
   | "check_item"
   | "expense"
+  | "settlement_transfer"
   | "note"
   | "vote";
 
@@ -119,6 +120,7 @@ export interface Booking extends VersionedEntity {
   endsAt: string | null;
   reservationCode: string | null;
   paymentStatus: "unpaid" | "partial" | "paid" | "refunded";
+  usageStatus?: "booked" | "check_in_pending" | "checked_in" | "used" | "cancelled";
   externalUrl: string | null;
   documentUrl: string | null;
   documentFile?: BookingDocument | null;
@@ -167,6 +169,17 @@ export interface Expense extends VersionedEntity {
   memo: string;
 }
 
+export interface SettlementTransfer extends VersionedEntity {
+  settlementGroupId: string;
+  expenseIds: string[];
+  currency: string;
+  fromMemberId: string;
+  toMemberId: string;
+  amountMinor: number;
+  status: "pending" | "completed";
+  completedAt: string | null;
+}
+
 export interface Note extends VersionedEntity {
   targetType: "trip" | "schedule_item" | "place" | "booking";
   targetId: string | null;
@@ -201,6 +214,7 @@ export interface EntityMap {
   booking: Booking;
   check_item: CheckItem;
   expense: Expense;
+  settlement_transfer: SettlementTransfer;
   note: Note;
   vote: Vote;
 }

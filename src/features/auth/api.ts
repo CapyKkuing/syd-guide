@@ -52,17 +52,25 @@ function isLocalHost() {
   );
 }
 
-function isAdminHost() {
-  return window.location.hostname.includes("-admin.");
+function isAdminHost(baseUrl: string) {
+  const hostname = baseUrl
+    ? new URL(baseUrl, "http://localhost").hostname
+    : window.location.hostname;
+  return hostname.includes("-admin.");
 }
 
-async function request(input: RequestInfo | URL, init?: RequestInit) {
+export async function requestWithAdminAccessRecovery(
+  fetcher: typeof fetch,
+  input: RequestInfo | URL,
+  init?: RequestInit,
+  baseUrl = window.location.origin
+) {
   try {
-    return await fetch(input, init);
+    return await fetcher(input, init);
   } catch (error) {
     if (
       error instanceof TypeError
-      && isAdminHost()
+      && isAdminHost(baseUrl)
       && navigator.onLine !== false
     ) {
       throw new AuthRequestError(
@@ -72,6 +80,10 @@ async function request(input: RequestInfo | URL, init?: RequestInit) {
     }
     throw error;
   }
+}
+
+async function request(input: RequestInfo | URL, init?: RequestInit) {
+  return requestWithAdminAccessRecovery(fetch, input, init);
 }
 
 export function isAdminAccessCode(code: string | undefined) {
@@ -134,12 +146,13 @@ export async function getParticipantRoster(): Promise<ParticipantRoster> {
 
 export async function setupParticipants(
   ownerName: string,
-  participantNames: string[]
+  participantNames: string[],
+  representativeIndex: number
 ): Promise<ParticipantRoster> {
   const response = await request("/api/admin/participants/setup", {
     method: "POST",
     headers: headers(true, true),
-    body: JSON.stringify({ ownerName, participantNames }),
+    body: JSON.stringify({ ownerName, participantNames, representativeIndex }),
   });
   return (await json<{ roster: ParticipantRoster }>(response)).roster;
 }

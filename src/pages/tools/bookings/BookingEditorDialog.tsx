@@ -5,32 +5,38 @@ import type { MutationPayloadMap } from "../../../shared/mutations";
 import type { BookingDocument } from "../../../shared/media";
 import type { TripMutationController } from "../../../services/mutations/controller";
 import type { BookingDocumentRuntime } from "../../../services/media/bookingDocumentRuntime";
+import { ocrApiClient } from "../../../services/ocr/api";
 import { isSafeExternalHttpsUrl } from "../../../shared/externalUrls";
 
 export function BookingEditorDialog({
   booking,
   controller,
   documentRuntime,
+  initialBookingType,
   onClose,
   places,
   scheduleItems = [],
-  timeZone
+  timeZone,
+  tripId,
 }: {
   booking: BookingView | null;
   controller: TripMutationController;
   documentRuntime?: BookingDocumentRuntime;
+  initialBookingType?: MutationPayloadMap["booking"]["bookingType"];
   onClose: () => void;
   places: Array<{ id: string; name: string }>;
   scheduleItems?: ScheduleItemView[];
   timeZone: string;
+  tripId?: string;
 }) {
   const [entityId] = useState(() => booking?.id ?? crypto.randomUUID());
   const [provider, setProvider] = useState(booking?.provider ?? "");
-  const [bookingType, setBookingType] = useState<MutationPayloadMap["booking"]["bookingType"]>(booking?.bookingType ?? "other");
+  const [bookingType, setBookingType] = useState<MutationPayloadMap["booking"]["bookingType"]>(booking?.bookingType ?? initialBookingType ?? "other");
   const [startsAt, setStartsAt] = useState(booking ? localDateTime(booking.startsAt) : "");
   const [endsAt, setEndsAt] = useState(booking?.endsAt ? localDateTime(booking.endsAt) : "");
   const [reservationCode, setReservationCode] = useState(booking?.reservationCode ?? "");
   const [paymentStatus, setPaymentStatus] = useState<MutationPayloadMap["booking"]["paymentStatus"]>(booking?.paymentStatus ?? "unpaid");
+  const [usageStatus, setUsageStatus] = useState<MutationPayloadMap["booking"]["usageStatus"]>(booking?.usageStatus ?? "booked");
   const [placeId, setPlaceId] = useState(booking?.placeId ?? "");
   const [externalUrl, setExternalUrl] = useState(booking?.externalUrl ?? "");
   const [documentUrl, setDocumentUrl] = useState(booking?.documentUrl ?? "");
@@ -45,6 +51,8 @@ export function BookingEditorDialog({
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [bookingSaved, setBookingSaved] = useState(false);
+  const [ocrBusy, setOcrBusy] = useState(false);
+  const [ocrInfo, setOcrInfo] = useState("");
   const scheduleCandidates = rankScheduleCandidates(
     scheduleItems,
     startsAt,
@@ -76,6 +84,7 @@ export function BookingEditorDialog({
       endsAt: endsAt ? zonedDateTime(endsAt, timeZone) : null,
       reservationCode: reservationCode.trim() || null,
       paymentStatus,
+      usageStatus,
       externalUrl: safeUrl(externalUrl),
       documentUrl: safeUrl(documentUrl),
       documentFile,
@@ -149,6 +158,30 @@ export function BookingEditorDialog({
     }
   }
 
+  async function applyOcrDraft() {
+    if (!selectedFile || !tripId) return;
+    setOcrBusy(true);
+    setError("");
+    setOcrInfo("");
+    try {
+      const result = await ocrApiClient.bookingDraft(tripId, selectedFile);
+      if (result.draft.provider) setProvider(result.draft.provider);
+      if (result.draft.bookingType) setBookingType(result.draft.bookingType);
+      if (result.draft.reservationCode) setReservationCode(result.draft.reservationCode);
+      if (result.draft.startsAt) setStartsAt(result.draft.startsAt);
+      if (result.draft.endsAt) setEndsAt(result.draft.endsAt);
+      setOcrInfo(
+        `자동 인식 초안을 적용했습니다. 저장 전에 확인·수정해 주세요. 이번 달 ${result.usage.used}/${result.usage.limit}페이지 사용`
+      );
+    } catch (caught) {
+      setError(caught instanceof Error
+        ? caught.message
+        : "자동 인식에 실패했습니다. 직접 입력해 주세요.");
+    } finally {
+      setOcrBusy(false);
+    }
+  }
+
   return (
     <BottomSheet ariaLabel={booking ? "예약 수정" : "예약 추가"} onClose={onClose} returnFocusTo={null}>
       <form className="tool-editor" onSubmit={submit}>
@@ -176,6 +209,10 @@ export function BookingEditorDialog({
         <label><span>결제 상태</span><select value={paymentStatus} onChange={(event) => setPaymentStatus(event.target.value as typeof paymentStatus)}>
           <option value="unpaid">미결제</option><option value="partial">일부 결제</option><option value="paid">결제 완료</option><option value="refunded">환불</option>
         </select></label>
+        <label><span>이용 상태</span><select value={usageStatus} onChange={(event) => setUsageStatus(event.target.value as typeof usageStatus)}>
+          <option value="booked">예약됨</option><option value="check_in_pending">체크인 전</option><option value="checked_in">체크인 완료</option>
+          <option value="used">이용 완료</option><option value="cancelled">취소</option>
+        </select></label>
         <label><span>예약번호</span><input value={reservationCode} onChange={(event) => setReservationCode(event.target.value)} /></label>
         <label><span>외부 주소</span><input type="url" value={externalUrl} onChange={(event) => setExternalUrl(event.target.value)} /></label>
         <label><span>문서 주소</span><input type="url" value={documentUrl} onChange={(event) => setDocumentUrl(event.target.value)} /></label>
@@ -193,6 +230,19 @@ export function BookingEditorDialog({
           />
           <small>{selectedFile?.name ?? booking?.documentFile?.originalName ?? "JPG, PNG, WebP, PDF · 최대 25MB"}</small>
         </label>
+        {selectedFile ? (
+          <section className="booking-ocr-actions">
+            <button
+              className="secondary-button"
+              disabled={!tripId || busy || ocrBusy}
+              onClick={() => void applyOcrDraft()}
+              type="button"
+            >
+              {ocrBusy ? "자동 인식 중…" : "OCR로 자동 입력"}
+            </button>
+            <small>7MB 이하 파일의 예약처·종류·일시·예약번호 초안만 채웁니다.</small>
+          </section>
+        ) : null}
         {booking?.documentFile && !selectedFile ? (
           <label className="tool-editor__check">
             <input checked={removeDocument} onChange={(event) => setRemoveDocument(event.target.checked)} type="checkbox" />
@@ -202,6 +252,7 @@ export function BookingEditorDialog({
         <label><span>메모</span><textarea value={memo} onChange={(event) => setMemo(event.target.value)} /></label>
         <label className="tool-editor__check"><input checked={isFixed} onChange={(event) => setIsFixed(event.target.checked)} type="checkbox" />고정 예약</label>
         <label className="tool-editor__check"><input checked={isRequired} onChange={(event) => setIsRequired(event.target.checked)} type="checkbox" />필수 예약</label>
+        {ocrInfo ? <p aria-live="polite">{ocrInfo}</p> : null}
         {error ? <p role="alert">{error}</p> : null}
         {confirmation === "delete" ? <div className="tool-editor__confirm"><p>{booking?.provider} 예약을 삭제할까요?</p><button onClick={() => booking?.isFixed ? setConfirmation("fixed") : void remove()} type="button">삭제 확인</button></div> : null}
         {confirmation === "fixed" ? <div className="tool-editor__confirm"><p>고정 예약입니다. 그래도 삭제할까요?</p><button onClick={() => void remove()} type="button">고정 예약 삭제</button></div> : null}

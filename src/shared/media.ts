@@ -1,5 +1,10 @@
 export type MediaStorageProvider = "google-drive";
 
+export interface MediaPreview {
+  previewCropAspect: "1:1" | "4:3" | "3:4" | "16:9";
+  previewBrightness: number;
+}
+
 export type BookingDocumentMimeType =
   | "image/jpeg"
   | "image/png"
@@ -43,6 +48,8 @@ export interface TripMedia {
   capturedAt: string | null;
   aiScore: number | null;
   aiLabels: string[];
+  previewCropAspect?: MediaPreview["previewCropAspect"];
+  previewBrightness?: MediaPreview["previewBrightness"];
   createdBy: string;
   createdAt: string;
 }

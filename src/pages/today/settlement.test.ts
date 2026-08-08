@@ -29,6 +29,19 @@ describe("calculateSettlements", () => {
       expense({ id: "legacy", amountMinor: 10_000, expenseScope: null, personalForMemberId: null }),
     ], members)).toEqual([]);
   });
+
+  it("creates separate transfers for a three-person shared payment", () => {
+    const [settlement] = calculateSettlements([
+      expense({ id: "shared", amountMinor: 30_000, expenseScope: "shared", personalForMemberId: null }),
+    ], [...members, { id: "jiho", role: "partner", displayName: "지호" }]);
+
+    if (!settlement) throw new Error("Expected an AUD settlement");
+
+    expect(settlement.transfers).toEqual([
+      { fromMemberId: "minji", toMemberId: "yeonjun", amountMinor: 10_000 },
+      { fromMemberId: "jiho", toMemberId: "yeonjun", amountMinor: 10_000 },
+    ]);
+  });
 });
 
 function expense(overrides: Partial<Expense>): Expense {

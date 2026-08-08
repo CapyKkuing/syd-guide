@@ -206,6 +206,28 @@ describe("Google Places discovery API", () => {
     );
   });
 
+  it("blocks photo calls before exceeding the free allowance", async () => {
+    await seedPlace("google-place-1");
+    await env.DB.prepare(
+      `INSERT INTO place_provider_usage (billing_month, sku, used_count, updated_at)
+       VALUES ('2026-08', 'place-photo', 800, ?)`
+    ).bind(fixedNow.toISOString()).run();
+    const placesFetch = vi.fn<typeof fetch>();
+    const app = createApp({ now: () => fixedNow, placesFetch });
+
+    const response = await app.request(
+      "http://localhost/api/trips/trip-places/places/place-1/photo?name=places%2Fgoogle-place-1%2Fphotos%2Fphoto-1",
+      { headers: headers() },
+      bindings()
+    );
+
+    expect(response.status).toBe(429);
+    await expect(response.json()).resolves.toMatchObject({
+      error: { code: "PLACES_FREE_LIMIT_REACHED" },
+    });
+    expect(placesFetch).not.toHaveBeenCalled();
+  });
+
   it("does not link a nearby business when the place name is different", async () => {
     await seedPlace();
     const placesFetch = vi.fn<typeof fetch>(async () => Response.json({

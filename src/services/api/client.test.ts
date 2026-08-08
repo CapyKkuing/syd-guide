@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { MutationRequest } from "../../shared/mutations";
+import { AuthRequestError } from "../../features/auth/api";
 import { ApiClient } from "./client";
 import { ApiClientError } from "./errors";
 
@@ -22,6 +23,19 @@ function captured(value: Request | null): Request {
 }
 
 describe("ApiClient", () => {
+  it("converts an online admin fetch failure into Access recovery", async () => {
+    const client = new ApiClient(
+      async () => { throw new TypeError("Failed to fetch"); },
+      "https://couple-travel-guide-admin.example.workers.dev"
+    );
+
+    const error = await client.getTripSnapshot("trip-one")
+      .catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(AuthRequestError);
+    expect(error).toMatchObject({ code: "ACCESS_REFRESH_REQUIRED" });
+  });
+
   it("calls a browser fetcher with the global receiver", async () => {
     let receiver: unknown;
     const receiverAwareFetcher = {

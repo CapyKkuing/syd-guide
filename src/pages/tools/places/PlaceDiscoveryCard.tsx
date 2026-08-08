@@ -8,7 +8,7 @@ import {
   Token,
   VStack,
 } from "@astryxdesign/core";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { MapPlaceView } from "../../../data/contracts";
 import { ApiClientError } from "../../../services/api/errors";
 import type { TripMutationController } from "../../../services/mutations/controller";
@@ -55,10 +55,29 @@ export function PlaceDiscoveryCard({
   const discovery = initialDiscovery !== undefined ? initialDiscovery : loadedDiscovery;
   const [photoUrl, setPhotoUrl] = useState<string | null>(() => normalizeImageUrl(place.imageUrl));
   const [error, setError] = useState("");
+  const [isLoadingPhoto, setIsLoadingPhoto] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [savedOverride, setSavedOverride] = useState<boolean | null>(null);
+  const mountedRef = useRef(true);
+  const objectUrlRef = useRef<string | null>(null);
   const isTransient = !storedPlace;
   const isSaved = savedOverride ?? storedPlace?.isSaved ?? place.isSaved;
+
+  const setPhotoBlob = useCallback((blob: Blob) => {
+    if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+    const objectUrl = URL.createObjectURL(blob);
+    objectUrlRef.current = objectUrl;
+    setPhotoUrl(objectUrl);
+    return objectUrl;
+  }, []);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (initialDiscovery !== undefined) return;
@@ -79,23 +98,41 @@ export function PlaceDiscoveryCard({
   useEffect(() => {
     if (!discovery?.photo) return;
     let active = true;
-    let objectUrl: string | null = null;
     const photoRequest = isRecommendation
-      ? placesApi.getRecommendationPhoto(tripId, discovery.photo.name)
-      : placesApi.getPhoto(tripId, place.id, discovery.photo.name);
+      ? placesApi.getRecommendationPhoto(tripId, discovery.photo.name, { automatic: true })
+      : placesApi.getPhoto(tripId, place.id, discovery.photo.name, { automatic: true });
     void photoRequest.then(({ blob, usage }) => {
       if (!active) return;
-      objectUrl = URL.createObjectURL(blob);
-      setPhotoUrl(objectUrl);
+      setPhotoBlob(blob);
       onUsage([usage]);
     }).catch(() => {
       if (active) setPhotoUrl(normalizeImageUrl(place.imageUrl));
     });
     return () => {
       active = false;
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [discovery?.photo, isRecommendation, onUsage, place.id, place.imageUrl, tripId]);
+  }, [discovery?.photo, isRecommendation, onUsage, place.id, place.imageUrl, setPhotoBlob, tripId]);
+
+  async function openDetails() {
+    let nextPhotoUrl = photoUrl;
+    if (!nextPhotoUrl && discovery?.photo) {
+      setIsLoadingPhoto(true);
+      try {
+        const result = isRecommendation
+          ? await placesApi.getRecommendationPhoto(tripId, discovery.photo.name)
+          : await placesApi.getPhoto(tripId, place.id, discovery.photo.name);
+        if (!mountedRef.current) return;
+        nextPhotoUrl = setPhotoBlob(result.blob);
+        onUsage([result.usage]);
+      } catch {
+        if (mountedRef.current) setError("사진을 불러오지 못했습니다.");
+      } finally {
+        if (mountedRef.current) setIsLoadingPhoto(false);
+      }
+    }
+    if (!mountedRef.current) return;
+    onOpen({ place, discovery, photoUrl: nextPhotoUrl, isTransient });
+  }
 
   async function toggleSaved() {
     if (!controller || isSaving) return;
@@ -164,7 +201,7 @@ export function PlaceDiscoveryCard({
       <VStack className="place-discovery-card__body" gap={2}>
         <HStack className="place-discovery-card__tokens" gap={1}>
           {place.isRecommended ? <Token color="green" label="추천" size="sm" /> : null}
-          {isSaved ? <Token color="teal" label="내 저장" size="sm" /> : null}
+          {isSaved ? <Token color="teal" label="내가 저장" size="sm" /> : null}
         </HStack>
         <HStack align="start" justify="between">
           <VStack gap={1}>
@@ -190,8 +227,9 @@ export function PlaceDiscoveryCard({
         ) : error ? <Text color="secondary" type="supporting">{error}</Text> : null}
         <HStack className="place-discovery-card__actions" gap={2}>
           <Button
-            label="상세 보기"
-            onClick={() => onOpen({ place, discovery, photoUrl, isTransient })}
+            isDisabled={isLoadingPhoto}
+            label={isLoadingPhoto ? "사진 불러오는 중" : "상세 보기"}
+            onClick={() => void openDetails()}
             size="sm"
             variant="secondary"
           />

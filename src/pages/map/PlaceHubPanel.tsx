@@ -9,7 +9,9 @@ import {
   VStack,
 } from "@astryxdesign/core";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Icon } from "../../components/Icon";
 import type { MapPlaceView } from "../../data/contracts";
+import { isSamePlace } from "../../domain/placeIdentity";
 import { ApiClientError } from "../../services/api/errors";
 import type { TripMutationController } from "../../services/mutations/controller";
 import { placesApi } from "../../services/places/api";
@@ -26,7 +28,6 @@ import { MapPlaceSheet } from "./MapPlaceSheet";
 import { PlaceEditorDialog } from "./PlaceEditorDialog";
 
 export type PlaceHubCategory = "all" | PlaceRecommendationCategory;
-export type PlaceHubMode = "saved" | "recommended";
 type PlaceSort = "popular" | "reviews" | "rating";
 
 interface PlaceHubItem {
@@ -45,20 +46,24 @@ interface CategorizedRecommendation {
 export function PlaceHubPanel({
   category,
   controller,
-  mode,
+  onOpenMap,
   places,
   tripId,
   viewerMemberId,
 }: {
   category: PlaceHubCategory;
   controller?: TripMutationController;
-  mode: PlaceHubMode;
+  onOpenMap: () => void;
   places: MapPlaceView[];
   tripId: string;
   viewerMemberId: string;
 }) {
+  const recommendationEnabled = places.some((place) => (
+    place.latitude !== null && place.longitude !== null
+  ));
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<PlaceSort>("popular");
+  const [showSavedOnly, setShowSavedOnly] = useState(false);
   const [visibleCount, setVisibleCount] = useState(6);
   const [selected, setSelected] = useState<PlaceCardSelection | null>(null);
   const [editingPlace, setEditingPlace] = useState<MapPlaceView | undefined>();
@@ -66,7 +71,7 @@ export function PlaceHubPanel({
   const [usage, setUsage] = useState<PlaceProviderUsage[]>([]);
   const [recommendations, setRecommendations] = useState<CategorizedRecommendation[]>([]);
   const [recommendationError, setRecommendationError] = useState("");
-  const [isLoading, setIsLoading] = useState(mode === "recommended");
+  const [isLoading, setIsLoading] = useState(recommendationEnabled);
 
   const recommendationCategories = useMemo(
     () => category === "all" ? (["restaurant", "cafe"] as const) : [category],
@@ -78,7 +83,7 @@ export function PlaceHubPanel({
   }, []);
 
   const loadRecommendations = useCallback(async (refresh = false) => {
-    if (mode !== "recommended") return;
+    if (!recommendationEnabled) return;
     await Promise.resolve();
     setIsLoading(true);
     setRecommendationError("");
@@ -104,42 +109,60 @@ export function PlaceHubPanel({
     } finally {
       setIsLoading(false);
     }
-  }, [mode, recommendationCategories, tripId]);
+  }, [recommendationCategories, recommendationEnabled, tripId]);
 
   useEffect(() => {
-    if (mode !== "recommended") return;
+    if (!recommendationEnabled) return;
     const timer = window.setTimeout(() => void loadRecommendations(), 0);
     return () => window.clearTimeout(timer);
-  }, [loadRecommendations, mode]);
+  }, [loadRecommendations, recommendationEnabled]);
 
-  const items = useMemo(() => mode === "saved"
-    ? savedItems(places, category)
-    : recommendationItems(places, recommendations),
-  [category, mode, places, recommendations]);
+  const displayedRecommendationError = recommendationEnabled
+    ? recommendationError
+    : "위치가 입력된 장소를 하나 추가하면 주변 추천을 받을 수 있습니다.";
+
+  const savedCount = useMemo(() => savedItems(places, category).length, [category, places]);
+  const items = useMemo(
+    () => unifiedItems(places, recommendations, category),
+    [category, places, recommendations]
+  );
   const filteredItems = useMemo(() => {
     const query = search.trim().toLocaleLowerCase();
     return items.filter((item) => {
       const searchable = `${item.place.name} ${item.discovery?.address ?? item.place.address} ${item.place.description}`;
-      return !query || searchable.toLocaleLowerCase().includes(query);
+      return (!showSavedOnly || item.storedPlace?.isSaved || item.place.isSaved)
+        && (!query || searchable.toLocaleLowerCase().includes(query));
     }).sort((left, right) => comparePlaceItems(left, right, sort));
-  }, [items, search, sort]);
+  }, [items, search, showSavedOnly, sort]);
   const visibleItems = filteredItems.slice(0, visibleCount);
 
   return (
     <VStack className="place-hub-panel" gap={3}>
+      <HStack className="place-hub-panel__quick-actions" gap={2}>
+        <Button
+          label={`내 저장 ${savedCount}`}
+          onClick={() => setShowSavedOnly((current) => !current)}
+          size="sm"
+          variant={showSavedOnly ? "primary" : "secondary"}
+        />
+        <Button
+          icon={<Icon name="map" />}
+          label="지도 보기"
+          onClick={onOpenMap}
+          size="sm"
+          variant="secondary"
+        />
+      </HStack>
+
       <HStack align="center" className="place-hub-panel__heading" justify="between">
-        <Text hasTabularNumbers type="label">
-          {mode === "saved" ? `저장 장소 ${filteredItems.length}곳` : `추천 장소 ${filteredItems.length}곳`}
-        </Text>
-        {mode === "recommended" ? (
-          <Button
-            isDisabled={isLoading}
-            label={isLoading ? "추천 불러오는 중" : "추천 새로고침"}
-            onClick={() => void loadRecommendations(true)}
-            size="sm"
-            variant="secondary"
-          />
-        ) : null}
+        <Text hasTabularNumbers type="label">저장과 추천을 한눈에 · {filteredItems.length}곳</Text>
+        <Button
+          isDisabled={isLoading || !recommendationEnabled}
+          label={isLoading ? "추천 불러오는 중" : "추천 새로고침"}
+          onClick={() => void loadRecommendations(true)}
+          size="sm"
+          variant="secondary"
+        />
       </HStack>
 
       <label className="map-search">
@@ -155,42 +178,40 @@ export function PlaceHubPanel({
         />
       </label>
 
-      {mode === "recommended" ? (
-        <VStack gap={2}>
-          <SegmentedControl
-            label="추천 정렬"
-            layout="fill"
-            onChange={(value) => {
-              setSort(value as PlaceSort);
-              setVisibleCount(6);
-            }}
-            size="sm"
-            value={sort}
-          >
-            <SegmentedControlItem label="인기순" value="popular" />
-            <SegmentedControlItem label="리뷰 많은순" value="reviews" />
-            <SegmentedControlItem label="평점순" value="rating" />
-          </SegmentedControl>
-          <Card className="place-provider-limit" padding={3} variant="muted">
-            <HStack align="center" justify="between">
-              <VStack gap={1}>
-                <Text type="label">무료 한도 보호 작동 중</Text>
-                <Text color="secondary" type="supporting">
-                  Google 최신 추천입니다. 정렬 변경에는 추가 호출이 없습니다.
-                </Text>
-              </VStack>
-              <Text hasTabularNumbers type="label">
-                검색 {usage.find((item) => item.sku === "nearby-search-enterprise")?.used ?? 0}/800 · 사진 {usage.find((item) => item.sku === "place-photo")?.used ?? 0}/800
+      <VStack gap={2}>
+        <SegmentedControl
+          label="추천 정렬"
+          layout="fill"
+          onChange={(value) => {
+            setSort(value as PlaceSort);
+            setVisibleCount(6);
+          }}
+          size="sm"
+          value={sort}
+        >
+          <SegmentedControlItem label="인기순" value="popular" />
+          <SegmentedControlItem label="리뷰 많은순" value="reviews" />
+          <SegmentedControlItem label="평점순" value="rating" />
+        </SegmentedControl>
+        <Card className="place-provider-limit" padding={3} variant="muted">
+          <HStack align="center" justify="between">
+            <VStack gap={1}>
+              <Text type="label">무료 한도 보호 작동 중</Text>
+              <Text color="secondary" type="supporting">
+                Google 최신 추천입니다. 처음 6장만 자동 표시하고 나머지 사진은 상세 보기에서 불러옵니다.
               </Text>
-            </HStack>
-          </Card>
-          {recommendationError ? (
-            <Text color="secondary" role="alert" type="supporting">
-              {recommendationError}
+            </VStack>
+            <Text hasTabularNumbers type="label">
+              검색 {usage.find((item) => item.sku === "nearby-search-enterprise")?.used ?? 0}/800 · 사진 {usage.find((item) => item.sku === "place-photo")?.used ?? 0}/800
             </Text>
-          ) : null}
-        </VStack>
-      ) : null}
+          </HStack>
+        </Card>
+        {displayedRecommendationError ? (
+          <Text color="secondary" role="alert" type="supporting">
+            {displayedRecommendationError}
+          </Text>
+        ) : null}
+      </VStack>
 
       {visibleItems.length ? (
         <Grid className="place-hub-panel__grid" columns={{ minWidth: 250, max: 3, repeat: "fit" }} gap={3}>
@@ -218,9 +239,9 @@ export function PlaceHubPanel({
             <Text type="body">
               {isLoading
                 ? "장소를 불러오는 중입니다."
-                : mode === "saved"
+                : showSavedOnly
                   ? "저장한 맛집이나 카페가 없습니다."
-                  : recommendationError || "추천 장소가 없습니다."}
+                  : displayedRecommendationError || "추천 장소가 없습니다."}
             </Text>
           </VStack>
         </Card>
@@ -274,16 +295,30 @@ function savedItems(places: MapPlaceView[], category: PlaceHubCategory): PlaceHu
   ));
 }
 
+function unifiedItems(
+  places: MapPlaceView[],
+  recommendations: CategorizedRecommendation[],
+  category: PlaceHubCategory
+): PlaceHubItem[] {
+  const recommended = recommendationItems(places, recommendations).filter((item) => (
+    category === "all" || item.place.category === category
+  ));
+  const savedOnly = savedItems(places, category).filter((saved) => !recommended.some((item) => (
+    samePlace(item.place, saved.place)
+  )));
+  return [...recommended, ...savedOnly].map((item, popularityRank) => ({
+    ...item,
+    popularityRank,
+  }));
+}
+
 function recommendationItems(
   places: MapPlaceView[],
   recommendations: CategorizedRecommendation[]
 ): PlaceHubItem[] {
   const stored = places.filter((place) => place.isSaved);
   return recommendations.map(({ category, discovery, popularityRank }) => {
-    const storedPlace = stored.find((place) =>
-      place.providerPlaceId === discovery.providerPlaceId
-      || normalizePlaceName(place.name) === normalizePlaceName(discovery.name)
-    );
+    const storedPlace = stored.find((place) => isSamePlace(place, discovery));
     return {
       discovery,
       popularityRank,
@@ -302,6 +337,10 @@ function recommendationItems(
       },
     };
   });
+}
+
+function samePlace(left: MapPlaceView, right: MapPlaceView) {
+  return isSamePlace(left, right);
 }
 
 function emptyRecommendationPlace(
@@ -352,10 +391,6 @@ function mergeUsage(current: PlaceProviderUsage[], next: PlaceProviderUsage[]) {
     merged.set(item.sku, previous && previous.used > item.used ? previous : item);
   });
   return [...merged.values()];
-}
-
-function normalizePlaceName(value: string) {
-  return value.normalize("NFKD").toLocaleLowerCase().replace(/[^a-z0-9가-힣]/g, "");
 }
 
 function recommendationErrorMessage(error: unknown) {

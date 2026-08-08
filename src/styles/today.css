@@ -87,6 +87,27 @@
 
 .representative-photo__figure {
   margin: 0;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background: var(--surface-3);
+}
+
+.representative-photo__figure--1-1 {
+  aspect-ratio: 1 / 1;
+}
+
+.representative-photo__figure--3-4 {
+  aspect-ratio: 3 / 4;
+}
+
+.representative-photo__figure--16-9 {
+  aspect-ratio: 16 / 9;
+}
+
+.representative-photo__figure .today-hero__cover {
+  height: 100%;
+  min-height: 0;
 }
 
 .representative-photo__figure figcaption,
@@ -392,6 +413,197 @@
 .today-dashboard {
   display: grid;
   gap: var(--space-4);
+}
+
+.representative-photo-editor.sheet {
+  inset: 0;
+  width: 100%;
+  max-width: none;
+  max-height: none;
+  border: 0;
+  border-radius: 0;
+  transform: none;
+}
+
+.representative-photo-editor .sheet__close {
+  position: absolute;
+  z-index: 1;
+  top: var(--space-3);
+  right: var(--space-3);
+}
+
+.representative-photo-editor__content {
+  display: grid;
+  min-height: 100dvh;
+  align-content: start;
+  gap: var(--space-5);
+  overflow-y: auto;
+  padding: var(--space-6) var(--space-4) calc(var(--space-6) + env(safe-area-inset-bottom));
+}
+
+.representative-photo-editor__heading {
+  display: grid;
+  gap: var(--space-1);
+  padding-right: calc(var(--space-7) + var(--space-2));
+}
+
+.representative-photo-editor__heading p,
+.representative-photo-editor__heading h2,
+.representative-photo-editor__heading span,
+.representative-photo-editor__message {
+  margin: 0;
+}
+
+.representative-photo-editor__heading p {
+  color: var(--accent-strong);
+  font-size: var(--text-xs);
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+
+.representative-photo-editor__heading h2 {
+  color: var(--text);
+}
+
+.representative-photo-editor__heading span,
+.representative-photo-editor__message {
+  color: var(--text-2);
+  font-size: var(--text-sm);
+}
+
+.representative-photo-editor__canvas {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: min(100%, 720px);
+  justify-self: center;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--surface-3);
+}
+
+.representative-photo-editor__canvas--1-1 { aspect-ratio: 1 / 1; }
+.representative-photo-editor__canvas--3-4 { aspect-ratio: 3 / 4; }
+.representative-photo-editor__canvas--16-9 { aspect-ratio: 16 / 9; }
+
+.representative-photo-editor__canvas img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.representative-photo-editor__canvas p {
+  position: absolute;
+  right: var(--space-3);
+  bottom: var(--space-3);
+  margin: 0;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--text) 78%, transparent);
+  color: var(--surface);
+  font-size: var(--text-xs);
+}
+
+.representative-photo-editor__grid {
+  position: absolute;
+  inset: var(--space-3);
+  border: 2px solid color-mix(in srgb, var(--surface) 88%, transparent);
+  border-radius: var(--radius-md);
+  background-image: linear-gradient(90deg, transparent 33%, color-mix(in srgb, var(--surface) 65%, transparent) 33%, color-mix(in srgb, var(--surface) 65%, transparent) 34%, transparent 34%, transparent 66%, color-mix(in srgb, var(--surface) 65%, transparent) 66%, color-mix(in srgb, var(--surface) 65%, transparent) 67%, transparent 67%), linear-gradient(transparent 33%, color-mix(in srgb, var(--surface) 65%, transparent) 33%, color-mix(in srgb, var(--surface) 65%, transparent) 34%, transparent 34%, transparent 66%, color-mix(in srgb, var(--surface) 65%, transparent) 66%, color-mix(in srgb, var(--surface) 65%, transparent) 67%, transparent 67%);
+  pointer-events: none;
+}
+
+.representative-photo-editor__controls {
+  display: grid;
+  width: min(100%, 640px);
+  justify-self: center;
+  gap: var(--space-5);
+}
+
+.representative-photo-editor__controls fieldset,
+.representative-photo-editor__controls label {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.representative-photo-editor__controls legend,
+.representative-photo-editor__controls label > span {
+  color: var(--text);
+  font-size: var(--text-sm);
+  font-weight: 800;
+}
+
+.representative-photo-editor__controls label > span {
+  display: flex;
+  justify-content: space-between;
+}
+
+.representative-photo-editor__ratio-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.representative-photo-editor__ratio-list button {
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-2);
+  font-weight: 800;
+}
+
+.representative-photo-editor__ratio-list button.is-selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+.representative-photo-editor__controls input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.representative-photo-editor__actions {
+  display: grid;
+  width: min(100%, 640px);
+  justify-self: center;
+  grid-template-columns: 1fr 1.25fr;
+  gap: var(--space-2);
+}
+
+@media (min-width: 761px) {
+  .representative-photo-editor.sheet {
+    top: 0;
+    left: 0;
+    margin: 0;
+  }
+
+  .representative-photo-editor__content {
+    grid-template-columns: minmax(0, 1.25fr) minmax(360px, .75fr);
+    align-items: center;
+    padding: var(--space-7);
+  }
+
+  .representative-photo-editor__heading {
+    grid-column: 1 / -1;
+    width: min(100%, 1080px);
+    justify-self: center;
+  }
+
+  .representative-photo-editor__controls,
+  .representative-photo-editor__actions {
+    width: 100%;
+  }
+
+  .representative-photo-editor__actions {
+    grid-column: 2;
+  }
 }
 
 .today-live-hero,

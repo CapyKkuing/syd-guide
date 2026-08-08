@@ -1,5 +1,5 @@
 import { DateInput } from "@astryxdesign/core/DateInput";
-import { useState, type ComponentProps, type FormEvent } from "react";
+import { useEffect, useRef, useState, type ComponentProps, type FormEvent } from "react";
 import { BottomSheet } from "../../components/BottomSheet";
 import {
   tripInputSchema,
@@ -24,7 +24,7 @@ type TripFormState = Omit<TripInput, "outboundFlight" | "returnFlight"> & {
   returnFlight: FlightDraft | null;
 };
 
-function initialInput(trip?: TripLibrarySummary): TripFormState {
+function initialInput(trip?: TripLibrarySummary, initialFocus?: "flights"): TripFormState {
   return trip ? {
     title: trip.title,
     destination: trip.destination,
@@ -35,10 +35,10 @@ function initialInput(trip?: TripLibrarySummary): TripFormState {
     coverImageUrl: trip.coverImageUrl,
     outboundFlight: trip.outboundFlight
       ? flightDetailsToDraft(trip.outboundFlight)
-      : null,
+      : initialFocus === "flights" ? emptyFlightDraft() : null,
     returnFlight: trip.returnFlight
       ? flightDetailsToDraft(trip.returnFlight)
-      : null
+      : initialFocus === "flights" ? emptyFlightDraft() : null
   } : {
     title: "",
     destination: "",
@@ -53,6 +53,7 @@ function initialInput(trip?: TripLibrarySummary): TripFormState {
 }
 
 export function TripForm({
+  initialFocus,
   trip,
   submitting,
   requestError,
@@ -60,6 +61,7 @@ export function TripForm({
   onClose,
   returnFocusTo
 }: {
+  initialFocus?: "flights";
   trip?: TripLibrarySummary;
   submitting: boolean;
   requestError?: string;
@@ -69,9 +71,15 @@ export function TripForm({
   onClose: () => void;
   returnFocusTo: HTMLElement | null;
 }) {
-  const [input, setInput] = useState(() => initialInput(trip));
+  const [input, setInput] = useState(() => initialInput(trip, initialFocus));
   const [validationError, setValidationError] = useState("");
+  const flightSectionRef = useRef<HTMLDivElement>(null);
   const mode = trip ? "edit" : "create";
+
+  useEffect(() => {
+    if (initialFocus !== "flights") return;
+    requestAnimationFrame(() => flightSectionRef.current?.scrollIntoView({ block: "start" }));
+  }, [initialFocus]);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -178,7 +186,7 @@ export function TripForm({
             <option value="completed">완료</option>
           </select>
         </label>
-        <div className="trip-form__section-heading">
+        <div ref={flightSectionRef} className="trip-form__section-heading">
           <h3>항공편</h3>
           <p>
             출국편 예정 출발과 귀국편 예정 도착을 여행 시작·종료 기준으로 사용합니다.

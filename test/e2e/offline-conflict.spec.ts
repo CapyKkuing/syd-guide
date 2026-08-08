@@ -98,7 +98,8 @@ for (const choice of ["latest", "mine"] as const) {
     });
 
     await page.goto(`/trip/${workspace.trip.id}/map`);
-    await page.getByRole("button", { name: /처음 저장한 장소/ }).click();
+    await expect(page.getByRole("heading", { name: "처음 저장한 장소" })).toBeVisible();
+    await page.getByRole("button", { name: "상세 보기" }).click();
     await page.getByRole("button", { name: "장소 수정" }).click();
     const editor = page.getByRole("dialog", { name: "장소 수정" });
 
@@ -121,7 +122,7 @@ for (const choice of ["latest", "mine"] as const) {
     if (choice === "latest") {
       await conflict.getByRole("button", { name: "최신 내용 사용" }).click();
       await expect(conflict).toHaveCount(0);
-      await expect(page.getByRole("button", { name: /서버 최신 장소/ }))
+      await expect(page.getByRole("heading", { name: "서버 최신 장소" }))
         .toBeVisible();
     } else {
       const responsePromise = page.waitForResponse((candidate) =>
@@ -132,7 +133,7 @@ for (const choice of ["latest", "mine"] as const) {
       await conflict.getByRole("button", { name: "내 수정 유지" }).click();
       await responsePromise;
       await expect(conflict).toHaveCount(0);
-      await expect(page.getByRole("button", { name: /내 충돌 장소/ }))
+      await expect(page.getByRole("heading", { name: "내 충돌 장소" }))
         .toBeVisible();
     }
 

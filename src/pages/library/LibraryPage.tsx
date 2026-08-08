@@ -52,11 +52,13 @@ function sessionRecovery(error: ApiRequestError) {
 export function LibraryPage({
   client,
   deviceManagement,
+  initialEditFocus,
   initialEditTripId,
   now = () => new Date()
 }: {
   client: TripLibraryClient;
   deviceManagement?: ReactNode;
+  initialEditFocus?: "flights";
   initialEditTripId?: string | null;
   now?: () => Date;
 }) {
@@ -255,6 +257,7 @@ export function LibraryPage({
         dialog={visibleDialog}
         library={library}
         deviceManagement={deviceManagement}
+        initialEditFocus={dialog ? undefined : initialEditFocus}
         now={now()}
         onClose={closeDialog}
       />

@@ -90,6 +90,11 @@ export async function loadTripSnapshot(
     ),
     statement(
       env,
+      "SELECT * FROM settlement_transfers WHERE trip_id = ? ORDER BY updated_at DESC, id",
+      tripId
+    ),
+    statement(
+      env,
       `SELECT * FROM notes
        WHERE trip_id = ?
          AND (visibility = 'shared' OR author_member_id = ?)
@@ -169,6 +174,7 @@ export async function loadTripSnapshot(
     bookingRows,
     checkRows,
     expenseRows,
+    settlementTransferRows,
     noteRows,
     voteRows,
     activityRows,
@@ -187,6 +193,9 @@ export async function loadTripSnapshot(
     bookings: bookingRows.map((row) => entityRegistry.booking.parse(row)),
     checkItems: checkRows.map((row) => entityRegistry.check_item.parse(row)),
     expenses: expenseRows.map((row) => entityRegistry.expense.parse(row)),
+    settlementTransfers: settlementTransferRows.map(
+      (row) => entityRegistry.settlement_transfer.parse(row)
+    ),
     notes: noteRows.map((row) => entityRegistry.note.parse(row)),
     votes: voteRows.map((row) => entityRegistry.vote.parse(row)),
     activity: activityRows.map(activity),

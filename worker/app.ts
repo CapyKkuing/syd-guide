@@ -8,6 +8,7 @@ import { AuthError } from "./auth/principal";
 import type { AppEnv } from "./env";
 import { apiError } from "./http/errors";
 import { registerAiModelRoutes, type AiModelFetch } from "./routes/ai-model";
+import { OcrError, registerOcrRoutes } from "./routes/ocr";
 import { registerPairingRoutes } from "./routes/pairing";
 import { PlacesError, registerPlacesRoutes } from "./routes/places";
 import { registerParticipantRoutes } from "./routes/participants";
@@ -19,15 +20,24 @@ import { MutationError } from "./services/mutations";
 import { PairingError } from "./services/pairing";
 import { ParticipantError } from "./services/participants";
 import type { GooglePlacesFetch } from "./services/google-places";
+import type { GoogleVisionFetch, VisionTokenProvider } from "./services/google-vision";
 
 interface AppOverrides extends Partial<AppDependencies> {
   aiModelFetch?: AiModelFetch;
   placesFetch?: GooglePlacesFetch;
+  visionFetch?: GoogleVisionFetch;
+  visionTokenProvider?: VisionTokenProvider;
 }
 
 export function createApp(overrides: AppOverrides = {}) {
   const app = new Hono<AppEnv>();
-  const { aiModelFetch, placesFetch, ...accessOverrides } = overrides;
+  const {
+    aiModelFetch,
+    placesFetch,
+    visionFetch,
+    visionTokenProvider,
+    ...accessOverrides
+  } = overrides;
   const dependencies = { ...defaultDependencies, ...accessOverrides };
 
   app.use("/api/*", requireSameOrigin);
@@ -38,6 +48,7 @@ export function createApp(overrides: AppOverrides = {}) {
   registerPairingRoutes(app, dependencies);
   registerTripRoutes(app, dependencies);
   registerMediaRoutes(app, dependencies);
+  registerOcrRoutes(app, dependencies, visionFetch, visionTokenProvider);
   registerPlacesRoutes(app, dependencies, placesFetch);
   registerSyncRoutes(app, dependencies);
   app.all("/api/*", (c) =>
@@ -73,6 +84,9 @@ export function createApp(overrides: AppOverrides = {}) {
       );
     }
     if (error instanceof PlacesError) {
+      return apiError(c, error.status, error.code, error.message);
+    }
+    if (error instanceof OcrError) {
       return apiError(c, error.status, error.code, error.message);
     }
     if (error instanceof MutationError || error instanceof SyncError) {

@@ -149,6 +149,7 @@ export function TripRoutePage({
               mediaStorage={workspace.data.mediaStorage}
               mediaThumbnailStore={mediaThumbnailStore}
               members={workspace.data.tools.members}
+              settlementTransfers={workspace.data.tools.settlementTransfers ?? []}
               mutationController={mutationController}
               onMediaChanged={workspace.reload}
               today={workspace.data.today}

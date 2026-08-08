@@ -1,5 +1,6 @@
 /* eslint-disable no-unused-vars */
 import { createImageClassifier } from "./transformersRuntime.js";
+import { readExifCapturedAt } from "./exifCapturedAt";
 
 const MAX_EDGE = 960;
 
@@ -35,6 +36,7 @@ export async function rankPhotos(files: File[]): Promise<RankedPhoto[]> {
   const ranked: Array<RankedPhoto & { hash: string }> = [];
 
   for (const file of files) {
+    const capturedAt = await readExifCapturedAt(file);
     const bitmap = await createImageBitmap(file);
     const sample = sampleImage(bitmap);
     const predictions = normalizePredictions(await classify(file, { top_k: 3 }));
@@ -51,7 +53,7 @@ export async function rankPhotos(files: File[]): Promise<RankedPhoto[]> {
       thumbnail,
       width: bitmap.width,
       height: bitmap.height,
-      capturedAt: null,
+      capturedAt,
       score,
       labels: predictions.map(({ label }) => label),
       hash: sample.hash,

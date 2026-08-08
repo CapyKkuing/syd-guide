@@ -15,23 +15,32 @@ const categorySections = [
 
 export function ChecklistPanel({
   controller,
+  initialAction,
   items,
   members,
   viewerMemberId
 }: {
   controller?: TripMutationController;
+  initialAction?: "edit-passport";
   items: CheckItemView[];
   members: PublicMember[];
   viewerMemberId: string;
 }) {
+  const initialPassport = initialAction === "edit-passport"
+    ? items.find((item) => (
+      item.requirementKind === "passport"
+      && (item.ownerMemberId === viewerMemberId || item.assigneeMemberId === viewerMemberId)
+    ))
+    : undefined;
   const [filter, setFilter] = useState<ScopeFilter>("all");
-  const [category, setCategory] = useState<CheckItemView["category"]>("essential");
-  const [scope, setScope] = useState<CheckItemView["scope"]>("shared");
-  const [title, setTitle] = useState("");
-  const [quantity, setQuantity] = useState("1");
-  const [memo, setMemo] = useState("");
-  const [requirementKind, setRequirementKind] = useState<CheckItemView["requirementKind"]>(null);
-  const [assigneeMemberId, setAssigneeMemberId] = useState("");
+  const [editingItem, setEditingItem] = useState<CheckItemView | null>(initialPassport ?? null);
+  const [category, setCategory] = useState<CheckItemView["category"]>(initialPassport?.category ?? "essential");
+  const [scope, setScope] = useState<CheckItemView["scope"]>(initialPassport?.scope ?? (initialAction === "edit-passport" ? "personal" : "shared"));
+  const [title, setTitle] = useState(initialPassport?.title ?? (initialAction === "edit-passport" ? "여권" : ""));
+  const [quantity, setQuantity] = useState(String(initialPassport?.quantity ?? 1));
+  const [memo, setMemo] = useState(initialPassport?.memo ?? "");
+  const [requirementKind, setRequirementKind] = useState<CheckItemView["requirementKind"]>(initialPassport?.requirementKind ?? (initialAction === "edit-passport" ? "passport" : null));
+  const [assigneeMemberId, setAssigneeMemberId] = useState(initialPassport?.assigneeMemberId ?? (initialAction === "edit-passport" ? viewerMemberId : ""));
   const [error, setError] = useState("");
   const visibleItems = useMemo(
     () => items.filter((item) => filter === "all" || item.scope === filter),
@@ -45,31 +54,53 @@ export function ChecklistPanel({
   const essentialItems = items.filter((item) => item.category === "essential");
   const reservationItems = items.filter((item) => item.category === "reservation");
 
-  async function create(event: FormEvent) {
+  function clearEditor() {
+    setEditingItem(null);
+    setCategory("essential");
+    setScope("shared");
+    setTitle("");
+    setQuantity("1");
+    setMemo("");
+    setRequirementKind(null);
+    setAssigneeMemberId("");
+  }
+
+  function edit(item: CheckItemView) {
+    setEditingItem(item);
+    setCategory(item.category);
+    setScope(item.scope);
+    setTitle(item.title);
+    setQuantity(String(item.quantity));
+    setMemo(item.memo);
+    setRequirementKind(item.requirementKind);
+    setAssigneeMemberId(item.assigneeMemberId ?? "");
+    document.querySelector<HTMLDetailsElement>(".checklist-add-panel")?.setAttribute("open", "");
+  }
+
+  async function save(event: FormEvent) {
     event.preventDefault();
     if (!controller) return;
     try {
-      await controller.submit("check_item", "create", crypto.randomUUID(), null, {
+      await controller.submit("check_item", editingItem ? "update" : "create", editingItem?.id ?? crypto.randomUUID(), editingItem?.version ?? null, {
         phase: category === "travel" ? "travel" : "pretrip",
         category,
         scope,
-        ownerMemberId: scope === "personal" ? viewerMemberId : null,
+        ownerMemberId: scope === "personal" ? editingItem?.ownerMemberId ?? viewerMemberId : null,
         assigneeMemberId: assigneeMemberId || null,
         title: title.trim(),
         quantity: Math.max(1, Number(quantity) || 1),
         memo: memo.trim(),
         requirementKind,
-        isDone: false,
-        position: Math.max(0, ...items.map((item) => item.position)) + 1
+        isDone: editingItem?.isDone ?? false,
+        position: editingItem?.position ?? Math.max(0, ...items.map((item) => item.position)) + 1
       });
-      setTitle("");
-      setMemo("");
+      clearEditor();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "준비물을 추가하지 못했습니다.");
     }
   }
 
-  async function update(item: CheckItemView, isDone: boolean) {
+  async function toggle(item: CheckItemView, isDone: boolean) {
     if (!controller) return;
     await controller.submit("check_item", "update", item.id, item.version, {
       phase: item.phase,
@@ -130,13 +161,18 @@ export function ChecklistPanel({
                   {sectionItems.map((item) => (
                     <li className={item.isDone ? "is-done" : undefined} key={item.id}>
                       <label className="checklist-item__check">
-                        <input checked={item.isDone} disabled={!controller} onChange={(event) => void update(item, event.target.checked)} type="checkbox" />
+                        <input checked={item.isDone} disabled={!controller} onChange={(event) => void toggle(item, event.target.checked)} type="checkbox" />
                         <VStack gap={1}>
                           <span className="checklist-item__title">{item.title} × {item.quantity}</span>
                           <span className="checklist-item__meta">{item.scope === "shared" ? "함께" : "개인"}{item.assigneeMemberId ? ` · ${memberNames.get(item.assigneeMemberId) ?? "담당자"}` : ""}</span>
                         </VStack>
                       </label>
-                      {controller ? <Button label={`${item.title} 삭제`} onClick={() => void remove(item)} size="sm" variant="ghost">삭제</Button> : null}
+                      {controller ? (
+                        <HStack gap={1}>
+                          <Button label={`${item.title} 편집`} onClick={() => edit(item)} size="sm" variant="ghost">편집</Button>
+                          <Button label={`${item.title} 삭제`} onClick={() => void remove(item)} size="sm" variant="ghost">삭제</Button>
+                        </HStack>
+                      ) : null}
                     </li>
                   ))}
                 </ul>
@@ -146,9 +182,9 @@ export function ChecklistPanel({
         })}
       </VStack>
 
-      <details className="checklist-add-panel">
-        <summary>새 체크 항목 추가</summary>
-        <form className="tool-inline-form checklist-form" onSubmit={create}>
+      <details className="checklist-add-panel" open={initialAction === "edit-passport" || undefined}>
+        <summary>{editingItem ? "체크 항목 편집" : "새 체크 항목 추가"}</summary>
+        <form className="tool-inline-form checklist-form" onSubmit={save}>
           <label><span>카테고리</span><select disabled={!controller} value={category} onChange={(event) => setCategory(event.target.value as CheckItemView["category"])}>
             <option value="essential">필수 준비</option><option value="reservation">예약·바우처</option><option value="packing">개인 짐</option><option value="travel">여행 중</option>
           </select></label>
@@ -164,7 +200,10 @@ export function ChecklistPanel({
             <option value="">일반</option><option value="passport">여권</option><option value="essential">필수 준비물</option>
           </select></label>
           <label className="checklist-form__memo"><span>메모</span><input disabled={!controller} value={memo} onChange={(event) => setMemo(event.target.value)} /></label>
-          <Button isDisabled={!controller} label="체크 항목 추가" type="submit" variant="primary" />
+          <HStack gap={2}>
+            <Button isDisabled={!controller} label={editingItem ? "체크 항목 저장" : "체크 항목 추가"} type="submit" variant="primary" />
+            {editingItem ? <Button label="편집 취소" onClick={clearEditor} variant="secondary">취소</Button> : null}
+          </HStack>
         </form>
       </details>
     </VStack>

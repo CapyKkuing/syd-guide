@@ -9,10 +9,12 @@ import {
   parseRoute,
   pathForAdminDevices,
   pathForLibrary,
+  pathForLibraryEdit,
   pathForMemories,
   pathForMemoryPlayer,
   pathForPair,
   pathForTool,
+  pathForToolAction,
   pathForTrip,
   useRoute
 } from "./router";
@@ -37,6 +39,18 @@ afterEach(() => {
 });
 
 describe("path routing", () => {
+  it("builds direct flight, lodging, and passport input URLs", () => {
+    expect(pathForLibraryEdit("sydney-2026", "flights")).toBe(
+      "/library?edit=sydney-2026&focus=flights"
+    );
+    expect(pathForToolAction("sydney-2026", "bookings", "create-lodging")).toBe(
+      "/trip/sydney-2026/tools/bookings?action=create-lodging"
+    );
+    expect(pathForToolAction("sydney-2026", "checklist", "edit-passport")).toBe(
+      "/trip/sydney-2026/tools/checklist?action=edit-passport"
+    );
+  });
+
   it.each([
     ["/", { name: "root" }],
     ["/library", { name: "library" }],

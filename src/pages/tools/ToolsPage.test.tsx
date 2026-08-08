@@ -105,19 +105,26 @@ describe("ToolsPage", () => {
   });
 
   it("opens emergency contacts and offline travel tips", async () => {
-    const emergency = await renderToolsPage("emergency");
-    expect(screen.getByRole("heading", { level: 1, name: "비상 연락처" })).toBeVisible();
-    expect(screen.getAllByRole("link", { name: "000 전화" })[0]).toHaveAttribute("href", "tel:000");
-    expect(screen.getByText("Meriton Sussex Street")).toBeVisible();
+    const online = Object.getOwnPropertyDescriptor(window.navigator, "onLine");
+    Object.defineProperty(window.navigator, "onLine", { configurable: true, value: false });
+    try {
+      const emergency = await renderToolsPage("emergency");
+      expect(screen.getByRole("heading", { level: 1, name: "비상 연락처" })).toBeVisible();
+      expect(screen.getAllByRole("link", { name: "000 전화" })[0]).toHaveAttribute("href", "tel:000");
+      expect(screen.getByText("Meriton Sussex Street")).toBeVisible();
 
-    emergency.unmount();
-    await renderToolsPage("tips");
-    expect(screen.getByRole("heading", { level: 1, name: "주의사항" })).toBeVisible();
-    expect(screen.getByRole("heading", { name: "교통카드" })).toBeVisible();
-    expect(screen.getByRole("link", { name: "비상 연락처 열기" })).toHaveAttribute(
-      "href",
-      "/trip/sydney-2026/tools/emergency"
-    );
+      emergency.unmount();
+      await renderToolsPage("tips");
+      expect(screen.getByRole("heading", { level: 1, name: "주의사항" })).toBeVisible();
+      expect(screen.getByRole("heading", { name: "교통카드" })).toBeVisible();
+      expect(screen.getByRole("link", { name: "비상 연락처 열기" })).toHaveAttribute(
+        "href",
+        "/trip/sydney-2026/tools/emergency"
+      );
+    } finally {
+      if (online) Object.defineProperty(window.navigator, "onLine", online);
+      else Reflect.deleteProperty(window.navigator, "onLine");
+    }
   });
 
   it("collects admin-only settings on the management route", async () => {

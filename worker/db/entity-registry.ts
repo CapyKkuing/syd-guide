@@ -123,7 +123,7 @@ export const entityRegistry = {
     table: "bookings",
     columns: [
       "place_id", "booking_type", "provider", "starts_at", "ends_at",
-      "reservation_code", "payment_status", "external_url", "document_url",
+      "reservation_code", "payment_status", "usage_status", "external_url", "document_url",
       "document_provider", "document_object_id", "document_name",
       "document_mime_type", "memo", "is_fixed", "is_required",
     ],
@@ -133,7 +133,7 @@ export const entityRegistry = {
       const document = value.documentFile ?? null;
       return [
         value.placeId, value.bookingType, value.provider, value.startsAt,
-        value.endsAt, value.reservationCode, value.paymentStatus,
+        value.endsAt, value.reservationCode, value.paymentStatus, value.usageStatus ?? "booked",
         value.externalUrl, value.documentUrl, document?.provider ?? null,
         document?.providerObjectId ?? null, document?.originalName ?? null,
         document?.mimeType ?? null, value.memo, Number(value.isFixed),
@@ -150,6 +150,7 @@ export const entityRegistry = {
       reservationCode: row.reservation_code === null
         ? null : String(row.reservation_code),
       paymentStatus: row.payment_status as EntityMap["booking"]["paymentStatus"],
+      usageStatus: (row.usage_status ?? "booked") as EntityMap["booking"]["usageStatus"],
       externalUrl: row.external_url === null ? null : String(row.external_url),
       documentUrl: row.document_url === null ? null : String(row.document_url),
       documentFile: row.document_object_id === null ? null : {
@@ -236,6 +237,33 @@ export const entityRegistry = {
         ? null : row.payment_method as EntityMap["expense"]["paymentMethod"],
       isSettled: bool(row.is_settled),
       memo: String(row.memo),
+    }),
+  },
+  settlement_transfer: {
+    table: "settlement_transfers",
+    columns: [
+      "settlement_group_id", "expense_ids_json", "currency", "from_member_id",
+      "to_member_id", "amount_minor", "status", "completed_at",
+    ],
+    payloadSchema: entitySchemas.settlement_transfer,
+    values: (raw) => {
+      const value = raw as MutationPayloadMap["settlement_transfer"];
+      return [
+        value.settlementGroupId, JSON.stringify(value.expenseIds), value.currency,
+        value.fromMemberId, value.toMemberId, value.amountMinor, value.status,
+        value.completedAt,
+      ];
+    },
+    parse: (row) => ({
+      ...base(row),
+      settlementGroupId: String(row.settlement_group_id),
+      expenseIds: JSON.parse(String(row.expense_ids_json)) as string[],
+      currency: String(row.currency),
+      fromMemberId: String(row.from_member_id),
+      toMemberId: String(row.to_member_id),
+      amountMinor: Number(row.amount_minor),
+      status: row.status as EntityMap["settlement_transfer"]["status"],
+      completedAt: row.completed_at === null ? null : String(row.completed_at),
     }),
   },
   note: {

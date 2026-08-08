@@ -74,9 +74,9 @@ describe("TodayPage", () => {
     expect(screen.getByRole("link", { name: "전체 준비 보기" }))
       .toHaveAttribute("href", "/trip/bondi-weekend/tools/checklist");
     expect(gaps?.[1]?.querySelector("a"))
-      .toHaveAttribute("href", "/trip/bondi-weekend/tools/bookings");
+      .toHaveAttribute("href", "/trip/bondi-weekend/tools/bookings?action=create-lodging");
     expect(gaps?.[2]?.querySelector("a"))
-      .toHaveAttribute("href", "/trip/bondi-weekend/tools/checklist");
+      .toHaveAttribute("href", "/trip/bondi-weekend/tools/checklist?action=edit-passport");
   });
 
   it("submits a preparation expense through the shared mutation controller", async () => {
@@ -181,7 +181,8 @@ describe("TodayPage", () => {
   it("shows the destination-local nightly expense reminder once per day", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-07-28T11:00:00.000Z"));
-    render(<TodayPage {...await todayProps("sydney-2026")} />);
+    const props = await todayProps("sydney-2026");
+    const { rerender } = render(<TodayPage {...props} />);
 
     expect(screen.getByRole("dialog", { name: "오늘 지출 정리 알림" })).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "오늘은 닫기" }));
@@ -189,6 +190,27 @@ describe("TodayPage", () => {
 
     act(() => window.dispatchEvent(new Event("focus")));
     expect(screen.queryByRole("dialog", { name: "오늘 지출 정리 알림" })).not.toBeInTheDocument();
+
+    vi.setSystemTime(new Date("2026-07-29T11:00:00.000Z"));
+    rerender(<TodayPage {...props} today={{ ...props.today, localDate: "2026-07-29" }} />);
+    act(() => window.dispatchEvent(new Event("focus")));
+    expect(screen.getByRole("dialog", { name: "오늘 지출 정리 알림" })).toBeVisible();
+  });
+
+  it("keeps manual expense entry available before the nightly reminder", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-07-28T05:00:00.000Z"));
+    const controller: TripMutationController = { submit: vi.fn() };
+    render(
+      <TodayPage
+        {...await todayProps("sydney-2026")}
+        mutationController={controller}
+      />
+    );
+
+    expect(screen.queryByRole("dialog", { name: "오늘 지출 정리 알림" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "지출 기록" }));
+    expect(screen.getByRole("dialog", { name: "비용 추가" })).toBeVisible();
   });
 
   it("keeps the trip cover until a real AI-selected trip photo exists", async () => {

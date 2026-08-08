@@ -1,4 +1,7 @@
-import type { MutationRequest } from "../../shared/mutations";
+import type {
+  MutationRequest,
+  SyncMutationRequest,
+} from "../../shared/mutations";
 import {
   resolveTravelDatabase,
   type OutboxRecord,
@@ -13,7 +16,7 @@ export class OutboxStore {
 
   async enqueue(
     tripId: string,
-    mutation: MutationRequest,
+    mutation: SyncMutationRequest,
     createdAt = new Date().toISOString()
   ): Promise<OutboxRecord> {
     const record: OutboxRecord = {

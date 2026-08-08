@@ -2,6 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 const baseURL = "http://localhost:4173";
 const responsiveTest = /responsive\.spec\.ts/;
+const androidOfflineTest = /android-offline\.spec\.ts/;
 const e2eStatePath = process.env.E2E_STATE_PATH ?? `.tmp/e2e-state-${Date.now()}`;
 
 process.env.E2E_STATE_PATH = e2eStatePath;
@@ -54,11 +55,22 @@ export default defineConfig({
     },
     {
       name: "android-chromium",
-      testMatch: responsiveTest,
+      testMatch: [responsiveTest, androidOfflineTest],
       use: {
         browserName: "chromium",
         viewport: { width: 390, height: 844 },
         deviceScaleFactor: 2.75,
+        hasTouch: true,
+        isMobile: true
+      }
+    },
+    {
+      name: "compact-chromium-320",
+      testMatch: responsiveTest,
+      use: {
+        browserName: "chromium",
+        viewport: { width: 320, height: 720 },
+        deviceScaleFactor: 2,
         hasTouch: true,
         isMobile: true
       }
@@ -69,6 +81,17 @@ export default defineConfig({
       use: {
         browserName: "webkit",
         viewport: { width: 393, height: 852 },
+        deviceScaleFactor: 3,
+        hasTouch: true,
+        isMobile: true
+      }
+    },
+    {
+      name: "wide-mobile-webkit-430",
+      testMatch: responsiveTest,
+      use: {
+        browserName: "webkit",
+        viewport: { width: 430, height: 932 },
         deviceScaleFactor: 3,
         hasTouch: true,
         isMobile: true

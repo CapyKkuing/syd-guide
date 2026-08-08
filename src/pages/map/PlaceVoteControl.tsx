@@ -1,3 +1,4 @@
+import { SegmentedControl, SegmentedControlItem, Text, VStack } from "@astryxdesign/core";
 import { useState } from "react";
 import type { MapPlaceView } from "../../data/contracts";
 import type { VoteChoice } from "../../shared/entities";
@@ -20,9 +21,12 @@ export function PlaceVoteControl({
 }) {
   const [error, setError] = useState("");
   const current = place.votes.find((vote) => vote.memberId === viewerMemberId);
+  const [pendingChoice, setPendingChoice] = useState<VoteChoice | null>(null);
 
   async function vote(choice: VoteChoice) {
     if (!controller) return;
+    const previousChoice = pendingChoice;
+    setPendingChoice(choice);
     setError("");
     try {
       await controller.submit(
@@ -33,27 +37,28 @@ export function PlaceVoteControl({
         { targetType: "place", targetId: place.id, choice }
       );
     } catch (caught) {
+      setPendingChoice(previousChoice);
       setError(caught instanceof Error ? caught.message : "투표를 저장하지 못했습니다.");
     }
   }
 
   return (
-    <div className="place-vote-control">
-      <p>내 선택</p>
-      <div role="group" aria-label={`${place.name} 투표`}>
+    <VStack className="place-vote-control" gap={2}>
+      <Text type="label">내 선택</Text>
+      <SegmentedControl
+        disabledMessage="온라인으로 연결하면 선택을 저장할 수 있습니다."
+        isDisabled={!controller}
+        label={`${place.name} 투표`}
+        layout="fill"
+        onChange={(value) => void vote(value as VoteChoice)}
+        size="md"
+        value={pendingChoice ?? current?.choice ?? ""}
+      >
         {choices.map((choice) => (
-          <button
-            aria-pressed={current?.choice === choice.value}
-            disabled={!controller}
-            key={choice.value}
-            onClick={() => void vote(choice.value)}
-            type="button"
-          >
-            {choice.label}
-          </button>
+          <SegmentedControlItem key={choice.value} label={choice.label} value={choice.value} />
         ))}
-      </div>
-      {error ? <p role="alert">{error}</p> : null}
-    </div>
+      </SegmentedControl>
+      {error ? <Text color="secondary" role="alert" type="supporting">{error}</Text> : null}
+    </VStack>
   );
 }

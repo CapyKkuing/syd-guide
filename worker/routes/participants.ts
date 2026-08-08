@@ -16,6 +16,9 @@ const name = z.string().trim().min(1).max(40);
 const setupSchema = z.object({
   ownerName: name,
   participantNames: z.array(name).max(20),
+  representativeIndex: z.number().int().min(0).max(20),
+}).refine((value) => value.representativeIndex <= value.participantNames.length, {
+  message: "대표자 위치가 참여자 범위를 벗어났습니다.",
 });
 const addSchema = z.object({ displayName: name });
 const updateSchema = z.object({
@@ -57,6 +60,7 @@ export function registerParticipantRoutes(
         c.env,
         values.ownerName,
         values.participantNames,
+        values.representativeIndex,
         dependencies.now()
       ),
     });

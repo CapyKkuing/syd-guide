@@ -1,4 +1,4 @@
-import { pathForLibrary, pathForLibraryEdit, pathForTool } from "../../app/router";
+import { pathForLibraryEdit, pathForTool, pathForToolAction } from "../../app/router";
 import { AppLink } from "../../components/AppLink";
 import { ExpensePanel } from "./ExpensePanel";
 import { selectUrgentGaps } from "./homeSelectors";
@@ -19,6 +19,13 @@ export function BeforeTripHome({
     bookings,
     checkItems,
   });
+
+  function gapPath(kind: (typeof gaps)[number]["kind"], target: (typeof gaps)[number]["target"]) {
+    if (kind === "flight") return pathForLibraryEdit(trip.id, "flights");
+    if (kind === "lodging") return pathForToolAction(trip.id, "bookings", "create-lodging");
+    if (kind === "passport") return pathForToolAction(trip.id, "checklist", "edit-passport");
+    return pathForTool(trip.id, target === "trip" ? "checklist" : target);
+  }
 
   return (
     <div className="today-page today-home today-home--before">
@@ -49,7 +56,7 @@ export function BeforeTripHome({
             {gaps.map((gap) => (
               <li key={gap.kind}>
                 <div><strong>{gap.label}</strong><p>{gap.description}</p></div>
-                <AppLink href={gap.target === "trip" ? pathForLibrary() : pathForTool(trip.id, gap.target)}>
+                <AppLink href={gapPath(gap.kind, gap.target)}>
                   확인
                 </AppLink>
               </li>

@@ -4,7 +4,7 @@ import type {
   TodayViewModel,
   TripSummaryViewModel,
 } from "../../data/contracts";
-import type { PublicMember } from "../../shared/entities";
+import type { PublicMember, SettlementTransfer } from "../../shared/entities";
 import type { TripMutationController } from "../../services/mutations/controller";
 import type { MediaApi } from "../../services/media/api";
 import type { MediaStorageProviderClient } from "../../services/media/provider";
@@ -15,6 +15,7 @@ export interface TodayHomeProps {
   bookings: BookingView[];
   checkItems: CheckItemView[];
   members: PublicMember[];
+  settlementTransfers?: SettlementTransfer[];
   media?: TripMedia[];
   mediaApi?: MediaApi;
   mediaProvider?: MediaStorageProviderClient;

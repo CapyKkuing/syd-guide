@@ -114,6 +114,27 @@ describe("private trip media API", () => {
     );
     expect(selected.status).toBe(200);
 
+    const preview = await request(
+      "partner",
+      `/api/trips/${trip.id}/media/${mediaId}/preview`,
+      {
+        method: "PATCH",
+        headers: headers("partner", true),
+        body: JSON.stringify({
+          previewCropAspect: "1:1",
+          previewBrightness: 8,
+        }),
+      }
+    );
+    expect(preview.status).toBe(200);
+    await expect(preview.json()).resolves.toMatchObject({
+      media: {
+        id: mediaId,
+        previewCropAspect: "1:1",
+        previewBrightness: 8,
+      },
+    });
+
     const snapshot = await request("owner", `/api/trips/${trip.id}/snapshot`, {
       headers: headers("owner"),
     });
@@ -130,6 +151,8 @@ describe("private trip media API", () => {
         thumbnailObjectId: "thumb_12345",
         aiScore: 0.91,
         aiLabels: ["harbor"],
+        previewCropAspect: "1:1",
+        previewBrightness: 8,
       }],
     });
   });

@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ThemeProvider } from "../../../app/theme/ThemeProvider";
@@ -80,8 +80,41 @@ describe("PlaceCategoryPanel", () => {
       .closest(".place-discovery-card");
     expect(quayCard).not.toBeNull();
     expect(within(quayCard as HTMLElement).getByText("추천")).toBeVisible();
-    expect(within(quayCard as HTMLElement).getByText("내 저장")).toBeVisible();
+    expect(within(quayCard as HTMLElement).getByText("내가 저장")).toBeVisible();
     expect(screen.getByText("검색 1/800 · 사진 0/800")).toBeVisible();
+  });
+
+  it("keeps same-name places with different provider ids separate", async () => {
+    vi.spyOn(placesApi, "getRecommendations").mockResolvedValue({
+      places: [recommendation("google-quay-barangaroo", "Quay", 4.6, 900)],
+      usage: [],
+    });
+    render(
+      <ThemeProvider>
+        <PlaceCategoryPanel
+          category="restaurant"
+          emptyMessage="맛집 없음"
+          places={[
+            place("restaurant", "Quay", {
+              address: "Circular Quay",
+              latitude: -33.858,
+              longitude: 151.21,
+              provider: "google-places",
+              providerPlaceId: "google-quay-circular",
+            }),
+          ]}
+          tripId="trip-1"
+          viewerMemberId="owner"
+        />
+      </ThemeProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getAllByRole("heading", { name: "Quay" })).toHaveLength(2);
+    });
+    const cards = [...document.querySelectorAll<HTMLElement>(".place-discovery-card")];
+    expect(cards).toHaveLength(2);
+    expect(cards.filter((card) => within(card).queryByText("내가 저장"))).toHaveLength(1);
   });
 
   it("saves only the provider id for a new live recommendation", async () => {
@@ -96,7 +129,7 @@ describe("PlaceCategoryPanel", () => {
           category="restaurant"
           controller={{ submit }}
           emptyMessage="맛집 없음"
-          places={[]}
+          places={[place("attraction", "Sydney anchor")]}
           tripId="trip-1"
           viewerMemberId="owner"
         />
@@ -139,7 +172,7 @@ describe("PlaceCategoryPanel", () => {
         <PlaceCategoryPanel
           category="restaurant"
           emptyMessage="맛집 없음"
-          places={[]}
+          places={[place("attraction", "Sydney anchor")]}
           tripId="trip-1"
           viewerMemberId="owner"
         />
@@ -156,6 +189,29 @@ describe("PlaceCategoryPanel", () => {
     expect(screen.getAllByRole("heading", { level: 3 }).map((heading) => heading.textContent))
       .toEqual(["Popular Place", "Rated Place"]);
     expect(getRecommendations).toHaveBeenCalledOnce();
+  });
+
+  it("does not request recommendations when no saved place has coordinates", () => {
+    const getRecommendations = vi.spyOn(placesApi, "getRecommendations");
+    render(
+      <ThemeProvider>
+        <PlaceCategoryPanel
+          category="restaurant"
+          emptyMessage="맛집 없음"
+          places={[place("restaurant", "Locationless", {
+            latitude: null,
+            longitude: null,
+          })]}
+          tripId="trip-1"
+          viewerMemberId="owner"
+        />
+      </ThemeProvider>
+    );
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "위치가 입력된 장소를 하나 추가하면 주변 추천을 받을 수 있습니다."
+    );
+    expect(getRecommendations).not.toHaveBeenCalled();
   });
 });
 
@@ -195,8 +251,8 @@ function place(
     category,
     status: "saved",
     dayDate: null,
-    latitude: null,
-    longitude: null,
+    latitude: -33.86,
+    longitude: 151.2,
     address: "Sydney",
     description: "",
     mapUrl: null,

@@ -4,6 +4,38 @@ import { describe, expect, it, vi } from "vitest";
 import { ChecklistPanel } from "./ChecklistPanel";
 
 describe("ChecklistPanel", () => {
+  it("opens direct passport entry with personal passport defaults", async () => {
+    const submit = vi.fn().mockResolvedValue({});
+    render(
+      <ChecklistPanel
+        controller={{ submit }}
+        initialAction="edit-passport"
+        items={[]}
+        members={[{ id: "partner", role: "partner", displayName: "민지" }]}
+        viewerMemberId="partner"
+      />
+    );
+
+    expect(screen.getByLabelText("준비물")).toHaveValue("여권");
+    expect(screen.getByLabelText("준비물 범위")).toHaveValue("personal");
+    expect(screen.getByLabelText("담당자")).toHaveValue("partner");
+    expect(screen.getByLabelText("필수 준비 구분")).toHaveValue("passport");
+    await userEvent.click(screen.getByRole("button", { name: "체크 항목 추가" }));
+
+    expect(submit).toHaveBeenCalledWith(
+      "check_item",
+      "create",
+      expect.any(String),
+      null,
+      expect.objectContaining({
+        ownerMemberId: "partner",
+        assigneeMemberId: "partner",
+        title: "여권",
+        requirementKind: "passport"
+      })
+    );
+  });
+
   it("forces personal checklist ownership to the current member", async () => {
     const submit = vi.fn().mockResolvedValue({});
     render(

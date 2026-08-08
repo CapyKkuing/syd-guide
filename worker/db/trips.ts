@@ -164,6 +164,15 @@ export async function createTrip(
     input.outboundFlight,
     input.returnFlight
   );
+  const sharedChecklist = [
+    ["해외 결제 수단", "essential", "pretrip", "essential"],
+    ["여행자 보험·비상 연락처 확인", "essential", "pretrip", "essential"],
+    ["항공권 확인", "reservation", "pretrip", null],
+    ["숙소 예약 확인", "reservation", "pretrip", null],
+    ["충전기", "packing", "pretrip", null],
+    ["eSIM·로밍", "packing", "pretrip", null],
+    ["오늘 쓴 비용 확인", "travel", "travel", null],
+  ] as const;
   await env.DB.batch([
     env.DB.prepare(
       `INSERT INTO trips (
@@ -194,6 +203,36 @@ export async function createTrip(
       `INSERT INTO trip_members (trip_id, member_id, joined_at)
        SELECT ?, id, ? FROM members WHERE is_active = 1`
     ).bind(id, timestamp),
+    env.DB.prepare(
+      `INSERT INTO check_items (
+        id, trip_id, scope, owner_member_id, assignee_member_id, title,
+        quantity, memo, is_done, position, version, updated_by, updated_at,
+        phase, category, requirement_kind
+      )
+      SELECT lower(hex(randomblob(16))), ?, 'personal', id, id, '여권',
+        1, '여권 만료일과 영문 이름을 확인하세요.', 0, 0, 1, ?, ?,
+        'pretrip', 'essential', 'passport'
+      FROM members WHERE is_active = 1`
+    ).bind(id, principal.memberId, timestamp),
+    ...sharedChecklist.map(([title, category, phase, requirementKind], index) => (
+      env.DB.prepare(
+        `INSERT INTO check_items (
+          id, trip_id, scope, owner_member_id, assignee_member_id, title,
+          quantity, memo, is_done, position, version, updated_by, updated_at,
+          phase, category, requirement_kind
+        ) VALUES (?, ?, 'shared', NULL, NULL, ?, 1, '', 0, ?, 1, ?, ?, ?, ?, ?)`
+      ).bind(
+        crypto.randomUUID(),
+        id,
+        title,
+        index + 1,
+        principal.memberId,
+        timestamp,
+        phase,
+        category,
+        requirementKind
+      )
+    )),
   ]);
   const trip = await findTripForMember(env, id, principal.memberId);
   if (!trip) throw new Error("Created trip could not be loaded");

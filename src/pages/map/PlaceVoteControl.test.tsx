@@ -32,8 +32,10 @@ describe("PlaceVoteControl", () => {
     const submit = vi.fn().mockResolvedValue({});
     render(<PlaceVoteControl controller={{ submit }} place={place} viewerMemberId="owner" />);
 
-    await userEvent.click(screen.getByRole("button", { name: "꼭 가요" }));
+    const mustVote = screen.getByRole("radio", { name: "꼭 가요" });
+    await userEvent.click(mustVote);
 
+    expect(mustVote).toHaveAttribute("aria-checked", "true");
     expect(submit).toHaveBeenCalledWith(
       "vote",
       "create",
@@ -53,7 +55,9 @@ describe("PlaceVoteControl", () => {
       />
     );
 
-    await userEvent.click(screen.getByRole("button", { name: "건너뛰기" }));
+    const skipVote = screen.getByRole("radio", { name: "건너뛰기" });
+    await userEvent.click(skipVote);
+    expect(skipVote).toHaveAttribute("aria-checked", "true");
     expect(submit).toHaveBeenCalledWith(
       "vote",
       "update",

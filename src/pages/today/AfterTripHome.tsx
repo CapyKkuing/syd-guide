@@ -12,6 +12,7 @@ import { defaultReelStore } from "../../features/memories/reel/reelStore";
 
 export function AfterTripHome({
   members,
+  settlementTransfers = [],
   media = [],
   mediaApi,
   mediaProvider,
@@ -68,7 +69,12 @@ export function AfterTripHome({
         다시 여행 보기
       </AppLink>
 
-      <SettlementPanel controller={mutationController} expenses={today.expenses} members={members} />
+      <SettlementPanel
+        controller={mutationController}
+        expenses={today.expenses}
+        members={members}
+        transfers={settlementTransfers}
+      />
 
       <ExpensePanel
         controller={mutationController}

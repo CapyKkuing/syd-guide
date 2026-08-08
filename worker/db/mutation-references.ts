@@ -114,6 +114,13 @@ export function mutationReferenceGuard(
         member(payload.personalForMemberId, tripId),
       );
     }
+    case "settlement_transfer": {
+      const payload = mutation.payload as MutationPayloadMap["settlement_transfer"];
+      return all(
+        member(payload.fromMemberId, tripId),
+        member(payload.toMemberId, tripId),
+      );
+    }
     case "note": {
       const payload = mutation.payload as MutationPayloadMap["note"];
       return noteTarget(

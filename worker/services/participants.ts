@@ -69,6 +69,7 @@ export async function setupParticipants(
   env: Env,
   ownerName: string,
   participantNames: string[],
+  representativeIndex: number,
   now: Date
 ): Promise<ParticipantRoster> {
   const current = await getParticipantRoster(env);
@@ -76,6 +77,15 @@ export async function setupParticipants(
     throw new ParticipantError(409, "SETUP_ALREADY_COMPLETE", "참여자 설정이 이미 완료되었습니다.");
   }
   const timestamp = now.toISOString();
+  const participantIds = participantNames.map((_, index) =>
+    index === 0 ? "partner" : crypto.randomUUID()
+  );
+  const representativeMemberId = representativeIndex === 0
+    ? "owner"
+    : participantIds[representativeIndex - 1];
+  if (!representativeMemberId) {
+    throw new ParticipantError(400, "PARTICIPANT_INPUT_INVALID", "여행 대표자를 선택해 주세요.");
+  }
   const statements = [
     env.DB.prepare(
       "UPDATE members SET display_name = ?, is_active = 1 WHERE id = 'owner'"
@@ -86,10 +96,10 @@ export async function setupParticipants(
         "UPDATE members SET display_name = ?, is_active = 1 WHERE id = 'partner'"
       ).bind(participantNames[0]),
     ] : []),
-    ...participantNames.slice(1).map((name) =>
+    ...participantNames.slice(1).map((name, index) =>
       env.DB.prepare(
         "INSERT INTO members (id, role, display_name, access_email, created_at, is_active) VALUES (?, 'partner', ?, NULL, ?, 1)"
-      ).bind(crypto.randomUUID(), name, timestamp)
+      ).bind(participantIds[index + 1], name, timestamp)
     ),
     env.DB.prepare(
       "UPDATE device_sessions SET revoked_at = COALESCE(revoked_at, ?) WHERE member_id IN (SELECT id FROM members WHERE is_active = 0)"
@@ -106,8 +116,8 @@ export async function setupParticipants(
        WHERE m.is_active = 1`
     ).bind(timestamp),
     env.DB.prepare(
-      "UPDATE app_settings SET representative_member_id = 'owner', setup_completed_at = ?, updated_at = ? WHERE id = 'app' AND setup_completed_at IS NULL"
-    ).bind(timestamp, timestamp),
+      "UPDATE app_settings SET representative_member_id = ?, setup_completed_at = ?, updated_at = ? WHERE id = 'app' AND setup_completed_at IS NULL"
+    ).bind(representativeMemberId, timestamp, timestamp),
   ];
   const results = await env.DB.batch(statements);
   if (results.at(-1)?.meta.changes !== 1) {

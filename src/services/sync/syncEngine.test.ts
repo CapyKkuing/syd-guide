@@ -1,6 +1,10 @@
 import { deleteDB } from "idb";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { MutationRequest } from "../../shared/mutations";
+import type {
+  MutationRequest,
+  SettlementGroupCreateRequest,
+  SyncMutationRequest,
+} from "../../shared/mutations";
 import { createTripSnapshot } from "../../test/snapshotSamples";
 import { ApiClientError } from "../api/errors";
 import {
@@ -56,6 +60,24 @@ function success(request: MutationRequest) {
   };
 }
 
+function settlementGroup(): SettlementGroupCreateRequest {
+  return {
+    idempotencyKey: "settlement-batch-key",
+    entity: "settlement_transfer",
+    action: "create_group",
+    entityId: "settlement-group",
+    baseVersion: null,
+    payload: {
+      expenseIds: ["expense-one"],
+      currency: "AUD",
+      transfers: [
+        { entityId: "transfer-one", fromMemberId: "member-two", toMemberId: "owner", amountMinor: 10_000 },
+        { entityId: "transfer-two", fromMemberId: "member-three", toMemberId: "owner", amountMinor: 10_000 },
+      ],
+    },
+  };
+}
+
 describe("SyncEngine", () => {
   it("replays mutations in creation order with the same idempotency keys", async () => {
     const { outbox, snapshots } = await setup();
@@ -96,6 +118,32 @@ describe("SyncEngine", () => {
     expect(transport.mutate.mock.calls.map((call) => call[1].idempotencyKey))
       .toEqual(["stable-key", "stable-key"]);
     expect(await outbox.get("stable-key")).toBeUndefined();
+  });
+
+  it("retries one settlement group command without splitting its transfers", async () => {
+    const { outbox, snapshots } = await setup();
+    const queued = settlementGroup();
+    await outbox.enqueue("trip-one", queued);
+    const transport = {
+      mutate: vi.fn()
+        .mockRejectedValueOnce(new TypeError("Failed to fetch"))
+        .mockResolvedValueOnce({
+          entity: "settlement_transfer" as const,
+          entityId: queued.entityId,
+          version: 1,
+          syncVersion: 9,
+          transfers: queued.payload.transfers.map(({ entityId }) => ({ entityId, version: 1 })),
+        })
+    };
+    const engine = new SyncEngine({ outbox, snapshots, transport });
+
+    await engine.flush("trip-one");
+    await engine.flush("trip-one");
+
+    expect(transport.mutate).toHaveBeenCalledTimes(2);
+    expect(transport.mutate.mock.calls.map((call) => call[1] as SyncMutationRequest))
+      .toEqual([queued, queued]);
+    expect(await outbox.listForTrip("trip-one")).toEqual([]);
   });
 
   it("marks a version conflict and stops before later records", async () => {

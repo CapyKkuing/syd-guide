@@ -1,8 +1,9 @@
 import type { TripSnapshot } from "../../shared/api";
 import type {
-  MutationRequest,
-  MutationSuccess,
+  SyncMutationRequest,
+  SyncMutationSuccess,
 } from "../../shared/mutations";
+import { requestWithAdminAccessRecovery } from "../../features/auth/api";
 import { errorFromResponse } from "./errors";
 
 export interface SnapshotResult {
@@ -48,9 +49,11 @@ export class ApiClient {
   ): Promise<SnapshotResult> {
     const headers = requestHeaders(this.baseUrl);
     if (etag) headers.set("If-None-Match", etag);
-    const response = await this.fetcher(
+    const response = await requestWithAdminAccessRecovery(
+      this.fetcher,
       this.url(`/api/trips/${encodeURIComponent(tripId)}/snapshot`),
-      { headers, credentials: "same-origin" }
+      { headers, credentials: "same-origin" },
+      this.baseUrl
     );
     if (response.status === 304) {
       return {
@@ -67,21 +70,23 @@ export class ApiClient {
     };
   }
 
-  async mutate<K extends MutationRequest>(
+  async mutate(
     tripId: string,
-    mutation: K
-  ): Promise<MutationSuccess> {
-    const response = await this.fetcher(
+    mutation: SyncMutationRequest
+  ): Promise<SyncMutationSuccess> {
+    const response = await requestWithAdminAccessRecovery(
+      this.fetcher,
       this.url(`/api/trips/${encodeURIComponent(tripId)}/mutations`),
       {
         method: "POST",
         credentials: "same-origin",
         headers: requestHeaders(this.baseUrl, true),
         body: JSON.stringify(mutation),
-      }
+      },
+      this.baseUrl
     );
     if (!response.ok) throw await errorFromResponse(response);
-    return response.json() as Promise<MutationSuccess>;
+    return response.json() as Promise<SyncMutationSuccess>;
   }
 }
 

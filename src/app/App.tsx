@@ -140,6 +140,7 @@ function AppContent({
             client={libraryClient}
             deviceManagement={<PairingManager />}
             initialEditTripId={new URLSearchParams(window.location.search).get("edit")}
+            initialEditFocus={new URLSearchParams(window.location.search).get("focus") === "flights" ? "flights" : undefined}
           />
         </ParticipantSetupGate>
       </LibraryShell>

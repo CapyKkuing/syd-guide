@@ -49,6 +49,8 @@ function media(): TripMedia {
     capturedAt: null,
     aiScore: 0.91,
     aiLabels: ["harbor"],
+    previewCropAspect: "4:3",
+    previewBrightness: 0,
     createdBy: "owner",
     createdAt: "2026-07-29T00:00:00.000Z",
   };
@@ -66,6 +68,7 @@ function setup(clientId: string | null = "test-client-id") {
     saveStorage: vi.fn().mockResolvedValue(storage),
     register: vi.fn().mockResolvedValue(savedMedia),
     selectRepresentative: vi.fn().mockResolvedValue(undefined),
+    savePreview: vi.fn().mockResolvedValue(savedMedia),
     remove: vi.fn().mockResolvedValue(undefined),
   };
   const provider: MediaStorageProviderClient & { connected: boolean } = {
@@ -170,5 +173,42 @@ describe("RepresentativePhotoPanel", () => {
 
     expect(await screen.findByText(/Google OAuth client ID가 아직 설정되지 않았습니다/)).toBeVisible();
     expect(runtime.provider.createFolder).not.toHaveBeenCalled();
+  });
+
+  it("saves only representative preview settings without reuploading the Drive original", async () => {
+    const user = userEvent.setup();
+    const runtime = setup();
+    const { container } = render(
+      <RepresentativePhotoPanel
+        api={runtime.api}
+        media={[]}
+        onChanged={vi.fn()}
+        provider={runtime.provider}
+        ranker={runtime.ranker}
+        storage={storage}
+        thumbnailStore={runtime.thumbnailStore}
+        trip={trip}
+        viewerRole="owner"
+      />
+    );
+    const input = container.querySelector<HTMLInputElement>('input[type="file"]');
+    if (!input) throw new Error("file input missing");
+    fireEvent.change(input, {
+      target: { files: [new File(["photo"], "harbour.jpg", { type: "image/jpeg" })] },
+    });
+    await screen.findByText("추천 91점");
+    await user.click(screen.getByRole("button", { name: "대표사진으로 선택" }));
+    await user.click(await screen.findByRole("button", { name: "대표사진 편집" }));
+    await user.click(screen.getByRole("button", { name: "1:1" }));
+    fireEvent.change(screen.getByLabelText("밝기"), { target: { value: "8" } });
+    await user.click(screen.getByRole("button", { name: "미리보기 저장" }));
+
+    await waitFor(() => {
+      expect(runtime.api.savePreview).toHaveBeenCalledWith(trip.id, runtime.savedMedia.id, {
+        previewCropAspect: "1:1",
+        previewBrightness: 8,
+      });
+    });
+    expect(runtime.provider.upload).toHaveBeenCalledTimes(2);
   });
 });

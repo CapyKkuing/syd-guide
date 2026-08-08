@@ -600,6 +600,16 @@
   font-weight: 500;
 }
 
+.booking-ocr-actions {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.booking-ocr-actions small {
+  color: var(--text-2);
+  font-size: var(--text-sm);
+}
+
 .checklist-panel {
   margin-top: var(--space-2);
 }

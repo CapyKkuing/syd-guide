@@ -326,6 +326,38 @@ describe("shared trip library API", () => {
     ]);
   });
 
+  it("creates the approved default checklist once for every new trip", async () => {
+    const created = await createTrip();
+    const { results } = await env.DB.prepare(
+      `SELECT title, scope, owner_member_id, category, phase, requirement_kind
+       FROM check_items WHERE trip_id = ? ORDER BY position, title`
+    )
+      .bind(created.id)
+      .all<{
+        title: string;
+        scope: string;
+        owner_member_id: string | null;
+        category: string;
+        phase: string;
+        requirement_kind: string | null;
+      }>();
+
+    expect(results.filter((item) => item.title === "여권")).toEqual([
+      expect.objectContaining({ scope: "personal", owner_member_id: "owner", requirement_kind: "passport" }),
+      expect.objectContaining({ scope: "personal", owner_member_id: "partner", requirement_kind: "passport" }),
+    ]);
+    expect(results.map((item) => item.title)).toEqual(expect.arrayContaining([
+      "해외 결제 수단",
+      "여행자 보험·비상 연락처 확인",
+      "항공권 확인",
+      "숙소 예약 확인",
+      "충전기",
+      "eSIM·로밍",
+      "오늘 쓴 비용 확인",
+    ]));
+    expect(results).toHaveLength(9);
+  });
+
   it("fully updates a trip and advances its version", async () => {
     const created = await createTrip();
     const response = await tripRequest("partner", `/api/trips/${created.id}`, {

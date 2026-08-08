@@ -1,60 +1,170 @@
 import { useMemo, useState } from "react";
-import type { Expense, PublicMember } from "../../shared/entities";
+import type { Expense, PublicMember, SettlementTransfer } from "../../shared/entities";
 import type { TripMutationController } from "../../services/mutations/controller";
+import { useSyncStatus } from "../../services/sync/SyncContext";
 import { calculateSettlements, type SettlementCurrency } from "./settlement";
 
 export function SettlementPanel({
   controller,
   expenses,
   members,
+  transfers,
 }: {
   controller?: TripMutationController;
   expenses: Expense[];
   members: PublicMember[];
+  transfers: SettlementTransfer[];
 }) {
   const [resolvedExpenseIds, setResolvedExpenseIds] = useState<string[]>([]);
+  const [optimisticTransfers, setOptimisticTransfers] = useState<Record<string, SettlementTransfer>>({});
   const [error, setError] = useState("");
-  const settlements = useMemo(
-    () => calculateSettlements(expenses.filter((expense) => !resolvedExpenseIds.includes(expense.id)), members),
-    [expenses, members, resolvedExpenseIds],
+  const sync = useSyncStatus();
+  const queuedCompletionIds = useMemo(() => new Set(
+    (sync?.pendingMutations ?? [])
+      .filter((mutation) => mutation.action === "complete")
+      .map((mutation) => mutation.entityId)
+  ), [sync?.pendingMutations]);
+  const queuedTransfers = useMemo(() => (sync?.pendingMutations ?? [])
+    .filter((mutation) => mutation.action === "create_group")
+    .flatMap((mutation) => mutation.payload.transfers.map((transfer) => ({
+      id: transfer.entityId,
+      tripId: "pending",
+      settlementGroupId: mutation.entityId,
+      expenseIds: mutation.payload.expenseIds,
+      currency: mutation.payload.currency,
+      fromMemberId: transfer.fromMemberId,
+      toMemberId: transfer.toMemberId,
+      amountMinor: transfer.amountMinor,
+      status: "pending" as const,
+      completedAt: null,
+      version: 0,
+      updatedBy: "pending",
+      updatedAt: "",
+    }))), [sync?.pendingMutations]);
+  const displayTransfers = useMemo(
+    () => {
+      const serverIds = new Set(transfers.map((transfer) => transfer.id));
+      const optimistic = Object.values(optimisticTransfers)
+        .filter((transfer) => !serverIds.has(transfer.id));
+      const knownIds = new Set([
+        ...serverIds,
+        ...optimistic.map((transfer) => transfer.id),
+      ]);
+      return [
+        ...transfers.map((transfer) => {
+          const optimistic = optimisticTransfers[transfer.id];
+          return optimistic && optimistic.version > transfer.version ? optimistic : transfer;
+        }),
+        ...optimistic,
+        ...queuedTransfers.filter((transfer) => !knownIds.has(transfer.id)),
+      ];
+    },
+    [optimisticTransfers, queuedTransfers, transfers],
   );
+  const activeExpenseIds = useMemo(() => new Set(
+    displayTransfers.filter((transfer) => transfer.status === "pending")
+      .flatMap((transfer) => transfer.expenseIds)
+  ), [displayTransfers]);
+  const settlements = useMemo(() => calculateSettlements(
+    expenses.filter((expense) => !resolvedExpenseIds.includes(expense.id) && !activeExpenseIds.has(expense.id)),
+    members,
+  ), [activeExpenseIds, expenses, members, resolvedExpenseIds]);
+  const transferGroups = useMemo(() => {
+    const groups = new Map<string, SettlementTransfer[]>();
+    displayTransfers.forEach((transfer) => groups.set(
+      transfer.settlementGroupId,
+      [...(groups.get(transfer.settlementGroupId) ?? []), transfer],
+    ));
+    return [...groups.values()].filter((group) => group.some((transfer) => transfer.status === "pending"));
+  }, [displayTransfers]);
 
-  async function markSettled(summary: SettlementCurrency) {
-    if (!controller) return;
+  async function createSettlement(summary: SettlementCurrency) {
+    if (!controller?.createSettlementGroup) return;
     setError("");
     try {
-      await Promise.all(summary.expenseIds.map((expenseId) => {
-        const expense = expenses.find((item) => item.id === expenseId);
-        if (!expense) return Promise.resolve();
-        return controller.submit("expense", "update", expense.id, expense.version, {
-          phase: expense.phase,
-          category: expense.category,
-          customCategory: expense.customCategory,
-          title: expense.title,
-          amountMinor: expense.amountMinor,
-          currency: expense.currency,
-          spentOn: expense.spentOn,
-          paidByMemberId: expense.paidByMemberId,
-          expenseScope: expense.expenseScope,
-          personalForMemberId: expense.personalForMemberId,
-          paymentMethod: expense.paymentMethod,
-          isSettled: true,
-          memo: expense.memo,
-        });
-      }));
-      setResolvedExpenseIds((ids) => [...ids, ...summary.expenseIds]);
+      const result = await controller.createSettlementGroup(
+        summary.expenseIds,
+        summary.currency,
+        summary.transfers,
+      );
+      const created = result.transfers.map((stored, index) => {
+        const transfer = summary.transfers[index];
+        if (!transfer) throw new Error("정산 송금 결과 수가 올바르지 않습니다.");
+        return {
+        ...transfer,
+        id: stored.entityId,
+        tripId: "pending",
+        version: stored.version,
+        updatedAt: new Date().toISOString(),
+        updatedBy: "pending",
+        settlementGroupId: result.entityId,
+        expenseIds: summary.expenseIds,
+        currency: summary.currency,
+        status: "pending" as const,
+        completedAt: null,
+      };
+      });
+      setOptimisticTransfers((current) => Object.fromEntries([
+        ...Object.entries(current), ...created.map((transfer) => [transfer.id, transfer]),
+      ]));
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "정산 완료 상태를 저장하지 못했습니다.");
+      setError(caught instanceof Error ? caught.message : "정산 송금을 만들지 못했습니다.");
     }
   }
 
-  if (!settlements.length) return null;
+  async function completeTransfer(transfer: SettlementTransfer, group: SettlementTransfer[]) {
+    if (!controller?.completeSettlementTransfer) return;
+    setError("");
+    const completedAt = new Date().toISOString();
+    try {
+      const result = await controller.completeSettlementTransfer(
+        transfer.id,
+        transfer.version,
+        transfer.settlementGroupId
+      );
+      const completed = { ...transfer, status: "completed" as const, completedAt, version: result.version };
+      setOptimisticTransfers((current) => ({ ...current, [transfer.id]: completed }));
+      if (group.every((item) => item.id === transfer.id || item.status === "completed")) {
+        setResolvedExpenseIds((ids) => [...ids, ...transfer.expenseIds]);
+      }
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "송금 완료 상태를 저장하지 못했습니다.");
+    }
+  }
+
+  if (!settlements.length && !transferGroups.length) return null;
 
   return (
     <section className="settlement-panel" aria-labelledby="settlement-title">
       <p className="today-section-heading__eyebrow">SETTLEMENT</p>
       <h2 id="settlement-title">정산하기</h2>
       <p className="settlement-panel__intro">함께 쓴 비용과 대신 결제한 개인 비용만 계산했어요.</p>
+      {transferGroups.map((group) => (
+        <section className="settlement-panel__currency" key={group[0]?.settlementGroupId}>
+          <p className="today-section-heading__eyebrow">진행 중인 정산</p>
+          {group.map((transfer) => (
+            <p className="settlement-panel__transfer" key={transfer.id}>
+              <span>{memberName(members, transfer.fromMemberId)} → {memberName(members, transfer.toMemberId)}</span>
+              <b>{formatMoney(transfer.amountMinor, transfer.currency)}</b>
+              <button
+                className="primary-button"
+                disabled={
+                  !controller?.completeSettlementTransfer
+                  || transfer.status === "completed"
+                  || transfer.version === 0
+                  || queuedCompletionIds.has(transfer.id)
+                }
+                onClick={() => void completeTransfer(transfer, group)}
+                type="button"
+              >
+                {transfer.version === 0 || queuedCompletionIds.has(transfer.id)
+                  ? "동기화 대기"
+                  : transfer.status === "completed" ? "송금 완료됨" : "송금 완료"}
+              </button>
+            </p>
+          ))}
+        </section>
+      ))}
       {settlements.map((summary) => {
         const transfer = summary.transfers[0];
         const summaryParts = [
@@ -68,12 +178,8 @@ export function SettlementPanel({
         return (
           <section className="settlement-panel__currency" key={summary.currency}>
             <p className="today-section-heading__eyebrow">{summary.currency}</p>
-            <strong>
-              {transfer
-                ? `${memberName(members, transfer.fromMemberId)} → ${memberName(members, transfer.toMemberId)} ${formatMoney(transfer.amountMinor, summary.currency)}`
-                : "추가 송금이 필요하지 않아요"}
-            </strong>
-            <p>{transfer ? "보내면 이 통화의 여행 비용 정산이 끝납니다." : "서로 낸 금액이 이미 균형입니다."}</p>
+            <strong>{transfer ? `${summary.transfers.length}건의 송금이 필요해요` : "추가 송금이 필요하지 않아요"}</strong>
+            <p>{transfer ? "송금별로 완료를 표시할 수 있습니다." : "서로 낸 금액이 이미 균형입니다."}</p>
             <p className="settlement-panel__summary">{summaryParts.join(" · ")}</p>
             <section className="settlement-panel__details">
               <h3>각자 낸 금액</h3>
@@ -84,8 +190,8 @@ export function SettlementPanel({
               <p><span>함께 쓴 비용</span><b>{formatMoney(summary.sharedAmountMinor, summary.currency)}</b></p>
               <p><span>대신 결제한 개인 비용</span><b>{formatMoney(summary.personalAmountMinor, summary.currency)}</b></p>
             </section>
-            <button className="primary-button settlement-panel__action" disabled={!controller} onClick={() => void markSettled(summary)} type="button">
-              {transfer ? "송금 완료로 표시" : "정산 완료로 표시"}
+            <button className="primary-button settlement-panel__action" disabled={!controller?.createSettlementGroup || !transfer} onClick={() => void createSettlement(summary)} type="button">
+              {transfer ? "정산 송금 만들기" : "정산 완료"}
             </button>
           </section>
         );

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { EntityKind } from "../../shared/entities";
+import type { MutationRequest } from "../../shared/mutations";
 import type { OutboxRecord } from "../offline/database";
 
 export function ConflictDialog({
@@ -16,6 +17,11 @@ export function ConflictDialog({
   const titleRef = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => titleRef.current?.focus(), []);
+
+  if (
+    record.mutation.action === "create_group"
+    || record.mutation.action === "complete"
+  ) return null;
 
   const entity = entityLabel(record.mutation.entity);
   const action = actionLabel(record.mutation.action);
@@ -83,13 +89,14 @@ function entityLabel(entity: EntityKind): string {
     booking: "예약",
     check_item: "체크 항목",
     expense: "비용",
+    settlement_transfer: "정산 송금",
     note: "메모",
     vote: "투표"
   };
   return labels[entity];
 }
 
-function actionLabel(action: OutboxRecord["mutation"]["action"]): string {
+function actionLabel(action: MutationRequest["action"]): string {
   return action === "create" ? "추가"
     : action === "update" ? "수정"
       : "삭제";

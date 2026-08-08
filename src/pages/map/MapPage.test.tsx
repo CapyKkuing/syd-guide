@@ -40,8 +40,19 @@ async function renderMapMode({
   tripId?: string;
 }) {
   const result = render(<MapPage days={days} places={places} tripId={tripId} />);
-  await userEvent.click(screen.getByRole("radio", { name: "지도" }));
+  await userEvent.click(screen.getByRole("button", { name: "지도 보기" }));
   return result;
+}
+
+async function selectMapFilter(
+  user: ReturnType<typeof userEvent.setup>,
+  label: string,
+  option: string
+) {
+  const trigger = screen.queryByRole("combobox", { name: label })
+    ?? screen.getByRole("button", { name: label });
+  await user.click(trigger);
+  await user.click(await screen.findByRole("option", { name: option }));
 }
 
 describe("MapPage", () => {
@@ -80,11 +91,18 @@ describe("MapPage", () => {
       details: null,
       usage: [],
     });
+    vi.spyOn(placesApi, "getRecommendations").mockResolvedValue({
+      places: [],
+      usage: [],
+    });
 
     render(<MapPage days={days} places={savedPlaces} tripId="sydney-2026" />);
 
     expect(screen.getByRole("heading", { level: 1, name: "장소" })).toBeVisible();
-    expect(screen.getByRole("radio", { name: "내 저장" })).toBeChecked();
+    expect(screen.queryByRole("radio", { name: "내 저장" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("radio", { name: "추천" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "내 저장 2" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "지도 보기" })).toBeVisible();
     expect(screen.getByRole("heading", { name: "Quay" })).toBeVisible();
     expect(screen.getByRole("heading", { name: "Sample Coffee" })).toBeVisible();
     expect(screen.queryByRole("heading", { name: "Hidden Coffee" })).not.toBeInTheDocument();
@@ -118,17 +136,49 @@ describe("MapPage", () => {
       }));
 
     render(<MapPage days={days} places={[savedRestaurant]} tripId="sydney-2026" />);
-    await userEvent.click(screen.getByRole("radio", { name: "추천" }));
 
     expect(await screen.findByRole("heading", { name: "Quay" })).toBeVisible();
-    expect(screen.getByRole("heading", { name: "Sample Coffee" })).toBeVisible();
+    expect(await screen.findByRole("heading", { name: "Sample Coffee" })).toBeVisible();
     const quayCard = screen.getByRole("heading", { name: "Quay" })
       .closest(".place-discovery-card");
     expect(quayCard).not.toBeNull();
     expect(within(quayCard as HTMLElement).getByText("추천")).toBeVisible();
-    expect(within(quayCard as HTMLElement).getByText("내 저장")).toBeVisible();
+    expect(within(quayCard as HTMLElement).getByText("내가 저장")).toBeVisible();
     expect(recommendations).toHaveBeenCalledWith("sydney-2026", "restaurant", false);
     expect(recommendations).toHaveBeenCalledWith("sydney-2026", "cafe", false);
+
+    await userEvent.click(screen.getByRole("button", { name: "내 저장 1" }));
+    expect(screen.getByRole("heading", { name: "Quay" })).toBeVisible();
+    expect(screen.queryByRole("heading", { name: "Sample Coffee" })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "내 저장 1" }));
+    expect(screen.getByRole("heading", { name: "Sample Coffee" })).toBeVisible();
+  });
+
+  it("does not request live recommendations until a saved place has coordinates", async () => {
+    const { places, days } = await getMapFixtures();
+    const firstPlace = places.at(0);
+    if (!firstPlace) throw new Error("fixture place missing");
+    const getRecommendations = vi.spyOn(placesApi, "getRecommendations");
+
+    render(
+      <MapPage
+        days={days}
+        places={[{
+          ...firstPlace,
+          id: "locationless-place",
+          category: "restaurant",
+          latitude: null,
+          longitude: null,
+          isSaved: true,
+        }]}
+        tripId="sydney-2026"
+      />
+    );
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "위치가 입력된 장소를 하나 추가하면 주변 추천을 받을 수 있습니다."
+    );
+    expect(getRecommendations).not.toHaveBeenCalled();
   });
 
   it.each([
@@ -149,7 +199,7 @@ describe("MapPage", () => {
     const { places, days } = await getMapFixtures(tripId);
     await renderMapMode({ places, days, tripId });
 
-    await userEvent.click(screen.getByRole("button", { name: day }));
+    await selectMapFilter(userEvent.setup(), "날짜", day);
 
     expect(screen.getByText(`${expectedCount}개 장소`)).toBeVisible();
   });
@@ -159,13 +209,13 @@ describe("MapPage", () => {
     const { places, days } = await getMapFixtures();
     await renderMapMode({ places, days });
 
-    await user.type(screen.getByRole("searchbox", { name: "장소 검색" }), "opera");
-    await user.click(screen.getByRole("button", { name: "2026-07-28" }));
-    await user.click(screen.getByRole("button", { name: "관광" }));
-    await user.click(screen.getByRole("button", { name: "저장" }));
+    await user.type(screen.getByRole("textbox", { name: "장소 검색" }), "opera");
+    await selectMapFilter(user, "날짜", "2026-07-28");
+    await selectMapFilter(user, "분류", "관광");
+    await selectMapFilter(user, "장소 상태", "저장");
 
     expect(screen.getByText("1개 장소")).toBeVisible();
-    expect(screen.getByRole("button", { name: /Sydney Opera House, 관광, 저장/ })).toBeVisible();
+    expect(screen.getByRole("button", { name: /Sydney Opera House관광, 저장/ })).toBeVisible();
     expect(screen.queryByRole("button", { name: /Quay, 맛집, 저장/ })).not.toBeInTheDocument();
   });
 
@@ -174,10 +224,10 @@ describe("MapPage", () => {
     const { places, days } = await getMapFixtures();
     await renderMapMode({ places, days });
 
-    await user.type(screen.getByRole("searchbox", { name: "장소 검색" }), "BENNELONG POINT");
+    await user.type(screen.getByRole("textbox", { name: "장소 검색" }), "BENNELONG POINT");
 
     expect(screen.getByText("1개 장소")).toBeVisible();
-    expect(screen.getByRole("button", { name: /Sydney Opera House, 관광, 저장/ })).toBeVisible();
+    expect(screen.getByRole("button", { name: /Sydney Opera House관광, 저장/ })).toBeVisible();
   });
 
   it("uses the saved schedule position for a selected day's map and place list order", async () => {
@@ -201,9 +251,9 @@ describe("MapPage", () => {
     };
     await renderMapMode({ places: routePlaces, days: [reorderedDay] });
 
-    await userEvent.click(screen.getByRole("button", { name: reorderedDay.date }));
+    await selectMapFilter(userEvent.setup(), "날짜", reorderedDay.date);
 
-    const cards = within(screen.getByRole("list", { name: "장소 목록" }))
+    const cards = within(screen.getByRole("region", { name: "장소 목록" }))
       .getAllByRole("button");
     expect(cards[0]).toHaveAccessibleName(expect.stringContaining(routePlaces[1]!.name));
     expect(cards[1]).toHaveAccessibleName(expect.stringContaining(routePlaces[0]!.name));
@@ -223,9 +273,9 @@ describe("MapPage", () => {
     }));
     await renderMapMode({ places: [sharedPlace], days: linkedDays });
 
-    await userEvent.click(screen.getByRole("button", { name: linkedDays[0]!.date }));
+    await selectMapFilter(userEvent.setup(), "날짜", linkedDays[0]!.date);
     expect(screen.getByText("1개 장소")).toBeVisible();
-    await userEvent.click(screen.getByRole("button", { name: linkedDays[1]!.date }));
+    await selectMapFilter(userEvent.setup(), "날짜", linkedDays[1]!.date);
     expect(screen.getByText("1개 장소")).toBeVisible();
   });
 
@@ -234,7 +284,7 @@ describe("MapPage", () => {
     await renderMapMode({ places, days });
 
     expect(screen.getByLabelText("온라인 지도")).toBeVisible();
-    expect(screen.getByRole("list", { name: "장소 목록" })).toBeVisible();
+    expect(screen.getByRole("region", { name: "장소 목록" })).toBeVisible();
     expect(screen.getByText("4개 장소")).toBeVisible();
     await waitFor(() => expect(screen.queryByText("온라인 지도를 불러오는 중입니다.")).not.toBeInTheDocument());
   });
@@ -247,9 +297,9 @@ describe("MapPage", () => {
       const { places, days } = await getMapFixtures();
       await renderMapMode({ places, days });
 
-      expect(screen.getByRole("status")).toHaveTextContent("오프라인 — 저장된 장소 목록을 표시합니다");
+      expect(screen.getByText("오프라인 — 저장된 장소 목록을 표시합니다.")).toBeVisible();
       expect(screen.queryByLabelText("온라인 지도")).not.toBeInTheDocument();
-      expect(screen.getByRole("list", { name: "장소 목록" })).toHaveTextContent("Sydney Opera House");
+      expect(screen.getByRole("region", { name: "장소 목록" })).toHaveTextContent("Sydney Opera House");
     } finally {
       if (original) Object.defineProperty(window.navigator, "onLine", original);
       else Reflect.deleteProperty(window.navigator, "onLine");
@@ -270,7 +320,7 @@ describe("MapPage", () => {
 
     await renderMapMode({ places: [coordinateLess], days });
 
-    expect(screen.getByRole("button", { name: /좌표 없는 장소, 숙소, 방문/ })).toBeVisible();
+    expect(screen.getByRole("button", { name: /좌표 없는 장소숙소, 방문/ })).toBeVisible();
     expect(screen.queryByRole("button", { name: "좌표 없는 장소 상세 보기" }))
       .not.toBeInTheDocument();
   });
@@ -280,7 +330,7 @@ describe("MapPage", () => {
     const { places, days } = await getMapFixtures();
     await renderMapMode({ places, days });
 
-    await user.type(screen.getByRole("searchbox", { name: "장소 검색" }), "없는 장소");
+    await user.type(screen.getByRole("textbox", { name: "장소 검색" }), "없는 장소");
     expect(screen.getByText("조건에 맞는 장소가 없습니다")).toBeVisible();
 
     await user.click(screen.getByRole("button", { name: "필터 초기화" }));
@@ -293,7 +343,7 @@ describe("MapPage", () => {
     const { places, days } = await getMapFixtures();
     await renderMapMode({ places, days });
 
-    const card = screen.getByRole("button", { name: /Sydney Opera House, 관광, 저장/ });
+    const card = screen.getByRole("button", { name: /Sydney Opera House관광, 저장/ });
     await user.click(card);
     const cardDialog = screen.getByRole("dialog", { name: "장소 상세" });
     expect(within(cardDialog).getByText("Bennelong Point, Sydney NSW 2000")).toBeVisible();
@@ -313,7 +363,7 @@ describe("MapPage", () => {
     };
     await renderMapMode({ places: [unsafePlace], days });
 
-    await userEvent.click(screen.getByRole("button", { name: /Unsafe place, 숙소, 방문/ }));
+    await userEvent.click(screen.getByRole("button", { name: /Unsafe place숙소, 방문/ }));
     const dialog = within(screen.getByRole("dialog", { name: "장소 상세" }));
     expect(dialog.getByRole("link", { name: "최신 정보 보기" })).toHaveAttribute("href", expect.stringContaining("www.google.com/maps/search"));
     expect(dialog.getByRole("link", { name: "길찾기" })).toHaveAttribute("href", expect.stringContaining("www.google.com/maps/dir"));
@@ -329,8 +379,8 @@ describe("MapPage", () => {
     ];
     await renderMapMode({ places: invalidPlaces, days });
 
-    expect(screen.getByRole("button", { name: /Outside low,/ })).toBeVisible();
-    expect(screen.getByRole("button", { name: /Outside high,/ })).toBeVisible();
+    expect(screen.getByRole("button", { name: /Outside low숙소/ })).toBeVisible();
+    expect(screen.getByRole("button", { name: /Outside high숙소/ })).toBeVisible();
   });
 
   it("keeps duplicate-name place cards distinct and opens the correct place", async () => {
@@ -344,8 +394,8 @@ describe("MapPage", () => {
     ];
     await renderMapMode({ places: duplicates, days });
 
-    const firstCard = screen.getByRole("button", { name: /Same name, 숙소, 방문, First address/ });
-    const secondCard = screen.getByRole("button", { name: /Same name, 숙소, 방문, Second address/ });
+    const firstCard = screen.getByRole("button", { name: /Same name숙소, 방문, First address/ });
+    const secondCard = screen.getByRole("button", { name: /Same name숙소, 방문, Second address/ });
     await user.click(firstCard);
     expect(within(screen.getByRole("dialog", { name: "장소 상세" })).getByText("First address")).toBeVisible();
     await user.click(screen.getByRole("button", { name: "닫기" }));

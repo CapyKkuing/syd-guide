@@ -1,5 +1,6 @@
 import type { Principal } from "../../src/shared/entities";
 import type {
+  MediaPreview,
   TripBookingStorage,
   TripMedia,
   TripMediaStorage,
@@ -35,6 +36,8 @@ export function toTripMedia(row: Row): TripMedia {
     capturedAt: row.captured_at === null ? null : String(row.captured_at),
     aiScore: row.ai_score === null ? null : Number(row.ai_score),
     aiLabels: JSON.parse(String(row.ai_labels_json)) as string[],
+    previewCropAspect: row.preview_crop_aspect as NonNullable<TripMedia["previewCropAspect"]>,
+    previewBrightness: Number(row.preview_brightness),
     createdBy: String(row.created_by),
     createdAt: String(row.created_at),
   };
@@ -203,6 +206,31 @@ export async function selectRepresentativeMedia(
        )`
   ).bind(mediaId, principal.memberId, timestamp, tripId, mediaId).run();
   return Boolean(result.meta.changes);
+}
+
+export async function updateMediaPreview(
+  env: Env,
+  principal: Principal,
+  tripId: string,
+  mediaId: string,
+  preview: MediaPreview,
+  now: Date
+): Promise<TripMedia | null> {
+  const row = await env.DB.prepare(
+    `UPDATE trip_media SET
+       preview_crop_aspect = ?,
+       preview_brightness = ?
+     WHERE id = ? AND trip_id = ?
+     RETURNING *`
+  ).bind(
+    preview.previewCropAspect,
+    preview.previewBrightness,
+    mediaId,
+    tripId
+  ).first<Row>();
+  if (!row) return null;
+  await touchTrip(env, tripId, principal.memberId, now.toISOString(), false);
+  return toTripMedia(row);
 }
 
 async function touchTrip(

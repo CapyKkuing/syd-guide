@@ -244,7 +244,11 @@
   right: 0;
   bottom: 0;
   left: 0;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
   max-height: min(85dvh, 720px);
+  overflow-x: hidden;
   overflow-y: auto;
   margin: 0 auto;
   padding: var(--space-6);
@@ -253,6 +257,29 @@
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   background: var(--surface);
   box-shadow: var(--shadow-card);
+}
+
+.sheet *,
+.sheet *::before,
+.sheet *::after {
+  box-sizing: border-box;
+}
+
+.sheet > *,
+.sheet form,
+.sheet fieldset,
+.sheet label {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.sheet input:not([type="checkbox"]):not([type="radio"]),
+.sheet select,
+.sheet textarea,
+.sheet img {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .sheet__close {

@@ -6,7 +6,48 @@ import {
   unique
 } from "./helpers";
 
-test("three target viewports keep primary routes inside the viewport", async ({
+async function expectNoElementOverflow(locator: import("@playwright/test").Locator) {
+  const dimensions = await locator.evaluate((element) => ({
+    client: element.clientWidth,
+    scroll: element.scrollWidth
+  }));
+  expect(dimensions.scroll).toBeLessThanOrEqual(dimensions.client + 1);
+}
+
+test("pre-trip gaps open their direct input surfaces without horizontal clipping", async ({
+  page
+}) => {
+  const workspace = await createWorkspace(page.request, unique("direct-pretrip"));
+  const todayPath = `/trip/${workspace.trip.id}/today`;
+
+  await page.goto(todayPath);
+  await page.locator(".urgent-gap-list li").filter({ hasText: "항공편 확인" })
+    .getByRole("link", { name: "확인" }).click();
+  const tripDialog = page.getByRole("dialog", { name: "여행 수정" });
+  await expect(tripDialog).toBeVisible();
+  await expect(tripDialog.locator(".trip-form__flight")).toHaveCount(2);
+  await expectNoElementOverflow(tripDialog);
+
+  await page.goto(todayPath);
+  await page.locator(".urgent-gap-list li").filter({ hasText: "숙소 예약" })
+    .getByRole("link", { name: "확인" }).click();
+  const bookingDialog = page.getByRole("dialog", { name: "예약 추가" });
+  await expect(bookingDialog).toBeVisible();
+  await expect(bookingDialog.getByLabel("예약 종류")).toHaveValue("lodging");
+  await expectNoElementOverflow(bookingDialog);
+
+  await page.goto(todayPath);
+  await page.locator(".urgent-gap-list li").filter({ hasText: "여권 확인" })
+    .getByRole("link", { name: "확인" }).click();
+  const passportEditor = page.locator(".checklist-add-panel");
+  await expect(passportEditor).toHaveAttribute("open", "");
+  await expect(passportEditor.getByLabel("준비물", { exact: true })).toHaveValue("여권");
+  await expect(passportEditor.getByRole("combobox", { name: "준비물 범위", exact: true })).toHaveValue("personal");
+  await expect(passportEditor.getByRole("combobox", { name: "필수 준비 구분", exact: true })).toHaveValue("passport");
+  await expectNoHorizontalOverflow(page);
+});
+
+test("target viewports keep primary routes inside the viewport", async ({
   page
 }) => {
   const errors: string[] = [];
@@ -58,7 +99,7 @@ test("keyboard navigation, sheet Escape, and focus return remain usable", async 
   const workspace = await createWorkspace(page.request, unique("keyboard"));
   await page.goto("/library");
   const skipLink = page.getByRole("link", { name: "본문으로 건너뛰기" });
-  if (testInfo.project.name === "iphone-webkit") {
+  if (testInfo.project.name.includes("webkit")) {
     await skipLink.focus();
   } else {
     await page.keyboard.press("Tab");

@@ -4,13 +4,21 @@ import type { Principal } from "../../src/shared/entities";
 import type {
   MutationRequest,
   MutationSuccess,
+  SettlementGroupCreateRequest,
+  SettlementGroupMutationSuccess,
+  SettlementTransferCompleteRequest,
+  SyncMutationSuccess,
 } from "../../src/shared/mutations";
 import { entityRegistry, idSchema } from "../db/entity-registry";
 import {
   mutationQueries,
   type ReceiptRow,
 } from "../db/mutation-queries";
-import { runMutationBatch } from "../db/mutation-store";
+import {
+  runMutationBatch,
+  runSettlementGroupBatch,
+  runSettlementTransferCompleteBatch,
+} from "../db/mutation-store";
 import type { Env } from "../env";
 
 export class MutationError extends Error {
@@ -33,6 +41,7 @@ const envelopeSchema = z.object({
     "booking",
     "check_item",
     "expense",
+    "settlement_transfer",
     "note",
     "vote",
   ]),
@@ -41,6 +50,75 @@ const envelopeSchema = z.object({
   baseVersion: z.number().int().positive().nullable(),
   payload: z.unknown().nullable(),
 });
+
+const settlementGroupSchema = z.object({
+  idempotencyKey: idSchema,
+  entity: z.literal("settlement_transfer"),
+  action: z.literal("create_group"),
+  entityId: idSchema,
+  baseVersion: z.null(),
+  payload: z.object({
+    expenseIds: z.array(idSchema).min(1).max(200),
+    currency: z.string().regex(/^[A-Z]{3}$/),
+    transfers: z.array(z.object({
+      entityId: idSchema,
+      fromMemberId: idSchema,
+      toMemberId: idSchema,
+      amountMinor: z.number().int().positive(),
+    })).min(1).max(50),
+  }),
+});
+
+const settlementCompleteSchema = z.object({
+  idempotencyKey: idSchema,
+  entity: z.literal("settlement_transfer"),
+  action: z.literal("complete"),
+  entityId: idSchema,
+  baseVersion: z.number().int().positive(),
+  payload: z.object({ settlementGroupId: idSchema }),
+});
+
+function parseSettlementGroup(input: unknown): SettlementGroupCreateRequest {
+  const parsed = settlementGroupSchema.safeParse(input);
+  if (!parsed.success) {
+    throw new MutationError(
+      400,
+      "MUTATION_INPUT_INVALID",
+      "정산 묶음 요청이 올바르지 않습니다."
+    );
+  }
+  const mutation = parsed.data;
+  const expenseIds = new Set(mutation.payload.expenseIds);
+  const transferIds = new Set(
+    mutation.payload.transfers.map((transfer) => transfer.entityId)
+  );
+  if (
+    expenseIds.size !== mutation.payload.expenseIds.length
+    || transferIds.size !== mutation.payload.transfers.length
+    || mutation.payload.transfers.some(
+      (transfer) => transfer.fromMemberId === transfer.toMemberId
+    )
+  ) {
+    throw new MutationError(
+      400,
+      "MUTATION_INPUT_INVALID",
+      "정산 묶음 요청이 올바르지 않습니다."
+    );
+  }
+  return mutation;
+}
+
+function parseSettlementComplete(input: unknown): SettlementTransferCompleteRequest {
+  const parsed = settlementCompleteSchema.safeParse(input);
+  if (!parsed.success) {
+    throw new MutationError(
+      400,
+      "MUTATION_INPUT_INVALID",
+      "송금 완료 요청이 올바르지 않습니다."
+    );
+  }
+  return parsed.data;
+}
 
 export function parseMutation(input: unknown): MutationRequest {
   const envelope = envelopeSchema.safeParse(input);
@@ -88,7 +166,7 @@ function receiptResult(
   row: ReceiptRow,
   tripId: string,
   memberId: string
-): MutationSuccess {
+): SyncMutationSuccess {
   if (row.trip_id !== tripId || row.member_id !== memberId) {
     throw new MutationError(
       409,
@@ -97,7 +175,7 @@ function receiptResult(
     );
   }
   try {
-    return JSON.parse(row.result_json) as MutationSuccess;
+    return JSON.parse(row.result_json) as SyncMutationSuccess;
   } catch {
     throw new MutationError(
       500,
@@ -131,7 +209,7 @@ export async function applyMutation(
     mutation.idempotencyKey
   );
   if (previous) {
-    return receiptResult(previous, tripId, principal.memberId);
+    return receiptResult(previous, tripId, principal.memberId) as MutationSuccess;
   }
   if (!(await mutationQueries.referencesAreValid(env, tripId, mutation))) {
     throw new MutationError(
@@ -180,7 +258,7 @@ export async function applyMutation(
       env,
       mutation.idempotencyKey
     );
-    if (stored) return receiptResult(stored, tripId, principal.memberId);
+    if (stored) return receiptResult(stored, tripId, principal.memberId) as MutationSuccess;
     if (!applied) {
       const authoritative = await mutationQueries.findCurrentEntity(
         env,
@@ -203,7 +281,229 @@ export async function applyMutation(
       env,
       mutation.idempotencyKey
     ).catch(() => null);
-    if (stored) return receiptResult(stored, tripId, principal.memberId);
+    if (stored) return receiptResult(stored, tripId, principal.memberId) as MutationSuccess;
     throw error;
   }
+}
+
+async function validateSettlementGroup(
+  env: Env,
+  tripId: string,
+  mutation: SettlementGroupCreateRequest
+): Promise<void> {
+  const expenseIdsJson = JSON.stringify(mutation.payload.expenseIds);
+  const transferIdsJson = JSON.stringify(
+    mutation.payload.transfers.map((transfer) => transfer.entityId)
+  );
+  const [validReferences, validExpenses, existingTransfer, pendingGroup] = await Promise.all([
+    Promise.all(mutation.payload.transfers.map((transfer) =>
+      mutationQueries.referencesAreValid(env, tripId, {
+        idempotencyKey: mutation.idempotencyKey,
+        entity: "settlement_transfer",
+        action: "create",
+        entityId: transfer.entityId,
+        baseVersion: null,
+        payload: {
+          settlementGroupId: mutation.entityId,
+          expenseIds: mutation.payload.expenseIds,
+          currency: mutation.payload.currency,
+          fromMemberId: transfer.fromMemberId,
+          toMemberId: transfer.toMemberId,
+          amountMinor: transfer.amountMinor,
+          status: "pending",
+          completedAt: null,
+        },
+      })
+    )),
+    env.DB.prepare(
+      `SELECT COUNT(*) AS count FROM expenses
+       WHERE trip_id = ? AND is_settled = 0 AND currency = ?
+         AND id IN (SELECT value FROM json_each(?))`
+    ).bind(
+      tripId,
+      mutation.payload.currency,
+      expenseIdsJson
+    ).first<{ count: number }>(),
+    env.DB.prepare(
+      `SELECT 1 AS found FROM settlement_transfers
+       WHERE trip_id = ? AND id IN (SELECT value FROM json_each(?)) LIMIT 1`
+    ).bind(tripId, transferIdsJson).first(),
+    env.DB.prepare(
+      `SELECT 1 AS found
+       FROM settlement_transfers transfer,
+         json_each(transfer.expense_ids_json) expense
+       WHERE transfer.trip_id = ? AND transfer.status = 'pending'
+         AND expense.value IN (SELECT value FROM json_each(?))
+       LIMIT 1`
+    ).bind(tripId, expenseIdsJson).first(),
+  ]);
+  if (
+    validReferences.some((valid) => !valid)
+    || Number(validExpenses?.count ?? 0) !== mutation.payload.expenseIds.length
+    || existingTransfer
+    || pendingGroup
+  ) {
+    throw new MutationError(
+      409,
+      "SETTLEMENT_GROUP_CONFLICT",
+      "이미 정산 중이거나 정산할 수 없는 비용이 포함되어 있습니다."
+    );
+  }
+}
+
+async function applySettlementGroup(
+  env: Env,
+  tripId: string,
+  principal: Principal,
+  input: unknown,
+  now: Date
+): Promise<SettlementGroupMutationSuccess> {
+  if (!(await mutationQueries.hasMembership(env, tripId, principal.memberId))) {
+    throw new MutationError(
+      404,
+      "TRIP_NOT_FOUND",
+      "여행을 찾을 수 없습니다."
+    );
+  }
+  const mutation = parseSettlementGroup(input);
+  const previous = await mutationQueries.findReceipt(env, mutation.idempotencyKey);
+  if (previous) {
+    return receiptResult(previous, tripId, principal.memberId) as SettlementGroupMutationSuccess;
+  }
+  await validateSettlementGroup(env, tripId, mutation);
+
+  try {
+    const applied = await runSettlementGroupBatch(
+      env,
+      tripId,
+      principal,
+      mutation,
+      now.toISOString()
+    );
+    const stored = await mutationQueries.findReceipt(env, mutation.idempotencyKey);
+    if (stored) {
+      return receiptResult(stored, tripId, principal.memberId) as SettlementGroupMutationSuccess;
+    }
+    if (!applied) {
+      throw new MutationError(
+        409,
+        "SETTLEMENT_GROUP_CONFLICT",
+        "정산 묶음을 저장하지 못했습니다."
+      );
+    }
+    throw new Error("Settlement group receipt missing");
+  } catch (error) {
+    if (error instanceof MutationError) throw error;
+    const stored = await mutationQueries.findReceipt(
+      env,
+      mutation.idempotencyKey
+    ).catch(() => null);
+    if (stored) {
+      return receiptResult(stored, tripId, principal.memberId) as SettlementGroupMutationSuccess;
+    }
+    await validateSettlementGroup(env, tripId, mutation);
+    throw error;
+  }
+}
+
+async function applySettlementComplete(
+  env: Env,
+  tripId: string,
+  principal: Principal,
+  input: unknown,
+  now: Date
+): Promise<MutationSuccess> {
+  if (!(await mutationQueries.hasMembership(env, tripId, principal.memberId))) {
+    throw new MutationError(
+      404,
+      "TRIP_NOT_FOUND",
+      "여행을 찾을 수 없습니다."
+    );
+  }
+  const mutation = parseSettlementComplete(input);
+  const previous = await mutationQueries.findReceipt(env, mutation.idempotencyKey);
+  if (previous) {
+    return receiptResult(previous, tripId, principal.memberId) as MutationSuccess;
+  }
+  const current = await mutationQueries.findCurrentEntity(
+    env,
+    tripId,
+    principal,
+    "settlement_transfer",
+    mutation.entityId
+  );
+  if (
+    !current
+    || current.version !== mutation.baseVersion
+    || current.status !== "pending"
+    || current.settlementGroupId !== mutation.payload.settlementGroupId
+  ) {
+    throw new MutationError(
+      409,
+      "VERSION_CONFLICT",
+      "다른 기기에서 송금 상태가 수정되었습니다.",
+      { current }
+    );
+  }
+
+  try {
+    const applied = await runSettlementTransferCompleteBatch(
+      env,
+      tripId,
+      principal,
+      mutation,
+      current.expenseIds,
+      now.toISOString()
+    );
+    const stored = await mutationQueries.findReceipt(env, mutation.idempotencyKey);
+    if (stored) {
+      return receiptResult(stored, tripId, principal.memberId) as MutationSuccess;
+    }
+    if (!applied) {
+      const authoritative = await mutationQueries.findCurrentEntity(
+        env,
+        tripId,
+        principal,
+        "settlement_transfer",
+        mutation.entityId
+      );
+      throw new MutationError(
+        409,
+        "VERSION_CONFLICT",
+        "다른 기기에서 송금 상태가 수정되었습니다.",
+        { current: authoritative }
+      );
+    }
+    throw new Error("Settlement completion receipt missing");
+  } catch (error) {
+    if (error instanceof MutationError) throw error;
+    const stored = await mutationQueries.findReceipt(
+      env,
+      mutation.idempotencyKey
+    ).catch(() => null);
+    if (stored) {
+      return receiptResult(stored, tripId, principal.memberId) as MutationSuccess;
+    }
+    throw error;
+  }
+}
+
+export function applySyncMutation(
+  env: Env,
+  tripId: string,
+  principal: Principal,
+  input: unknown,
+  now: Date
+): Promise<SyncMutationSuccess> {
+  if (
+    input !== null
+    && typeof input === "object"
+    && "action" in input
+    && (input.action === "create_group" || input.action === "complete")
+  ) {
+    return input.action === "create_group"
+      ? applySettlementGroup(env, tripId, principal, input, now)
+      : applySettlementComplete(env, tripId, principal, input, now);
+  }
+  return applyMutation(env, tripId, principal, input, now);
 }

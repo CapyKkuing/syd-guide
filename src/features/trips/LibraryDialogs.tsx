@@ -25,12 +25,14 @@ export function LibraryDialogs({
   dialog,
   library,
   deviceManagement,
+  initialEditFocus,
   now,
   onClose
 }: {
   dialog: LibraryDialogState;
   library: ReturnType<typeof useTripLibrary>;
   deviceManagement: ReactNode;
+  initialEditFocus?: "flights";
   now: Date;
   onClose: () => void;
 }) {
@@ -43,6 +45,7 @@ export function LibraryDialogs({
     return (
       <TripForm
         key={dialog.kind === "edit" ? dialog.trip.id : "create"}
+        initialFocus={dialog.kind === "edit" ? initialEditFocus : undefined}
         trip={dialog.kind === "edit" ? dialog.trip : undefined}
         submitting={library.isMutating}
         requestError={mutationMessage}

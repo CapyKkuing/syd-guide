@@ -72,7 +72,7 @@ export async function ensureE2eParticipants(
   if (!roster.setupComplete) {
     const response = await request.post(`${BASE_URL}/api/admin/participants/setup`, {
       headers: ownerHeaders(true),
-      data: { ownerName: "연준", participantNames: ["민지"] }
+      data: { ownerName: "연준", participantNames: ["민지"], representativeIndex: 0 }
     });
     if (!response.ok()) {
       throw new Error(`E2E participant setup failed: ${response.status()}`);

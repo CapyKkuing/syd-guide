@@ -6,7 +6,7 @@ import { idSchema } from "../db/entity-registry";
 import { loadTripSnapshot } from "../db/snapshot";
 import type { AppEnv } from "../env";
 import {
-  applyMutation,
+  applySyncMutation,
   MutationError,
 } from "../services/mutations";
 
@@ -90,7 +90,7 @@ export function registerSyncRoutes(
     const input = await c.req.json().catch(() => null);
     try {
       return c.json(
-        await applyMutation(
+        await applySyncMutation(
           c.env,
           tripId,
           principal,

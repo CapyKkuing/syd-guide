@@ -49,6 +49,36 @@ describe("composeReel", () => {
     });
   });
 
+  it("orders by captured time and falls back to upload time", () => {
+    const capturedLater = photo(1, {
+      capturedAt: "2026-07-02T09:00:00+10:00",
+      createdAt: "2026-07-01T00:00:00.000Z",
+    });
+    const capturedEarlier = photo(2, {
+      capturedAt: "2026-07-01T09:00:00+10:00",
+      createdAt: "2026-07-02T00:00:00.000Z",
+    });
+    const uploadedLater = photo(3, {
+      capturedAt: null,
+      createdAt: "2026-07-04T00:00:00.000Z",
+    });
+    const uploadedEarlier = photo(4, {
+      capturedAt: null,
+      createdAt: "2026-07-03T00:00:00.000Z",
+    });
+
+    expect(composeReel([capturedLater, capturedEarlier]).scenes)
+      .toEqual([
+        expect.objectContaining({ mediaId: capturedEarlier.id }),
+        expect.objectContaining({ mediaId: capturedLater.id }),
+      ]);
+    expect(composeReel([uploadedLater, uploadedEarlier]).scenes)
+      .toEqual([
+        expect.objectContaining({ mediaId: uploadedEarlier.id }),
+        expect.objectContaining({ mediaId: uploadedLater.id }),
+      ]);
+  });
+
   it("keeps the stronger photo from one temporary perceptual-hash group", () => {
     const first = photo(1, { aiScore: 0.4 });
     const stronger = photo(2, { aiScore: 0.9 });

@@ -1,3 +1,4 @@
+import { Button, HStack, Text, VStack } from "@astryxdesign/core";
 import { useState, type FormEvent } from "react";
 import { BottomSheet } from "../../components/BottomSheet";
 import type { MapPlaceView } from "../../data/contracts";
@@ -91,17 +92,22 @@ export function PlaceEditorDialog({
         </select></label>
         <label><span>주소</span><input value={address} onChange={(event) => setAddress(event.target.value)} /></label>
         <label><span>설명</span><textarea value={description} onChange={(event) => setDescription(event.target.value)} /></label>
-        <div className="place-editor__coordinates">
+        <HStack className="place-editor__coordinates" gap={3}>
           <label><span>위도</span><input inputMode="decimal" value={latitude} onChange={(event) => setLatitude(event.target.value)} /></label>
           <label><span>경도</span><input inputMode="decimal" value={longitude} onChange={(event) => setLongitude(event.target.value)} /></label>
-        </div>
+        </HStack>
         <label><span>Google 지도 주소</span><input type="url" value={mapUrl} onChange={(event) => setMapUrl(event.target.value)} /></label>
         {error ? <p role="alert">{error}</p> : null}
-        {confirmDelete ? <div className="place-editor__confirm"><p>{place?.name} 장소를 삭제할까요?</p><button onClick={() => void remove()} type="button">삭제 확인</button></div> : null}
-        <div className="place-editor__actions">
-          {place ? <button className="danger-button" onClick={() => setConfirmDelete(true)} type="button">삭제</button> : null}
-          <button className="primary-button" type="submit">저장</button>
-        </div>
+        {confirmDelete ? (
+          <VStack className="place-editor__confirm" gap={2}>
+            <Text type="label">{place?.name} 장소를 삭제할까요?</Text>
+            <Button label="삭제 확인" onClick={() => void remove()} size="lg" variant="destructive" />
+          </VStack>
+        ) : null}
+        <HStack className="place-editor__actions" gap={2} justify="end">
+          {place ? <Button label="삭제" onClick={() => setConfirmDelete(true)} size="lg" variant="destructive" /> : null}
+          <Button label="저장" size="lg" type="submit" variant="primary" />
+        </HStack>
       </form>
     </BottomSheet>
   );

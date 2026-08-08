@@ -1,7 +1,7 @@
 import { openDB, type DBSchema, type IDBPDatabase } from "idb";
 import type { SessionPrincipal } from "../../features/auth/api";
 import type { TripSnapshot } from "../../shared/api";
-import type { MutationRequest } from "../../shared/mutations";
+import type { SyncMutationRequest } from "../../shared/mutations";
 import type { TravelReel } from "../../features/memories/reel/types";
 
 export interface SnapshotRecord {
@@ -14,7 +14,7 @@ export interface SnapshotRecord {
 export interface OutboxRecord {
   idempotencyKey: string;
   tripId: string;
-  mutation: MutationRequest;
+  mutation: SyncMutationRequest;
   state: "queued" | "sending" | "conflict";
   attempts: number;
   createdAt: string;

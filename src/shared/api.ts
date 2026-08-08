@@ -7,6 +7,7 @@ import type {
   Place,
   PublicMember,
   ScheduleItem,
+  SettlementTransfer,
   Trip,
   TripDay,
   Vote
@@ -30,6 +31,7 @@ export interface TripSnapshot {
   bookings: Booking[];
   checkItems: CheckItem[];
   expenses: Expense[];
+  settlementTransfers?: SettlementTransfer[];
   notes: Note[];
   votes: Vote[];
   activity: ActivityLog[];

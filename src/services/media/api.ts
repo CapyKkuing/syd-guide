@@ -1,5 +1,6 @@
 /* eslint-disable no-unused-vars */
 import type {
+  MediaPreview,
   TripBookingStorage,
   TripMedia,
   TripMediaStorage,
@@ -25,6 +26,8 @@ export interface RegisterMediaInput {
   aiLabels: string[];
 }
 
+export type MediaPreviewInput = MediaPreview;
+
 export interface MediaApi {
   getConfig(tripId: string): Promise<MediaConfig>;
   getBookingStorage(tripId: string): Promise<TripBookingStorage | null>;
@@ -35,6 +38,11 @@ export interface MediaApi {
   saveStorage(tripId: string, rootObjectId: string): Promise<TripMediaStorage>;
   register(tripId: string, input: RegisterMediaInput): Promise<TripMedia>;
   selectRepresentative(tripId: string, mediaId: string): Promise<void>;
+  savePreview(
+    tripId: string,
+    mediaId: string,
+    preview: MediaPreviewInput
+  ): Promise<TripMedia>;
   remove(tripId: string, mediaId: string): Promise<void>;
 }
 
@@ -114,6 +122,22 @@ export class MediaApiClient implements MediaApi {
       method: "PATCH",
       body: JSON.stringify({ mediaId }),
     });
+  }
+
+  async savePreview(
+    tripId: string,
+    mediaId: string,
+    preview: MediaPreviewInput
+  ): Promise<TripMedia> {
+    const result = await this.json<{ media: TripMedia }>(
+      tripId,
+      `/media/${encodeURIComponent(mediaId)}/preview`,
+      {
+        method: "PATCH",
+        body: JSON.stringify(preview),
+      }
+    );
+    return result.media;
   }
 
   async remove(tripId: string, mediaId: string): Promise<void> {

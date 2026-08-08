@@ -68,6 +68,7 @@ export const entitySchemas = {
     endsAt: nullableTimestamp,
     reservationCode: z.string().max(160).nullable(),
     paymentStatus: z.enum(["unpaid", "partial", "paid", "refunded"]),
+    usageStatus: z.enum(["booked", "check_in_pending", "checked_in", "used", "cancelled"]).default("booked"),
     externalUrl: nullableUrl,
     documentUrl: nullableUrl,
     documentFile: z.object({
@@ -111,6 +112,16 @@ export const entitySchemas = {
     paymentMethod: z.enum(["cash", "card"]).nullable(),
     isSettled: z.boolean(),
     memo: longText,
+  }),
+  settlement_transfer: z.object({
+    settlementGroupId: idSchema,
+    expenseIds: z.array(idSchema).min(1).max(500),
+    currency: z.string().regex(/^[A-Z]{3}$/),
+    fromMemberId: idSchema,
+    toMemberId: idSchema,
+    amountMinor: z.number().int().min(1).max(999_999_999_999),
+    status: z.enum(["pending", "completed"]),
+    completedAt: z.iso.datetime({ offset: true }).nullable(),
   }),
   note: z.object({
     targetType: z.enum(["trip", "schedule_item", "place", "booking"]),

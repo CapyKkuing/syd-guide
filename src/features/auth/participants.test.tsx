@@ -100,7 +100,8 @@ describe("participant first setup", () => {
     );
 
     expect(await screen.findByRole("button", { name: "1명으로 시작하기" })).toBeVisible();
-    await userEvent.type(screen.getByLabelText(/내 이름/), "연준");
+    await userEvent.type(screen.getByRole("textbox", { name: /내 이름/ }), "연준");
+    await userEvent.click(screen.getByRole("radio", { name: "연준" }));
     await userEvent.click(screen.getByRole("button", { name: "1명으로 시작하기" }));
 
     await waitFor(() => expect(screen.getByText("여행 서재 내용")).toBeVisible());
@@ -108,12 +109,16 @@ describe("participant first setup", () => {
       "/api/admin/participants/setup",
       expect.objectContaining({
         method: "POST",
-        body: JSON.stringify({ ownerName: "연준", participantNames: [] }),
+        body: JSON.stringify({
+          ownerName: "연준",
+          participantNames: [],
+          representativeIndex: 0,
+        }),
       })
     );
   });
 
-  it("requires names and keeps the owner as the initial representative", async () => {
+  it("requires names and lets a participant become the initial representative", async () => {
     const request = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
       if (url === "/api/session") {
@@ -127,9 +132,11 @@ describe("participant first setup", () => {
           roster: {
             ...initialRoster,
             setupComplete: true,
+            representativeMemberId: "partner",
             members: initialRoster.members.map((member, index) => ({
               ...member,
               displayName: index === 0 ? "연준" : "민지",
+              isRepresentative: index === 1,
             })),
           },
         });
@@ -147,8 +154,13 @@ describe("participant first setup", () => {
     expect(await screen.findByRole("heading", { name: "누구와 함께 가나요?" })).toBeVisible();
     await userEvent.click(screen.getByRole("button", { name: "함께 갈 사람 추가" }));
     expect(screen.getByRole("button", { name: "2명으로 시작하기" })).toBeVisible();
-    await userEvent.type(screen.getByLabelText(/내 이름/), "연준");
-    await userEvent.type(screen.getByLabelText(/함께 갈 사람 1/), "민지");
+    await userEvent.type(screen.getByRole("textbox", { name: /내 이름/ }), "연준");
+    await userEvent.type(screen.getByRole("textbox", { name: /함께 갈 사람 1/ }), "민지");
+    await userEvent.click(screen.getByRole("button", { name: "2명으로 시작하기" }));
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toHaveTextContent("여행 대표자를 선택해 주세요.");
+    });
+    await userEvent.click(screen.getByRole("radio", { name: "민지" }));
     await userEvent.click(screen.getByRole("button", { name: "2명으로 시작하기" }));
 
     await waitFor(() => expect(screen.getByText("여행 서재 내용")).toBeVisible());
@@ -156,7 +168,11 @@ describe("participant first setup", () => {
       "/api/admin/participants/setup",
       expect.objectContaining({
         method: "POST",
-        body: JSON.stringify({ ownerName: "연준", participantNames: ["민지"] }),
+        body: JSON.stringify({
+          ownerName: "연준",
+          participantNames: ["민지"],
+          representativeIndex: 1,
+        }),
       })
     );
   });

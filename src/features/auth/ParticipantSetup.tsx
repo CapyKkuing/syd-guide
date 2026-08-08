@@ -5,6 +5,8 @@ import {
   Card,
   Heading,
   HStack,
+  RadioList,
+  RadioListItem,
   StackItem,
   Text,
   TextInput,
@@ -65,6 +67,7 @@ function SetupScreen({
     owner?.displayName === "나" ? "" : owner?.displayName ?? ""
   );
   const [participantNames, setParticipantNames] = useState<string[]>([]);
+  const [representativeIndex, setRepresentativeIndex] = useState<number | null>(null);
   const [status, setStatus] = useState("");
   const [attempted, setAttempted] = useState(false);
   const validNames = participantNames.map((name) => name.trim()).filter(Boolean);
@@ -72,9 +75,13 @@ function SetupScreen({
   async function submit() {
     setAttempted(true);
     setStatus("");
-    if (!ownerName.trim() || validNames.length !== participantNames.length) return;
+    if (
+      !ownerName.trim()
+      || validNames.length !== participantNames.length
+      || representativeIndex === null
+    ) return;
     try {
-      onComplete(await setupParticipants(ownerName.trim(), validNames));
+      onComplete(await setupParticipants(ownerName.trim(), validNames, representativeIndex));
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "참여자 설정을 저장하지 못했습니다.");
     }
@@ -86,11 +93,11 @@ function SetupScreen({
         <Text color="accent" type="label">첫 설정</Text>
         <Heading level={1}>누구와 함께 가나요?</Heading>
         <Text color="secondary" type="body">
-          대표자와 함께 갈 사람을 먼저 등록해 주세요. 기기 연결은 나중에 할 수 있어요.
+          함께 갈 사람을 등록하고 여행 대표자를 선택해 주세요. 기기 연결은 나중에 할 수 있어요.
         </Text>
       </VStack>
 
-      <Card padding={4} variant="green">
+      <Card padding={4}>
         <VStack gap={3}>
           <Text type="label">내 정보</Text>
           <TextInput
@@ -104,13 +111,13 @@ function SetupScreen({
             value={ownerName}
           />
           <HStack align="center" gap={3}>
-            <Avatar name={ownerName || "대표자"} size="lg" tooltip={false} />
+            <Avatar name={ownerName || "관리자"} size="lg" tooltip={false} />
             <VStack gap={0.5}>
               <HStack align="center" gap={2}>
                 <Text type="label">{ownerName || "이름을 입력해 주세요"}</Text>
-                <Badge label="대표자" variant="green" />
+                <Badge label="보안 관리자" variant="green" />
               </HStack>
-              <Text color="secondary" type="supporting">여행 대표자 · 이 기기의 관리자</Text>
+              <Text color="secondary" type="supporting">이 기기의 보안 관리자</Text>
             </VStack>
           </HStack>
         </VStack>
@@ -149,9 +156,16 @@ function SetupScreen({
               {participantNames.length ? (
                 <Button
                   label={`${index + 1}번째 사람 삭제`}
-                  onClick={() => setParticipantNames((current) =>
-                    current.filter((_, itemIndex) => itemIndex !== index)
-                  )}
+                  onClick={() => {
+                    setParticipantNames((current) =>
+                      current.filter((_, itemIndex) => itemIndex !== index)
+                    );
+                    setRepresentativeIndex((current) => {
+                      const removedIndex = index + 1;
+                      if (current === removedIndex) return null;
+                      return current !== null && current > removedIndex ? current - 1 : current;
+                    });
+                  }}
                   size="sm"
                   variant="ghost"
                 >삭제</Button>
@@ -165,6 +179,38 @@ function SetupScreen({
             width="100%"
           />
         </VStack>
+      </Card>
+
+      <Card padding={4}>
+        <RadioList
+          description="일정과 정산에서 대표로 표시할 사람입니다. 보안 관리자 권한과는 별개입니다."
+          isRequired
+          label="여행 대표자 선택"
+          onChange={(value) => setRepresentativeIndex(Number(value))}
+          status={attempted && representativeIndex === null
+            ? { type: "error", message: "여행 대표자를 선택해 주세요." }
+            : undefined}
+          value={representativeIndex === null ? "" : String(representativeIndex)}
+          width="100%"
+        >
+          <RadioListItem
+            description="이 기기의 보안 관리자"
+            isDisabled={!ownerName.trim()}
+            label={ownerName.trim() || "내 이름 입력 필요"}
+            startContent={<Avatar name={ownerName || "관리자"} size="sm" tooltip={false} />}
+            value="0"
+          />
+          {participantNames.map((name, index) => (
+            <RadioListItem
+              description={`함께 갈 사람 ${index + 1}`}
+              isDisabled={!name.trim()}
+              key={index}
+              label={name.trim() || `함께 갈 사람 ${index + 1} 이름 입력 필요`}
+              startContent={<Avatar name={name || `참여자 ${index + 1}`} size="sm" tooltip={false} />}
+              value={String(index + 1)}
+            />
+          ))}
+        </RadioList>
       </Card>
 
       <VStack gap={2}>

@@ -34,11 +34,13 @@ function tabbableElements(container: HTMLElement): HTMLElement[] {
 
 export function BottomSheet({
   ariaLabel,
+  className,
   onClose,
   returnFocusTo,
   children
 }: {
   ariaLabel: string;
+  className?: string;
   onClose: () => void;
   returnFocusTo: HTMLElement | null;
   children: ReactNode;
@@ -111,7 +113,7 @@ export function BottomSheet({
         ref={dialogRef}
         aria-label={ariaLabel}
         aria-modal="true"
-        className="sheet"
+        className={className ? `sheet ${className}` : "sheet"}
         role="dialog"
         tabIndex={-1}
       >

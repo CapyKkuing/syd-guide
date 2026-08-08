@@ -1,4 +1,5 @@
 import { createContext, useContext } from "react";
+import type { SyncMutationRequest } from "../../shared/mutations";
 
 export interface SyncStatus {
   online: boolean;
@@ -6,6 +7,7 @@ export interface SyncStatus {
   conflicts: number;
   lastSync: string | null;
   syncing: boolean;
+  pendingMutations: SyncMutationRequest[];
   syncNow: () => Promise<void>;
 }
 

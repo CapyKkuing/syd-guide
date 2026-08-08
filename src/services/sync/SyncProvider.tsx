@@ -5,6 +5,7 @@ import {
   type ReactNode
 } from "react";
 import type { MutableTravelGuideDataSource } from "../../data/contracts";
+import type { SyncMutationRequest } from "../../shared/mutations";
 import type { OutboxRecord } from "../offline/database";
 import type { OutboxStore } from "../offline/outboxStore";
 import { ConflictDialog } from "./ConflictDialog";
@@ -36,6 +37,7 @@ export function SyncProvider({
   const [conflicts, setConflicts] = useState(0);
   const [lastSync, setLastSync] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
+  const [pendingMutations, setPendingMutations] = useState<SyncMutationRequest[]>([]);
   const [resolving, setResolving] = useState(false);
   const [conflict, setConflict] = useState<OutboxRecord | null>(null);
 
@@ -46,6 +48,7 @@ export function SyncProvider({
     ]);
     setQueued(counts.queued);
     setConflicts(counts.conflicts);
+    setPendingMutations(records.map((record) => record.mutation));
     setConflict(records.find((record) => record.state === "conflict") ?? null);
   }, [runtime.outbox, tripId]);
 
@@ -127,6 +130,7 @@ export function SyncProvider({
       conflicts,
       lastSync,
       syncing,
+      pendingMutations,
       syncNow
     }}>
       {children}

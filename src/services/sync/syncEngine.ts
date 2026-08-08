@@ -1,6 +1,6 @@
 import type {
-  MutationRequest,
-  MutationSuccess
+  SyncMutationRequest,
+  SyncMutationSuccess,
 } from "../../shared/mutations";
 import { ApiClientError } from "../api/errors";
 import type { OutboxStore } from "../offline/outboxStore";
@@ -9,7 +9,7 @@ import type { SnapshotStore } from "../offline/snapshotStore";
 export interface SyncTransport {
   // ESLint's base rule does not recognize TypeScript interface arguments.
   // eslint-disable-next-line no-unused-vars
-  mutate(tripId: string, mutation: MutationRequest): Promise<MutationSuccess>;
+  mutate(tripId: string, mutation: SyncMutationRequest): Promise<SyncMutationSuccess>;
 }
 
 export interface SyncFlushResult {
@@ -67,6 +67,12 @@ export class SyncEngine {
     const record = await this.outbox.get(idempotencyKey);
     if (!record || record.state !== "conflict") {
       throw new Error("다시 보낼 충돌 항목이 없습니다.");
+    }
+    if (
+      record.mutation.action === "create_group"
+      || record.mutation.action === "complete"
+    ) {
+      throw new Error("정산 요청은 충돌 내용 유지로 다시 보낼 수 없습니다.");
     }
     const version = currentVersion(record.conflictCurrent);
     if (version === null) {

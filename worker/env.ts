@@ -12,6 +12,9 @@ export interface Env {
   DEV_AUTH?: "enabled";
   GOOGLE_DRIVE_CLIENT_ID?: string;
   GOOGLE_PLACES_API_KEY?: string;
+  GOOGLE_VISION_CLIENT_EMAIL?: string;
+  GOOGLE_VISION_PRIVATE_KEY?: string;
+  GOOGLE_VISION_PROJECT_ID?: string;
 }
 
 export type AppEnv = {

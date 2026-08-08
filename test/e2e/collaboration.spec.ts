@@ -35,7 +35,7 @@ test("owner and partner share schedule, place, booking, checklist, note, and vot
   await placeDialog.getByLabel("주소", { exact: true }).fill("Circular Quay");
   await placeDialog.getByRole("button", { name: "저장" }).click();
   await flushOutbox(page, workspace.trip.id);
-  await expect(page.getByRole("button", { name: /함께 고른 카페/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "함께 고른 카페" })).toBeVisible();
 
   await page.goto(`/trip/${workspace.trip.id}/tools/bookings`);
   await page.getByRole("button", { name: "예약 추가" }).click();
@@ -64,8 +64,8 @@ test("owner and partner share schedule, place, booking, checklist, note, and vot
   await expect(page.getByText("함께 보는 메모")).toBeVisible();
 
   await page.goto(`/trip/${workspace.trip.id}/map`);
-  await page.getByRole("button", { name: /함께 고른 카페/ }).click();
-  await page.getByRole("button", { name: "꼭 가요" }).click();
+  await page.getByRole("button", { name: "상세 보기" }).click();
+  await page.getByRole("radio", { name: "꼭 가요" }).check();
   await flushOutbox(page, workspace.trip.id);
 
   await partner.page.goto(`/trip/${workspace.trip.id}/schedule`);
@@ -81,7 +81,8 @@ test("owner and partner share schedule, place, booking, checklist, note, and vot
   await expect(partner.page.getByText("함께 보는 메모")).toBeVisible();
 
   await partner.page.goto(`/trip/${workspace.trip.id}/map`);
-  await partner.page.getByRole("button", { name: /함께 고른 카페/ }).click();
+  await expect(partner.page.getByRole("heading", { name: "함께 고른 카페" })).toBeVisible();
+  await partner.page.getByRole("button", { name: "상세 보기" }).click();
   await partner.page.getByRole("button", { name: "장소 수정" }).click();
   const editPlace = partner.page.getByRole("dialog", { name: "장소 수정" });
   await editPlace.getByLabel("장소 이름").fill("파트너가 수정한 카페");
@@ -89,7 +90,7 @@ test("owner and partner share schedule, place, booking, checklist, note, and vot
   await flushOutbox(partner.page, workspace.trip.id);
 
   await page.reload();
-  await expect(page.getByRole("button", { name: /파트너가 수정한 카페/ }))
+  await expect(page.getByRole("heading", { name: "파트너가 수정한 카페" }))
     .toBeVisible();
 
   await page.goto(`/trip/${workspace.trip.id}/tools/checklist`);

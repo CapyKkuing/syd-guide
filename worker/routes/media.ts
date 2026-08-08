@@ -10,6 +10,7 @@ import {
   saveBookingStorage,
   saveMediaStorage,
   selectRepresentativeMedia,
+  updateMediaPreview,
 } from "../db/media";
 import { findTripForMember } from "../db/trips";
 import type { AppEnv } from "../env";
@@ -43,6 +44,10 @@ const mediaInput = z.object({
   aiLabels: z.array(z.string().trim().min(1).max(80)).max(5),
 });
 const representativeInput = z.object({ mediaId: z.uuid() });
+const previewInput = z.object({
+  previewCropAspect: z.enum(["1:1", "4:3", "3:4", "16:9"]),
+  previewBrightness: z.number().int().min(-20).max(20),
+});
 
 async function input<T extends z.ZodType>(
   request: Request,
@@ -177,6 +182,28 @@ export function registerMediaRoutes(
       throw new MediaError(404, "MEDIA_NOT_FOUND", "대표 사진을 찾을 수 없습니다.");
     }
     return c.json({ representativeMediaId: body.mediaId });
+  });
+
+  app.patch("/api/trips/:id/media/:mediaId/preview", async (c) => {
+    const principal = await requirePrincipal(c, dependencies);
+    const tripId = c.req.param("id");
+    await tripForMember(c.env, tripId, principal.memberId);
+    const mediaId = z.uuid().safeParse(c.req.param("mediaId"));
+    if (!mediaId.success) {
+      throw new MediaError(400, "MEDIA_ID_INVALID", "사진 ID가 올바르지 않습니다.");
+    }
+    const media = await updateMediaPreview(
+      c.env,
+      principal,
+      tripId,
+      mediaId.data,
+      await input(c.req.raw, previewInput),
+      dependencies.now()
+    );
+    if (!media) {
+      throw new MediaError(404, "MEDIA_NOT_FOUND", "대표 사진을 찾을 수 없습니다.");
+    }
+    return c.json({ media });
   });
 
   app.delete("/api/trips/:id/media/:mediaId", async (c) => {

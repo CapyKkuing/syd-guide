@@ -1,3 +1,4 @@
+import { Button, Heading, HStack, Text, VStack } from "@astryxdesign/core";
 import { BottomSheet } from "../../components/BottomSheet";
 import type { MapPlaceView } from "../../data/contracts";
 import type { TripMutationController } from "../../services/mutations/controller";
@@ -51,7 +52,7 @@ export function MapPlaceSheet({
   };
   return (
     <BottomSheet ariaLabel="장소 상세" onClose={onClose} returnFocusTo={returnFocusTo}>
-      <div className="map-place-sheet">
+      <VStack className="map-place-sheet" gap={4}>
         {photoUrl ? (
           <figure className="map-place-sheet__photo">
             <img alt={`${place.name} 장소 사진`} src={photoUrl} />
@@ -71,30 +72,32 @@ export function MapPlaceSheet({
             ) : null}
           </figure>
         ) : null}
-        <h2>{place.name}</h2>
+        <Heading level={2}>{place.name}</Heading>
         <dl>
-          <div><dt>분류</dt><dd>{categoryLabels[place.category]}</dd></div>
-          <div><dt>상태</dt><dd>{statusLabels[place.status]}</dd></div>
-          <div><dt>주소</dt><dd>{discovery?.address || place.address}</dd></div>
-          {discovery?.rating ? <div><dt>평점</dt><dd>★ {discovery.rating.toFixed(1)} · 리뷰 {discovery.userRatingCount.toLocaleString("ko-KR")}개</dd></div> : null}
-          {discovery?.openNow !== null && discovery?.openNow !== undefined ? <div><dt>현재 영업</dt><dd>{discovery.openNow ? "영업 중" : "영업 종료"}</dd></div> : null}
-          {discovery?.phone ? <div><dt>전화</dt><dd><a href={`tel:${discovery.phone}`}>{discovery.phone}</a></dd></div> : null}
-          {discovery?.websiteUrl ? <div><dt>웹사이트</dt><dd><a href={discovery.websiteUrl} rel="noreferrer noopener" target="_blank">공식 사이트 열기</a></dd></div> : null}
-          {place.description ? <div><dt>설명</dt><dd>{place.description}</dd></div> : null}
+          <VStack as="div" gap={1}><dt>분류</dt><dd>{categoryLabels[place.category]}</dd></VStack>
+          <VStack as="div" gap={1}><dt>상태</dt><dd>{statusLabels[place.status]}</dd></VStack>
+          <VStack as="div" gap={1}><dt>주소</dt><dd>{discovery?.address || place.address}</dd></VStack>
+          {discovery?.rating ? <VStack as="div" gap={1}><dt>평점</dt><dd>★ {discovery.rating.toFixed(1)} · 리뷰 {discovery.userRatingCount.toLocaleString("ko-KR")}개</dd></VStack> : null}
+          {discovery?.openNow !== null && discovery?.openNow !== undefined ? <VStack as="div" gap={1}><dt>현재 영업</dt><dd>{discovery.openNow ? "영업 중" : "영업 종료"}</dd></VStack> : null}
+          {discovery?.phone ? <VStack as="div" gap={1}><dt>전화</dt><dd><a href={`tel:${discovery.phone}`}>{discovery.phone}</a></dd></VStack> : null}
+          {discovery?.websiteUrl ? <VStack as="div" gap={1}><dt>웹사이트</dt><dd><a href={discovery.websiteUrl} rel="noreferrer noopener" target="_blank">공식 사이트 열기</a></dd></VStack> : null}
+          {place.description ? <VStack as="div" gap={1}><dt>설명</dt><dd>{place.description}</dd></VStack> : null}
         </dl>
         {discovery ? <p className="google-maps-attribution" translate="no">Google Maps</p> : null}
         {!hideManagement ? (
-          <>
-            <p>투표: 꼭 가요 {voteTotals.must} · 괜찮아요 {voteTotals.okay} · 건너뛰기 {voteTotals.skip}</p>
+          <VStack className="map-place-sheet__vote" gap={2}>
+            <Text color="secondary" hasTabularNumbers type="supporting">
+              함께 고른 결과 · 꼭 가요 {voteTotals.must} · 괜찮아요 {voteTotals.okay} · 건너뛰기 {voteTotals.skip}
+            </Text>
             <PlaceVoteControl controller={controller} place={place} viewerMemberId={viewerMemberId} />
-          </>
+          </VStack>
         ) : null}
-        <div className="map-place-sheet__map-links">
+        <HStack className="map-place-sheet__map-links" gap={2}>
           <a className="map-place-sheet__map-link" href={discovery?.mapUrl ?? mapsSearchUrl} rel="noreferrer noopener" target="_blank">최신 정보 보기</a>
           <a className="map-place-sheet__map-link" href={mapsDirectionsUrl} rel="noreferrer noopener" target="_blank">길찾기</a>
-        </div>
-        {controller && !hideManagement ? <button className="secondary-button" onClick={onEdit} type="button">장소 수정</button> : null}
-      </div>
+        </HStack>
+        {controller && !hideManagement ? <Button label="장소 수정" onClick={onEdit} size="lg" variant="secondary" width="100%" /> : null}
+      </VStack>
     </BottomSheet>
   );
 }

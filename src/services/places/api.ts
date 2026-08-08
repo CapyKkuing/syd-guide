@@ -16,8 +16,22 @@ interface PlacePhotoResult {
   };
 }
 
+interface PlacePhotoOptions {
+  automatic?: boolean;
+}
+
+const automaticPhotoLimitPerTrip = 6;
+
+export class AutomaticPlacePhotoLimitError extends Error {
+  constructor() {
+    super("Automatic place photo limit reached");
+    this.name = "AutomaticPlacePhotoLimitError";
+  }
+}
+
 export class PlacesApi {
   private readonly fetcher: Fetcher;
+  private readonly automaticPhotoRequests = new Map<string, Set<string>>();
   private readonly discoveryRequests = new Map<string, Promise<PlaceDiscoveryResponse>>();
   private readonly recommendationRequests = new Map<string, Promise<PlaceRecommendationResponse>>();
   private readonly photoRequests = new Map<string, Promise<PlacePhotoResult>>();
@@ -71,10 +85,18 @@ export class PlacesApi {
     return request;
   }
 
-  async getPhoto(tripId: string, placeId: string, name: string): Promise<PlacePhotoResult> {
-    const key = `${tripId}:${placeId}:${name}`;
+  async getPhoto(
+    tripId: string,
+    placeId: string,
+    name: string,
+    options: PlacePhotoOptions = {}
+  ): Promise<PlacePhotoResult> {
+    const key = `${tripId}:${name}`;
     const existing = this.photoRequests.get(key);
     if (existing) return existing;
+    if (options.automatic && !this.reserveAutomaticPhotoRequest(tripId, key)) {
+      throw new AutomaticPlacePhotoLimitError();
+    }
     const query = new URLSearchParams({ name });
     const request = this.fetcher(
       `/api/trips/${encodeURIComponent(tripId)}/places/${encodeURIComponent(placeId)}/photo?${query}`,
@@ -90,10 +112,17 @@ export class PlacesApi {
     return request;
   }
 
-  async getRecommendationPhoto(tripId: string, name: string): Promise<PlacePhotoResult> {
-    const key = `${tripId}:recommendation:${name}`;
+  async getRecommendationPhoto(
+    tripId: string,
+    name: string,
+    options: PlacePhotoOptions = {}
+  ): Promise<PlacePhotoResult> {
+    const key = `${tripId}:${name}`;
     const existing = this.photoRequests.get(key);
     if (existing) return existing;
+    if (options.automatic && !this.reserveAutomaticPhotoRequest(tripId, key)) {
+      throw new AutomaticPlacePhotoLimitError();
+    }
     const query = new URLSearchParams({ name });
     const request = this.fetcher(
       `/api/trips/${encodeURIComponent(tripId)}/places/recommendation-photo?${query}`,
@@ -107,6 +136,14 @@ export class PlacesApi {
     });
     this.photoRequests.set(key, request);
     return request;
+  }
+
+  private reserveAutomaticPhotoRequest(tripId: string, key: string) {
+    const requests = this.automaticPhotoRequests.get(tripId) ?? new Set<string>();
+    if (requests.has(key) || requests.size >= automaticPhotoLimitPerTrip) return false;
+    requests.add(key);
+    this.automaticPhotoRequests.set(tripId, requests);
+    return true;
   }
 }
 

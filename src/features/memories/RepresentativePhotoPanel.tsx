@@ -8,6 +8,7 @@ import {
   rankPhotos,
   type RankedPhoto,
 } from "../../services/media/localPhotoRanker";
+import { RepresentativePhotoEditorDialog } from "./RepresentativePhotoEditorDialog";
 
 const MAX_PHOTOS = 20;
 const MAX_FILE_BYTES = 25 * 1024 * 1024;
@@ -43,6 +44,7 @@ export function RepresentativePhotoPanel({
   );
   const [previews, setPreviews] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
+  const [editorOpen, setEditorOpen] = useState(false);
   const [message, setMessage] = useState(
     api
       ? "사진은 내 Google Drive에 저장되고 AI 분석은 이 기기에서만 실행됩니다."
@@ -224,11 +226,12 @@ export function RepresentativePhotoPanel({
 
   return (
     <div className="representative-photo">
-      <figure className="representative-photo__figure">
+      <figure className={`representative-photo__figure representative-photo__figure--${(representative?.previewCropAspect ?? "4:3").replace(":", "-")}`}>
         <img
           className="today-hero__cover"
           src={coverUrl || trip.coverImageUrl}
           alt={`${trip.destination} 여행 대표 사진`}
+          style={representative ? { filter: `brightness(${100 + (representative.previewBrightness ?? 0)}%)` } : undefined}
         />
         <figcaption>
           {representativeId
@@ -258,6 +261,11 @@ export function RepresentativePhotoPanel({
             >
               Drive에서 공유 설정
             </a>
+          ) : null}
+          {representative && coverUrl && api ? (
+            <button className="secondary-button" disabled={busy} onClick={() => setEditorOpen(true)} type="button">
+              대표사진 편집
+            </button>
           ) : null}
         </div>
         <label className={busy || !api ? "photo-upload is-disabled" : "photo-upload"}>
@@ -297,6 +305,19 @@ export function RepresentativePhotoPanel({
             </article>
           ))}
         </div>
+      ) : null}
+      {editorOpen && representative && coverUrl && api ? (
+        <RepresentativePhotoEditorDialog
+          api={api}
+          media={representative}
+          onClose={() => setEditorOpen(false)}
+          onSaved={(saved) => {
+            setItems((current) => current.map((item) => item.id === saved.id ? saved : item));
+            setMessage("대표사진 미리보기를 저장했습니다.");
+            onChanged();
+          }}
+          previewUrl={coverUrl}
+        />
       ) : null}
     </div>
   );

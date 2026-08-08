@@ -144,6 +144,7 @@ export function mapSnapshotToWorkspace(
       bookings: snapshot.bookings,
       checkItems: snapshot.checkItems,
       expenses: snapshot.expenses,
+      settlementTransfers: snapshot.settlementTransfers ?? [],
       notes: snapshot.notes,
       activity: snapshot.activity.slice(0, 100).map((entry) => ({
         id: entry.id,

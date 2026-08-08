@@ -35,9 +35,8 @@ body {
 
 .library-header,
 .trip-header {
-  position: sticky;
+  position: static;
   z-index: 24;
-  top: 0;
   border-bottom-color: color-mix(in srgb, var(--line) 76%, transparent);
   background: color-mix(in srgb, var(--bg) 84%, transparent);
   backdrop-filter: blur(18px);

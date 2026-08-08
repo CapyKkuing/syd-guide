@@ -31,7 +31,8 @@ export function BookingsPanel({
   tripId,
   viewerRole,
   experiencePhase = "before",
-  localDate
+  localDate,
+  initialBookingType
 }: {
   bookings: BookingView[];
   controller?: TripMutationController;
@@ -45,8 +46,11 @@ export function BookingsPanel({
   viewerRole?: MemberRole;
   experiencePhase?: ExperiencePhase;
   localDate?: string;
+  initialBookingType?: "lodging";
 }) {
-  const [editing, setEditing] = useState<BookingView | null | undefined>();
+  const [editing, setEditing] = useState<BookingView | null | undefined>(
+    initialBookingType ? null : undefined
+  );
   const [selected, setSelected] = useState<BookingView | null>(null);
   const [detailReturnFocusTo, setDetailReturnFocusTo] = useState<HTMLElement | null>(null);
   const documentRuntime = useMemo(
@@ -133,7 +137,7 @@ export function BookingsPanel({
           <Text type="body">미리 예약한 항공권, 호텔, 이용권을 추가해 두세요.</Text>
         </VStack>
       ) : null}
-      {editing !== undefined && controller ? <BookingEditorDialog booking={editing} controller={controller} documentRuntime={documentRuntime} onClose={() => setEditing(undefined)} places={places} scheduleItems={scheduleItems} timeZone={timeZone} /> : null}
+      {editing !== undefined && controller ? <BookingEditorDialog booking={editing} controller={controller} documentRuntime={documentRuntime} initialBookingType={editing ? undefined : initialBookingType} onClose={() => setEditing(undefined)} places={places} scheduleItems={scheduleItems} timeZone={timeZone} tripId={tripId} /> : null}
       {selected ? (
         <BookingDetailSheet
           booking={selected}

@@ -11,6 +11,7 @@ import {
 } from "@astryxdesign/core";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { MapPlaceView } from "../../../data/contracts";
+import { isSamePlace } from "../../../domain/placeIdentity";
 import { ApiClientError } from "../../../services/api/errors";
 import type { TripMutationController } from "../../../services/mutations/controller";
 import { placesApi } from "../../../services/places/api";
@@ -52,6 +53,9 @@ export function PlaceCategoryPanel({
   viewerMemberId: string;
 }) {
   const discoveryEnabled = Boolean(tripId && category !== "transport");
+  const recommendationEnabled = discoveryEnabled && places.some((place) => (
+    place.latitude !== null && place.longitude !== null
+  ));
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<PlaceFilter>("all");
   const [sort, setSort] = useState<PlaceSort>("popular");
@@ -62,7 +66,7 @@ export function PlaceCategoryPanel({
   const [usage, setUsage] = useState<PlaceProviderUsage[]>([]);
   const [recommendations, setRecommendations] = useState<PlaceDiscoveryDetails[]>([]);
   const [recommendationError, setRecommendationError] = useState("");
-  const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(discoveryEnabled);
+  const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(recommendationEnabled);
   const items = useMemo(
     () => mergePlaceRecommendations(category, places, recommendations),
     [category, places, recommendations]
@@ -91,7 +95,7 @@ export function PlaceCategoryPanel({
   }, []);
 
   const refreshRecommendations = useCallback(async () => {
-    if (!discoveryEnabled || !tripId) return;
+    if (!recommendationEnabled || !tripId) return;
     setIsLoadingRecommendations(true);
     setRecommendationError("");
     try {
@@ -107,10 +111,10 @@ export function PlaceCategoryPanel({
     } finally {
       setIsLoadingRecommendations(false);
     }
-  }, [category, discoveryEnabled, tripId]);
+  }, [category, recommendationEnabled, tripId]);
 
   useEffect(() => {
-    if (!discoveryEnabled || !tripId) return;
+    if (!recommendationEnabled || !tripId) return;
     let active = true;
     void placesApi.getRecommendations(
       tripId,
@@ -125,7 +129,13 @@ export function PlaceCategoryPanel({
       if (active) setIsLoadingRecommendations(false);
     });
     return () => { active = false; };
-  }, [category, discoveryEnabled, tripId]);
+  }, [category, recommendationEnabled, tripId]);
+
+  const displayedRecommendationError = recommendationEnabled
+    ? recommendationError
+    : discoveryEnabled
+      ? "위치가 입력된 장소를 하나 추가하면 주변 추천을 받을 수 있습니다."
+      : "";
 
   function openPlace(selection: PlaceCardSelection) {
     setReturnFocusTo(document.activeElement instanceof HTMLElement ? document.activeElement : null);
@@ -139,7 +149,7 @@ export function PlaceCategoryPanel({
         <HStack className="place-category-tool__actions" gap={1}>
           {discoveryEnabled ? (
             <Button
-              isDisabled={isLoadingRecommendations}
+              isDisabled={isLoadingRecommendations || !recommendationEnabled}
               label={isLoadingRecommendations ? "추천 불러오는 중" : "추천 새로고침"}
               onClick={() => void refreshRecommendations()}
               size="sm"
@@ -202,7 +212,7 @@ export function PlaceCategoryPanel({
               <VStack gap={1}>
                 <Text type="label">무료 한도 보호 작동 중</Text>
                 <Text color="secondary" type="supporting">
-                  Google 최신 추천입니다. 정렬 변경에는 추가 호출이 없습니다.
+                  Google 최신 추천입니다. 처음 6장만 자동 표시하고 나머지 사진은 상세 보기에서 불러옵니다.
                 </Text>
               </VStack>
               <Text hasTabularNumbers type="label">
@@ -210,9 +220,9 @@ export function PlaceCategoryPanel({
               </Text>
             </HStack>
           </Card>
-          {recommendationError ? (
+          {displayedRecommendationError ? (
             <Text color="secondary" role="alert" type="supporting">
-              {recommendationError}
+              {displayedRecommendationError}
             </Text>
           ) : null}
         </VStack>
@@ -313,10 +323,7 @@ function mergePlaceRecommendations(
   }
   const usedStoredIds = new Set<string>();
   const live = recommendations.map((discovery, index) => {
-    const storedPlace = stored.find((place) =>
-      place.providerPlaceId === discovery.providerPlaceId
-      || normalizePlaceName(place.name) === normalizePlaceName(discovery.name)
-    );
+    const storedPlace = stored.find((place) => isSamePlace(place, discovery));
     if (storedPlace) usedStoredIds.add(storedPlace.id);
     return {
       discovery,
@@ -382,10 +389,6 @@ function comparePlaceItems(left: PlacePanelItem, right: PlacePanelItem, sort: Pl
       || left.popularityRank - right.popularityRank;
   }
   return left.popularityRank - right.popularityRank;
-}
-
-function normalizePlaceName(value: string) {
-  return value.normalize("NFKD").toLocaleLowerCase().replace(/[^a-z0-9가-힣]/g, "");
 }
 
 function recommendationErrorMessage(error: unknown) {

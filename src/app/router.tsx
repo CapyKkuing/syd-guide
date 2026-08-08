@@ -131,9 +131,12 @@ export function pathForLibrary(baseUrl = APP_BASE_URL): string {
 
 export function pathForLibraryEdit(
   tripId: string,
+  focus?: "flights",
   baseUrl = APP_BASE_URL
 ): string {
-  return `${pathForLibrary(baseUrl)}?edit=${encodeURIComponent(tripId)}`;
+  const params = new URLSearchParams({ edit: tripId });
+  if (focus) params.set("focus", focus);
+  return `${pathForLibrary(baseUrl)}?${params.toString()}`;
 }
 
 export function pathForPair(baseUrl = APP_BASE_URL): string {
@@ -161,6 +164,15 @@ export function pathForTool(
     return pathForTrip(tripId, "map", baseUrl);
   }
   return pathForApp(`/trip/${encodeURIComponent(tripId)}/tools/${toolId}`, baseUrl);
+}
+
+export function pathForToolAction(
+  tripId: string,
+  toolId: ToolRouteId,
+  action: "create-lodging" | "edit-passport",
+  baseUrl = APP_BASE_URL
+): string {
+  return `${pathForTool(tripId, toolId, baseUrl)}?action=${action}`;
 }
 
 export function pathForAdminDevices(

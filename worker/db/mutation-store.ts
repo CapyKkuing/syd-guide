@@ -5,6 +5,8 @@ import type {
 import type {
   MutationPayloadMap,
   MutationRequest,
+  SettlementGroupCreateRequest,
+  SettlementTransferCompleteRequest,
 } from "../../src/shared/mutations";
 import {
   entityRegistry,
@@ -117,6 +119,7 @@ const activityNames: Record<EntityKind, string> = {
   booking: "예약",
   check_item: "체크 항목",
   expense: "비용",
+  settlement_transfer: "정산 송금",
   note: "메모",
   vote: "투표",
 };
@@ -182,4 +185,167 @@ export async function runMutationBatch(
   ]);
   return Number(results[0]?.meta.changes ?? 0) === 1
     && Number(results[3]?.meta.changes ?? 0) === 1;
+}
+
+export async function runSettlementGroupBatch(
+  env: Env,
+  tripId: string,
+  principal: Principal,
+  mutation: SettlementGroupCreateRequest,
+  timestamp: string
+): Promise<boolean> {
+  const transfers = mutation.payload.transfers;
+  const claims = mutation.payload.expenseIds.map((expenseId) => env.DB.prepare(
+    `INSERT INTO settlement_expense_claims (
+      trip_id, expense_id, settlement_group_id, created_at
+    ) VALUES (?, ?, ?, ?)`
+  ).bind(tripId, expenseId, mutation.entityId, timestamp));
+  const resultJson = JSON.stringify({
+    entity: "settlement_transfer",
+    entityId: mutation.entityId,
+    version: 1,
+    transfers: transfers.map((transfer) => ({
+      entityId: transfer.entityId,
+      version: 1,
+    })),
+  });
+  const statements = transfers.map((transfer) => env.DB.prepare(
+    `INSERT INTO settlement_transfers (
+      id, trip_id, settlement_group_id, expense_ids_json, currency,
+      from_member_id, to_member_id, amount_minor, status, completed_at,
+      version, updated_by, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', NULL, 1, ?, ?)`
+  ).bind(
+    transfer.entityId,
+    tripId,
+    mutation.entityId,
+    JSON.stringify(mutation.payload.expenseIds),
+    mutation.payload.currency,
+    transfer.fromMemberId,
+    transfer.toMemberId,
+    transfer.amountMinor,
+    principal.memberId,
+    timestamp
+  ));
+  const results = await env.DB.batch([
+    ...claims,
+    ...statements,
+    env.DB.prepare(
+      "UPDATE trips SET sync_version = sync_version + 1 WHERE id = ?"
+    ).bind(tripId),
+    env.DB.prepare(
+      `INSERT INTO activity_logs (
+        id, trip_id, member_id, entity_type, entity_id, action, summary,
+        created_at
+      ) VALUES (?, ?, ?, 'settlement_transfer', ?, 'create', ?, ?)`
+    ).bind(
+      crypto.randomUUID(),
+      tripId,
+      principal.memberId,
+      mutation.entityId,
+      `정산 송금 ${transfers.length}건 추가`,
+      timestamp
+    ),
+    env.DB.prepare(
+      `INSERT INTO mutation_receipts (
+        idempotency_key, trip_id, member_id, result_json, created_at
+      ) VALUES (?, ?, ?, json_set(?, '$.syncVersion',
+        (SELECT sync_version FROM trips WHERE id = ?)), ?)`
+    ).bind(
+      mutation.idempotencyKey,
+      tripId,
+      principal.memberId,
+      resultJson,
+      tripId,
+      timestamp
+    ),
+  ]);
+  const transferStart = claims.length;
+  const receiptIndex = claims.length + transfers.length + 2;
+  return results.slice(0, claims.length)
+    .every((result) => Number(result?.meta.changes ?? 0) === 1)
+    && results.slice(transferStart, transferStart + transfers.length)
+    .every((result) => Number(result?.meta.changes ?? 0) === 1)
+    && Number(results[receiptIndex]?.meta.changes ?? 0) === 1;
+}
+
+export async function runSettlementTransferCompleteBatch(
+  env: Env,
+  tripId: string,
+  principal: Principal,
+  mutation: SettlementTransferCompleteRequest,
+  expenseIds: string[],
+  timestamp: string
+): Promise<boolean> {
+  const nextVersion = mutation.baseVersion + 1;
+  const resultJson = JSON.stringify({
+    entity: "settlement_transfer",
+    entityId: mutation.entityId,
+    version: nextVersion,
+  });
+  const results = await env.DB.batch([
+    env.DB.prepare(
+      `UPDATE settlement_transfers
+       SET status = 'completed', completed_at = ?, version = version + 1,
+         updated_by = ?, updated_at = ?
+       WHERE id = ? AND trip_id = ? AND settlement_group_id = ?
+         AND status = 'pending' AND version = ?`
+    ).bind(
+      timestamp,
+      principal.memberId,
+      timestamp,
+      mutation.entityId,
+      tripId,
+      mutation.payload.settlementGroupId,
+      mutation.baseVersion
+    ),
+    env.DB.prepare(
+      `UPDATE expenses
+       SET is_settled = 1, version = version + 1,
+         updated_by = ?, updated_at = ?
+       WHERE trip_id = ? AND is_settled = 0
+         AND id IN (SELECT value FROM json_each(?))
+         AND NOT EXISTS (
+           SELECT 1 FROM settlement_transfers
+           WHERE trip_id = ? AND settlement_group_id = ? AND status = 'pending'
+         )`
+    ).bind(
+      principal.memberId,
+      timestamp,
+      tripId,
+      JSON.stringify(expenseIds),
+      tripId,
+      mutation.payload.settlementGroupId
+    ),
+    env.DB.prepare(
+      "UPDATE trips SET sync_version = sync_version + 1 WHERE id = ?"
+    ).bind(tripId),
+    env.DB.prepare(
+      `INSERT INTO activity_logs (
+        id, trip_id, member_id, entity_type, entity_id, action, summary,
+        created_at
+      ) VALUES (?, ?, ?, 'settlement_transfer', ?, 'update', '정산 송금 완료', ?)`
+    ).bind(
+      crypto.randomUUID(),
+      tripId,
+      principal.memberId,
+      mutation.entityId,
+      timestamp
+    ),
+    env.DB.prepare(
+      `INSERT INTO mutation_receipts (
+        idempotency_key, trip_id, member_id, result_json, created_at
+      ) VALUES (?, ?, ?, json_set(?, '$.syncVersion',
+        (SELECT sync_version FROM trips WHERE id = ?)), ?)`
+    ).bind(
+      mutation.idempotencyKey,
+      tripId,
+      principal.memberId,
+      resultJson,
+      tripId,
+      timestamp
+    ),
+  ]);
+  return Number(results[0]?.meta.changes ?? 0) === 1
+    && Number(results[4]?.meta.changes ?? 0) === 1;
 }

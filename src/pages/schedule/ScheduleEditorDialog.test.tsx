@@ -49,8 +49,8 @@ const item = {
   place: "Sydney Opera House",
   description: "가이드 투어",
   kind: "attraction" as const,
-  travelMode: null,
-  travelNote: null,
+  travelMode: "transit" as const,
+  travelNote: "L2 경전철과 도보",
   bookingStatus: null,
   bookingProvider: null,
   updatedAt: "2026-09-09T00:00:00.000Z",
@@ -87,6 +87,7 @@ describe("ScheduleEditorDialog", () => {
     await userEvent.type(screen.getByLabelText("일정 제목"), "오페라 하우스");
     await userEvent.type(screen.getByLabelText("시작 시간"), "13:00");
     await userEvent.selectOptions(screen.getByLabelText("연결 장소"), "place-opera");
+    await userEvent.type(screen.getByLabelText("이동 메모"), "L2 경전철과 도보 12분");
     await userEvent.click(screen.getByRole("button", { name: "저장" }));
 
     expect(mutationController.submit).toHaveBeenCalledWith(
@@ -99,6 +100,7 @@ describe("ScheduleEditorDialog", () => {
         title: "오페라 하우스",
         placeId: "place-opera",
         startsAt: "2026-09-10T13:00:00+10:00",
+        travelNote: "L2 경전철과 도보 12분",
         position: 1
       })
     );
@@ -146,6 +148,9 @@ describe("ScheduleEditorDialog", () => {
 
     await userEvent.clear(screen.getByLabelText("일정 제목"));
     await userEvent.type(screen.getByLabelText("일정 제목"), "오페라 하우스 투어");
+    expect(screen.getByLabelText("이동 메모")).toHaveValue("L2 경전철과 도보");
+    await userEvent.clear(screen.getByLabelText("이동 메모"));
+    await userEvent.type(screen.getByLabelText("이동 메모"), "L2 경전철과 도보 12분");
     await userEvent.click(screen.getByRole("button", { name: "저장" }));
 
     expect(mutationController.submit).toHaveBeenCalledWith(
@@ -157,6 +162,7 @@ describe("ScheduleEditorDialog", () => {
         tripDayId: "day-one",
         placeId: "place-opera",
         title: "오페라 하우스 투어",
+        travelNote: "L2 경전철과 도보 12분",
         position: 1,
         isFixed: true
       })

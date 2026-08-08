@@ -66,13 +66,19 @@
   color: var(--text-2);
 }
 
+.map-page__header p,
+.map-page__map-toolbar .astryx-text,
+.map-page__result-summary .astryx-text {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
 .map-filters {
-  display: grid;
-  gap: var(--space-3);
-  padding: var(--space-4);
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
   border: 1px solid var(--today-boundary);
-  border-radius: var(--radius-lg);
-  background: var(--surface);
 }
 
 .map-search {
@@ -87,7 +93,7 @@
   min-height: 44px;
   padding: 10px var(--space-3);
   border: 1px solid var(--today-boundary);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-lg);
   background: var(--surface);
   color: var(--text);
   font: inherit;
@@ -120,7 +126,7 @@
   min-height: 44px;
   padding: 8px var(--space-3);
   border: 1px solid var(--today-boundary);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-lg);
   background: var(--surface);
   color: var(--text);
   cursor: pointer;
@@ -152,6 +158,14 @@
 .place-hub-panel__heading,
 .place-provider-limit .astryx-stack-horizontal {
   flex-wrap: wrap;
+}
+
+.place-hub-panel__quick-actions {
+  width: 100%;
+}
+
+.place-hub-panel__quick-actions > * {
+  flex: 1 1 0;
 }
 
 @media (max-width: 760px) {
@@ -196,7 +210,7 @@
   inset: auto var(--space-3) var(--space-3);
   margin: 0;
   padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-lg);
   background: var(--surface);
   color: var(--text);
 }
@@ -243,7 +257,7 @@
   gap: var(--space-1);
   padding: var(--space-4);
   border: 1px solid var(--today-boundary);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   background: var(--surface);
   color: var(--text);
   cursor: pointer;
@@ -265,7 +279,7 @@
   gap: var(--space-3);
   padding: var(--space-5);
   border: 1px solid var(--today-boundary);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   background: var(--surface);
   color: var(--text);
 }
@@ -285,6 +299,10 @@
   display: grid;
   gap: var(--space-3);
   margin: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
 }
 
 .map-place-sheet dl > div {
@@ -311,7 +329,7 @@
   align-items: center;
   justify-content: center;
   border: 1px solid var(--accent);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-lg);
   background: var(--accent);
   color: var(--text-on-accent);
   font-weight: 800;
@@ -330,11 +348,14 @@
   gap: var(--space-3);
 }
 
-.place-vote-control p {
-  margin: 0;
+.map-place-sheet__vote,
+.place-editor__confirm {
+  padding: var(--space-4);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
 }
 
-.place-vote-control > div,
 .place-editor__actions,
 .place-editor__confirm {
   display: flex;
@@ -342,9 +363,13 @@
   gap: var(--space-2);
 }
 
-.place-vote-control button[aria-pressed="true"] {
-  border-color: var(--accent-strong);
-  background: var(--accent-soft);
+.place-vote-control .astryx-segmented-control {
+  width: 100%;
+}
+
+.place-vote-control .astryx-segmented-control-item {
+  min-height: 44px;
+  border-radius: var(--radius-lg);
 }
 
 .place-editor {
@@ -363,7 +388,7 @@
   min-height: 44px;
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--today-boundary);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-lg);
   background: var(--surface);
   color: var(--text);
   font: inherit;
@@ -393,5 +418,51 @@
     max-height: 430px;
     overflow-y: auto;
     padding-right: var(--space-1);
+  }
+}
+
+.map-page__map-view,
+.map-page__map-toolbar,
+.map-page__result-summary,
+.map-filter-selectors,
+.map-place-list-section .astryx-list {
+  min-width: 0;
+  width: 100%;
+}
+
+.map-page__header > .astryx-button {
+  flex: none;
+  white-space: nowrap;
+}
+
+.map-filter-selectors > .astryx-selector {
+  flex: 1 1 180px;
+}
+
+.map-place-list-section .astryx-list-item {
+  border-color: var(--today-boundary);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.map-place-list-section .astryx-list-item > button {
+  border-radius: var(--radius-lg);
+}
+
+@media (max-width: 760px) {
+  .map-page__map-toolbar,
+  .map-page__result-summary {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .map-page__map-toolbar > .astryx-button {
+    align-self: flex-start;
+  }
+
+  .map-filter-selectors > .astryx-selector,
+  .map-filter-selectors > .astryx-button {
+    flex-basis: 100%;
+    width: 100%;
   }
 }

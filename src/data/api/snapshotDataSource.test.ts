@@ -81,6 +81,65 @@ describe("SnapshotTravelGuideDataSource", () => {
     expect(today?.schedule).toHaveLength(2);
   });
 
+  it("persists a queued schedule update for an offline cold start", async () => {
+    const snapshot = createTripSnapshot();
+    const item = snapshot.scheduleItems[0];
+    if (!item) throw new Error("테스트 일정이 없습니다.");
+    const snapshots = await createSnapshotStore();
+    await snapshots.put({
+      tripId: snapshot.trip.id,
+      snapshot,
+      etag: "\"trip-one-7\"",
+      savedAt: "2026-07-28T12:00:00.000Z"
+    });
+    const source = new SnapshotTravelGuideDataSource(
+      {
+        getTripSnapshot: vi.fn().mockRejectedValue(new TypeError("Failed to fetch"))
+      },
+      async () => {
+        throw new TypeError("Failed to fetch");
+      },
+      () => new Date("2026-09-10T01:00:00.000Z"),
+      { snapshots }
+    );
+
+    await source.applyLocalMutation(snapshot.trip.id, {
+      idempotencyKey: "offline-schedule-update",
+      entity: "schedule_item",
+      action: "update",
+      entityId: item.id,
+      baseVersion: item.version,
+      payload: {
+        tripDayId: item.tripDayId,
+        placeId: item.placeId,
+        bookingId: item.bookingId,
+        title: item.title,
+        startsAt: item.startsAt,
+        endsAt: item.endsAt,
+        memo: item.memo,
+        travelMode: item.travelMode,
+        travelNote: "QA-ANDROID-OFFLINE",
+        position: 1,
+        isFixed: item.isFixed,
+        isDone: item.isDone,
+      },
+    }, "2026-08-08T12:00:00.000Z");
+
+    const durable = await snapshots.get(snapshot.trip.id);
+    expect(durable?.snapshot.scheduleItems.find((candidate) => candidate.id === item.id)).toMatchObject({
+      position: 1,
+      travelNote: "QA-ANDROID-OFFLINE",
+      version: item.version + 1,
+      updatedAt: "2026-08-08T12:00:00.000Z",
+    });
+    const schedule = await source.getSchedule(snapshot.trip.id);
+    expect(schedule?.days.flatMap((day) => day.items).find((candidate) => candidate.id === item.id)).toMatchObject({
+      position: 1,
+      travelNote: "QA-ANDROID-OFFLINE",
+      version: item.version + 1,
+    });
+  });
+
   it("opens a durable snapshot offline when legacy storage has no principal", async () => {
     const snapshot = createTripSnapshot();
     const snapshots = await createSnapshotStore();

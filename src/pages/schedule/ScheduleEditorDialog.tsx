@@ -29,6 +29,7 @@ export function ScheduleEditorDialog({
   const [travelMode, setTravelMode] = useState<
     "" | "walk" | "transit" | "drive" | "ferry"
   >(item?.travelMode ?? "");
+  const [travelNote, setTravelNote] = useState(item?.travelNote ?? "");
   const [isFixed, setIsFixed] = useState(item?.isFixed ?? false);
   const [isDone, setIsDone] = useState(item?.isDone ?? false);
   const [confirmation, setConfirmation] = useState<"none" | "delete" | "fixed">("none");
@@ -49,7 +50,7 @@ export function ScheduleEditorDialog({
         endsAt: endTime ? zonedIso(day.date, endTime, timeZone) : null,
         memo: memo.trim(),
         travelMode: travelMode || null,
-        travelNote: item?.travelNote ?? "",
+        travelNote: travelNote.trim(),
         position: item?.position ?? nextPosition(day),
         isFixed,
         isDone
@@ -157,6 +158,15 @@ export function ScheduleEditorDialog({
             <option value="drive">차량</option>
             <option value="ferry">페리</option>
           </select>
+        </label>
+        <label>
+          <span>이동 메모</span>
+          <textarea
+            maxLength={1_000}
+            onChange={(event) => setTravelNote(event.target.value)}
+            placeholder="예: L2 경전철과 도보 12분"
+            value={travelNote}
+          />
         </label>
         <div className="schedule-editor__checks">
           <label><input checked={isFixed} onChange={(event) => setIsFixed(event.target.checked)} type="checkbox" />고정 일정</label>

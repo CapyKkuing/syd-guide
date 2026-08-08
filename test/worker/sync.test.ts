@@ -1,8 +1,13 @@
 import { env } from "cloudflare:test";
 import { beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "../../worker/app";
+import { runSettlementGroupBatch } from "../../worker/db/mutation-store";
 import type { Env } from "../../worker/env";
 import type { Trip } from "../../src/shared/entities";
+import type {
+  SettlementGroupCreateRequest,
+  SettlementTransferCompleteRequest,
+} from "../../src/shared/mutations";
 
 const fixedNow = new Date("2026-07-27T00:00:00.000Z");
 const app = createApp({ now: () => fixedNow });
@@ -83,9 +88,92 @@ function placeCreate(
   };
 }
 
+function settlementGroupCreate(
+  idempotencyKey = "settlement-group-key",
+  transferIds = ["settlement-one", "settlement-two"],
+  entityId = "settlement-group-one"
+): SettlementGroupCreateRequest {
+  return {
+    idempotencyKey,
+    entity: "settlement_transfer",
+    action: "create_group",
+    entityId,
+    baseVersion: null,
+    payload: {
+      expenseIds: ["expense-shared"],
+      currency: "AUD",
+      transfers: [
+        {
+          entityId: transferIds[0] ?? "settlement-one",
+          fromMemberId: "partner",
+          toMemberId: "owner",
+          amountMinor: 10_000,
+        },
+        {
+          entityId: transferIds[1] ?? "settlement-two",
+          fromMemberId: "friend",
+          toMemberId: "owner",
+          amountMinor: 10_000,
+        },
+      ],
+    },
+  };
+}
+
+function settlementComplete(
+  entityId: string,
+  idempotencyKey: string
+): SettlementTransferCompleteRequest {
+  return {
+    idempotencyKey,
+    entity: "settlement_transfer",
+    action: "complete",
+    entityId,
+    baseVersion: 1,
+    payload: { settlementGroupId: "settlement-group-one" },
+  };
+}
+
+async function seedThreePersonExpense(tripId: string): Promise<void> {
+  await env.DB.batch([
+    env.DB.prepare(
+      `INSERT OR IGNORE INTO members (
+        id, role, display_name, access_email, created_at
+      ) VALUES ('friend', 'partner', '친구', NULL, ?)`
+    ).bind(fixedNow.toISOString()),
+    env.DB.prepare(
+      `INSERT OR IGNORE INTO trip_members (trip_id, member_id, joined_at)
+       VALUES (?, 'friend', ?)`
+    ).bind(tripId, fixedNow.toISOString()),
+  ]);
+  const response = await postMutation(tripId, {
+    idempotencyKey: "expense-shared-key",
+    entity: "expense",
+    action: "create",
+    entityId: "expense-shared",
+    baseVersion: null,
+    payload: {
+      phase: "travel",
+      category: "food",
+      customCategory: null,
+      title: "함께 먹은 저녁",
+      amountMinor: 30_000,
+      currency: "AUD",
+      spentOn: "2026-09-10",
+      paidByMemberId: "owner",
+      expenseScope: "shared",
+      personalForMemberId: null,
+      paymentMethod: "card",
+      isSettled: false,
+      memo: "",
+    },
+  });
+  expect(response.status).toBe(200);
+}
+
 async function postMutation(
   tripId: string,
-  body: Record<string, unknown>,
+  body: unknown,
   role: "owner" | "partner" = "owner"
 ) {
   return request(role, `/api/trips/${tripId}/mutations`, {
@@ -158,6 +246,7 @@ function interleavingSnapshotDb(onInterleave: () => Promise<void>): {
 describe("versioned trip sync API", () => {
   beforeEach(async () => {
     await env.DB.prepare("DELETE FROM trips").run();
+    await env.DB.prepare("DELETE FROM members WHERE id = 'friend'").run();
   });
 
   it("returns the first result for a repeated idempotency key", async () => {
@@ -195,6 +284,209 @@ describe("versioned trip sync API", () => {
         "SELECT sync_version FROM trips WHERE id = ?"
       ).bind(trip.id).first<{ sync_version: number }>()
     ).resolves.toEqual({ sync_version: 1 });
+  });
+
+  it("creates a three-person settlement group once with one sync increment and receipt", async () => {
+    const trip = await seedTrip();
+    await seedThreePersonExpense(trip.id);
+    const mutation = settlementGroupCreate();
+
+    const firstResponse = await postMutation(trip.id, mutation);
+    const secondResponse = await postMutation(trip.id, mutation);
+    const first = await firstResponse.json();
+    const second = await secondResponse.json();
+
+    expect(firstResponse.status).toBe(200);
+    expect(secondResponse.status).toBe(200);
+    expect(second).toEqual(first);
+    expect(first).toEqual({
+      entity: "settlement_transfer",
+      entityId: "settlement-group-one",
+      version: 1,
+      syncVersion: 2,
+      transfers: [
+        { entityId: "settlement-one", version: 1 },
+        { entityId: "settlement-two", version: 1 },
+      ],
+    });
+    await expect(env.DB.prepare(
+      "SELECT COUNT(*) AS count FROM settlement_transfers WHERE trip_id = ?"
+    ).bind(trip.id).first()).resolves.toEqual({ count: 2 });
+    await expect(env.DB.prepare(
+      "SELECT COUNT(*) AS count FROM mutation_receipts WHERE idempotency_key = ?"
+    ).bind(mutation.idempotencyKey).first()).resolves.toEqual({ count: 1 });
+    await expect(env.DB.prepare(
+      "SELECT COUNT(*) AS count FROM activity_logs WHERE entity_id = ?"
+    ).bind(mutation.entityId).first()).resolves.toEqual({ count: 1 });
+  });
+
+  it("allows only one active settlement group for concurrent different requests", async () => {
+    const trip = await seedTrip();
+    await seedThreePersonExpense(trip.id);
+    const first = settlementGroupCreate();
+    const second = settlementGroupCreate(
+      "settlement-group-other-key",
+      ["settlement-other-one", "settlement-other-two"],
+      "settlement-group-other"
+    );
+
+    const responses = await Promise.all([
+      postMutation(trip.id, first),
+      postMutation(trip.id, second),
+    ]);
+
+    expect(responses.map((response) => response.status).sort()).toEqual([200, 409]);
+    await expect(env.DB.prepare(
+      "SELECT COUNT(*) AS count FROM settlement_transfers WHERE trip_id = ?"
+    ).bind(trip.id).first()).resolves.toEqual({ count: 2 });
+    await expect(env.DB.prepare(
+      "SELECT COUNT(*) AS count FROM settlement_expense_claims WHERE trip_id = ?"
+    ).bind(trip.id).first()).resolves.toEqual({ count: 1 });
+    await expect(env.DB.prepare(
+      "SELECT COUNT(*) AS count FROM mutation_receipts WHERE trip_id = ? AND result_json LIKE '%settlement_transfer%'"
+    ).bind(trip.id).first()).resolves.toEqual({ count: 1 });
+  });
+
+  it("rolls back every settlement transfer when one insert in the D1 batch fails", async () => {
+    const trip = await seedTrip();
+    await env.DB.prepare(
+      `INSERT OR IGNORE INTO members (
+        id, role, display_name, access_email, created_at
+      ) VALUES ('friend', 'partner', '친구', NULL, ?)`
+    ).bind(fixedNow.toISOString()).run();
+    const mutation = settlementGroupCreate(
+      "settlement-rollback-key",
+      ["duplicated-transfer", "duplicated-transfer"]
+    );
+
+    await expect(runSettlementGroupBatch(
+      bindings("owner"),
+      trip.id,
+      { memberId: "owner", role: "owner" },
+      mutation,
+      fixedNow.toISOString()
+    )).rejects.toThrow();
+
+    await expect(env.DB.prepare(
+      "SELECT COUNT(*) AS count FROM settlement_transfers WHERE trip_id = ?"
+    ).bind(trip.id).first()).resolves.toEqual({ count: 0 });
+    await expect(env.DB.prepare(
+      "SELECT sync_version FROM trips WHERE id = ?"
+    ).bind(trip.id).first()).resolves.toEqual({ sync_version: 0 });
+    await expect(env.DB.prepare(
+      "SELECT COUNT(*) AS count FROM mutation_receipts WHERE idempotency_key = ?"
+    ).bind(mutation.idempotencyKey).first()).resolves.toEqual({ count: 0 });
+  });
+
+  it("settles source expenses only when the last transfer completes", async () => {
+    const trip = await seedTrip();
+    await seedThreePersonExpense(trip.id);
+    await postMutation(trip.id, settlementGroupCreate());
+
+    const first = await postMutation(
+      trip.id,
+      settlementComplete("settlement-one", "complete-one-key")
+    );
+    expect(first.status).toBe(200);
+    await expect(env.DB.prepare(
+      "SELECT is_settled, version FROM expenses WHERE id = 'expense-shared'"
+    ).first()).resolves.toEqual({ is_settled: 0, version: 1 });
+
+    const secondRequest = settlementComplete(
+      "settlement-two",
+      "complete-two-key"
+    );
+    const second = await postMutation(trip.id, secondRequest);
+    const repeated = await postMutation(trip.id, secondRequest);
+    const secondBody = await second.json();
+    expect(second.status).toBe(200);
+    expect(repeated.status).toBe(200);
+    await expect(repeated.json()).resolves.toEqual(secondBody);
+    await expect(env.DB.prepare(
+      "SELECT is_settled, version FROM expenses WHERE id = 'expense-shared'"
+    ).first()).resolves.toEqual({ is_settled: 1, version: 2 });
+    await expect(env.DB.prepare(
+      `SELECT id, status, version FROM settlement_transfers
+       WHERE trip_id = ? ORDER BY id`
+    ).bind(trip.id).all()).resolves.toMatchObject({
+      results: [
+        { id: "settlement-one", status: "completed", version: 2 },
+        { id: "settlement-two", status: "completed", version: 2 },
+      ],
+    });
+    await expect(env.DB.prepare(
+      "SELECT sync_version FROM trips WHERE id = ?"
+    ).bind(trip.id).first()).resolves.toEqual({ sync_version: 4 });
+  });
+
+  it("collapses concurrent transfer completion with the same idempotency key", async () => {
+    const trip = await seedTrip();
+    await seedThreePersonExpense(trip.id);
+    await postMutation(trip.id, settlementGroupCreate());
+    const mutation = settlementComplete("settlement-one", "complete-concurrent-key");
+
+    const responses = await Promise.all([
+      postMutation(trip.id, mutation),
+      postMutation(trip.id, mutation),
+    ]);
+    const bodies = await Promise.all(responses.map((response) => response.json()));
+
+    expect(responses.map((response) => response.status)).toEqual([200, 200]);
+    expect(bodies[1]).toEqual(bodies[0]);
+    await expect(env.DB.prepare(
+      "SELECT status, version FROM settlement_transfers WHERE id = 'settlement-one'"
+    ).first()).resolves.toEqual({ status: "completed", version: 2 });
+    await expect(env.DB.prepare(
+      "SELECT COUNT(*) AS count FROM mutation_receipts WHERE idempotency_key = 'complete-concurrent-key'"
+    ).first()).resolves.toEqual({ count: 1 });
+  });
+
+  it("rolls back the last transfer completion when expense settlement fails", async () => {
+    const trip = await seedTrip();
+    await seedThreePersonExpense(trip.id);
+    await postMutation(trip.id, settlementGroupCreate());
+    await postMutation(
+      trip.id,
+      settlementComplete("settlement-one", "complete-first-key")
+    );
+    await env.DB.prepare(
+      `CREATE TRIGGER fail_expense_settlement
+       BEFORE UPDATE OF is_settled ON expenses
+       WHEN NEW.is_settled = 1
+       BEGIN SELECT RAISE(ABORT, 'forced expense failure'); END`
+    ).run();
+
+    try {
+      const response = await postMutation(
+        trip.id,
+        settlementComplete("settlement-two", "complete-rollback-key")
+      );
+      expect(response.status).toBe(500);
+    } finally {
+      await env.DB.prepare("DROP TRIGGER fail_expense_settlement").run();
+    }
+
+    await expect(env.DB.prepare(
+      "SELECT status, version FROM settlement_transfers WHERE id = 'settlement-two'"
+    ).first()).resolves.toEqual({ status: "pending", version: 1 });
+    await expect(env.DB.prepare(
+      "SELECT is_settled, version FROM expenses WHERE id = 'expense-shared'"
+    ).first()).resolves.toEqual({ is_settled: 0, version: 1 });
+    await expect(env.DB.prepare(
+      "SELECT sync_version FROM trips WHERE id = ?"
+    ).bind(trip.id).first()).resolves.toEqual({ sync_version: 3 });
+    await expect(env.DB.prepare(
+      "SELECT COUNT(*) AS count FROM mutation_receipts WHERE idempotency_key = 'complete-rollback-key'"
+    ).first()).resolves.toEqual({ count: 0 });
+
+    const retried = await postMutation(
+      trip.id,
+      settlementComplete("settlement-two", "complete-rollback-key")
+    );
+    expect(retried.status).toBe(200);
+    await expect(env.DB.prepare(
+      "SELECT status, version FROM settlement_transfers WHERE id = 'settlement-two'"
+    ).first()).resolves.toEqual({ status: "completed", version: 2 });
   });
 
   it("collapses concurrent duplicate requests into one atomic mutation", async () => {
@@ -402,7 +694,7 @@ describe("versioned trip sync API", () => {
     };
     const partnerBody = await partner.json() as typeof ownerBody;
 
-    expect(ownerBody.checkItems.map(({ id }) => id)).toEqual([
+    expect(ownerBody.checkItems.map(({ id }) => id).filter((id) => id.startsWith("check-"))).toEqual([
       "check-shared",
       "check-owner",
     ]);
@@ -410,7 +702,7 @@ describe("versioned trip sync API", () => {
       "note-shared",
       "note-owner",
     ]);
-    expect(partnerBody.checkItems.map(({ id }) => id)).toEqual([
+    expect(partnerBody.checkItems.map(({ id }) => id).filter((id) => id.startsWith("check-"))).toEqual([
       "check-shared",
       "check-partner",
     ]);
@@ -723,7 +1015,11 @@ describe("versioned trip sync API", () => {
       `/api/trips/${trip.id}/snapshot`,
       { headers: headers("owner") }
     );
-    await expect(snapshot.json()).resolves.toMatchObject({
+    const snapshotBody = await snapshot.json() as {
+      checkItems: Array<{ id: string; version: number }>;
+      [key: string]: unknown;
+    };
+    expect(snapshotBody).toMatchObject({
       days: [{ id: "day-one", version: 1 }],
       scheduleItems: [{ id: "schedule-one", version: 1 }],
       places: [{ id: "place-dependency", version: 1 }],
@@ -737,12 +1033,14 @@ describe("versioned trip sync API", () => {
           mimeType: "application/pdf",
         },
       }],
-      checkItems: [{ id: "check-one", version: 1 }],
       expenses: [{ id: "expense-one", version: 1 }],
       notes: [{ id: "note-one", version: 1 }],
       votes: [{ id: "vote-one", version: 1 }],
       syncVersion: 8,
     });
+    expect(snapshotBody.checkItems).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: "check-one", version: 1 }),
+    ]));
   });
 
   it("rejects malformed IDs, unsafe URLs, coordinates, and action shapes", async () => {
