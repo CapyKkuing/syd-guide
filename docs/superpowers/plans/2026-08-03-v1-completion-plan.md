@@ -4,7 +4,9 @@
 > 기준 브랜치: `main`
 > ~~기준 커밋: `d4d561b`~~
 >
-> 기준 커밋: `c841309` (2026-08-03 Phase 0 인증 복구·여행 편집 복귀 배포 기준)
+> ~~기준 커밋: `c841309` (2026-08-03 Phase 0 인증 복구·여행 편집 복귀 배포 기준)~~
+>
+> 기준 커밋: `923f8e2` (2026-08-08 Phase 1 구현·GAP-31 오프라인 보정 배포 기준)
 > 목표: 모바일 여행 중 상시 사용하는 V1을 Android와 iPhone에서 설치·오프라인·운영 복구까지 검증한다.
 
 ## 0. 이 문서의 운영 규칙
@@ -58,6 +60,8 @@
 - ~~사용자 운영 Worker는 `c841309` 배포 version `998ac34a-ab2e-4939-83b9-65df3a46f6dd`가 현재 100% 트래픽을 처리한다.~~
 
   2026-08-03 읽기 전용 Cloudflare 조회 결과 사용자 Worker의 현재 100% 트래픽은 deployment `58b26641-dcc9-47d8-9c10-c31130e30ddf`, version `c5d6449b-e059-4868-961e-8a2b57795077`이고 관리자 Worker는 deployment `7e90579a-e0df-46c4-a6dc-5a772f01b3ee`, version `c1dabd93-75c7-455a-ac33-5521a2da2e6c`이다. version annotation에 commit SHA가 없어 현재 `HEAD c841309` 또는 dirty worktree와 동일하다고 확정할 수 없다. 운영 QA는 정적 자산·행동을 직접 대조해 버전을 식별한 뒤 완료로 기록한다.
+
+- 2026-08-08 Phase 1 제품 커밋 `923f8e2`를 `main`에 push하고 깨끗한 commit archive에서 두 Worker를 재배포했다. 최종 사용자 Worker version은 `d8142a51-152a-4a4d-90e1-c4d80a261636`, 관리자 Worker version은 `540a31cc-dac4-4807-a174-258549f09b06`이다. 운영 D1 migration과 Secret은 변경하지 않았다. 사용자 Worker의 no-cache HTTP 응답은 새 bundle `/assets/index-N7N133Fx.js`를 반환한다. 기존 설치·브라우저 PWA는 이전 service worker bundle을 계속 표시해 새 bundle의 실제 화면 QA는 온라인 완전 종료·재실행 뒤로 남긴다.
 
 - ~~`0017_settlement_transfers.sql`, `0018_booking_checkin_status.sql`, `0019_default_checklist.sql`, `0020_trip_media_preview.sql`은 현재 worktree에만 있고 운영 D1에 적용되지 않았다. 따라서 정산·예약·체크리스트·대표사진 상태는 모두 `로컬 구현`으로만 기록한다.~~
 
@@ -127,7 +131,9 @@
 | Phase 1D 여행 전·중·후·관리 | 진행 중 | ~~수동 항공편·비용 알림·Drive·AI·릴·관리 기반, 항공편·숙소·여권 직접 입력과 기본 체크리스트, 대표사진 자르기·밝기 로컬 구현·자동·390px 화면 검증, JPEG EXIF 촬영시각 추출·릴 정렬 자동 검증~~<br>~~위 범위와 최초 설정 대표자 선택 로컬 구현·자동·390px 화면 검증~~<br>2026-08-08 현지 날짜 변경 비용 알림, 수동 비용 fallback, Drive PDF 미리보기·오류·object URL 정리, 대표사진·EXIF·릴·관리 회귀를 메인 Sol 자동 게이트로 재검증했다. | ~~대표사진 migration 운영 적용, 실제 설치폰 EXIF 확인, 최초 대표자 선택, 전체 회귀~~<br>대표사진 migration 운영 적용, Drive 원본 checksum, 실제 설치폰 EXIF·최초 대표자 선택·PWA 설치 확인 |
 | Phase 2~6 | 대기 | 계획만 존재하거나 일부 기반 존재 | 날씨, 실기기 오프라인, 백업·복원, Workers 단일 운영, 최종 QA |
 
-현재 승인 범위는 Phase 1 로컬 코드·테스트·화면 QA다. Phase 단위 commit은 Phase 1의 합의된 작업을 모두 완료한 뒤 진행한다. push, migration, Secret, 외부 API 설정, 배포는 각각 별도 승인을 받는다.
+~~현재 승인 범위는 Phase 1 로컬 코드·테스트·화면 QA다. Phase 단위 commit은 Phase 1의 합의된 작업을 모두 완료한 뒤 진행한다. push, migration, Secret, 외부 API 설정, 배포는 각각 별도 승인을 받는다.~~
+
+2026-08-08 사용자 승인 범위인 Phase 1 commit·push·사용자·관리자 Worker 배포까지 완료했다. migration·Secret 제외는 유지했다. 다음 실행 단위는 기존 설치 Android PWA가 새 service worker를 받은 뒤 `GAP-31`을 실제 기기에서 재검증하고, 통과하면 iPhone 검증으로 이어가는 것이다.
 
 ### 요구사항 불일치·미구현 원장
 
@@ -680,7 +686,9 @@ npm run build
 
 ~~현재는 **Phase 1 요구사항 불일치 보정 게이트**다. `GAP-03` 지도 보기 UI 통일까지 로컬 구현·자동·390px·1440px 화면 검증을 완료했다. 다음 작업은 코드 확장이 아니라 Phase 1B 운영 실데이터·월 800회 하드 리밋·실제 설치폰 장소/지도 QA이며, 배포·운영 데이터 변경은 별도 승인으로만 진행한다.~~
 
-2026-08-08 현재 **Phase 1B·1C·1D 로컬 구현·Sol High 통합 회귀 게이트**를 통과했다. `typecheck`, `lint`, frontend 476건, Worker 90건, production build, E2E 39건을 통과했고 E2E는 1440·320·390·393·430px를 포함한다. 다음 실행 단위는 Phase 1A 실제 설치폰 일정·오프라인 재연결 검증과 Phase 1 운영 migration·Secret·실데이터 QA이며, commit·push·migration·Secret·외부 API·배포는 계속 별도 승인이다.
+~~2026-08-08 현재 **Phase 1B·1C·1D 로컬 구현·Sol High 통합 회귀 게이트**를 통과했다. `typecheck`, `lint`, frontend 476건, Worker 90건, production build, E2E 39건을 통과했고 E2E는 1440·320·390·393·430px를 포함한다. 다음 실행 단위는 Phase 1A 실제 설치폰 일정·오프라인 재연결 검증과 Phase 1 운영 migration·Secret·실데이터 QA이며, commit·push·migration·Secret·외부 API·배포는 계속 별도 승인이다.~~
+
+2026-08-08 Phase 1 제품 코드와 `GAP-31` 보정을 `923f8e2`로 commit·push하고 사용자·관리자 Worker를 배포했다. migration·Secret은 제외했다. 다음 실행 단위는 Android PWA 업데이트 뒤 일정 순서·오프라인 이동 메모·재연결 동기화를 실제 기기에서 재검증하고, 통과하면 iPhone에서 같은 시나리오를 검증하는 것이다.
 
 ~~실제 설치폰 일정 QA를 Phase 1B 운영 장소 QA보다 먼저 수행한다.~~
 
@@ -693,6 +701,8 @@ npm run build
 **2026-08-08 Phase 1A Android 실기기 결과:** 온라인 일정 순서 변경과 이동 메모 저장은 동작했지만, 앱 종료 뒤 비행기 모드 cold start에서는 일정 순서가 이전 상태로 복원됐다. 오프라인 이동 메모 수정은 로컬에 유지되지 않았고 재연결 때 동기화 오류가 여러 번 표시됐다. `GAP-31`로 등록하고 다음 실행 단위를 snapshot·outbox·version 충돌의 근본 원인 보정으로 변경한다. iPhone 검증은 Android 보정 뒤로 유지한다.
 
 **2026-08-08 GAP-31 로컬 보정 결과:** outbox에 적재한 일정 update를 기기 snapshot에 즉시 투영하고 version을 연결해 앱 종료 뒤에도 순서·이동 메모가 유지되게 했다. frontend 67파일 478건, Worker 10파일 90건, typecheck·lint·production build, 기존 desktop offline-conflict E2E 4건, 신규 desktop·390×844 Android Chromium cold-start E2E 2건을 통과했다. 실제 설치 Android 재검증은 commit·push·사용자·관리자 Worker 배포 승인 뒤 진행하며, migration·Secret은 이 보정에 필요하지 않다.
+
+**2026-08-08 Phase 1 commit·배포 결과:** `923f8e2`를 `main`에 push하고 깨끗한 commit archive에서 사용자 version `d8142a51-152a-4a4d-90e1-c4d80a261636`, 관리자 version `540a31cc-dac4-4807-a174-258549f09b06`를 배포했다. 처음 dirty worktree에서 만든 배포에는 로컬 목업 파일이 정적 자산으로 포함된 것을 발견해 즉시 폐기하고 깨끗한 archive로 다시 배포했다. 최종 mockup 경로는 제품 SPA 또는 관리자 Access 로그인으로 응답하며 목업을 제공하지 않는다. HTTP no-cache 응답으로 새 사용자 bundle을 확인했지만 현재 브라우저 세션은 이전 service worker cache를 유지하므로 실제 새 화면의 운영 QA는 설치 PWA 업데이트 뒤 대기한다. 운영 D1 migration과 Secret은 변경하지 않았다.
 
 ### 2026-08-03 · GAP-03 지도 보기 UI 통일 실행
 
@@ -757,7 +767,9 @@ npm run build
 
    ~~`GAP-03` 로컬 구현은 완료했다. 다음 승인 단위는 Phase 1B 운영 실데이터·운영 하드 리밋·실제 설치폰 장소/지도 검증이다. 이후 `GAP-08~10` 운영 migration·Drive 원본 보존·실제 설치폰 대표사진·EXIF·대표자 검증과 Phase 1 통합 게이트를 실행한다.~~<br>~~`GAP-03` 로컬 구현과 Phase 1B 운영 추천·필터·정렬·저장 표시의 1회 QA까지 완료했다. 다음 승인 단위는 `GAP-24` 사진 호출 재사용 보정이며, 이후 실제 지도·상세·설치폰 장소 QA와 `GAP-08~10` 운영 검증을 진행한다.~~<br>~~`GAP-03` 로컬 구현과 Phase 1B 운영 추천·필터·정렬·저장 표시의 1회 QA까지 완료했다. 다음 승인 단위는 `GAP-24` 자동 썸네일 정책 선택과 승인된 정책의 로컬 구현이다. 이후 실제 지도·상세·설치폰 장소 QA와 `GAP-08~10` 운영 검증을 진행한다.~~<br>~~`GAP-03`과 `GAP-24` 로컬 구현·자동 검증을 완료했다. 다음 Phase 1B 승인 단위는 이 변경의 배포 뒤 운영 필터·정렬 사진 +0, 상세 +1, 실제 지도·설치폰 터치 검증이다. 배포 전에는 다른 승인된 Phase 1 로컬 항목을 계속 진행할 수 있다.~~<br>~~`GAP-25` 로컬 구현·자동·390px 화면 검증을 완료했다. 다음 승인 단위는 제품 동작을 바꾸지 않는 `GAP-26` 회귀 테스트 기대 URL 보정이다. 그 다음 `GAP-27` 지도 필터 경계 디자인 방향을 승인받아 보정한다.~~<br>~~`GAP-26` 회귀 테스트 URL 보정을 완료했다. 다음 승인 단위는 `GAP-27` 지도 필터 경계 디자인 방향 선택이다.~~<br>~~`GAP-27` A안(공통 경계선 복원) 로컬 구현·자동 검증·390px·1440px 실제 지도 화면 QA를 완료했다. 다음 승인 단위는 계획서에 남은 Phase 1 항목 중 하나를 선택하는 것이다.~~<br>`GAP-28`의 실제 원인인 좌표 없는 장소 추천 자동 호출을 차단하고 대상 테스트·세 브라우저 반응형 E2E·내부 브라우저 검증을 완료했다. 다음 승인 단위는 Phase 1 계획표의 남은 운영·실기기 증거 중 하나를 선택하는 것이다.
 
-현재 Phase 1 로컬 작업은 승인돼 있다. 다만 요구사항 해석, 데이터 schema, 비용, 보안, 외부 서비스에 영향을 주는 선택은 실행 전에 다시 승인받는다. Phase 1의 합의된 작업과 QA가 모두 끝나기 전에는 중간 commit을 만들지 않는다. push, migration, Secret, deploy는 계속 별도 승인이다.
+~~현재 Phase 1 로컬 작업은 승인돼 있다. 다만 요구사항 해석, 데이터 schema, 비용, 보안, 외부 서비스에 영향을 주는 선택은 실행 전에 다시 승인받는다. Phase 1의 합의된 작업과 QA가 모두 끝나기 전에는 중간 commit을 만들지 않는다. push, migration, Secret, deploy는 계속 별도 승인이다.~~
+
+2026-08-08 Phase 1 commit·push·두 Worker 배포는 사용자 승인 아래 완료했다. migration·Secret은 제외 상태를 유지한다. 실제 Android·iPhone 설치 PWA 검증과 운영 실데이터 QA가 끝나기 전에는 Phase 1 전체를 `완료`로 확대하지 않는다.
 
 ## 13. 컨텍스트 압축 후 복구 체크리스트
 
