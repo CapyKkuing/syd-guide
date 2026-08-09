@@ -33,6 +33,7 @@ const storage: TripMediaStorage = {
   connectedBy: "owner",
   connectedAt: "2026-07-29T00:00:00.000Z",
 };
+const previewFolder = { id: "preview_folder_12345" };
 
 function media(): TripMedia {
   return {
@@ -78,6 +79,7 @@ function setup(clientId: string | null = "test-client-id") {
       provider.connected = true;
     }),
     createFolder: vi.fn().mockResolvedValue({ id: storage.rootObjectId }),
+    findFolder: vi.fn().mockResolvedValue(previewFolder),
     upload: vi.fn()
       .mockResolvedValueOnce({ id: savedMedia.providerObjectId })
       .mockResolvedValueOnce({ id: savedMedia.thumbnailObjectId }),
@@ -134,6 +136,22 @@ describe("RepresentativePhotoPanel", () => {
 
     await screen.findByText("추천 91점");
     expect(runtime.ranker).toHaveBeenCalledWith([file]);
+    expect(runtime.provider.findFolder).toHaveBeenCalledWith(
+      "앱 미리보기",
+      storage.rootObjectId
+    );
+    expect(runtime.provider.upload).toHaveBeenNthCalledWith(
+      1,
+      storage.rootObjectId,
+      expect.stringContaining("-harbour.jpg"),
+      expect.any(File)
+    );
+    expect(runtime.provider.upload).toHaveBeenNthCalledWith(
+      2,
+      previewFolder.id,
+      expect.stringContaining("-thumb.webp"),
+      expect.any(Blob)
+    );
     expect(runtime.api.register).toHaveBeenCalledWith(
       trip.id,
       expect.objectContaining({
@@ -173,6 +191,43 @@ describe("RepresentativePhotoPanel", () => {
 
     expect(await screen.findByText(/Google OAuth client ID가 아직 설정되지 않았습니다/)).toBeVisible();
     expect(runtime.provider.createFolder).not.toHaveBeenCalled();
+  });
+
+  it("creates the preview folder when it does not exist", async () => {
+    const runtime = setup();
+    vi.mocked(runtime.provider.findFolder!).mockResolvedValue(null);
+    vi.mocked(runtime.provider.createFolder).mockResolvedValue(previewFolder);
+    const { container } = render(
+      <RepresentativePhotoPanel
+        api={runtime.api}
+        media={[]}
+        onChanged={vi.fn()}
+        provider={runtime.provider}
+        ranker={runtime.ranker}
+        storage={storage}
+        thumbnailStore={runtime.thumbnailStore}
+        trip={trip}
+        viewerRole="owner"
+      />
+    );
+
+    const input = container.querySelector<HTMLInputElement>('input[type="file"]');
+    if (!input) throw new Error("file input missing");
+    fireEvent.change(input, {
+      target: { files: [new File(["photo"], "harbour.jpg", { type: "image/jpeg" })] },
+    });
+
+    await screen.findByText("추천 91점");
+    expect(runtime.provider.createFolder).toHaveBeenCalledWith(
+      "앱 미리보기",
+      storage.rootObjectId
+    );
+    expect(runtime.provider.upload).toHaveBeenNthCalledWith(
+      2,
+      previewFolder.id,
+      expect.stringContaining("-thumb.webp"),
+      expect.any(Blob)
+    );
   });
 
   it("saves only representative preview settings without reuploading the Drive original", async () => {

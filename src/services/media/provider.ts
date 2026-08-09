@@ -10,6 +10,7 @@ export interface MediaStorageProviderClient {
   readonly connected: boolean;
   connect(clientId: string): Promise<void>;
   createFolder(name: string, parentObjectId?: string): Promise<MediaObject>;
+  findFolder?(name: string, parentObjectId: string): Promise<MediaObject | null>;
   upload(
     rootObjectId: string,
     name: string,

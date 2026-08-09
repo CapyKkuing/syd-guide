@@ -12,6 +12,7 @@ import { RepresentativePhotoEditorDialog } from "./RepresentativePhotoEditorDial
 
 const MAX_PHOTOS = 20;
 const MAX_FILE_BYTES = 25 * 1024 * 1024;
+const PREVIEW_FOLDER_NAME = "앱 미리보기";
 const SUPPORTED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 interface Props {
@@ -131,11 +132,18 @@ export function RepresentativePhotoPanel({
       if (!connectedStorage) throw new Error("Google Drive 폴더를 연결해 주세요.");
       setMessage(`사진 ${files.length}장을 기기에서 분석하는 중입니다.`);
       const ranked = await ranker(files);
+      const previewFolder = await provider.findFolder?.(
+        PREVIEW_FOLDER_NAME,
+        connectedStorage.rootObjectId
+      ) ?? await provider.createFolder(
+        PREVIEW_FOLDER_NAME,
+        connectedStorage.rootObjectId
+      );
       const uploaded: TripMedia[] = [];
       for (let index = 0; index < ranked.length; index += 1) {
         setMessage(`추천 점수 계산 완료 · Drive 업로드 ${index + 1}/${ranked.length}`);
         const photo = ranked[index];
-        if (photo) uploaded.push(await uploadPhoto(connectedStorage, photo));
+        if (photo) uploaded.push(await uploadPhoto(connectedStorage, previewFolder.id, photo));
       }
       setItems((current) => [...uploaded, ...current]);
       setMessage(
@@ -150,6 +158,7 @@ export function RepresentativePhotoPanel({
 
   async function uploadPhoto(
     connectedStorage: TripMediaStorage,
+    previewRootObjectId: string,
     photo: RankedPhoto
   ): Promise<TripMedia> {
     if (!api || !provider || !thumbnailStore) {
@@ -165,7 +174,7 @@ export function RepresentativePhotoPanel({
     let thumbnailId: string | null = null;
     try {
       const thumbnail = await provider.upload(
-        connectedStorage.rootObjectId,
+        previewRootObjectId,
         `${prefix}-thumb.webp`,
         photo.thumbnail
       );

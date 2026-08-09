@@ -49,7 +49,6 @@ export async function analyzeBookingDocument(
 ): Promise<VisionDocumentResult> {
   const token = await tokenProvider(config, fetcher);
   const content = bytesToBase64(new Uint8Array(await file.arrayBuffer()));
-  const parent = `projects/${config.projectId}/locations/us`;
   const pdf = file.type === "application/pdf";
   const response = await fetcher(
     pdf
@@ -62,14 +61,12 @@ export async function analyzeBookingDocument(
         "Content-Type": "application/json",
       },
       body: JSON.stringify(pdf ? {
-        parent,
         requests: [{
           inputConfig: { content, mimeType: file.type },
           features: [{ type: "DOCUMENT_TEXT_DETECTION" }],
           pages: [1, 2, 3, 4, 5],
         }],
       } : {
-        parent,
         requests: [{
           image: { content },
           features: [{ type: "DOCUMENT_TEXT_DETECTION" }],
@@ -110,15 +107,24 @@ function fileText(value: unknown) {
 
 export function bookingDraft(text: string): BookingOcrDraft {
   const dates = findDateTimes(text);
-  const reservation = /(?:예약(?:번호|코드)|booking\s*(?:reference|code)|confirmation\s*(?:number|code)|pnr)\s*[:#-]?\s*([a-z0-9-]{4,12})/i.exec(text);
+  const reservation = /(?:예약(?:번호|코드)|reservation(?:\s*(?:number|code))?|booking\s*(?:reference|code)|confirmation\s*(?:number|code)|pnr)\s*[:#-]?\s*([a-z0-9-]{4,32})/i.exec(text);
   const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  let provider: string | null = null;
+  for (const line of lines) {
+    const labeled = /^(?:hotel|airline|provider|예약처|항공사|숙소)\s*[:#-]\s*(.{2,80})$/i.exec(line);
+    if (labeled?.[1]) {
+      provider = labeled[1].trim();
+      break;
+    }
+  }
+  provider ??= lines.find((line) => (
+    line.length >= 2
+    && line.length <= 80
+    && !/^(예약|reservation|booking|confirmation|date|time|check-|status|amount|출발|도착|passenger|승객)/i.test(line)
+  )) ?? null;
   return {
     bookingType: bookingType(text),
-    provider: lines.find((line) => (
-      line.length >= 2
-      && line.length <= 80
-      && !/^(예약|booking|confirmation|date|time|출발|도착|passenger|승객)/i.test(line)
-    )) ?? null,
+    provider,
     reservationCode: reservation?.[1]?.toUpperCase() ?? null,
     startsAt: dates[0] ?? null,
     endsAt: dates[1] ?? null,

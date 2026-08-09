@@ -2,6 +2,7 @@ import { env } from "cloudflare:test";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createApp } from "../../worker/app";
 import type { Env } from "../../worker/env";
+import { bookingDraft } from "../../worker/services/google-vision";
 
 const now = new Date("2026-08-08T00:00:00.000Z");
 
@@ -55,11 +56,32 @@ describe("booking OCR", () => {
     await seedTrip();
   });
 
+  it("separates labeled hotel and reservation values from an English voucher", () => {
+    expect(bookingDraft([
+      "BOOKING CONFIRMATION",
+      "Reservation: TEST-20260809",
+      "Hotel: Sample Harbour Hotel",
+      "Check-in: 2026-10-08 15:00",
+      "Check-out: 2026-10-12 11:00",
+      "Status: PAID",
+      "Amount: AUD 420.00",
+    ].join("\n"))).toEqual({
+      bookingType: "lodging",
+      provider: "Sample Harbour Hotel",
+      reservationCode: "TEST-20260809",
+      startsAt: "2026-10-08T15:00",
+      endsAt: "2026-10-12T11:00",
+    });
+  });
+
   it("returns an editable booking draft and reserves one image page", async () => {
     const visionFetch = vi.fn<typeof fetch>(async (_input, init) => {
       expect(new Headers(init?.headers).get("Authorization")).toBe("Bearer test-token");
-      expect(JSON.parse(String(init?.body))).toMatchObject({
-        requests: [{ features: [{ type: "DOCUMENT_TEXT_DETECTION" }] }],
+      expect(JSON.parse(String(init?.body))).toEqual({
+        requests: [{
+          image: { content: expect.any(String) },
+          features: [{ type: "DOCUMENT_TEXT_DETECTION" }],
+        }],
       });
       return Response.json({
         responses: [{
@@ -97,9 +119,12 @@ describe("booking OCR", () => {
   it("returns an editable PDF draft and reserves the five requested pages", async () => {
     const visionFetch = vi.fn<typeof fetch>(async (input, init) => {
       expect(String(input)).toBe("https://vision.googleapis.com/v1/files:annotate");
-      expect(JSON.parse(String(init?.body))).toMatchObject({
+      expect(JSON.parse(String(init?.body))).toEqual({
         requests: [{
-          inputConfig: { mimeType: "application/pdf" },
+          inputConfig: {
+            content: expect.any(String),
+            mimeType: "application/pdf",
+          },
           features: [{ type: "DOCUMENT_TEXT_DETECTION" }],
           pages: [1, 2, 3, 4, 5],
         }],

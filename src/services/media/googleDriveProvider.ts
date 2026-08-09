@@ -81,6 +81,19 @@ export class GoogleDriveProvider implements MediaStorageProviderClient {
     });
   }
 
+  async findFolder(name: string, parentObjectId: string): Promise<MediaObject | null> {
+    const query = [
+      `'${escapeDriveQueryValue(parentObjectId)}' in parents`,
+      `name = '${escapeDriveQueryValue(name)}'`,
+      "mimeType = 'application/vnd.google-apps.folder'",
+      "trashed = false",
+    ].join(" and ");
+    const result = await this.requestJson<{ files: MediaObject[] }>(
+      `${DRIVE_API}/files?q=${encodeURIComponent(query)}&fields=files(id)&pageSize=1`
+    );
+    return result.files[0] ?? null;
+  }
+
   async upload(
     rootObjectId: string,
     name: string,
@@ -146,6 +159,10 @@ export class GoogleDriveProvider implements MediaStorageProviderClient {
     }
     return response;
   }
+}
+
+function escapeDriveQueryValue(value: string): string {
+  return value.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
 }
 
 let googleIdentityPromise: Promise<void> | null = null;
