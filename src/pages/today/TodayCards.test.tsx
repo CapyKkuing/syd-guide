@@ -22,14 +22,14 @@ describe("WeatherCard", () => {
         forecast: [],
       },
       message: null,
-      attribution: "Open-Meteo · BOM ACCESS-G",
+      attribution: "Open-Meteo · Best Match",
       disclaimer: "일반 참고용 정보입니다.",
     }} />);
 
     expect(screen.getByText("19.5°C · 맑음")).toBeVisible();
     expect(screen.getByText("Sydney · UV 4")).toBeVisible();
     expect(screen.getByText("실시간")).toBeVisible();
-    expect(screen.getByText(/출처: Open-Meteo · BOM ACCESS-G/)).toBeVisible();
+    expect(screen.getByText(/출처: Open-Meteo · Best Match/)).toBeVisible();
   });
 
   it("does not show sample values when weather is unavailable", () => {
@@ -38,7 +38,7 @@ describe("WeatherCard", () => {
       location: "Sydney",
       weather: null,
       message: "현재 날씨 정보를 불러올 수 없습니다.",
-      attribution: "Open-Meteo · BOM ACCESS-G",
+      attribution: "Open-Meteo · Best Match",
       disclaimer: "일반 참고용 정보입니다.",
     }} />);
 

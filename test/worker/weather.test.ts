@@ -7,7 +7,7 @@ import { purgeExpiredWeatherSnapshots } from "../../worker/services/purge";
 import type { WeatherResponse } from "../../src/shared/weather";
 
 const initialNow = new Date("2026-08-12T00:00:00.000Z");
-const attribution = "Open-Meteo · BOM ACCESS-G";
+const attribution = "Open-Meteo · Best Match";
 
 function bindings(): Env {
   return {
@@ -82,7 +82,7 @@ function openMeteoFetch() {
   });
 }
 
-describe("Open-Meteo BOM weather route", () => {
+describe("Open-Meteo Best Match weather route", () => {
   beforeEach(async () => {
     await env.DB.prepare("DELETE FROM trips").run();
     await env.DB.prepare("DELETE FROM weather_provider_usage").run();
@@ -91,7 +91,7 @@ describe("Open-Meteo BOM weather route", () => {
     await seedTrip();
   });
 
-  it("geocodes once, stores BOM current and forecast, then serves the 60 minute cache", async () => {
+  it("geocodes once, stores current and forecast, then serves the 60 minute cache", async () => {
     const weatherFetch = openMeteoFetch();
     const app = createApp({ now: () => initialNow, weatherFetch });
 
@@ -117,11 +117,11 @@ describe("Open-Meteo BOM weather route", () => {
     expect(second.status).toBe(200);
     await expect(second.json()).resolves.toMatchObject({ status: "cached", attribution });
     expect(weatherFetch).toHaveBeenCalledTimes(2);
-    const [geocodingUrl, bomUrl] = weatherFetch.mock.calls.map(([input]) => new URL(String(input)));
+    const [geocodingUrl, forecastUrl] = weatherFetch.mock.calls.map(([input]) => new URL(String(input)));
     expect(geocodingUrl.href).toContain("https://geocoding-api.open-meteo.com/v1/search?");
     expect(geocodingUrl.searchParams.get("name")).toBe("Sydney, Australia");
-    expect(bomUrl.href).toContain("https://api.open-meteo.com/v1/bom?");
-    expect(bomUrl.searchParams.get("daily")).toContain("temperature_2m_max");
+    expect(forecastUrl.href).toContain("https://api.open-meteo.com/v1/forecast?");
+    expect(forecastUrl.searchParams.get("daily")).toContain("temperature_2m_max");
     await expect(env.DB.prepare(
       "SELECT used_count FROM weather_provider_usage WHERE billing_month = '2026-08'"
     ).first()).resolves.toEqual({ used_count: 2 });

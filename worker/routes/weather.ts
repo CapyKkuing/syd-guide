@@ -59,7 +59,7 @@ export function registerWeatherRoutes(
         status: "cached",
         weather: cached.current,
         message: null,
-        attribution: "Open-Meteo · BOM ACCESS-G",
+        attribution: "Open-Meteo · Best Match",
         disclaimer: WEATHER_DISCLAIMER,
       });
     }
@@ -88,7 +88,7 @@ export function registerWeatherRoutes(
         status: "live",
         weather: stored.current,
         message: null,
-        attribution: "Open-Meteo · BOM ACCESS-G",
+        attribution: "Open-Meteo · Best Match",
         disclaimer: WEATHER_DISCLAIMER,
       });
     } catch (error) {

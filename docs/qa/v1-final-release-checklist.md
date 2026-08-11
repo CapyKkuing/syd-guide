@@ -124,10 +124,10 @@ Secret 설정 단계가 없다.
 
 ### 2-1. 고정 조건
 
-- [ ] Open-Meteo Free의 비공개·비상업 사용 조건과 BOM ACCESS-G 사용 승인이 확인됐다.
+- [ ] Open-Meteo Free의 비공개·비상업 사용 조건과 Best Match 사용 승인이 확인됐다.
 - [ ] 제품 자체 월 hard limit이 10,000회로 기록돼 있다.
 - [ ] current 서버 캐시 60분, forecast 서버 캐시 24시간이 기록돼 있다.
-- [ ] `Open-Meteo · BOM ACCESS-G` 출처와 일반 정보용 면책 문구가 화면에 포함돼 있다.
+- [ ] `Open-Meteo · Best Match` 출처와 일반 정보용 면책 문구가 화면에 포함돼 있다.
 - [ ] Open-Meteo Free에는 API key·결제수단·자동 유료 전환이 없고, 상업 공개 전에는 별도 라이선스 검토가 필요함을 확인했다.
 - [ ] 운영 시각, 실행자, 최종 SHA, 두 Worker 대상과 롤백 담당을 기록했다.
 

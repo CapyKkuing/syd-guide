@@ -83,7 +83,7 @@ export async function fetchWeatherForecast(
   fetcher: WeatherProviderFetch,
 ): Promise<WeatherSnapshot> {
   const response = await fetchWithTimeout(fetcher, endpoint(
-    "https://api.open-meteo.com/v1/bom",
+    "https://api.open-meteo.com/v1/forecast",
     {
       latitude: String(location.latitude),
       longitude: String(location.longitude),
@@ -105,7 +105,7 @@ export async function fetchCurrentWeather(
   fetcher: WeatherProviderFetch,
 ): Promise<Omit<WeatherSnapshot, "forecast">> {
   const response = await fetchWithTimeout(fetcher, endpoint(
-    "https://api.open-meteo.com/v1/bom",
+    "https://api.open-meteo.com/v1/forecast",
     {
       latitude: String(location.latitude),
       longitude: String(location.longitude),
