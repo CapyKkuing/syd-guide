@@ -17,6 +17,7 @@ import type {
 } from "../contracts";
 import { mapSnapshotToWorkspace } from "./snapshotMappers";
 import type { TripMedia, TripMediaStorage } from "../../shared/media";
+import { quotaWeather, unavailableWeather } from "../../shared/weather";
 
 const ONLINE_LOAD_ERROR =
   "인터넷 연결이 필요합니다. 연결을 확인한 뒤 다시 시도해 주세요.";
@@ -31,13 +32,13 @@ export class SnapshotTravelGuideDataSource implements MutableTravelGuideDataSour
   private readonly cache = new Map<string, CacheEntry>();
   private readonly pending = new Map<string, Promise<TripWorkspace | null>>();
   private readonly minimumSyncVersions = new Map<string, number>();
-  private readonly client: Pick<ApiClient, "getTripSnapshot">;
+  private readonly client: Pick<ApiClient, "getTripSnapshot"> & Partial<Pick<ApiClient, "getWeather">>;
   private readonly principalLoader: () => Promise<SessionPrincipal>;
   private readonly clock: () => Date;
   private readonly onSessionInvalid: () => void | Promise<void>;
 
   constructor(
-    client: Pick<ApiClient, "getTripSnapshot">,
+    client: Pick<ApiClient, "getTripSnapshot"> & Partial<Pick<ApiClient, "getWeather">>,
     principalLoader: () => Promise<SessionPrincipal>,
     clock: () => Date = () => new Date(),
     options: {
@@ -140,6 +141,24 @@ export class SnapshotTravelGuideDataSource implements MutableTravelGuideDataSour
     }
     const now = this.clock();
     const workspace = mapSnapshotToWorkspace(snapshot, principal, now);
+    if (this.client.getWeather) {
+      try {
+        workspace.today.weather = await this.client.getWeather(tripId);
+      } catch (error) {
+        if (error instanceof ApiClientError && error.status === 401) {
+          if (isAdminAccessCode(error.code)) throw error;
+          await this.onSessionInvalid();
+          throw error;
+        }
+        workspace.today.weather = error instanceof ApiClientError
+          && error.code === "WEATHER_FREE_LIMIT_REACHED"
+          ? quotaWeather(workspace.context.trip.destination)
+          : unavailableWeather(
+            workspace.context.trip.destination,
+            "현재 날씨 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
+          );
+      }
+    }
     this.minimumSyncVersions.delete(tripId);
     this.cache.set(tripId, {
       snapshot,

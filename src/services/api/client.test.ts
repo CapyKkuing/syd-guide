@@ -54,6 +54,26 @@ describe("ApiClient", () => {
     expect(receiver).toBe(globalThis);
   });
 
+  it("loads the normalized weather response through the authenticated client", async () => {
+    let received: Request | null = null;
+    const client = new ApiClient(async (input, init) => {
+      received = new Request(input, init);
+      return Response.json({
+        status: "unavailable",
+        location: "Sydney",
+        weather: null,
+        message: "not configured",
+        attribution: "WeatherAPI.com",
+        disclaimer: "일반 참고용 정보입니다.",
+      });
+    }, "http://localhost");
+
+    const result = await client.getWeather("trip-one");
+
+    expect(captured(received).url).toBe("http://localhost/api/trips/trip-one/weather");
+    expect(result).toMatchObject({ status: "unavailable", location: "Sydney" });
+  });
+
   it("sends the selected local development principal to snapshot and mutation requests", async () => {
     window.localStorage.setItem("couple_dev_principal", "partner");
     const received: Request[] = [];

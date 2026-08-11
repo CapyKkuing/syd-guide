@@ -23,7 +23,7 @@ describe("FixtureTravelGuideDataSource", () => {
     ]);
 
     expect(context?.trip.id).toBe("sydney-2026");
-    expect(today?.weather.isSample).toBe(true);
+    expect(today?.weather.status).toBe("unavailable");
     expect(schedule?.days.length).toBeGreaterThan(1);
     expect(mapPreview?.places.length).toBeGreaterThan(2);
     expect(tools?.groups).toHaveLength(3);

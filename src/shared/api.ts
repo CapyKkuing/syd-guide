@@ -13,6 +13,7 @@ import type {
   Vote
 } from "./entities";
 import type { TripMedia, TripMediaStorage } from "./media";
+import type { WeatherResponse } from "./weather";
 
 export interface ApiErrorBody {
   error: {
@@ -39,3 +40,5 @@ export interface TripSnapshot {
   mediaStorage?: TripMediaStorage | null;
   syncVersion: number;
 }
+
+export type { WeatherResponse };

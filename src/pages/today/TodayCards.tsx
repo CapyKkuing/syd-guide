@@ -34,10 +34,22 @@ export function WeatherCard({ weather }: Pick<TodayCardProps, "weather">) {
       <div className="today-card__heading">
         <Icon name="weather" />
         <h3 id="weather-card-title">날씨</h3>
-        <DataFreshness value={{ source: "sample", updatedAt: null }} />
+        {weather.status === "live" || weather.status === "cached" ? (
+          <DataFreshness value={{ source: weather.status, updatedAt: weather.weather.fetchedAt }} />
+        ) : null}
       </div>
-      <p className="today-card__value">{weather.temperatureC}°C · {weather.condition}</p>
-      <p className="today-card__detail">{weather.location} · UV {weather.uvIndex}</p>
+      {weather.weather ? (
+        <>
+          <p className="today-card__value">{weather.weather.temperatureC}°C · {weather.weather.condition}</p>
+          <p className="today-card__detail">{weather.weather.location.name} · UV {weather.weather.uvIndex}</p>
+        </>
+      ) : (
+        <>
+          <p className="today-card__value">{weather.location}</p>
+          <p className="today-card__detail">{weather.message}</p>
+        </>
+      )}
+      <p className="today-card__detail">출처: {weather.attribution} · {weather.disclaimer}</p>
     </Card>
   );
 }

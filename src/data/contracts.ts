@@ -12,6 +12,7 @@ import type {
 } from "../shared/entities";
 import type { ExperiencePhase } from "../domain/tripPhase";
 import type { TripMedia, TripMediaStorage } from "../shared/media";
+import type { WeatherResponse } from "../shared/weather";
 
 export type TripPhase = "upcoming" | "active" | "completed";
 export type ScheduleKind =
@@ -94,13 +95,7 @@ export interface TodayViewModel {
   greeting: string;
   headline: string;
   dDay: number | null;
-  weather: {
-    location: string;
-    condition: string;
-    temperatureC: number;
-    uvIndex: number;
-    isSample: true;
-  };
+  weather: WeatherResponse;
   nextMovement: {
     departureTime: string;
     countdownLabel: string;

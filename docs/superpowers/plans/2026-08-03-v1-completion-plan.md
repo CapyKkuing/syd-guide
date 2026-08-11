@@ -205,8 +205,14 @@
 | Phase 1C 필수 도구 | 진행 중 | ~~기존 교통·비상·주의사항·예약·비용 화면, 다인 정산·예약 체크인 로컬 구현·자동 검증~~<br>~~위 범위와 `0017`·`0018` 운영 D1 적용~~<br>~~위 범위, `0017`·`0018` 운영 D1 적용, `GAP-25` 정산 묶음 원자 생성·완료와 멱등 재시도 로컬 구현·자동·390px 화면 검증~~<br>2026-08-08 `GAP-30` 비용별 정산 묶음 원자 소유권, 동시·재시도 멱등성, 동기화 뒤 송금 완료 활성화를 보정했다. Google Vision OCR 공통 초안·Worker provider 경계·월 800페이지 차단·수동 입력 fallback도 로컬 구현·mock 자동 검증했다.<br>2026-08-09 `GAP-35` 주의사항 온라인 전용 문구와 상태 회귀를 통합하고 전체 자동·브라우저 검증을 통과했다.<br>2026-08-09 `0019`·`0021`·`0022` 운영 migration을 적용하고 기본 체크리스트 9개·정산 소유권·Vision 사용량 schema를 확인했다.<br>~~2026-08-09 Vision API·최소 IAM·Secret과 generic 요청 본문 보정을 운영 배포했고 실제 JPG OCR·3/800 사용량·편집 가능한 초안을 확인했다. `GAP-37` 영문 라벨 매핑 오류는 보정 대기다.~~<br>2026-08-09 `GAP-37`까지 보정·운영 배포했다. 실제 JPG OCR 1회에서 예약처·예약번호·종류·시작·종료와 편집 가능 상태, 사용량 `4/800`, 오류 0을 확인했다.<br>2026-08-09 QA 전용 완료 여행에서 AUD 30 공동 비용의 3인 정산 송금 2건과 개별 완료·원본 비용 완료 경계를 운영 확인했다. 예약 `체크인 전` 저장·재조회와 `체크인 완료` 수정 저장·재조회, Drive 이미지 미리보기도 통과했다. | ~~운영 D1 적용·화면 QA, OCR 공급업체 승인·연동, 전체 상태별 QA~~<br>~~정산·예약 운영 실데이터·화면 QA, `GAP-37` OCR 영문 라벨 매핑 보정, 설치폰 상태별 QA~~<br>~~정산·예약 운영 실데이터·화면 QA와 설치폰 상태별 QA~~<br>PDF Drive 미리보기 운영 증거와 설치폰 상태별 QA |
 | Phase 1D 여행 전·중·후·관리 | 진행 중 | ~~수동 항공편·비용 알림·Drive·AI·릴·관리 기반, 항공편·숙소·여권 직접 입력과 기본 체크리스트, 대표사진 자르기·밝기 로컬 구현·자동·390px 화면 검증, JPEG EXIF 촬영시각 추출·릴 정렬 자동 검증~~<br>~~위 범위와 최초 설정 대표자 선택 로컬 구현·자동·390px 화면 검증~~<br>2026-08-08 현지 날짜 변경 비용 알림, 수동 비용 fallback, Drive PDF 미리보기·오류·object URL 정리, 대표사진·EXIF·릴·관리 회귀를 메인 Sol 자동 게이트로 재검증했다.<br>2026-08-09 `GAP-36` EXIF offset 검증과 업로드시각 fallback 회귀를 통합하고 전체 자동 검증을 통과했다.<br>2026-08-09 대표사진 `0020` 운영 migration을 적용하고 자르기 비율·밝기 기본값을 확인했다.<br>~~2026-08-09 Drive 원본 checksum 비변경을 운영 확인했고, `GAP-38`의 원본·미리보기 하위 폴더 분리를 로컬 구현·자동 검증했다.~~<br>2026-08-09 Drive 원본 checksum 비변경과 `GAP-38` 원본·미리보기 분리의 구현·배포·운영 QA를 완료했다. 새 사진 2장의 원본은 여행사진 루트에 각각 1개, WebP는 재사용한 단일 `앱 미리보기` 폴더에 각각 1개 저장됐고 Drive 새로 불러오기 뒤 앱 미리보기·오류 0·가로 넘침 0을 확인했다.<br>2026-08-11 `GAP-39` 후보 카드 배경 정렬과 앱 사진 이력 삭제를 로컬 구현하고 391·1280px 화면, 대상 UI·Worker 테스트, 타입 검사·lint·build를 통과했다. | ~~대표사진 migration 운영 적용, 실제 설치폰 EXIF 확인, 최초 대표자 선택, 전체 회귀~~<br>~~실제 설치폰 EXIF·최초 대표자 선택·PWA 설치, `GAP-39` 대표사진 후보 카드 정렬·제외 사진 이력 삭제.~~<br>실제 설치폰 JPEG EXIF·최초 대표자 선택·PWA 설치와 `GAP-39` 배포·운영 QA. 다른 기기 빈 캐시 미리보기의 실제 전송량·시간은 별도 실기기 QA로 유지 |
 | ~~Phase 2~6~~ | ~~대기~~ | ~~계획만 존재하거나 일부 기반 존재~~ | ~~날씨, 실기기 온라인 전용 PWA, 백업·복원, Workers 단일 운영, 최종 QA~~ |
-| Phase 2 실제 날씨 | 공급업체 조사 완료·승인 대기 | Open-Meteo·Google Weather API·WeatherAPI.com의 공식 호주 지원·상업 이용·무료 한도·자동 과금·캐시 조건 비교 | 공급업체·월 제품 하드 리밋·출처 표기 승인 뒤 Worker 경계 구현 |
-| Phase 3~6 | 대기 | 온라인 전용 PWA 기반과 일부 운영 증거 존재 | 설치폰 입력 회귀, 백업·복원, Workers 단일 운영, 최종 QA |
+| ~~Phase 2 실제 날씨~~ | ~~공급업체 조사 완료·승인 대기~~ | ~~Open-Meteo·Google Weather API·WeatherAPI.com의 공식 호주 지원·상업 이용·무료 한도·자동 과금·캐시 조건 비교~~ | ~~공급업체·월 제품 하드 리밋·출처 표기 승인 뒤 Worker 경계 구현~~ |
+| Phase 2 실제 날씨 | 로컬 구현·자동 검증 완료, 운영 연결 대기 | WeatherAPI.com Free-only·월 10,000회·현재 60분/예보 24시간·출처·면책을 확정했고 Worker·D1 0023 초안·Today 상태 UI를 구현 | 운영 D1 `0023` 적용, `WEATHERAPI_KEY` Secret, 실제 호출 1회, 사용자·관리자 배포와 최종 통합 QA |
+| ~~Phase 3~6~~ | ~~대기~~ | ~~온라인 전용 PWA 기반과 일부 운영 증거 존재~~ | ~~설치폰 입력 회귀, 백업·복원, Workers 단일 운영, 최종 QA~~ |
+| Phase 3 설치 PWA 최종 검증 | 대기 | 온라인 전용 PWA 기반과 Android 일부 운영 증거 존재 | 최종 통합 QA에서 남은 설치폰 입력 회귀 |
+| Phase 4 D1 백업·복원 | 로컬 구현·검증·암호화 키 생성 완료, 운영 리허설 대기 | 공식 export·test restore·`age` 공개키 암호화 경계, 안전 스크립트와 수동 Drive runbook 구현·검증 | ~~`age` 설치·복구키 위치~~ 완료. 운영 export·Drive 업로드·별도 빈 테스트 D1 복원은 각각 승인 대기 |
+| ~~Phase 5~6~~ | ~~대기~~ | ~~Workers 단일 운영 참조 감사와 최종 QA 계획 존재~~ | ~~Pages workflow 중지, Workers 단일 운영, 최종 통합 QA·출시 판정~~ |
+| Phase 5 Workers 단일 운영 | 로컬 설정·참조 감사 완료, 원격 반영 대기 | Pages workflow의 `main` push 자동 트리거를 제거하고 수동 `workflow_dispatch`와 `/syd-guide/` fixture를 유지했다. 제품 runtime의 Pages URL 참조가 없고 대상 fixture 테스트가 통과했다. | commit·push 뒤 자동 Pages 미실행 확인, 동일 SHA 두 Worker 배포와 HTTP·PWA deep-link 운영 QA |
+| Phase 6 최종 통합·출시 | 실행 체크리스트 준비 완료, 최종 일괄 QA 대기 | `docs/qa/v1-final-release-checklist.md`에 로컬 자동 게이트, Phase 1 잔여 실기기·운영 QA, 날씨·백업·Workers 운영 순서, P0/P1·출시 승인 경계를 통합했다. | 모든 구현 묶음 종료 뒤 전체 자동·운영·Android QA, 문서 동기화, commit·push·deploy·tag·handoff 각각 별도 승인 |
 
 **2026-08-11 Phase 1 1차 묶음 상태 보정:** 위 Phase 1D 행의 `GAP-39 배포·운영 QA` 대기는 완료로 대체한다. 남은 Phase 1D 범위는 실제 설치폰 JPEG EXIF·최초 대표자 선택·PWA 설치와 다른 기기 빈 캐시 성능이다. 관리자 `GAP-40`은 코드·자동 검증·push·두 Worker 배포까지 완료했으나 내부 브라우저의 구 서비스 워커가 이전 HTML·번들을 반환해 운영 복구 화면 재검증만 남았다.
 
@@ -253,10 +259,10 @@
 | GAP-08 | 대표사진 미리보기 자르기·밝기, Drive 원본 비변경 | ~~로컬 구현·자동·390px 화면 검증~~<br>~~로컬 구현·자동·390px 화면 검증. 편집 저장은 Drive 원본 재업로드 없이 preview metadata만 변경. 2026-08-09 `0020` 운영 migration 적용·기본값 검증 완료~~<br>2026-08-09 `0020` 운영 적용 뒤 자르기 `16:9`·밝기 `+12` 저장과 편집 전후 Drive 원본 SHA-256 동일, 추가 업로드 0회를 확인 | ~~편집값은 미리보기에만 적용되고 원본 checksum·파일이 유지됨~~<br>실제 Drive 원본 checksum·파일 보존 확인 완료 | Phase 1D 완료 |
 | GAP-09 | 사진 EXIF 촬영시각을 릴 정렬에 사용 | 로컬 구현·자동 검증 | 실제 설치폰 JPEG는 촬영시각을 우선 사용하고 EXIF가 없으면 업로드시각 사용 | Phase 1D |
 | GAP-10 | 최초 여행 설정에서 대표자가 참여자 중 대표자를 선택 | ~~불일치~~<br>로컬 구현·자동·390px 화면 검증 | ~~첫 설정과 관리 화면에서 대표자 지정·변경 확인~~<br>운영 관리자 PWA 최초 설정에서 동행자를 대표자로 지정한 뒤 관리 화면에서 변경·유지 확인 | Phase 1D |
-| GAP-11 | 샘플이 아닌 실제 날씨 | 미구현 | ~~live·cached·offline·quota 상태와 갱신시각 확인~~<br>live·서버 cached·quota 상태와 갱신시각 확인. 기기 오프라인 날씨는 제외 | Phase 2 |
+| GAP-11 | 샘플이 아닌 실제 날씨 | ~~미구현~~<br>로컬 구현·자동 검증 완료, 운영 연결 대기 | ~~live·cached·offline·quota 상태와 갱신시각 확인~~<br>live·서버 cached·quota 상태와 갱신시각 확인. 기기 오프라인 날씨는 제외<br>WeatherAPI.com Free-only, 월 10,000회 원자 차단, current 60분·forecast 24시간 정규화 캐시와 Today live/cached/unavailable·출처/면책 UI를 구현했다. current·forecast는 물리적으로 분리 저장하고 목적지 query가 현재 여행과 일치할 때만 재사용한다. 운영 Secret·migration·실제 호출·배포·최종 QA는 별도 승인이다. | Phase 2 |
 | GAP-12 | Android·iPhone 설치 PWA 비행기 모드 cold start·수정·재연결 | ~~실기기 미검증~~<br>2026-08-08 사용자 결정으로 **폐기 승인**. 오프라인 기능을 V1에서 제거하고 `GAP-32`로 대체 | ~~두 실제 기기의 체크리스트와 결과 증거 기록~~<br>완료 조건 폐기. 이력만 보존 | ~~Phase 3~~<br>GAP-32로 대체 |
-| GAP-13 | D1 암호화 Drive 백업과 별도 테스트 D1 복원 | 미구현 | 암호화·업로드·복원·데이터 대조 성공 | Phase 4 |
-| GAP-14 | Cloudflare Workers만 운영 | 불일치 | GitHub Pages 자동 workflow 중지 후 두 Worker 정상 | Phase 5 |
+| GAP-13 | D1 암호화 Drive 백업과 별도 테스트 D1 복원 | ~~미구현~~<br>로컬 스크립트·runbook·암호화 키 준비·계획/부정 가드 검증 완료, 운영 리허설 대기 | 암호화·업로드·새 빈 테스트 D1 복원·데이터 대조 성공. 운영 export·Drive 업로드·test D1 생성/복원/조회는 각각 별도 승인 | Phase 4 |
+| GAP-14 | Cloudflare Workers만 운영 | ~~불일치~~<br>로컬 workflow 자동 트리거 제거·참조 감사 완료, 원격 반영 대기 | GitHub Pages 자동 workflow 중지 후 두 Worker 동일 SHA 정상. 수동 fixture는 유지 | Phase 5 |
 | GAP-15 | 향후 다른 클라우드 저장소 전환 경계 | 부분 구현 | 상용화용 provider·DB migration 결정 문서화 | Phase 5 또는 연기 승인 |
 | GAP-16 | 전체 모바일 UI 일관성과 실데이터·빈 상태·오류·오프라인 상태 | ~~미검증~~<br>오프라인 데이터 화면은 범위에서 제거. 실데이터·빈 상태·오류·온라인 필요 상태는 미검증 | Phase별 화면 QA와 최종 통합 게이트 모두 통과 | Phase 1·6 |
 | GAP-17 | 최신 관리자 설치 PWA의 여행 편집 복귀 | 운영 확인 대기 | 완전 종료·재실행 후 선택 여행 편집창이 바로 열림 | Phase 0·6 |
@@ -736,7 +742,7 @@ interface WeatherSnapshot {
 
 1. 운영 D1 export 성공과 파일 크기 기록.
 2. 암호화 파일만 Drive에 존재하는지 확인.
-3. 새 테스트 D1에 migration 적용 후 복원.
+3. ~~새 테스트 D1에 migration 적용 후 복원.~~<br>전체 export에는 schema가 포함되므로 새 **빈 테스트 D1**에 복원한다. migration 선적용은 현재 전체 export 방식과 함께 사용하지 않는다.
 4. 핵심 테이블 row count와 표본 여행·일정·참여자·예약·장소를 원본과 대조.
 5. 테스트 DB 앱 연결 또는 읽기 쿼리로 복원 가능성을 확인.
 6. 평문 임시 파일이 남지 않았는지 확인.
@@ -1058,6 +1064,15 @@ npm run build
 
 **2026-08-11 GAP-39 운영 결과와 GAP-40 잔여:** 운영 QA에서 제외 사진 `the_rocks.jpg`의 앱 이력을 삭제해 6→5장과 재조회 뒤 유지, D1 대상 행 0·다른 미디어와 대표사진 유지, Google Drive 원본 JPEG·WebP 보존을 확인했다. `GAP-39`는 완료다. 같은 배포의 관리자 `/library`에서 구 서비스 워커가 이전 HTML·bundle `/assets/index-D7j3Hrnj.js`를 계속 반환했고 새 bundle 직접 경로도 구 SPA fallback으로 가로챘다. 정책상 브라우저 내부 관리 페이지나 raw CDP 우회는 사용하지 않았으며, 해당 origin 서비스 워커 해제 뒤 `관리자 로그인이 필요합니다`·재로그인 링크·raw `Failed to fetch` 미노출을 운영 재검증한다.
 
+**2026-08-11 사용자 결정: 남은 운영·실기기 검증은 최종 통합 QA로 묶는다**
+
+- ~~Phase 1B·1C·1D의 남은 운영·실기기 검증을 각 실행 단위 전환마다 수행한다.~~
+
+  사용자는 남은 구현 묶음을 먼저 진행하고, 운영 브라우저·설치 Android·PDF·Places 800회·관리자 Access·JPEG EXIF·PWA·빈 캐시 성능 검증은 마지막 별도 통합 QA에서 한꺼번에 수행하기로 결정했다.
+- 각 구현 묶음에서는 변경된 경계의 대상 테스트·`typecheck`·lint·production build까지만 수행한다. 전체 Playwright, 운영 호출, 실제 기기 입력과 최종 수동 QA는 Phase 6 최종 게이트로 미룬다.
+- 이 결정은 현재 `진행 중` 항목을 `완료`로 바꾸지 않는다. `GAP-40`, Phase 1B/1C/1D 실기기·운영 증거와 사용자 승인 대기 항목은 원장에 그대로 유지한다.
+- 다음 실제 구현 후보는 Phase 2 실제 날씨다. 다만 공급업체·제품 월 hard limit·출처·면책 문구는 비용·Secret·외부 호출 범위를 바꾸므로 아래 승인 대기 조건이 충족되기 전에는 구현하지 않는다.
+
 ### 2026-08-11 · Phase 1 자동 증거 보강
 
 - 실제 Android 입력 없이 확인 가능한 경계만 로컬 테스트로 보강했다. JPEG EXIF를 브라우저 `File` 경계에서 읽는 비동기 경로, ranked photo의 `capturedAt`이 미디어 등록 payload로 전달되는 경로, 다중 사진이 단일 `앱 미리보기` 폴더를 재사용하는 경로를 검증한다.
@@ -1075,7 +1090,15 @@ npm run build
 - **Open-Meteo Free:** key 없이 월 300,000회지만 non-commercial 전용이다. 공개 상용 앱은 유료 상업 라이선스가 필요하고 현재 유료 월 한도의 강제 cutoff가 없어 V1의 자동 비용 차단 원칙과 충돌할 수 있다. 공식 캐시 TTL 상한도 확인되지 않았다.
 - **Google Weather API:** 호주의 current·hourly·daily·history·alerts를 지원하고 월 10,000 successful events 무료다. Cloud billing과 API key가 필요하며 이후 종량 과금된다. current·hourly 캐시는 최대 1시간이고 자체 Worker hard limit 외에 billing account 전체 quota를 별도 관리해야 한다.
 - 공식 근거: [WeatherAPI pricing](https://www.weatherapi.com/pricing.aspx), [WeatherAPI docs](https://www.weatherapi.com/docs/), [WeatherAPI terms](https://www.weatherapi.com/terms.aspx), [Open-Meteo pricing](https://open-meteo.com/en/pricing), [Open-Meteo terms](https://open-meteo.com/en/terms), [Google Weather coverage](https://developers.google.com/maps/documentation/weather/coverage), [Google Weather billing](https://developers.google.com/maps/documentation/weather/usage-and-billing), [Google Weather service terms](https://cloud.google.com/maps-platform/terms/maps-service-terms#21-weather-api).
-- **승인 대기:** 공급업체 선택, 제품 자체 월 hard limit 숫자, 출처·면책 문구를 사용자가 승인하기 전에는 가입·Secret·migration·Worker 구현·실제 호출·배포를 진행하지 않는다. 추천은 `WeatherAPI.com Free-only`이며 유료 전환·자동 upgrade·결제수단 등록은 제외한다.
+- ~~승인 대기: 공급업체 선택, 제품 자체 월 hard limit 숫자, 출처·면책 문구를 사용자가 승인하기 전에는 가입·Secret·migration·Worker 구현·실제 호출·배포를 진행하지 않는다. 추천은 `WeatherAPI.com Free-only`이며 유료 전환·자동 upgrade·결제수단 등록은 제외한다.~~
+
+  2026-08-11 사용자는 `WeatherAPI.com Free-only`, 제품 월 hard limit `10,000회`, 현재 날씨 서버 캐시 `60분`, 예보 서버 캐시 `24시간`, WeatherAPI 출처·일반 정보용 면책 문구 표시를 승인했다. 유료 전환·자동 upgrade·결제수단 등록은 계속 제외한다. 이번 2차 묶음은 로컬 Worker·D1 migration 초안·Today UI·자동 검증만 포함하며, 운영 migration 적용·`WEATHERAPI_KEY` Secret 설정·실제 공급업체 호출·배포는 별도 승인이다.
+
+**2026-08-11 · Phase 2 2차 묶음 로컬 구현 완료:**
+
+- `0023_weather_snapshots.sql` 초안에 제품 월 사용량과 정규화한 current·forecast cache schema를 추가했다. Worker는 WeatherAPI `forecast.json`으로 최초 current·3일 forecast를 받고 current 60분·forecast 24시간을 분리 보존한다. current 만료 뒤 forecast가 아직 유효하면 `current.json`만 갱신한다. 월 사용량은 UTC 월 기준 10,000회 미만일 때만 원자적으로 예약하고, 한도 도달 시 provider 호출 전에 차단한다. raw provider 응답은 저장하지 않는다.
+- Today는 더 이상 `21°C · 맑음` 샘플을 표시하지 않는다. live/cached 갱신 시각, unavailable/quota 안내, WeatherAPI.com 출처와 일반 참고용 면책 문구를 표시한다. 날씨 실패는 여행 snapshot 자체를 실패시키지 않는다.
+- `test/worker/weather.test.ts`에서 최초 정규화·60분 cached·24시간 forecast 유지 중 current 단독 갱신·10,000회 차단·미설정 Secret을 확인했고, frontend 36건과 typecheck·lint·production build·diff-check를 통과했다. 실제 WeatherAPI 호출, 운영 D1 `0023` 적용, `WEATHERAPI_KEY` Secret, 배포, 운영·실기기·전체 E2E QA는 실행하지 않았다.
 
 ### 2026-08-11 · Phase 4 승인 전 백업·복원 준비
 
@@ -1084,6 +1107,63 @@ npm run build
 - 현재 앱의 Google Drive 연결은 브라우저에서 `drive.file` access token을 일시 발급받아 메모리에만 보관하며 refresh token을 저장하지 않는다. 따라서 이 인증을 무인 PowerShell 백업에 재사용할 수 없다. V1 첫 검증은 암호화 파일의 **수동 Drive 업로드**가 가장 작은 범위이고, 자동 업로드는 별도 OAuth 도구·서비스 계정·토큰 보관 정책을 승인한 뒤 분리한다.
 - **추천 승인안:** `age` 공개키 암호화, 개인키는 Drive·Git·프로젝트 밖의 암호화 저장소와 별도 오프라인 복구 사본에 보관, 첫 백업은 수동 실행·수동 Drive 업로드, 복원은 새 테스트 D1만 사용한다. 개인키 보관 위치·`age` 설치·백업 폴더·테스트 D1 생성·운영 export는 사용자가 승인해야 한다.
 - 공식 근거: [Cloudflare D1 import/export](https://developers.cloudflare.com/d1/best-practices/import-export-data/), [Wrangler D1 commands](https://developers.cloudflare.com/d1/wrangler-commands/), [age 공식 저장소](https://github.com/FiloSottile/age), [Google Drive files.create](https://developers.google.com/workspace/drive/api/reference/rest/v3/files/create).
+
+### 2026-08-11 · Phase 4 로컬 구현 승인
+
+- 사용자는 Phase 4의 **로컬 스크립트와 runbook 구현**을 승인했다. `scripts/backup-d1.ps1`, `scripts/restore-d1-test.ps1`, `docs/operations/d1-backup-restore.md`, `docs/operations/incident-runbook.md`를 추가하고 원격 작업을 하지 않는 계획 모드로 검증한다.
+- 백업 스크립트는 운영 D1 SQL을 명시적인 작업 폴더에 임시 생성하고 `age` 공개키로 암호화한 뒤 평문과 실패한 부분 파일을 정리하도록 설계한다. 복원 스크립트는 운영 DB 이름과 테스트 DB 이름이 같으면 거부하고, 명시적인 확인 없이는 원격 import를 실행하지 않는다.
+- Windows·SSD에서 단순 파일 삭제만으로 물리적 안전 삭제를 보장할 수 없으므로, 평문은 암호화된 로컬 디스크의 전용 임시 폴더에만 만들고 `finally`에서 즉시 삭제한다. 보관·Drive 업로드 대상은 `.age` 파일 하나뿐이다.
+- ~~Phase 4 전체 실행 승인~~<br>이번 승인에는 `age` 설치·키 생성·개인키 보관 위치 확정·운영 D1 export·Drive 업로드·별도 D1 생성·migration·원격 복원·commit·push·배포가 포함되지 않는다. 각 항목은 실제 실행 전에 별도 승인한다.
+
+**2026-08-11 · Phase 4 로컬 구현 결과:**
+
+- `backup-d1.ps1`은 기본 계획 모드, Git 프로젝트 내부 출력 거부, 공개 recipient 파일의 개인키 혼입 차단, 원격 export 성공 후 `.age` 암호화, 평문·부분 파일의 경계 확인 후 정리를 구현했다.
+- `restore-d1-test.ps1`은 운영·테스트 DB 동명이면 거부하고 테스트 DB 이름 표식과 두 확인 스위치를 강제한다. 전체 export schema 충돌을 피하도록 새 빈 테스트 D1만 사용하며 복호화 평문은 전용 임시 폴더에서 즉시 정리한다.
+- 두 스크립트는 Windows PowerShell 5.1에서도 안전하게 파싱되도록 실행 문자열을 ASCII로 유지했다. PowerShell 구문 2개, 계획 모드 2개, 파일 생성 0, 프로젝트 내부 출력 차단, 운영 DB 복원 차단, 불완전 확인 스위치 차단을 직접 확인했다.
+- `typecheck`, 전체 lint, production build, `git diff --check`를 통과했다. 운영 export·Drive·키·원격 D1·migration·Secret·commit·push·배포는 실행하지 않았다.
+
+**2026-08-12 · Phase 4 실제 리허설 준비 재개:**
+
+- 사용자의 `진행` 지시에 따라 공식 Windows 패키지의 `age` 설치와 로컬·Cloudflare 사전 점검을 진행한다. 개인키 위치는 보안 정책 선택이므로 임의로 정하지 않고 확정 전에는 키를 생성하지 않는다.
+- 확인된 고정 드라이브는 `C:`, `D:`, Google Drive가 연결된 `G:`다. 관리자 권한이 없어 `C:`·`D:`의 BitLocker 상태를 읽지 못했으므로 암호화 여부를 추정하지 않는다. `G:`에는 개인키를 저장하지 않는다.
+- 개인키 위치가 확정되기 전에는 운영 D1 export·Drive 업로드·별도 테스트 D1 생성·원격 복원을 실행하지 않는다.
+- 공식 WinGet 패키지 `FiloSottile.age` v1.3.1 설치와 `age-keygen` 실행 가능 상태를 확인했다. Wrangler 4.114.0 인증과 운영 D1 정보 읽기 사전 점검도 통과했으며 계정·DB 식별값은 기록하지 않았다.
+- ~~다음 차단은 개인키 저장 위치다. 암호화 상태를 확인하지 못한 `C:`·`D:`를 임의 선택하지 않고, Google Drive `G:`에는 개인키를 두지 않는다.~~
+- 사용자가 확인한 `C:`·`D:` 상태는 암호화 0%·보호 해제다. 사용자는 BitLocker를 사용하지 않고, `age` 개인키를 비밀번호로 암호화한 `key.age` 파일로 만들어 외장하드에 보관하는 방향을 승인했다. 외장하드는 현재 연결돼 있지 않아 키 생성은 아직 실행하지 않았다.
+- Wrangler D1 export는 `--output` 파일을 요구하므로 운영 SQL 평문이 짧게라도 로컬 파일로 생성된다. 비밀번호 암호화 개인키는 이 평문을 보호하지 못한다. 따라서 운영 export 전에는 BitLocker 없이 사용할 별도 평문 보호 방식인 EFS 암호화 임시 폴더 또는 암호화 컨테이너 중 하나를 승인·강제해야 한다. 보호되지 않은 `C:`·`D:`·외장하드에 평문 SQL을 만드는 안은 승인 계획과 충돌하므로 사용하지 않는다.
+- 읽기 전용 시스템 확인에서 Windows 에디션은 `Core`(Home 계열), `D:`는 정상 NTFS로 확인됐다. Microsoft 공식 문서상 Home 에디션은 EFS 파일 암호화를 지원하지 않으므로 EFS안은 폐기한다. BitLocker를 사용하지 않는 현재 결정에서 남는 권장안은 VeraCrypt 파일 컨테이너를 임시 평문 전용 볼륨으로 마운트하고, 백업·복원 직후 마운트 해제하는 방식이다.
+- ~~다음 차단은 VeraCrypt 설치·암호화 컨테이너 생성 승인과 외장하드 연결이다. 운영 D1 export·Drive 업로드·별도 테스트 D1 생성·원격 복원은 아직 실행하지 않는다.~~
+- 사용자는 현재 애인과 둘이 사용하는 개인 여행 앱 범위에서 BitLocker·EFS·VeraCrypt 없이 진행하고, 최종 백업 파일만 `age`로 암호화하는 최소안을 승인했다. 운영 export와 테스트 복원 중 평문 SQL은 `D:`의 Git 프로젝트 밖 전용 임시 폴더에만 만들고 `finally`에서 즉시 삭제한다. 암호화되지 않은 디스크에서는 삭제된 평문의 물리적 복구 불가능을 보장할 수 없다는 잔여 위험을 사용자가 수용했다.
+- 백업·복원 스크립트는 실제 원격 실행마다 `-AcceptUnencryptedTemporaryFiles`를 요구해 이 위험을 명시적으로 재확인한다. Google Drive에는 `.sql.age`만 업로드하고 평문 SQL·부분 파일·개인키는 올리지 않는다.
+- ~~다음 차단은 외장하드 연결과 비밀번호 암호화 `key.age` 생성이다. 운영 D1 export·Drive 업로드·별도 테스트 D1 생성·원격 복원은 아직 실행하지 않는다.~~
+- USB 외장하드 `E:` 연결 뒤 `scripts/create-age-key.ps1`로 평문 개인키를 디스크에 쓰지 않고 비밀번호 암호화 `E:\TravelGuideRecovery\key.age`와 공개 `D:\TravelGuideRecovery\recipients.txt`를 생성했다. 암호화 파일은 `age-encryption.org/v1` 헤더, 0바이트 초과, `AGE-SECRET-KEY-` 평문 부재를 확인했고 공개 recipient는 `age1...` 형식을 통과했다. 키 값·비밀번호·공개키 전체 문자열은 기록하지 않았다.
+- 다음 승인 단위는 운영 D1 export 1회, 완성된 `.sql.age`의 비공개 Drive 수동 업로드, 별도 빈 테스트 D1 생성·복원·데이터 대조다. 운영 D1 쓰기·migration·Secret·commit·push·배포는 포함하지 않는다.
+
+### 2026-08-12 · 2차~5차 로컬 구현 묶음 통합 기록
+
+- **2차 실제 날씨:** ~~current와 forecast를 한 행에 같이 보관한다.~~<br>WeatherAPI의 저장 제한을 코드 경계에서도 지키도록 current와 forecast를 별도 테이블로 분리했다. current는 60분, forecast는 24시간 만료와 인덱스를 각각 사용하고, 시간별 정리 작업도 두 테이블을 분리 삭제한다. 여행 목적지 query가 저장 query와 일치할 때만 캐시를 재사용해 여행지 변경 뒤 이전 장소 날씨가 남지 않는다. full refresh는 D1 batch로 current·forecast를 함께 저장하고, 월 9,999회에서 동시 요청은 정확히 1회만 예약돼 10,000회에 도달한다. malformed forecast는 cache miss로 처리한다. 대상 Worker 10건과 typecheck를 통과했다.
+- **3차 D1 백업·복원:** Windows PowerShell 5.1 기본 config 계산, 필수 `AgeCommand`, D: backup·recipient·work 경계, E: encrypted identity 경계, 공개 recipient·age 헤더, 운영 DB 이름 차단, 새 빈 테스트 D1 확인 스위치를 구현했다. 임시 폴더 정리는 예상 파일과 reparse point 여부를 다시 확인한 뒤에만 실행한다. Parser·PlanOnly·잘못된 드라이브·누락 승인 부정 검증은 원격 호출과 산출물 없이 통과했다. BitLocker 없이 D: 평문 SQL의 물리적 안전 삭제를 보장하지 못하는 승인된 잔여 위험은 유지한다.
+- **4차 Workers 단일 운영:** `.github/workflows/deploy-pages.yml`에서 `main` push 자동 트리거만 제거하고 수동 `workflow_dispatch`와 GitHub Pages fixture를 유지했다. 제품 runtime에 Pages 운영 URL 참조가 없고 fixture 소비 테스트가 존재함을 확인했다. 이 로컬 변경의 commit·push와 자동 Pages 미실행 확인, 동일 SHA 두 Worker 배포는 아직 실행하지 않았다.
+- **5차 최종 통합·출시 준비:** `docs/qa/v1-final-release-checklist.md`에 전체 자동 게이트와 Phase 1 잔여 실기기·운영 QA, Phase 2 migration·Secret·동일 SHA 배포, Phase 4 export·Drive·빈 test D1 restore, Phase 5 HTTP·PWA deep-link, P0/P1·문서 동기화·출시 승인 순서를 하나로 통합했다. 사용자 결정에 따라 운영·브라우저·실기기·전체 E2E는 모든 로컬 구현이 끝난 뒤 한 번에 실행한다.
+- **승인 경계:** 이번 기록에는 commit·push·운영 D1 `0023` 적용·Secret·실제 WeatherAPI 호출·운영 export·Drive 업로드·test D1 생성/복원/조회·두 Worker 배포·Pages 원격 확인·V1 tag가 포함되지 않는다.
+
+### 2026-08-12 · 2차~5차 로컬 전체 자동 QA
+
+- `typecheck`, 전체 lint, frontend 69파일 489건, Worker 11파일 107건, production build를 통과했다. PowerShell 5.1에서 백업·복원 스크립트 3개의 parser와 backup·restore `PlanOnly`를 확인했고 D: 출력·작업 폴더 생성과 원격 호출은 0건이었다.
+- 첫 전체 Playwright에서 WeatherAPI Secret이 없는 로컬 `DEV_AUTH` 환경의 의도된 503 응답이 브라우저 resource error로 수집돼 5개 viewport의 동일 2개 시나리오가 실패했다. ~~로컬 Secret 미설정도 HTTP 503을 반환한다.~~<br>운영의 Secret 누락 503 계약은 유지하되, 로컬 `DEV_AUTH` 환경에서만 200 `unavailable` 상태를 반환하도록 보정했다. 외부 provider fixture·실제 WeatherAPI 호출은 사용하지 않았다.
+- 보정 뒤 날씨 Worker 대상 12건과 typecheck를 통과했고, 1440×900·390×844·320×720·393×852·430×932 전체 Playwright 46건이 통과했다. 로컬 D1에 `0001`~`0023` migration을 새 격리 상태로 적용했으며 운영 D1은 변경하지 않았다.
+- Pages workflow는 `main` push trigger가 없고 수동 `workflow_dispatch`만 유지되며, 제품 runtime의 `github.io`·`pages.dev` 운영 URL 참조는 0건이다. `/syd-guide/` fixture는 자동 테스트 소비 경계로 유지한다.
+- 이 자동 QA는 작업트리 기준 증거다. 최종 commit SHA 확정, 운영 D1 `0023` 적용, `WEATHERAPI_KEY`, 실제 날씨·백업·Drive·빈 테스트 D1 복원, Pages 원격 상태, 두 Worker 동일 SHA 배포, Android·관리자 수동 QA, V1 tag는 사용자 승인 뒤 마지막 통합 QA에서 별도로 검증한다.
+
+### 2026-08-12 · 최종 통합 실행 승인
+
+- 사용자는 2차~5차 로컬 구현 묶음의 최종 통합 실행을 승인했다. 승인 범위는 승인된 변경의 commit·`main` push, 운영 D1 `0023_weather_snapshots.sql` 적용, 사용자·관리자 Worker의 `WEATHERAPI_KEY` Secret 설정, 동일 최종 SHA 두 Worker 배포, 실제 날씨·HTTP·PWA·관리자 Access 운영 QA, 운영 D1 `age` 암호화 export와 비공개 Drive 업로드, 새 빈 테스트 D1 복원·비민감 데이터 대조, Pages 자동 배포 미실행 확인, 남은 Android·관리자 수동 QA, P0·P1 판정, V1 tag와 최종 handoff다.
+- Phase 4 최초 예상 파일에는 백업·복원 스크립트 2개만 적혀 있었지만, 승인된 비밀번호 암호화 개인키 생성과 검증에 실제 사용한 `scripts/create-age-key.ps1`도 최종 release bundle에 포함한다. 키 값·비밀번호·recipient 전체 문자열과 `E:`의 실제 키 파일은 Git·Drive·로그에 포함하지 않는다.
+- ~~복원 전후 핵심 테이블 10개만 row count를 비교한다.~~<br>Cloudflare·SQLite 메타데이터를 제외한 사용자 테이블 27개 전체 row count를 비교한다. 표본 데이터의 값은 로그에 출력하지 않는다.
+- `0023`은 additive migration이다. 날씨 장애 시 두 Worker를 동일한 이전 안정 SHA로 되돌리고 새 날씨 테이블은 삭제하지 않은 채 미사용 상태로 둔다. 운영 schema 삭제·되돌리기는 별도 계획과 승인이 없으면 실행하지 않는다.
+- 실행 순서는 `Git·Cloudflare 사전점검 → 승인 파일만 commit·push → 0023 migration → WEATHERAPI_KEY → 동일 SHA 두 Worker 배포 → 운영 canary → 암호화 백업·빈 테스트 D1 복원 → 남은 실기기 게이트 → 문서·대시보드·TASKS 동기화 → V1 tag`로 고정한다. migration 적용 전에 새 cron·날씨 Worker를 배포하지 않는다.
+- 사전점검에서 두 Worker와 로컬 환경 모두 `WEATHERAPI_KEY`가 없음을 확인했다. 외부 WeatherAPI 계정·약관 동의와 키 발급은 사용자만 완료할 수 있는 입력으로 분리하고, 키가 준비될 때까지 날씨 Secret·실제 provider 호출·최종 날씨 완료 판정·V1 tag는 보류한다. 승인된 commit·push, migration 준비, Pages 확인, 백업·복원처럼 독립적인 작업은 계속 진행한다.
+- 실제 Android 카메라 JPEG EXIF, 설치폰 지도·PDF·최초 대표자·빈 캐시 성능처럼 사용자 기기 입력이 필요한 항목은 로컬·브라우저 증거로 완료 확대하지 않는다. 실행 가능한 운영 자동 검증을 먼저 끝낸 뒤 사용자 입력 항목만 마지막에 모아 보고한다.
 
 ## 13. 컨텍스트 압축 후 복구 체크리스트
 

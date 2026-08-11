@@ -24,6 +24,32 @@ describe("SnapshotTravelGuideDataSource", () => {
     expect(today?.schedule).toHaveLength(2);
   });
 
+  it("uses the server weather state without making a weather failure break the trip page", async () => {
+    const snapshot = createTripSnapshot();
+    const source = new SnapshotTravelGuideDataSource(
+      {
+        getTripSnapshot: vi.fn().mockResolvedValue({
+          snapshot,
+          etag: null,
+          notModified: false,
+        }),
+        getWeather: vi.fn().mockRejectedValue(new ApiClientError(
+          429,
+          "WEATHER_FREE_LIMIT_REACHED",
+          "limit",
+        )),
+      },
+      async () => ({ memberId: "owner", role: "owner" }),
+    );
+
+    const today = await source.getToday(snapshot.trip.id);
+
+    expect(today?.weather).toMatchObject({
+      status: "quota",
+      message: "이번 달 날씨 무료 보호 한도에 도달했습니다.",
+    });
+  });
+
   it("does not expose cached trip data when the online API is unavailable", async () => {
     const source = new SnapshotTravelGuideDataSource(
       {

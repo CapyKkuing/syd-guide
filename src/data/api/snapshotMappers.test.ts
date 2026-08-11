@@ -76,7 +76,7 @@ describe("mapSnapshotToWorkspace", () => {
       type: "레스토랑",
       status: "confirmed"
     });
-    expect(workspace.today.weather.isSample).toBe(true);
+    expect(workspace.today.weather.status).toBe("unavailable");
     expect(workspace.today.expenses).toEqual([]);
     expect(workspace.today.expenseTotals).toEqual([]);
   });

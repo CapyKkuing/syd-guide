@@ -1,6 +1,9 @@
 import { createApp } from "./app";
 import type { Env } from "./env";
-import { purgeExpiredTrips } from "./services/purge";
+import {
+  purgeExpiredTrips,
+  purgeExpiredWeatherSnapshots,
+} from "./services/purge";
 
 const app = createApp();
 const contentSecurityPolicy = [
@@ -37,7 +40,13 @@ export default {
   },
   scheduled(event, env, context) {
     context.waitUntil(
-      purgeExpiredTrips(env.DB, new Date(event.scheduledTime).toISOString())
+      Promise.all([
+        purgeExpiredTrips(env.DB, new Date(event.scheduledTime).toISOString()),
+        purgeExpiredWeatherSnapshots(
+          env.DB,
+          new Date(event.scheduledTime).toISOString()
+        ),
+      ]).then(() => undefined)
     );
   }
 } satisfies ExportedHandler<Env>;

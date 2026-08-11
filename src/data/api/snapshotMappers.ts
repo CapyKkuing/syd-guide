@@ -1,6 +1,7 @@
 import type { SessionPrincipal } from "../../features/auth/api";
 import { deriveExperiencePhase } from "../../domain/tripPhase";
 import type { TripSnapshot } from "../../shared/api";
+import { unavailableWeather } from "../../shared/weather";
 import type { Booking, Place, ScheduleItem } from "../../shared/entities";
 import type {
   MapPlaceView,
@@ -113,7 +114,7 @@ export function mapSnapshotToWorkspace(
       greeting: trip.experiencePhase === "before" ? "여행까지" : trip.experiencePhase === "during" ? "NEXT UP" : "여행 완료",
       headline: trip.experiencePhase === "before" ? "출발 준비" : trip.experiencePhase === "during" ? "오늘 일정" : "여행 기록",
       dDay: trip.experiencePhase === "before" ? daysBetween(localDate, trip.startDate) : trip.experiencePhase === "during" ? 0 : null,
-      weather: { location: trip.destination, condition: "맑음", temperatureC: 21, uvIndex: 5, isSample: true },
+      weather: unavailableWeather(trip.destination),
       nextMovement: nextMovement ? {
         departureTime: timeOf(nextMovement.startsAt),
         countdownLabel: countdown(new Date(nextMovement.startsAt).getTime() - now.getTime()),

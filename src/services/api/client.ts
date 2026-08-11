@@ -1,4 +1,4 @@
-import type { TripSnapshot } from "../../shared/api";
+import type { TripSnapshot, WeatherResponse } from "../../shared/api";
 import type {
   SyncMutationRequest,
   SyncMutationSuccess,
@@ -68,6 +68,17 @@ export class ApiClient {
       etag: response.headers.get("ETag"),
       notModified: false,
     };
+  }
+
+  async getWeather(tripId: string): Promise<WeatherResponse> {
+    const response = await requestWithAdminAccessRecovery(
+      this.fetcher,
+      this.url(`/api/trips/${encodeURIComponent(tripId)}/weather`),
+      { headers: requestHeaders(this.baseUrl), credentials: "same-origin" },
+      this.baseUrl,
+    );
+    if (!response.ok) throw await errorFromResponse(response);
+    return response.json() as Promise<WeatherResponse>;
   }
 
   async mutate(

@@ -13,3 +13,23 @@ export async function purgeExpiredTrips(
     .run();
   return result.meta.changes;
 }
+
+export async function purgeExpiredWeatherSnapshots(
+  db: D1Database,
+  scheduledAt: string
+): Promise<number> {
+  const scheduledTime = Date.parse(scheduledAt);
+  if (!Number.isFinite(scheduledTime)) {
+    throw new Error("Scheduled weather purge time is invalid");
+  }
+  const cutoff = new Date(scheduledTime).toISOString();
+  const results = await db.batch([
+    db.prepare(
+      "DELETE FROM weather_current_snapshots WHERE expires_at <= ?"
+    ).bind(cutoff),
+    db.prepare(
+      "DELETE FROM weather_forecast_snapshots WHERE expires_at <= ?"
+    ).bind(cutoff),
+  ]);
+  return (results[0]?.meta.changes ?? 0) + (results[1]?.meta.changes ?? 0);
+}

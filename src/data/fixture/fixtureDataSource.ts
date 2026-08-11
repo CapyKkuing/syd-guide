@@ -10,6 +10,7 @@ import type {
   TripPhase,
   TripSummaryViewModel
 } from "../contracts";
+import { unavailableWeather } from "../../shared/weather";
 import { pathForAsset } from "../../app/basePath";
 
 type TripDefinition = Omit<TripSummaryViewModel,
@@ -258,13 +259,7 @@ export class FixtureTravelGuideDataSource implements TravelGuideDataSource {
       experiencePhase: trip.experiencePhase,
       localDate: scheduleContextDate,
       dayLabel: dayLabel(scheduleContextDate, trip.timeZone),
-      weather: {
-        location: trip.destination,
-        condition: "맑음",
-        temperatureC: 21,
-        uvIndex: 5,
-        isSample: true as const
-      },
+      weather: unavailableWeather(trip.destination),
       expenses: [],
       expenseTotals: [],
       unsettledExpenseCount: 0

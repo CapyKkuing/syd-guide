@@ -16,6 +16,7 @@ import { pathForTrip } from "../../app/router";
 import { AppLink } from "../../components/AppLink";
 import { BottomSheet } from "../../components/BottomSheet";
 import { ExpensePanel } from "./ExpensePanel";
+import { WeatherCard } from "./TodayCards";
 import {
   expenseReminderKey,
   selectNextSchedule,
@@ -126,13 +127,7 @@ export function DuringTripHome({
             <Text type="supporting">일정 순서와 저장한 장소를 지도에서 확인합니다.</Text>
           </VStack>
         </ClickableCard>
-        <Card elevation="low" padding={4} variant="green">
-          <VStack gap={2}>
-            <Text type="label">SYDNEY WEATHER</Text>
-            <Heading level={3}>{today.weather.temperatureC}°C · {today.weather.condition}</Heading>
-            <Text type="supporting">{today.weather.location} · UV {today.weather.uvIndex}</Text>
-          </VStack>
-        </Card>
+        <WeatherCard weather={today.weather} />
       </Grid>
 
       <Card className="today-live-schedule" elevation="low" padding={5} variant="default">

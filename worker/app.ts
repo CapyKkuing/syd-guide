@@ -11,6 +11,7 @@ import { registerAiModelRoutes, type AiModelFetch } from "./routes/ai-model";
 import { OcrError, registerOcrRoutes } from "./routes/ocr";
 import { registerPairingRoutes } from "./routes/pairing";
 import { PlacesError, registerPlacesRoutes } from "./routes/places";
+import { WeatherError, registerWeatherRoutes } from "./routes/weather";
 import { registerParticipantRoutes } from "./routes/participants";
 import { registerSessionRoutes } from "./routes/session";
 import { registerSyncRoutes, SyncError } from "./routes/sync";
@@ -21,12 +22,14 @@ import { PairingError } from "./services/pairing";
 import { ParticipantError } from "./services/participants";
 import type { GooglePlacesFetch } from "./services/google-places";
 import type { GoogleVisionFetch, VisionTokenProvider } from "./services/google-vision";
+import type { WeatherApiFetch } from "./services/weatherapi";
 
 interface AppOverrides extends Partial<AppDependencies> {
   aiModelFetch?: AiModelFetch;
   placesFetch?: GooglePlacesFetch;
   visionFetch?: GoogleVisionFetch;
   visionTokenProvider?: VisionTokenProvider;
+  weatherFetch?: WeatherApiFetch;
 }
 
 export function createApp(overrides: AppOverrides = {}) {
@@ -36,6 +39,7 @@ export function createApp(overrides: AppOverrides = {}) {
     placesFetch,
     visionFetch,
     visionTokenProvider,
+    weatherFetch,
     ...accessOverrides
   } = overrides;
   const dependencies = { ...defaultDependencies, ...accessOverrides };
@@ -50,6 +54,7 @@ export function createApp(overrides: AppOverrides = {}) {
   registerMediaRoutes(app, dependencies);
   registerOcrRoutes(app, dependencies, visionFetch, visionTokenProvider);
   registerPlacesRoutes(app, dependencies, placesFetch);
+  registerWeatherRoutes(app, dependencies, weatherFetch);
   registerSyncRoutes(app, dependencies);
   app.all("/api/*", (c) =>
     apiError(c, 404, "NOT_FOUND", "API route not found")
@@ -84,6 +89,9 @@ export function createApp(overrides: AppOverrides = {}) {
       );
     }
     if (error instanceof PlacesError) {
+      return apiError(c, error.status, error.code, error.message);
+    }
+    if (error instanceof WeatherError) {
       return apiError(c, error.status, error.code, error.message);
     }
     if (error instanceof OcrError) {
