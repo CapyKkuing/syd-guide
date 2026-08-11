@@ -22,14 +22,14 @@ import { PairingError } from "./services/pairing";
 import { ParticipantError } from "./services/participants";
 import type { GooglePlacesFetch } from "./services/google-places";
 import type { GoogleVisionFetch, VisionTokenProvider } from "./services/google-vision";
-import type { WeatherApiFetch } from "./services/weatherapi";
+import type { WeatherProviderFetch } from "./services/open-meteo";
 
 interface AppOverrides extends Partial<AppDependencies> {
   aiModelFetch?: AiModelFetch;
   placesFetch?: GooglePlacesFetch;
   visionFetch?: GoogleVisionFetch;
   visionTokenProvider?: VisionTokenProvider;
-  weatherFetch?: WeatherApiFetch;
+  weatherFetch?: WeatherProviderFetch;
 }
 
 export function createApp(overrides: AppOverrides = {}) {

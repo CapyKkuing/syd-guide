@@ -2,7 +2,7 @@ import type { Context, Hono } from "hono";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { z } from "zod";
 import type { WeatherResponse } from "../../src/shared/weather";
-import { unavailableWeather, WEATHER_DISCLAIMER } from "../../src/shared/weather";
+import { WEATHER_DISCLAIMER } from "../../src/shared/weather";
 import type { AppDependencies } from "../auth/access";
 import { requirePrincipal } from "../auth/principal";
 import {
@@ -18,9 +18,10 @@ import type { AppEnv } from "../env";
 import {
   fetchCurrentWeather,
   fetchWeatherForecast,
-  type WeatherApiFetch,
-  WeatherApiProviderError,
-} from "../services/weatherapi";
+  type WeatherProviderFetch,
+  OpenMeteoProviderError,
+  resolveWeatherLocation,
+} from "../services/open-meteo";
 
 const idSchema = z.string().regex(/^[A-Za-z0-9-]{1,100}$/);
 
@@ -37,7 +38,7 @@ export class WeatherError extends Error {
 export function registerWeatherRoutes(
   app: Hono<AppEnv>,
   dependencies: AppDependencies,
-  weatherFetch: WeatherApiFetch = fetch,
+  weatherFetch: WeatherProviderFetch = fetch,
 ) {
   app.get("/api/trips/:id/weather", async (c) => {
     c.header("Cache-Control", "private, no-store");
@@ -58,18 +59,12 @@ export function registerWeatherRoutes(
         status: "cached",
         weather: cached.current,
         message: null,
-        attribution: "WeatherAPI.com",
+        attribution: "Open-Meteo · BOM ACCESS-G",
         disclaimer: WEATHER_DISCLAIMER,
       });
     }
-    if (!c.env.WEATHERAPI_KEY && c.env.DEV_AUTH === "enabled") {
-      return response(c, unavailableWeather(
-        trip.destination,
-        "날씨 연결을 준비 중입니다. 여행 일정은 계속 확인할 수 있습니다.",
-      ));
-    }
-    const apiKey = configuredApiKey(c.env);
-    if (!await reserveWeatherProviderUsage(c.env, now)) {
+    const canRefreshCurrentOnly = Boolean(cached?.current && hasFreshForecast(cached, now, query));
+    if (!await reserveWeatherProviderUsage(c.env, now, canRefreshCurrentOnly ? 1 : 2)) {
       throw new WeatherError(
         429,
         "WEATHER_FREE_LIMIT_REACHED",
@@ -77,30 +72,27 @@ export function registerWeatherRoutes(
       );
     }
     try {
-      const stored = cached && hasFreshForecast(cached, now, query)
+      const stored = canRefreshCurrentOnly && cached?.current
         ? await saveWeatherSnapshot(
           c.env,
           tripId,
-          { ...await fetchCurrentWeather(apiKey, query, now, weatherFetch), forecast: cached.forecast },
+          {
+            ...await fetchCurrentWeather(cached.current.location, now, weatherFetch),
+            forecast: cached.forecast,
+          },
           now,
           { refreshForecast: false, query },
         )
-        : await saveWeatherSnapshot(
-          c.env,
-          tripId,
-          await fetchWeatherForecast(apiKey, query, now, weatherFetch),
-          now,
-          { refreshForecast: true, query },
-        );
+        : await refreshFullForecast(c.env, tripId, query, now, weatherFetch);
       return response(c, {
         status: "live",
         weather: stored.current,
         message: null,
-        attribution: "WeatherAPI.com",
+        attribution: "Open-Meteo · BOM ACCESS-G",
         disclaimer: WEATHER_DISCLAIMER,
       });
     } catch (error) {
-      if (error instanceof WeatherApiProviderError || error instanceof TypeError) {
+      if (error instanceof OpenMeteoProviderError || error instanceof TypeError) {
         throw new WeatherError(
           502,
           "WEATHER_PROVIDER_ERROR",
@@ -112,15 +104,21 @@ export function registerWeatherRoutes(
   });
 }
 
-function configuredApiKey(env: AppEnv["Bindings"]): string {
-  if (!env.WEATHERAPI_KEY) {
-    throw new WeatherError(
-      503,
-      "WEATHER_NOT_CONFIGURED",
-      "날씨 연결을 준비 중입니다. 여행 일정은 계속 확인할 수 있습니다.",
-    );
-  }
-  return env.WEATHERAPI_KEY;
+async function refreshFullForecast(
+  env: AppEnv["Bindings"],
+  tripId: string,
+  query: string,
+  now: Date,
+  weatherFetch: WeatherProviderFetch,
+) {
+  const location = await resolveWeatherLocation(query, weatherFetch);
+  return saveWeatherSnapshot(
+    env,
+    tripId,
+    await fetchWeatherForecast(location, now, weatherFetch),
+    now,
+    { refreshForecast: true, query },
+  );
 }
 
 function response(c: Context<AppEnv>, body: WeatherResponse) {

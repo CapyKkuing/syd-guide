@@ -29,7 +29,7 @@ export type WeatherResponse =
       status: "live" | "cached";
       weather: WeatherSnapshot;
       message: null;
-      attribution: "WeatherAPI.com";
+      attribution: "Open-Meteo · BOM ACCESS-G";
       disclaimer: string;
     }
   | {
@@ -37,7 +37,7 @@ export type WeatherResponse =
       location: string;
       weather: null;
       message: string;
-      attribution: "WeatherAPI.com";
+      attribution: "Open-Meteo · BOM ACCESS-G";
       disclaimer: string;
     };
 
@@ -52,7 +52,7 @@ export function unavailableWeather(
     location,
     weather: null,
     message,
-    attribution: "WeatherAPI.com",
+    attribution: "Open-Meteo · BOM ACCESS-G",
     disclaimer: WEATHER_DISCLAIMER,
   };
 }
@@ -63,7 +63,7 @@ export function quotaWeather(location: string): WeatherResponse {
     location,
     weather: null,
     message: "이번 달 날씨 무료 보호 한도에 도달했습니다.",
-    attribution: "WeatherAPI.com",
+    attribution: "Open-Meteo · BOM ACCESS-G",
     disclaimer: WEATHER_DISCLAIMER,
   };
 }

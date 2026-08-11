@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { WeatherCard } from "./TodayCards";
 
 describe("WeatherCard", () => {
-  it("shows live WeatherAPI data with its source and disclaimer", () => {
+  it("shows live Open-Meteo BOM data with its source and disclaimer", () => {
     render(<WeatherCard weather={{
       status: "live",
       weather: {
@@ -22,14 +22,14 @@ describe("WeatherCard", () => {
         forecast: [],
       },
       message: null,
-      attribution: "WeatherAPI.com",
+      attribution: "Open-Meteo · BOM ACCESS-G",
       disclaimer: "일반 참고용 정보입니다.",
     }} />);
 
     expect(screen.getByText("19.5°C · 맑음")).toBeVisible();
     expect(screen.getByText("Sydney · UV 4")).toBeVisible();
     expect(screen.getByText("실시간")).toBeVisible();
-    expect(screen.getByText(/출처: WeatherAPI.com/)).toBeVisible();
+    expect(screen.getByText(/출처: Open-Meteo · BOM ACCESS-G/)).toBeVisible();
   });
 
   it("does not show sample values when weather is unavailable", () => {
@@ -38,7 +38,7 @@ describe("WeatherCard", () => {
       location: "Sydney",
       weather: null,
       message: "현재 날씨 정보를 불러올 수 없습니다.",
-      attribution: "WeatherAPI.com",
+      attribution: "Open-Meteo · BOM ACCESS-G",
       disclaimer: "일반 참고용 정보입니다.",
     }} />);
 

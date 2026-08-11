@@ -63,7 +63,7 @@ describe("ApiClient", () => {
         location: "Sydney",
         weather: null,
         message: "not configured",
-        attribution: "WeatherAPI.com",
+        attribution: "Open-Meteo · BOM ACCESS-G",
         disclaimer: "일반 참고용 정보입니다.",
       });
     }, "http://localhost");

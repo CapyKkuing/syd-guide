@@ -49,16 +49,23 @@ type SavedWeather = Omit<StoredWeather, "current"> & {
   current: WeatherSnapshot;
 };
 
-export async function reserveWeatherProviderUsage(env: Env, now: Date): Promise<boolean> {
+export async function reserveWeatherProviderUsage(
+  env: Env,
+  now: Date,
+  requestCount = 1,
+): Promise<boolean> {
+  if (!Number.isInteger(requestCount) || requestCount < 1 || requestCount > WEATHER_MONTHLY_LIMIT) {
+    throw new Error("Weather provider request count is invalid");
+  }
   const row = await env.DB.prepare(
     `INSERT INTO weather_provider_usage (billing_month, used_count, updated_at)
-     VALUES (?, 1, ?)
+     VALUES (?, ?, ?)
      ON CONFLICT (billing_month) DO UPDATE SET
-       used_count = used_count + 1,
+       used_count = used_count + excluded.used_count,
        updated_at = excluded.updated_at
-     WHERE used_count < ?
+     WHERE used_count <= ? - excluded.used_count
      RETURNING used_count`
-  ).bind(billingMonth(now), now.toISOString(), WEATHER_MONTHLY_LIMIT)
+  ).bind(billingMonth(now), requestCount, now.toISOString(), WEATHER_MONTHLY_LIMIT)
     .first<{ used_count: number }>();
   return row !== null;
 }

@@ -15,7 +15,6 @@ export interface Env {
   GOOGLE_VISION_CLIENT_EMAIL?: string;
   GOOGLE_VISION_PRIVATE_KEY?: string;
   GOOGLE_VISION_PROJECT_ID?: string;
-  WEATHERAPI_KEY?: string;
 }
 
 export type AppEnv = {

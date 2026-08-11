@@ -118,16 +118,17 @@ health endpoint를 기다린다. 따라서 이 단계는 원격 D1이나 운영 
 
 ## 2. Phase 2 운영 날씨 게이트
 
-이 절은 로컬 테스트가 아니라 운영 승인 후의 순서다. 운영 migration, Secret, 실제
-provider 호출과 두 Worker 배포를 지금 실행하지 않는다.
+이 절은 로컬 테스트가 아니라 운영 승인 후의 순서다. 운영 migration, 실제
+provider 호출과 두 Worker 배포를 지금 실행하지 않는다. Open-Meteo Free에는 API
+Secret 설정 단계가 없다.
 
 ### 2-1. 고정 조건
 
-- [ ] WeatherAPI.com Free-only 사용 승인이 확인됐다.
+- [ ] Open-Meteo Free의 비공개·비상업 사용 조건과 BOM ACCESS-G 사용 승인이 확인됐다.
 - [ ] 제품 자체 월 hard limit이 10,000회로 기록돼 있다.
 - [ ] current 서버 캐시 60분, forecast 서버 캐시 24시간이 기록돼 있다.
-- [ ] WeatherAPI.com 출처와 일반 정보용 면책 문구가 화면에 포함돼 있다.
-- [ ] 유료 전환, 자동 upgrade, 결제수단 등록을 하지 않는다는 범위를 확인했다.
+- [ ] `Open-Meteo · BOM ACCESS-G` 출처와 일반 정보용 면책 문구가 화면에 포함돼 있다.
+- [ ] Open-Meteo Free에는 API key·결제수단·자동 유료 전환이 없고, 상업 공개 전에는 별도 라이선스 검토가 필요함을 확인했다.
 - [ ] 운영 시각, 실행자, 최종 SHA, 두 Worker 대상과 롤백 담당을 기록했다.
 
 ### 2-2. 반드시 이 순서로 실행
@@ -136,11 +137,9 @@ provider 호출과 두 Worker 배포를 지금 실행하지 않는다.
 | --- | --- | --- | --- |
 | 1 | 운영 승인·최종 SHA·migration 파일 확인 | 승인 범위와 배포 산출물이 동일 | 사용자 승인, FINAL_SHA |
 | 2 | D1에 0023_weather_snapshots.sql 적용 | 적용 성공, schema·migration drift 없음 | 원격 migration 로그 |
-| 3 | 사용자 Worker에 WEATHERAPI_KEY Secret 설정 | 값은 로그·문서에 남기지 않고 설정 성공만 기록 | Secret 변경 승인 |
-| 4 | 관리자 Worker에 같은 Secret 설정 | 두 Worker의 provider 경계가 동일 | Secret 변경 승인 |
-| 5 | 같은 FINAL_SHA를 두 Worker에 배포 | 두 version ID와 SHA가 서로 일치 | 배포 로그 |
-| 6 | 실제 날씨 QA 실행 | 아래 2-3의 모든 시나리오 통과 | 운영 브라우저·API 증거 |
-| 7 | 운영 상태·승인·롤백 정보를 plan/TASKS/dashboard에 동기화 | 불일치 0 | 문서 diff·사용자 승인 |
+| 3 | 같은 FINAL_SHA를 두 Worker에 배포 | 두 version ID와 SHA가 서로 일치 | 배포 로그 |
+| 4 | 실제 날씨 QA 실행 | 아래 2-3의 모든 시나리오 통과 | 운영 브라우저·API 증거 |
+| 5 | 운영 상태·승인·롤백 정보를 plan/TASKS/dashboard에 동기화 | 불일치 0 | 문서 diff·사용자 승인 |
 
 ### 2-3. 실제 날씨 시나리오
 
@@ -150,7 +149,7 @@ provider 호출과 두 Worker 배포를 지금 실행하지 않는다.
 - [ ] forecast 24시간 cache가 만료되는 경계를 확인한다.
 - [ ] 월 사용량이 10,000회에 도달하면 provider 호출 전에 차단된다.
 - [ ] provider 오류·timeout·잘못된 응답에서 사용자용 unavailable 상태가 표시된다.
-- [ ] Secret 미설정·provider 불가 상태에서 raw provider body와 Secret이 노출되지 않는다.
+- [ ] provider 불가 상태에서 raw provider body와 내부 오류 정보가 노출되지 않는다.
 - [ ] 날씨 실패가 여행·일정·메모리 snapshot 저장을 실패시키지 않는다.
 - [ ] 출처와 면책 문구가 live·cached·unavailable 상태에서 필요한 위치에 남는다.
 - [ ] 기기 오프라인 날씨를 제공한다고 오판하게 만드는 UI나 문구가 없다.
@@ -363,8 +362,7 @@ P2 또는 알려진 잔여 이슈는 숨기지 말고 severity, 영향, 완화, 
 | 최종 commit | 명시적 commit 승인 | commit SHA, diff check | [ ] |
 | main push | 명시적 push 승인 | remote SHA 비교 | [ ] |
 | D1 0023 migration | 운영 migration 승인 | migration 로그·schema 확인 | [ ] |
-| 두 Worker WEATHERAPI_KEY | Secret 승인 | 값 없는 설정 결과 | [ ] |
-| WeatherAPI 실제 호출·비용 경계 | provider·비용 승인 | 호출 수·cache·quota | [ ] |
+| Open-Meteo 실제 호출·비용 경계 | provider 사용 승인 | 호출 수·cache·quota | [ ] |
 | 사용자·관리자 Worker deploy | 두 대상 배포 승인 | 같은 SHA·version ID | [ ] |
 | Pages workflow 정책 변경 | workflow commit/push 승인 | push trigger 부재 증거 | [ ] |
 | 수동 Pages dispatch | 별도 Pages 배포 승인 | workflow run | [ ] |
