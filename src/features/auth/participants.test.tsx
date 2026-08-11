@@ -48,6 +48,32 @@ describe("participant first setup", () => {
     expect(screen.queryByText("Failed to fetch")).not.toBeInTheDocument();
   });
 
+  it("recovers when the browser reports a cross-realm fetch TypeError", async () => {
+    vi.stubGlobal("location", {
+      hostname: "couple-travel-guide-admin.example.com",
+      origin: "https://couple-travel-guide-admin.example.com",
+      pathname: "/library",
+      search: "",
+      hash: "",
+    });
+    const crossRealmTypeError = Object.assign(new Error("Failed to fetch"), {
+      name: "TypeError",
+    });
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(crossRealmTypeError));
+
+    render(
+      <ParticipantSetupGate>
+        <p>여행 서재 내용</p>
+      </ParticipantSetupGate>
+    );
+
+    expect(await screen.findByRole("heading", { name: "관리자 로그인이 필요합니다" }))
+      .toBeVisible();
+    expect(screen.getByRole("link", { name: "관리자 다시 로그인" }))
+      .toHaveAttribute("href", "/api/session?continue=%2Flibrary");
+    expect(screen.queryByText("Failed to fetch")).not.toBeInTheDocument();
+  });
+
   it("shows reconnect guidance and retries an invalid device session", async () => {
     const request = vi.fn()
       .mockResolvedValueOnce(Response.json({

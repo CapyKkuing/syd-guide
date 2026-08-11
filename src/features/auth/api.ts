@@ -59,6 +59,15 @@ function isAdminHost(baseUrl: string) {
   return hostname.includes("-admin.");
 }
 
+function isFetchTypeError(error: unknown) {
+  return error instanceof TypeError || (
+    typeof error === "object"
+    && error !== null
+    && "name" in error
+    && error.name === "TypeError"
+  );
+}
+
 export async function requestWithAdminAccessRecovery(
   fetcher: typeof fetch,
   input: RequestInfo | URL,
@@ -69,7 +78,7 @@ export async function requestWithAdminAccessRecovery(
     return await fetcher(input, init);
   } catch (error) {
     if (
-      error instanceof TypeError
+      isFetchTypeError(error)
       && isAdminHost(baseUrl)
       && navigator.onLine !== false
     ) {
