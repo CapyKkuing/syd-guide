@@ -56,7 +56,9 @@ export function AfterTripHome({
       </section>
 
       <ReelEditor
+        api={mediaApi}
         media={media}
+        onMediaChanged={onMediaChanged}
         provider={mediaProvider}
         store={defaultReelStore}
         thumbnailStore={mediaThumbnailStore}

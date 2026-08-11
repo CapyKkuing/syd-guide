@@ -159,6 +159,10 @@ describe("MapPage", () => {
     const firstPlace = places.at(0);
     if (!firstPlace) throw new Error("fixture place missing");
     const getRecommendations = vi.spyOn(placesApi, "getRecommendations");
+    vi.spyOn(placesApi, "getDiscovery").mockResolvedValue({
+      details: null,
+      usage: [{ sku: "place-photo", used: 1, limit: 800 }],
+    });
 
     render(
       <MapPage
@@ -178,6 +182,7 @@ describe("MapPage", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(
       "위치가 입력된 장소를 하나 추가하면 주변 추천을 받을 수 있습니다."
     );
+    expect(await screen.findByText("검색 0/800 · 사진 1/800")).toBeVisible();
     expect(getRecommendations).not.toHaveBeenCalled();
   });
 

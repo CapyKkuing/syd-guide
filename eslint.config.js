@@ -8,8 +8,13 @@ export default [
   {
     ignores: [
       "assets/**",
+      ".codex-progress/**",
+      ".codex-remote-attachments/**",
       "dist/**",
       "docs/**",
+      ".omo/**",
+      ".superpowers/**",
+      ".worktrees/**",
       ".tmp/**",
       ".wrangler/**",
       "node_modules/**",

@@ -23,9 +23,9 @@
 - [x] Task 17: private Google Drive trip photos and representative photo
 - [x] Task 18: editable 2-minute/3-minute photo-only memory reel
 - [x] Task 19: silent vertical photo reel player
-- [ ] Task 20: automated regression and deploy complete; installed-device offline QA pending
+- [ ] Task 20: automated regression and deploy complete; Android online-only QA complete, Phase 1D real-device evidence and Phase 2–6 gates pending
 
-Current handoff: `docs/handoffs/2026-07-30-pwa-offline-cold-start.md`
+Current execution plan: `docs/superpowers/plans/2026-08-03-v1-completion-plan.md`
 
 Current product spec: `docs/superpowers/specs/2026-07-29-final-product-design.md`
 

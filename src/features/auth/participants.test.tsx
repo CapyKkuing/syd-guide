@@ -179,6 +179,33 @@ describe("participant first setup", () => {
 });
 
 describe("participant management", () => {
+  it("changes the travel representative without changing administrator access", async () => {
+    const updatedRoster = {
+      ...initialRoster,
+      setupComplete: true,
+      representativeMemberId: "partner",
+      members: initialRoster.members.map((member) => ({
+        ...member,
+        isRepresentative: member.id === "partner",
+      })),
+    };
+    const request = vi.fn().mockResolvedValue(Response.json({ roster: updatedRoster }));
+    const onChange = vi.fn();
+    vi.stubGlobal("fetch", request);
+
+    render(<ParticipantManager roster={initialRoster} onChange={onChange} />);
+    await userEvent.click(screen.getByRole("button", { name: "여자친구 대표자로 지정" }));
+
+    await waitFor(() => expect(onChange).toHaveBeenCalledWith(updatedRoster));
+    expect(request).toHaveBeenCalledWith(
+      "/api/admin/participants/partner",
+      expect.objectContaining({
+        method: "PATCH",
+        body: JSON.stringify({ isRepresentative: true }),
+      })
+    );
+  });
+
   it("requires confirmation before removing a participant", async () => {
     const updatedRoster = {
       ...initialRoster,

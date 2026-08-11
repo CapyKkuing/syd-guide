@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readJpegCapturedAt } from "./exifCapturedAt";
+import { readExifCapturedAt, readJpegCapturedAt } from "./exifCapturedAt";
 
 function jpegWithExifDate(
   date: string,
@@ -70,5 +70,17 @@ describe("readJpegCapturedAt", () => {
       .toBeNull();
     expect(readJpegCapturedAt(Uint8Array.from([0xff, 0xd8, 0xff, 0xd9])))
       .toBeNull();
+  });
+});
+
+describe("readExifCapturedAt", () => {
+  it("reads the captured timestamp through the browser File boundary", async () => {
+    const bytes = jpegWithExifDate("2026:08:02 09:20:00", "+10:00");
+    const file = new File([Uint8Array.from(bytes).buffer], "android-camera.jpg", {
+      type: "image/jpeg",
+    });
+
+    await expect(readExifCapturedAt(file))
+      .resolves.toBe("2026-08-02T09:20:00+10:00");
   });
 });

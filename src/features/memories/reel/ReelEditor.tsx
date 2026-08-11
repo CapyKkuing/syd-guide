@@ -5,6 +5,7 @@ import {
   useState,
 } from "react";
 import type { TripMedia } from "../../../shared/media";
+import type { MediaApi } from "../../../services/media/api";
 import type { MediaStorageProviderClient } from "../../../services/media/provider";
 import type { MediaThumbnailStore } from "../../../services/offline/mediaThumbnailStore";
 import {
@@ -18,15 +19,19 @@ import type { ReelStore } from "./reelStore";
 import type { TravelReel } from "./types";
 
 interface Props {
+  api?: Pick<MediaApi, "remove">;
   media: TripMedia[];
+  onMediaChanged?: () => void | Promise<void>;
   provider?: MediaStorageProviderClient;
   store: Pick<ReelStore, "get" | "save">;
-  thumbnailStore?: Pick<MediaThumbnailStore, "get" | "save">;
+  thumbnailStore?: Pick<MediaThumbnailStore, "get" | "remove" | "save">;
   tripId: string;
 }
 
 export function ReelEditor({
+  api,
   media,
+  onMediaChanged,
   provider,
   store,
   thumbnailStore,
@@ -40,24 +45,34 @@ export function ReelEditor({
   const [playing, setPlaying] = useState(false);
   const [replacementSceneId, setReplacementSceneId] = useState<string | null>(null);
   const [draggedSceneId, setDraggedSceneId] = useState<string | null>(null);
+  const [pendingDeleteMediaId, setPendingDeleteMediaId] = useState<string | null>(null);
+  const [deletingMediaId, setDeletingMediaId] = useState<string | null>(null);
+  const [removedMediaIds, setRemovedMediaIds] = useState<Set<string>>(() => new Set());
   const [message, setMessage] = useState("사진 릴을 준비하는 중입니다.");
   const createdUrls = useRef(new Set<string>());
 
+  const visibleMedia = useMemo(
+    () => media.filter((item) => !removedMediaIds.has(item.id)),
+    [media, removedMediaIds]
+  );
   const mediaById = useMemo(
-    () => new Map(media.map((item) => [item.id, item])),
-    [media]
+    () => new Map(visibleMedia.map((item) => [item.id, item])),
+    [visibleMedia]
   );
   const includedMediaIds = useMemo(
     () => new Set(reel?.scenes.map((scene) => scene.mediaId) ?? []),
     [reel]
   );
-  const availableMedia = media.filter((item) => !includedMediaIds.has(item.id));
+  const availableMedia = visibleMedia.filter((item) => !includedMediaIds.has(item.id));
   const boundedIndex = reel?.scenes.length
     ? Math.min(currentIndex, reel.scenes.length - 1)
     : 0;
   const currentScene = reel?.scenes[boundedIndex];
   const currentMedia = currentScene
     ? mediaById.get(currentScene.mediaId)
+    : undefined;
+  const pendingDeleteMedia = pendingDeleteMediaId
+    ? availableMedia.find((item) => item.id === pendingDeleteMediaId)
     : undefined;
 
   useEffect(() => {
@@ -66,21 +81,26 @@ export function ReelEditor({
       try {
         const [saved, blobs] = await Promise.all([
           store.get(tripId),
-          loadThumbnailBlobs(media, thumbnailStore, undefined),
+          loadThumbnailBlobs(visibleMedia, thumbnailStore, undefined),
         ]);
         const hashes = await hashBlobs(blobs);
         if (!active) return;
         addPreviewUrls(blobs, createdUrls.current, setPreviews);
         setSimilarityHashes(hashes);
-        const next = reconcileReel(saved, media)
-          ?? composeReel(media, { similarityHashes: hashes, tripId });
+        const savedNeedsCleanup = saved
+          ? reelReferencesMissingMedia(saved, visibleMedia)
+          : false;
+        const next = reconcileReel(saved, visibleMedia)
+          ?? composeReel(visibleMedia, { similarityHashes: hashes, tripId });
         setReel(next);
-        if (!saved) await store.save(next);
+        if (!saved || savedNeedsCleanup) await store.save(next);
         if (active) {
-          setMessage(
-            media.length
-              ? "자동 구성을 만들었습니다. 순서와 사진을 자유롭게 바꿀 수 있습니다."
-              : "여행 사진을 추가하면 자동 릴이 만들어집니다."
+          setMessage((current) =>
+            current.startsWith("사진 이력")
+              ? current
+              : visibleMedia.length
+                ? "자동 구성을 만들었습니다. 순서와 사진을 자유롭게 바꿀 수 있습니다."
+                : "여행 사진을 추가하면 자동 릴이 만들어집니다."
           );
         }
       } catch {
@@ -90,7 +110,7 @@ export function ReelEditor({
     return () => {
       active = false;
     };
-  }, [media, store, thumbnailStore, tripId]);
+  }, [store, thumbnailStore, tripId, visibleMedia]);
 
   useEffect(() => () => {
     for (const url of createdUrls.current) URL.revokeObjectURL(url);
@@ -123,7 +143,7 @@ export function ReelEditor({
 
   function resetAutomatic() {
     commit(
-      composeReel(media, { similarityHashes, tripId }),
+      composeReel(visibleMedia, { similarityHashes, tripId }),
       "기기 내 유사도 분석으로 자동 구성을 다시 만들었습니다."
     );
   }
@@ -151,12 +171,12 @@ export function ReelEditor({
     }
     setMessage("Drive에서 사진 미리보기를 불러오는 중입니다.");
     try {
-      const blobs = await loadThumbnailBlobs(media, thumbnailStore, provider);
+      const blobs = await loadThumbnailBlobs(visibleMedia, thumbnailStore, provider);
       const hashes = await hashBlobs(blobs);
       addPreviewUrls(blobs, createdUrls.current, setPreviews);
       setSimilarityHashes(hashes);
       if (reel?.mode === "auto") {
-        const next = composeReel(media, {
+        const next = composeReel(visibleMedia, {
           similarityHashes: hashes,
           tripId,
         });
@@ -166,6 +186,62 @@ export function ReelEditor({
       setMessage("사진 미리보기와 기기 내 중복 분석을 새로 불러왔습니다.");
     } catch {
       setMessage("Drive 사진을 불러오지 못했습니다. 공유 권한을 확인해 주세요.");
+    }
+  }
+
+  async function removeMediaHistory(item: TripMedia) {
+    if (!api || deletingMediaId) return;
+    setDeletingMediaId(item.id);
+    setMessage("사진 이력을 삭제하는 중입니다.");
+    try {
+      await api.remove(tripId, item.id);
+      const remainingMedia = visibleMedia.filter((mediaItem) => mediaItem.id !== item.id);
+      const nextReel = reconcileReel(reel, remainingMedia)
+        ?? composeReel(remainingMedia, { similarityHashes, tripId });
+      setReel(nextReel);
+      setPreviousReel(null);
+      setCurrentIndex((index) =>
+        Math.min(index, Math.max(nextReel.scenes.length - 1, 0))
+      );
+      setReplacementSceneId(null);
+      setPendingDeleteMediaId(null);
+      setRemovedMediaIds((current) => new Set(current).add(item.id));
+
+      const previewUrl = previews[item.id];
+      if (previewUrl && createdUrls.current.delete(previewUrl)) {
+        URL.revokeObjectURL(previewUrl);
+      }
+      setPreviews((current) => {
+        const next = { ...current };
+        delete next[item.id];
+        return next;
+      });
+      setSimilarityHashes((current) => {
+        const next = { ...current };
+        delete next[item.id];
+        return next;
+      });
+
+      let localCleanupFailed = !await retryOnce(async () => {
+        await thumbnailStore?.remove(item.id);
+      });
+      if (!await retryOnce(() => store.save(nextReel))) {
+        localCleanupFailed = true;
+      }
+      try {
+        await onMediaChanged?.();
+      } catch {
+        localCleanupFailed = true;
+      }
+      setMessage(
+        localCleanupFailed
+          ? "사진 이력은 삭제됐습니다. 화면이 남아 있으면 다시 불러와 주세요. Drive 원본은 유지됩니다."
+          : "사진 이력을 삭제했습니다. Google Drive 원본과 미리보기 파일은 유지됩니다."
+      );
+    } catch {
+      setMessage("사진 이력을 삭제하지 못했습니다. 다시 시도해 주세요.");
+    } finally {
+      setDeletingMediaId(null);
     }
   }
 
@@ -253,7 +329,7 @@ export function ReelEditor({
         </button>
         <button
           className="secondary-button"
-          disabled={!media.length}
+          disabled={!visibleMedia.length}
           onClick={resetAutomatic}
           type="button"
         >
@@ -400,6 +476,7 @@ export function ReelEditor({
             {availableMedia.map((item) => (
               <PhotoChoice
                 actionLabel="릴에 추가"
+                deleteDisabled={Boolean(deletingMediaId)}
                 key={item.id}
                 item={item}
                 onChoose={() =>
@@ -408,10 +485,42 @@ export function ReelEditor({
                     "사진을 릴 끝에 추가했습니다."
                   )
                 }
+                onDeleteRequest={api ? () => setPendingDeleteMediaId(item.id) : undefined}
                 preview={previews[item.id]}
               />
             ))}
           </div>
+          {pendingDeleteMedia ? (
+            <div
+              aria-labelledby="memory-reel-delete-title"
+              aria-modal="true"
+              className="memory-reel__delete-confirm"
+              role="alertdialog"
+            >
+              <div>
+                <strong id="memory-reel-delete-title">{pendingDeleteMedia.originalName} 이력을 삭제할까요?</strong>
+                <span>앱 기록에서만 지우며 Google Drive 원본과 미리보기 파일은 유지합니다.</span>
+              </div>
+              <div className="memory-reel__delete-actions">
+                <button
+                  className="secondary-button"
+                  disabled={Boolean(deletingMediaId)}
+                  onClick={() => setPendingDeleteMediaId(null)}
+                  type="button"
+                >
+                  취소
+                </button>
+                <button
+                  className="danger-button"
+                  disabled={Boolean(deletingMediaId)}
+                  onClick={() => void removeMediaHistory(pendingDeleteMedia)}
+                  type="button"
+                >
+                  {deletingMediaId ? "삭제 중…" : "이력 삭제 확인"}
+                </button>
+              </div>
+            </div>
+          ) : null}
         </div>
       ) : null}
     </section>
@@ -420,13 +529,17 @@ export function ReelEditor({
 
 function PhotoChoice({
   actionLabel,
+  deleteDisabled = false,
   item,
   onChoose,
+  onDeleteRequest,
   preview,
 }: {
   actionLabel: string;
+  deleteDisabled?: boolean;
   item: TripMedia;
   onChoose: () => void;
+  onDeleteRequest?: () => void;
   preview?: string;
 }) {
   return (
@@ -437,9 +550,22 @@ function PhotoChoice({
         <div className="memory-reel__choice-placeholder">미리보기 없음</div>
       )}
       <strong>{item.originalName}</strong>
-      <button className="secondary-button" onClick={onChoose} type="button">
-        {actionLabel}
-      </button>
+      <div className="memory-reel__choice-actions">
+        <button className="secondary-button" onClick={onChoose} type="button">
+          {actionLabel}
+        </button>
+        {onDeleteRequest ? (
+          <button
+            aria-label={`${item.originalName} 이력 삭제`}
+            className="danger-button"
+            disabled={deleteDisabled}
+            onClick={onDeleteRequest}
+            type="button"
+          >
+            이력 삭제
+          </button>
+        ) : null}
+      </div>
     </article>
   );
 }
@@ -461,6 +587,27 @@ function reconcileReel(
     ),
     durationMs: scenes.reduce((total, scene) => total + scene.durationMs, 0),
   };
+}
+
+function reelReferencesMissingMedia(
+  reel: TravelReel,
+  media: TripMedia[]
+): boolean {
+  const mediaIds = new Set(media.map((item) => item.id));
+  return reel.scenes.some((scene) => !mediaIds.has(scene.mediaId))
+    || reel.excludedMediaIds.some((mediaId) => !mediaIds.has(mediaId));
+}
+
+async function retryOnce(action: () => Promise<void>): Promise<boolean> {
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      await action();
+      return true;
+    } catch {
+      if (attempt === 1) return false;
+    }
+  }
+  return false;
 }
 
 async function loadThumbnailBlobs(

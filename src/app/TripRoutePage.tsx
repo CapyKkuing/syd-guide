@@ -124,7 +124,9 @@ export function TripRoutePage({
   } else {
     page = memoryView ? (
       <MemoryRoutePage
+        api={hasVerifiedIdentity ? mediaApi : undefined}
         media={workspace.data.media}
+        onMediaChanged={workspace.reload}
         provider={mediaProvider}
         thumbnailStore={mediaThumbnailStore}
         trip={workspace.data.context.trip}
@@ -200,13 +202,17 @@ export function TripRoutePage({
 }
 
 function MemoryRoutePage({
+  api,
   media,
+  onMediaChanged,
   provider,
   thumbnailStore,
   trip,
   view,
 }: {
+  api?: MediaApi;
   media: TripMedia[];
+  onMediaChanged?: () => void | Promise<void>;
   provider?: MediaStorageProviderClient;
   thumbnailStore?: MediaThumbnailStore;
   trip: TripSummaryViewModel;
@@ -242,7 +248,9 @@ function MemoryRoutePage({
         </nav>
       </header>
       <ReelEditor
+        api={api}
         media={media}
+        onMediaChanged={onMediaChanged}
         provider={provider}
         store={defaultReelStore}
         thumbnailStore={thumbnailStore}

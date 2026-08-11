@@ -93,7 +93,7 @@ describe("private trip media API", () => {
         mimeType: "image/jpeg",
         width: 1600,
         height: 900,
-        capturedAt: null,
+        capturedAt: "2026-08-02T09:20:00+10:00",
         aiScore: 0.91,
         aiLabels: ["harbor"],
       }),
@@ -149,12 +149,100 @@ describe("private trip media API", () => {
         provider: "google-drive",
         providerObjectId: "photo_12345",
         thumbnailObjectId: "thumb_12345",
+        capturedAt: "2026-08-02T09:20:00+10:00",
         aiScore: 0.91,
         aiLabels: ["harbor"],
         previewCropAspect: "1:1",
         previewBrightness: 8,
       }],
     });
+
+    const retained = await request("partner", `/api/trips/${trip.id}/media`, {
+      method: "POST",
+      headers: headers("partner", true),
+      body: JSON.stringify({
+        provider: "google-drive",
+        providerObjectId: "photo_retained",
+        thumbnailObjectId: "thumb_retained",
+        originalName: "opera-house.jpg",
+        mimeType: "image/jpeg",
+        width: 1600,
+        height: 900,
+        capturedAt: "2026-08-02T10:00:00+10:00",
+        aiScore: 0.82,
+        aiLabels: ["opera-house"],
+      }),
+    });
+    expect(retained.status).toBe(201);
+    const retainedMediaId = ((await retained.json()) as {
+      media: { id: string };
+    }).media.id;
+
+    const removed = await request(
+      "partner",
+      `/api/trips/${trip.id}/media/${mediaId}`,
+      {
+        method: "DELETE",
+        headers: headers("partner"),
+      }
+    );
+    expect(removed.status).toBe(204);
+
+    const afterRemoval = await request("owner", `/api/trips/${trip.id}/snapshot`, {
+      headers: headers("owner"),
+    });
+    await expect(afterRemoval.json()).resolves.toMatchObject({
+      trip: { representativeMediaId: null },
+      mediaStorage: {
+        provider: "google-drive",
+        rootObjectId: "folder_12345",
+      },
+      media: [{
+        id: retainedMediaId,
+        providerObjectId: "photo_retained",
+        thumbnailObjectId: "thumb_retained",
+      }],
+    });
+  });
+
+  it("rejects an invalid EXIF offset before creating media", async () => {
+    const trip = await createTrip();
+    await request("owner", `/api/trips/${trip.id}/media/storage`, {
+      method: "PUT",
+      headers: headers("owner", true),
+      body: JSON.stringify({
+        provider: "google-drive",
+        rootObjectId: "folder_12345",
+      }),
+    });
+
+    const response = await request("partner", `/api/trips/${trip.id}/media`, {
+      method: "POST",
+      headers: headers("partner", true),
+      body: JSON.stringify({
+        provider: "google-drive",
+        providerObjectId: "photo_12345",
+        thumbnailObjectId: "thumb_12345",
+        originalName: "invalid-offset.jpg",
+        mimeType: "image/jpeg",
+        width: 1600,
+        height: 900,
+        capturedAt: "2026-08-02T09:20:00+24:00",
+        aiScore: null,
+        aiLabels: [],
+      }),
+    });
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: { code: "MEDIA_INPUT_INVALID" },
+    });
+    const row = await env.DB.prepare(
+      "SELECT COUNT(*) AS media_count FROM trip_media WHERE trip_id = ?"
+    )
+      .bind(trip.id)
+      .first<{ media_count: number }>();
+    expect(row?.media_count).toBe(0);
   });
 
   it("allows only the owner to establish the shared Drive folder", async () => {

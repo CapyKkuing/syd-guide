@@ -173,7 +173,13 @@ describe("participant setup", () => {
       body: JSON.stringify({ isRepresentative: true }),
     });
     await expect(changed.json()).resolves.toMatchObject({
-      roster: { representativeMemberId: member?.id },
+      roster: {
+        representativeMemberId: member?.id,
+        members: expect.arrayContaining([
+          expect.objectContaining({ id: "owner", isRepresentative: false }),
+          expect.objectContaining({ id: member?.id, isRepresentative: true }),
+        ]),
+      },
     });
 
     const session = await request("/api/session");

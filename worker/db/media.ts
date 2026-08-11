@@ -165,23 +165,34 @@ export async function deleteMedia(
   now: Date
 ): Promise<boolean> {
   const timestamp = now.toISOString();
-  const result = await env.DB.prepare(
-    "DELETE FROM trip_media WHERE id = ? AND trip_id = ?"
-  ).bind(mediaId, tripId).run();
-  if (!result.meta.changes) return false;
-  await env.DB.prepare(
-    `UPDATE trips SET
-       representative_media_id = CASE
-         WHEN representative_media_id = ? THEN NULL
-         ELSE representative_media_id
-       END,
-       version = version + 1,
-       sync_version = sync_version + 1,
-       updated_by = ?,
-       updated_at = ?
-     WHERE id = ?`
-  ).bind(mediaId, principal.memberId, timestamp, tripId).run();
-  return true;
+  const results = await env.DB.batch([
+    env.DB.prepare(
+      `UPDATE trips SET
+         representative_media_id = CASE
+           WHEN representative_media_id = ? THEN NULL
+           ELSE representative_media_id
+         END,
+         version = version + 1,
+         sync_version = sync_version + 1,
+         updated_by = ?,
+         updated_at = ?
+       WHERE id = ?
+         AND EXISTS (
+           SELECT 1 FROM trip_media WHERE id = ? AND trip_id = ?
+         )`
+    ).bind(
+      mediaId,
+      principal.memberId,
+      timestamp,
+      tripId,
+      mediaId,
+      tripId
+    ),
+    env.DB.prepare(
+      "DELETE FROM trip_media WHERE id = ? AND trip_id = ?"
+    ).bind(mediaId, tripId),
+  ]);
+  return Boolean(results[1]?.meta.changes);
 }
 
 export async function selectRepresentativeMedia(

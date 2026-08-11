@@ -358,6 +358,31 @@ describe("shared trip library API", () => {
     expect(results).toHaveLength(9);
   });
 
+  it("does not recreate default checklist items after the user deletes them", async () => {
+    const created = await createTrip();
+    await env.DB.prepare("DELETE FROM check_items WHERE trip_id = ?")
+      .bind(created.id)
+      .run();
+
+    const response = await tripRequest("owner", `/api/trips/${created.id}`, {
+      method: "PATCH",
+      headers: headers("owner", true),
+      body: JSON.stringify({
+        ...validTrip,
+        title: "체크리스트를 비운 여행",
+        baseVersion: 1,
+      }),
+    });
+
+    expect(response.status).toBe(200);
+    const row = await env.DB.prepare(
+      "SELECT COUNT(*) AS item_count FROM check_items WHERE trip_id = ?"
+    )
+      .bind(created.id)
+      .first<{ item_count: number }>();
+    expect(row?.item_count).toBe(0);
+  });
+
   it("fully updates a trip and advances its version", async () => {
     const created = await createTrip();
     const response = await tripRequest("partner", `/api/trips/${created.id}`, {

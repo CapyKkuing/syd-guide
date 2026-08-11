@@ -47,7 +47,7 @@ function media(): TripMedia {
     mimeType: "image/jpeg",
     width: 1600,
     height: 900,
-    capturedAt: null,
+    capturedAt: "2026-08-02T09:20:00+10:00",
     aiScore: 0.91,
     aiLabels: ["harbor"],
     previewCropAspect: "4:3",
@@ -96,7 +96,7 @@ function setup(clientId: string | null = "test-client-id") {
     thumbnail: new Blob(["thumb"], { type: "image/webp" }),
     width: 1600,
     height: 900,
-    capturedAt: null,
+    capturedAt: "2026-08-02T09:20:00+10:00",
     score: 0.91,
     labels: ["harbor"],
   }]);
@@ -157,6 +157,7 @@ describe("RepresentativePhotoPanel", () => {
       expect.objectContaining({
         providerObjectId: runtime.savedMedia.providerObjectId,
         thumbnailObjectId: runtime.savedMedia.thumbnailObjectId,
+        capturedAt: "2026-08-02T09:20:00+10:00",
         aiScore: 0.91,
       })
     );
@@ -191,6 +192,212 @@ describe("RepresentativePhotoPanel", () => {
 
     expect(await screen.findByText(/Google OAuth client ID가 아직 설정되지 않았습니다/)).toBeVisible();
     expect(runtime.provider.createFolder).not.toHaveBeenCalled();
+  });
+
+  it("reuses one preview folder for every photo in a multi-file upload", async () => {
+    const runtime = setup();
+    const secondMedia = {
+      ...runtime.savedMedia,
+      id: "22222222-2222-4222-8222-222222222222",
+      providerObjectId: "original_67890",
+      thumbnailObjectId: "thumb_67890",
+      originalName: "opera-house.jpg",
+    };
+    const files = [
+      new File(["photo-one"], "harbour.jpg", { type: "image/jpeg" }),
+      new File(["photo-two"], "opera-house.jpg", { type: "image/jpeg" }),
+    ];
+    vi.mocked(runtime.ranker).mockResolvedValue([
+      {
+        file: files[0],
+        thumbnail: new Blob(["thumb-one"], { type: "image/webp" }),
+        width: 1600,
+        height: 900,
+        capturedAt: "2026-08-02T09:20:00+10:00",
+        score: 0.91,
+        labels: ["harbor"],
+      },
+      {
+        file: files[1],
+        thumbnail: new Blob(["thumb-two"], { type: "image/webp" }),
+        width: 1200,
+        height: 1600,
+        capturedAt: "2026-08-03T11:30:00+10:00",
+        score: 0.87,
+        labels: ["landmark"],
+      },
+    ]);
+    vi.mocked(runtime.provider.upload)
+      .mockReset()
+      .mockResolvedValueOnce({ id: runtime.savedMedia.providerObjectId })
+      .mockResolvedValueOnce({ id: runtime.savedMedia.thumbnailObjectId })
+      .mockResolvedValueOnce({ id: secondMedia.providerObjectId })
+      .mockResolvedValueOnce({ id: secondMedia.thumbnailObjectId });
+    vi.mocked(runtime.api.register)
+      .mockResolvedValueOnce(runtime.savedMedia)
+      .mockResolvedValueOnce(secondMedia);
+    const { container } = render(
+      <RepresentativePhotoPanel
+        api={runtime.api}
+        media={[]}
+        onChanged={vi.fn()}
+        provider={runtime.provider}
+        ranker={runtime.ranker}
+        storage={storage}
+        thumbnailStore={runtime.thumbnailStore}
+        trip={trip}
+        viewerRole="owner"
+      />
+    );
+
+    const input = container.querySelector<HTMLInputElement>('input[type="file"]');
+    if (!input) throw new Error("file input missing");
+    fireEvent.change(input, { target: { files } });
+
+    await waitFor(() => expect(runtime.api.register).toHaveBeenCalledTimes(2));
+    expect(runtime.provider.findFolder).toHaveBeenCalledTimes(1);
+    expect(runtime.provider.createFolder).not.toHaveBeenCalled();
+    expect(runtime.provider.upload).toHaveBeenNthCalledWith(
+      1,
+      storage.rootObjectId,
+      expect.stringContaining("-harbour.jpg"),
+      files[0]
+    );
+    expect(runtime.provider.upload).toHaveBeenNthCalledWith(
+      2,
+      previewFolder.id,
+      expect.stringContaining("-thumb.webp"),
+      expect.any(Blob)
+    );
+    expect(runtime.provider.upload).toHaveBeenNthCalledWith(
+      3,
+      storage.rootObjectId,
+      expect.stringContaining("-opera-house.jpg"),
+      files[1]
+    );
+    expect(runtime.provider.upload).toHaveBeenNthCalledWith(
+      4,
+      previewFolder.id,
+      expect.stringContaining("-thumb.webp"),
+      expect.any(Blob)
+    );
+  });
+
+  it("keeps completed photos visible when a later photo upload fails", async () => {
+    const runtime = setup();
+    const files = [
+      new File(["photo-one"], "harbour.jpg", { type: "image/jpeg" }),
+      new File(["photo-two"], "opera-house.jpg", { type: "image/jpeg" }),
+    ];
+    vi.mocked(runtime.ranker).mockResolvedValue([
+      {
+        file: files[0],
+        thumbnail: new Blob(["thumb-one"], { type: "image/webp" }),
+        width: 1600,
+        height: 900,
+        capturedAt: "2026-08-02T09:20:00+10:00",
+        score: 0.91,
+        labels: ["harbor"],
+      },
+      {
+        file: files[1],
+        thumbnail: new Blob(["thumb-two"], { type: "image/webp" }),
+        width: 1200,
+        height: 1600,
+        capturedAt: "2026-08-03T11:30:00+10:00",
+        score: 0.87,
+        labels: ["landmark"],
+      },
+    ]);
+    vi.mocked(runtime.provider.upload)
+      .mockReset()
+      .mockResolvedValueOnce({ id: runtime.savedMedia.providerObjectId })
+      .mockResolvedValueOnce({ id: runtime.savedMedia.thumbnailObjectId })
+      .mockResolvedValueOnce({ id: "original_67890" })
+      .mockRejectedValueOnce(new Error("두 번째 미리보기 업로드 실패"));
+    const { container } = render(
+      <RepresentativePhotoPanel
+        api={runtime.api}
+        media={[]}
+        onChanged={vi.fn()}
+        provider={runtime.provider}
+        ranker={runtime.ranker}
+        storage={storage}
+        thumbnailStore={runtime.thumbnailStore}
+        trip={trip}
+        viewerRole="owner"
+      />
+    );
+
+    const input = container.querySelector<HTMLInputElement>('input[type="file"]');
+    if (!input) throw new Error("file input missing");
+    fireEvent.change(input, { target: { files } });
+
+    expect(await screen.findByText("두 번째 미리보기 업로드 실패")).toBeVisible();
+    expect(screen.getByText("추천 91점")).toBeVisible();
+    expect(runtime.api.register).toHaveBeenCalledTimes(1);
+    expect(runtime.provider.remove).toHaveBeenCalledWith("original_67890");
+  });
+
+  it("removes both Drive objects when media registration fails", async () => {
+    const runtime = setup();
+    vi.mocked(runtime.api.register).mockRejectedValue(new Error("미디어 등록 실패"));
+    const { container } = render(
+      <RepresentativePhotoPanel
+        api={runtime.api}
+        media={[]}
+        onChanged={vi.fn()}
+        provider={runtime.provider}
+        ranker={runtime.ranker}
+        storage={storage}
+        thumbnailStore={runtime.thumbnailStore}
+        trip={trip}
+        viewerRole="owner"
+      />
+    );
+
+    const input = container.querySelector<HTMLInputElement>('input[type="file"]');
+    if (!input) throw new Error("file input missing");
+    fireEvent.change(input, {
+      target: { files: [new File(["photo"], "harbour.jpg", { type: "image/jpeg" })] },
+    });
+
+    expect(await screen.findByText("미디어 등록 실패")).toBeVisible();
+    expect(runtime.provider.remove).toHaveBeenCalledTimes(2);
+    expect(runtime.provider.remove).toHaveBeenCalledWith(runtime.savedMedia.providerObjectId);
+    expect(runtime.provider.remove).toHaveBeenCalledWith(runtime.savedMedia.thumbnailObjectId);
+  });
+
+  it("removes the registered media and Drive objects when thumbnail caching fails", async () => {
+    const runtime = setup();
+    vi.mocked(runtime.thumbnailStore.save).mockRejectedValue(
+      new Error("기기 미리보기 저장 실패")
+    );
+    const { container } = render(
+      <RepresentativePhotoPanel
+        api={runtime.api}
+        media={[]}
+        onChanged={vi.fn()}
+        provider={runtime.provider}
+        ranker={runtime.ranker}
+        storage={storage}
+        thumbnailStore={runtime.thumbnailStore}
+        trip={trip}
+        viewerRole="owner"
+      />
+    );
+
+    const input = container.querySelector<HTMLInputElement>('input[type="file"]');
+    if (!input) throw new Error("file input missing");
+    fireEvent.change(input, {
+      target: { files: [new File(["photo"], "harbour.jpg", { type: "image/jpeg" })] },
+    });
+
+    expect(await screen.findByText("기기 미리보기 저장 실패")).toBeVisible();
+    expect(runtime.api.remove).toHaveBeenCalledWith(trip.id, runtime.savedMedia.id);
+    expect(runtime.provider.remove).toHaveBeenCalledTimes(2);
+    expect(runtime.provider.remove).toHaveBeenCalledWith(runtime.savedMedia.providerObjectId);
+    expect(runtime.provider.remove).toHaveBeenCalledWith(runtime.savedMedia.thumbnailObjectId);
   });
 
   it("creates the preview folder when it does not exist", async () => {

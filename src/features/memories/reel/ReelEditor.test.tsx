@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import type { TripMedia } from "../../../shared/media";
 import { ReelEditor } from "./ReelEditor";
+import type { TravelReel } from "./types";
 
 function photo(index: number): TripMedia {
   return {
@@ -72,5 +73,184 @@ describe("ReelEditor", () => {
 
     expect(await screen.findByText("Drive 연결 후 사진 미리보기")).toBeVisible();
     expect(screen.getByRole("button", { name: "미리보기 재생" })).toBeEnabled();
+  });
+
+  it("deletes only the app history after confirmation and preserves the Drive files", async () => {
+    const user = userEvent.setup();
+    const first = photo(1);
+    const excluded = photo(2);
+    const saved: TravelReel = {
+      tripId: "trip-one",
+      scenes: [{ id: "scene-1", mediaId: first.id, durationMs: 3_000 }],
+      excludedMediaIds: [excluded.id],
+      durationMs: 3_000,
+      mode: "edited",
+    };
+    const store = {
+      get: vi.fn().mockResolvedValue(saved),
+      save: vi.fn().mockResolvedValue(undefined),
+    };
+    const api = { remove: vi.fn().mockResolvedValue(undefined) };
+    const thumbnailStore = {
+      get: vi.fn().mockResolvedValue(null),
+      remove: vi.fn().mockResolvedValue(undefined),
+      save: vi.fn().mockResolvedValue(undefined),
+    };
+    const provider = {
+      provider: "google-drive" as const,
+      connected: true,
+      connect: vi.fn().mockResolvedValue(undefined),
+      createFolder: vi.fn().mockResolvedValue({ id: "folder" }),
+      upload: vi.fn().mockResolvedValue({ id: "uploaded" }),
+      download: vi.fn().mockResolvedValue(new Blob()),
+      remove: vi.fn().mockResolvedValue(undefined),
+      folderUrl: vi.fn().mockReturnValue("#"),
+    };
+    const onMediaChanged = vi.fn().mockResolvedValue(undefined);
+
+    render(
+      <ReelEditor
+        api={api}
+        media={[first, excluded]}
+        onMediaChanged={onMediaChanged}
+        provider={provider}
+        store={store}
+        thumbnailStore={thumbnailStore}
+        tripId="trip-one"
+      />
+    );
+
+    expect(await screen.findByText("제외 사진 1장")).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "photo-2.jpg 이력 삭제" }));
+    expect(screen.getByRole("alertdialog")).toHaveTextContent(
+      "Google Drive 원본과 미리보기 파일은 유지합니다."
+    );
+    await user.click(screen.getByRole("button", { name: "취소" }));
+    expect(api.remove).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole("button", { name: "photo-2.jpg 이력 삭제" }));
+    await user.click(screen.getByRole("button", { name: "이력 삭제 확인" }));
+
+    await waitFor(() => expect(api.remove).toHaveBeenCalledWith("trip-one", excluded.id));
+    expect(thumbnailStore.remove).toHaveBeenCalledWith(excluded.id);
+    expect(provider.remove).not.toHaveBeenCalled();
+    expect(store.save).toHaveBeenLastCalledWith(expect.objectContaining({
+      scenes: [expect.objectContaining({ mediaId: first.id })],
+      excludedMediaIds: [],
+    }));
+    expect(onMediaChanged).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText("photo-2.jpg")).not.toBeInTheDocument();
+    expect(screen.getByText(/사진 이력을 삭제했습니다.*Google Drive 원본/)).toBeVisible();
+  });
+
+  it("keeps the photo history visible when the app record cannot be deleted", async () => {
+    const user = userEvent.setup();
+    const first = photo(1);
+    const excluded = photo(2);
+    const saved: TravelReel = {
+      tripId: "trip-one",
+      scenes: [{ id: "scene-1", mediaId: first.id, durationMs: 3_000 }],
+      excludedMediaIds: [excluded.id],
+      durationMs: 3_000,
+      mode: "edited",
+    };
+    const store = {
+      get: vi.fn().mockResolvedValue(saved),
+      save: vi.fn().mockResolvedValue(undefined),
+    };
+    const api = { remove: vi.fn().mockRejectedValue(new Error("request failed")) };
+    const onMediaChanged = vi.fn().mockResolvedValue(undefined);
+
+    render(
+      <ReelEditor
+        api={api}
+        media={[first, excluded]}
+        onMediaChanged={onMediaChanged}
+        store={store}
+        tripId="trip-one"
+      />
+    );
+
+    expect(await screen.findByText("제외 사진 1장")).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "photo-2.jpg 이력 삭제" }));
+    await user.click(screen.getByRole("button", { name: "이력 삭제 확인" }));
+
+    await waitFor(() => expect(api.remove).toHaveBeenCalledWith("trip-one", excluded.id));
+    expect(onMediaChanged).not.toHaveBeenCalled();
+    expect(screen.getByText("photo-2.jpg")).toBeVisible();
+    expect(screen.getByText("사진 이력을 삭제하지 못했습니다. 다시 시도해 주세요.")).toBeVisible();
+  });
+
+  it("retries local cleanup after the app history is deleted", async () => {
+    const user = userEvent.setup();
+    const first = photo(1);
+    const excluded = photo(2);
+    const saved: TravelReel = {
+      tripId: "trip-one",
+      scenes: [{ id: "scene-1", mediaId: first.id, durationMs: 3_000 }],
+      excludedMediaIds: [excluded.id],
+      durationMs: 3_000,
+      mode: "edited",
+    };
+    const store = {
+      get: vi.fn().mockResolvedValue(saved),
+      save: vi.fn()
+        .mockRejectedValueOnce(new Error("temporary reel store failure"))
+        .mockResolvedValue(undefined),
+    };
+    const thumbnailStore = {
+      get: vi.fn().mockResolvedValue(null),
+      remove: vi.fn()
+        .mockRejectedValueOnce(new Error("temporary thumbnail store failure"))
+        .mockResolvedValue(undefined),
+      save: vi.fn().mockResolvedValue(undefined),
+    };
+
+    render(
+      <ReelEditor
+        api={{ remove: vi.fn().mockResolvedValue(undefined) }}
+        media={[first, excluded]}
+        store={store}
+        thumbnailStore={thumbnailStore}
+        tripId="trip-one"
+      />
+    );
+
+    expect(await screen.findByText("제외 사진 1장")).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "photo-2.jpg 이력 삭제" }));
+    await user.click(screen.getByRole("button", { name: "이력 삭제 확인" }));
+
+    await waitFor(() => expect(store.save.mock.calls.length).toBeGreaterThanOrEqual(2));
+    expect(thumbnailStore.remove).toHaveBeenCalledTimes(2);
+    expect(store.save).toHaveBeenLastCalledWith(expect.objectContaining({
+      excludedMediaIds: [],
+    }));
+    expect(screen.getByText(/사진 이력을 삭제했습니다.*Google Drive 원본/)).toBeVisible();
+  });
+
+  it("persists reconciled reel references when deleted media is missing on reload", async () => {
+    const first = photo(1);
+    const removed = photo(2);
+    const saved: TravelReel = {
+      tripId: "trip-one",
+      scenes: [{ id: "scene-1", mediaId: first.id, durationMs: 3_000 }],
+      excludedMediaIds: [removed.id],
+      durationMs: 3_000,
+      mode: "edited",
+    };
+    const store = {
+      get: vi.fn().mockResolvedValue(saved),
+      save: vi.fn().mockResolvedValue(undefined),
+    };
+
+    render(
+      <ReelEditor media={[first]} store={store} tripId="trip-one" />
+    );
+
+    await waitFor(() => expect(store.save).toHaveBeenCalledWith(expect.objectContaining({
+      excludedMediaIds: [],
+      scenes: [expect.objectContaining({ mediaId: first.id })],
+    })));
+    expect(screen.queryByText("photo-2.jpg")).not.toBeInTheDocument();
   });
 });

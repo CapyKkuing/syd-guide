@@ -158,11 +158,17 @@
 .representative-photo__candidates {
   display: grid;
   gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--today-boundary);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
 }
 
 .photo-candidate {
   display: grid;
   gap: var(--space-2);
+  min-width: 0;
   padding: var(--space-2);
   border: 1px solid var(--today-boundary);
   border-radius: var(--radius-md);
@@ -194,6 +200,12 @@
 .photo-candidate p {
   margin: 0;
   font-weight: 800;
+}
+
+.photo-candidate .secondary-button {
+  width: 100%;
+  min-width: 0;
+  white-space: normal;
 }
 
 .memory-reel {
@@ -408,6 +420,39 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.memory-reel__choice-actions,
+.memory-reel__delete-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.memory-reel__choice-actions button,
+.memory-reel__delete-actions button {
+  width: 100%;
+  min-width: 0;
+  white-space: normal;
+}
+
+.memory-reel__delete-confirm {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+}
+
+.memory-reel__delete-confirm > div:first-child {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.memory-reel__delete-confirm span {
+  color: var(--text-2);
+  font-size: var(--text-sm);
 }
 
 .today-dashboard {
@@ -837,10 +882,6 @@
   .representative-photo__actions,
   .representative-photo__candidates {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .representative-photo__candidates {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .memory-reel {

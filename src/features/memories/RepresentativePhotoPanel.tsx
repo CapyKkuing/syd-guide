@@ -143,9 +143,15 @@ export function RepresentativePhotoPanel({
       for (let index = 0; index < ranked.length; index += 1) {
         setMessage(`추천 점수 계산 완료 · Drive 업로드 ${index + 1}/${ranked.length}`);
         const photo = ranked[index];
-        if (photo) uploaded.push(await uploadPhoto(connectedStorage, previewFolder.id, photo));
+        if (photo) {
+          uploaded.push(await uploadPhoto(connectedStorage, previewFolder.id, photo));
+          const completed = [...uploaded];
+          setItems((current) => [
+            ...completed,
+            ...current.filter((item) => !completed.some((saved) => saved.id === item.id)),
+          ]);
+        }
       }
-      setItems((current) => [...uploaded, ...current]);
       setMessage(
         `업로드 완료 · AI 추천 상위 ${Math.min(uploaded.length, 3)}장에서 대표사진을 골라 주세요.`
       );
@@ -172,6 +178,7 @@ export function RepresentativePhotoPanel({
       photo.file
     );
     let thumbnailId: string | null = null;
+    let registeredMediaId: string | null = null;
     try {
       const thumbnail = await provider.upload(
         previewRootObjectId,
@@ -190,6 +197,7 @@ export function RepresentativePhotoPanel({
         aiScore: photo.score,
         aiLabels: photo.labels,
       });
+      registeredMediaId = saved.id;
       await thumbnailStore.save(saved.id, trip.id, photo.thumbnail);
       const url = URL.createObjectURL(photo.thumbnail);
       createdUrls.current.add(url);
@@ -197,6 +205,7 @@ export function RepresentativePhotoPanel({
       return saved;
     } catch (error) {
       await Promise.allSettled([
+        ...(registeredMediaId ? [api.remove(trip.id, registeredMediaId)] : []),
         provider.remove(original.id),
         ...(thumbnailId ? [provider.remove(thumbnailId)] : []),
       ]);
