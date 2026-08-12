@@ -1179,6 +1179,17 @@ npm run build
 - 운영 D1은 `0023`까지 이미 적용돼 새 migration write 없이 날씨 사용량·current·forecast 테이블과 만료 인덱스 2개를 확인했다. Best Match 실공급업체 호출은 Sydney 좌표에서 유효한 현재값·UV·3일 예보와 `Australia/Sydney` 시간대를 반환했다. 전체 Worker 11파일 102건, frontend 69파일 489건, typecheck·lint·production build·diff-check가 통과했다. Secret·결제·유료 호출은 없다.
 - 운영 월 provider counter는 BOM 실패 canary를 포함해 `2`이고 current·forecast cache는 각각 0건이다. 현재 제품 데이터에는 여행 중인 trip이 없고 브라우저의 직접 API 탐색은 client 차단이어서, Best Match 제품 경로의 실제 `live → cached` 화면·사용량 불변 증거는 완료로 확대하지 않는다. 운영 데이터를 임의 변경하지 않고 Phase 6 통합 QA에서 여행 중 QA 데이터가 준비됐을 때 확인한다.
 
+### 2026-08-12 · Phase 6 자동·읽기 전용 운영 QA 중간 결과
+
+- 배포 제품 SHA는 `c602239cc0f0e7bfe46cf3ce90e495c4f5815c6a`, 최신 문서 HEAD는 `8fc2f5f40c26b8f6f3409fd2175cbdc161db89f0`로 분리해 기록한다. 두 SHA 사이 제품 소스 차이는 없고 계획서 3줄만 다르다. 사용자 Worker version `805f50b4-ca76-48e3-b0e6-822b821f1f67`과 관리자 Worker version `8fc85eaa-a3fe-4ab0-bc0f-ef50e23c4d1b`는 모두 제품 SHA annotation으로 100% 배포돼 있다.
+- 현재 소스에서 frontend 69파일 489건, Worker 11파일 102건, Playwright 5개 프로젝트 46/46, `typecheck`, lint, production build와 `git diff --check`를 통과했다. Playwright는 격리된 local D1에 `0001`~`0023`을 적용했으며 운영 D1을 변경하지 않았다.
+- Pages workflow에는 `push` trigger가 없고 수동 `workflow_dispatch`만 남아 있다. trigger 제거 뒤 제품·문서 main push에서 Pages workflow 실행은 0건이며 제품 runtime의 `github.io`·`pages.dev` 참조도 0건이다.
+- 사용자 운영 Today는 DOM 로드·콘솔 warn/error 0·가로 overflow 0으로 확인했다. 다만 내부 브라우저는 최신 `/assets/index-D-sCj9MX.js`가 아니라 구 `/assets/index-COr6lnbW.js`를 사용했다. 관리자 `/library`도 구 `/assets/index-D7j3Hrnj.js`를 유지해 `참여자 설정을 불러오지 못했습니다 / Failed to fetch`를 다시 노출했다. 정상 reload 1회로 바뀌지 않았으므로 `GAP-40`과 관리자 PWA service worker 갱신은 P1 출시 차단으로 유지한다. 코드·자동 회귀·배포 완료를 운영 화면 완료로 확대하지 않는다.
+- 운영 D1은 pending migration 0, 앱 테이블 27개다. `couple-travel-guide-restore-test`는 앱 테이블 0개인 빈 복원 대상이며 두 query 모두 `rows_written = 0`이었다. 기존 암호화 산출물 `couple-travel-guide-20260811T213611Z-428eb6c6.sql.age`는 136,447 bytes, age header와 SHA-256 `C5C1F0C8DE1EBC5E172F2057D5B3B7EF9EB93F556D972DDA5EDE125C0E16D75D`를 확인했고 같은 폴더의 평문·partial 잔존은 0개다. 스크립트 3개 parser와 backup/restore PlanOnly는 통과했다.
+- Phase 4 완료에는 사용자가 복원 터미널의 `key.age` passphrase를 직접 입력한 실제 restore, 복원 후 27개 테이블 row count·비민감 표본·평문 cleanup, canonical Drive 공유·다운로드 SHA 증거 동기화가 남는다. 비밀번호는 채팅·인자·로그에 기록하지 않는다.
+- Open-Meteo 운영 상태는 월 counter 2, current/forecast cache 각 0, 여행 중 trip 0이다. 따라서 실제 제품 `live → cached`는 geocoding+forecast 2 provider request와 D1 cache write, 여행 중 QA 데이터 없이는 확인할 수 없다. 이 쓰기와 임시 QA trip 변경은 현재 중간 QA에서 실행하지 않고 사용자 확인 항목으로 유지한다.
+- 위 결과는 Phase 6 자동·읽기 전용 게이트의 중간 통과다. Android 실제 JPEG EXIF·Places·PDF·대표자/PWA·빈 캐시 릴, GAP-40 구 service worker 해제, Phase 4 실제 restore, 날씨 제품 live/cache, P0/P1 0건 판정과 V1 tag가 끝나기 전에는 Task 20·Phase 6·V1을 완료 처리하지 않는다.
+
 ## 13. 컨텍스트 압축 후 복구 체크리스트
 
 컨텍스트가 압축되거나 작업이 이어질 때마다 구현을 재개하기 전에 다음을 확인한다.

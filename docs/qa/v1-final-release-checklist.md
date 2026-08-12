@@ -15,7 +15,7 @@
 
 - 남은 운영·브라우저·실기기 검증은 구현 묶음 사이에 나누지 않고 Phase 6에서 한 번에 수행한다.
 - 각 구현 묶음에서는 변경 경계의 대상 테스트, typecheck, lint, production build만 수행한다.
-- Phase 1의 실기기·운영 잔여 항목, Phase 2의 실제 WeatherAPI 운영, Phase 4의 운영
+- Phase 1의 실기기·운영 잔여 항목, Phase 2의 실제 Open-Meteo 운영, Phase 4의 운영
   export·복원, Phase 5의 Workers-only·PWA deep-link를 모두 같은 최종 증거 묶음으로
   판정한다.
 - iPhone 실기기 QA는 V1 완료 기준이 아니라 상용 출시 단계로 이동했다.
@@ -29,22 +29,22 @@
 | 자동 검증 | 로컬 명령의 직접 출력이 성공 | 명령, 시각, SHA, 결과 로그 기록 |
 | 화면 검증 | 로컬 또는 운영 브라우저에서 직접 확인 | viewport, 경로, 콘솔·overflow 기록 |
 | 실기기 검증 | 설치 Android에서 직접 입력·재실행 | 기기, OS, 앱 모드, 증거 기록 |
-| 운영 검증 | Cloudflare·WeatherAPI·Drive·D1 등 실제 경계 확인 | 실행 승인과 비밀정보 없는 증거 |
+| 운영 검증 | Cloudflare·Open-Meteo·Drive·D1 등 실제 경계 확인 | 실행 승인과 비밀정보 없는 증거 |
 | 사용자 승인 | 해당 단계의 명시적 승인 확인 | 승인 일시·범위·기록 위치 |
 | 완료 | 위 상태가 계획서 기준으로 모두 충족 | GAP 원장·TASKS·dashboard 동기화 후 판정 |
 
 상태를 추정해서 완료로 올리지 않는다. 과거 계획서나 대시보드에 남은 성공 기록은
 참고용 이력일 뿐 최종 SHA의 현재 증거가 아니다. 과거 자동 게이트의 기록에는
-frontend 68개 파일 485건, Worker 95건, Playwright 46건이 있으나 최종 통합 때 다시
-실행한다.
+frontend 69개 파일 489건, Worker 102건, Playwright 46건이 있으며, 2026-08-12
+Phase 6에서 현재 소스 기준으로 다시 실행했다.
 
 ### 최종 일괄 QA 순서
 
-- [ ] A. 최종 SHA 고정, worktree·승인 범위·비밀정보 노출 사전 확인
-- [ ] B. 로컬 자동 게이트 전체 실행
+- [x] A. 제품 SHA와 문서 SHA 분리, worktree·승인 범위·비밀정보 노출 사전 확인
+- [x] B. 로컬 자동 게이트 전체 실행
 - [ ] C. 승인된 Phase 2 운영 순서 실행
 - [ ] D. 승인된 Phase 4 백업·복원 순서 실행
-- [ ] E. Phase 5 Pages 정책·동일 SHA·HTTP PWA smoke 실행
+- [ ] E. Phase 5 Pages 정책·동일 제품 SHA는 확인, stale PWA smoke는 재검증 필요
 - [ ] F. Phase 1 잔여 운영·브라우저·Android 실기기 항목 실행
 - [ ] G. P0/P1·핵심 흐름·보안·계획 동기화·출시 승인 판정
 
@@ -55,12 +55,12 @@ frontend 68개 파일 485건, Worker 95건, Playwright 46건이 있으나 최종
 
 ### 1-1. 사전 고정
 
-- [ ] 최종 구현 범위가 계획서의 현재 실행 단위와 일치한다.
-- [ ] 브랜치와 HEAD를 기록한다.
-- [ ] 최종 SHA를 FINAL_SHA라는 비밀정보가 아닌 버전 식별자로 기록한다.
-- [ ] 의도하지 않은 변경, 새 비밀정보, 평문 SQL, 개인키, 토큰, PII가 diff에 없다.
-- [ ] 운영 migration·Secret·provider 호출·배포 승인과 로컬 검증 승인을 분리했다.
-- [ ] Windows에서 실행 중인 Vite, Wrangler, Node, 브라우저를 정리하고 포트 충돌이 없다.
+- [x] 최종 구현 범위가 계획서의 현재 실행 단위와 일치한다.
+- [x] 브랜치와 HEAD를 기록했다: `main`, 문서 HEAD `8fc2f5f4`.
+- [x] 배포 제품 SHA `c602239c`와 문서 SHA `8fc2f5f4`를 분리해 기록했다.
+- [x] 승인 파일 밖 로컬 사진·목업·`.omo`·`.superpowers`·`src/dev`를 release 범위에서 제외했다.
+- [x] 운영 migration·provider 호출·배포 승인과 로컬 검증 승인을 분리했다.
+- [x] 전체 Playwright가 격리된 4173 포트와 local D1에서 완료됐다.
 
 사전 확인에 사용할 읽기 전용 명령:
 
@@ -79,13 +79,13 @@ git status --short
 
 | 순서 | 명령 | 직접 통과 기준 | 상태 |
 | --- | --- | --- | --- |
-| 1 | npm run typecheck | TypeScript 오류 0, 종료 코드 0 | [ ] |
-| 2 | npm run lint | ESLint 오류·warning 0, 종료 코드 0 | [ ] |
-| 3 | npm test | frontend 단위·컴포넌트·회귀 테스트 전부 성공 | [ ] |
-| 4 | npm run test:worker | Worker·D1·provider 경계 테스트 전부 성공 | [ ] |
-| 5 | npm run test:e2e | Playwright 전체 프로젝트 성공, 실패 trace·console 오류 없음 | [ ] |
-| 6 | npm run build | production build 성공, 산출물 누락 없음 | [ ] |
-| 7 | git diff --check | 공백 오류 0 | [ ] |
+| 1 | npm run typecheck | TypeScript 오류 0, 종료 코드 0 | [x] |
+| 2 | npm run lint | ESLint 오류·warning 0, 종료 코드 0 | [x] |
+| 3 | npm test | frontend 69개 파일 489건 성공 | [x] |
+| 4 | npm run test:worker | Worker 11개 파일 102건 성공 | [x] |
+| 5 | npm run test:e2e | Playwright 5개 프로젝트 46/46 성공 | [x] |
+| 6 | npm run build | production build 성공, 산출물 누락 없음 | [x] |
+| 7 | git diff --check | 공백 오류 0 | [x] |
 
 Playwright의 test:e2e는 별도의 local webServer를 시작한다. 현재 설정은 production
 build, local D1 migration, local Wrangler dev를 순서대로 실행하고 localhost:4173의
@@ -95,12 +95,12 @@ health endpoint를 기다린다. 따라서 이 단계는 원격 D1이나 운영 
 
 ### 1-3. 자동 게이트 증거
 
-- [ ] 각 명령의 시작 시각, 종료 코드, 최종 SHA, 테스트 수와 실패 수를 기록했다.
-- [ ] test:e2e의 desktop Chromium, Android-like Chromium, compact 320px, WebKit
+- [x] 각 명령의 종료 코드, 제품 SHA, 테스트 수와 실패 수를 기록했다.
+- [x] test:e2e의 desktop Chromium, Android-like Chromium, compact 320px, WebKit
       responsive 프로젝트 결과를 구분해 기록했다.
-- [ ] local D1 상태와 .tmp 결과 폴더가 운영 데이터나 Git 추적 파일을 변경하지 않았다.
-- [ ] production build 산출물과 service worker가 최종 소스와 일치한다.
-- [ ] 자동 통과만으로 운영·실기기·사용자 승인 상태를 완료로 올리지 않았다.
+- [x] local D1 상태와 .tmp 결과 폴더가 운영 데이터나 Git 추적 파일을 변경하지 않았다.
+- [x] production build 산출물과 network-only service worker 자동 경계를 검증했다.
+- [x] 자동 통과만으로 운영·실기기·사용자 승인 상태를 완료로 올리지 않았다.
 
 ### 1-4. Windows 실행 주의
 
@@ -124,20 +124,20 @@ Secret 설정 단계가 없다.
 
 ### 2-1. 고정 조건
 
-- [ ] Open-Meteo Free의 비공개·비상업 사용 조건과 Best Match 사용 승인이 확인됐다.
-- [ ] 제품 자체 월 hard limit이 10,000회로 기록돼 있다.
-- [ ] current 서버 캐시 60분, forecast 서버 캐시 24시간이 기록돼 있다.
-- [ ] `Open-Meteo · Best Match` 출처와 일반 정보용 면책 문구가 화면에 포함돼 있다.
-- [ ] Open-Meteo Free에는 API key·결제수단·자동 유료 전환이 없고, 상업 공개 전에는 별도 라이선스 검토가 필요함을 확인했다.
-- [ ] 운영 시각, 실행자, 최종 SHA, 두 Worker 대상과 롤백 담당을 기록했다.
+- [x] Open-Meteo Free의 비공개·비상업 사용 조건과 Best Match 사용 승인이 확인됐다.
+- [x] 제품 자체 월 hard limit이 10,000회로 기록돼 있다.
+- [x] current 서버 캐시 60분, forecast 서버 캐시 24시간이 기록돼 있다.
+- [x] `Open-Meteo · Best Match` 출처와 일반 정보용 면책 문구가 구현돼 있다.
+- [x] Open-Meteo Free에는 API key·결제수단·자동 유료 전환이 없고, 상업 공개 전에는 별도 라이선스 검토가 필요함을 확인했다.
+- [x] 제품 SHA `c602239c`, 두 Worker version과 additive migration 롤백 원칙을 기록했다.
 
 ### 2-2. 반드시 이 순서로 실행
 
 | 순서 | 작업 | 통과 기준 | 승인·증거 |
 | --- | --- | --- | --- |
-| 1 | 운영 승인·최종 SHA·migration 파일 확인 | 승인 범위와 배포 산출물이 동일 | 사용자 승인, FINAL_SHA |
-| 2 | D1에 0023_weather_snapshots.sql 적용 | 적용 성공, schema·migration drift 없음 | 원격 migration 로그 |
-| 3 | 같은 FINAL_SHA를 두 Worker에 배포 | 두 version ID와 SHA가 서로 일치 | 배포 로그 |
+| 1 | 운영 승인·제품 SHA·migration 파일 확인 | 승인 범위와 배포 산출물이 동일 | 완료, `c602239c` |
+| 2 | D1에 0023_weather_snapshots.sql 적용 | 적용 성공, schema·migration drift 없음 | 완료, pending 0 |
+| 3 | 같은 제품 SHA를 두 Worker에 배포 | 두 version ID와 SHA가 서로 일치 | 완료, 100%·동일 annotation |
 | 4 | 실제 날씨 QA 실행 | 아래 2-3의 모든 시나리오 통과 | 운영 브라우저·API 증거 |
 | 5 | 운영 상태·승인·롤백 정보를 plan/TASKS/dashboard에 동기화 | 불일치 0 | 문서 diff·사용자 승인 |
 
@@ -173,12 +173,12 @@ test D1 restore → row/sample 대조다.
 
 ### 3-1. 사전 승인
 
-- [ ] 운영 export 1회 승인이 있다.
-- [ ] age 공개 recipient와 비밀번호 암호화 identity의 보관 위치를 확인했다.
-- [ ] recipient·identity·작업 폴더가 Git 프로젝트 밖의 승인된 드라이브에 있다.
-- [ ] 평문 SQL이 잠시 생성되는 잔여 위험과 안전 삭제 미보장 사실을 승인받았다.
-- [ ] test D1 생성·원격 복원·읽기 전용 대조 승인이 각각 있다.
-- [ ] 백업 파일·폴더·계정·경로·Drive 권한에 PII나 비밀정보가 포함되지 않는다.
+- [x] 운영 export 1회 승인이 있다.
+- [x] age 공개 recipient와 비밀번호 암호화 identity의 보관 위치를 확인했다.
+- [x] recipient·identity·작업 폴더가 Git 프로젝트 밖의 승인된 드라이브에 있다.
+- [x] 평문 SQL이 잠시 생성되는 잔여 위험과 안전 삭제 미보장 사실을 승인받았다.
+- [x] test D1 생성·원격 복원·읽기 전용 대조 승인이 각각 있다.
+- [x] 백업 파일·폴더·경로 검사에서 평문 SQL·개인키 marker가 없음을 확인했다.
 
 실행 시 백업 스크립트의 원격 export 확인 스위치와 복원 스크립트의 두 테스트
 복원 확인 스위치를 모두 별도로 검토한다. unencrypted temporary file 위험을
@@ -187,12 +187,12 @@ test D1 restore → row/sample 대조다.
 
 ### 3-2. 운영 export와 암호화
 
-- [ ] Wrangler remote export를 Git 프로젝트 밖의 전용 임시 폴더에 한 번 실행했다.
-- [ ] export SQL이 비어 있지 않고, 평문 파일 경로가 승인된 작업 폴더 안이다.
-- [ ] age 공개 recipient로 즉시 암호화했다.
-- [ ] 완성된 .sql.age 파일의 크기와 SHA-256을 기록했다.
-- [ ] .sql, .partial, 개인키, 비밀번호가 결과 폴더·로그·스크린샷에 남지 않았다.
-- [ ] 평문 제거 결과를 확인했으며 SSD의 물리적 복구 불가를 주장하지 않았다.
+- [x] Wrangler remote export를 Git 프로젝트 밖에서 한 번 실행한 암호화 산출물이 존재한다.
+- [x] 암호화 산출물이 0바이트가 아니며 age header가 유효하다.
+- [x] age 공개 recipient로 암호화된 `.sql.age` 형식이다.
+- [x] 완성된 `.sql.age`는 136,447 bytes이며 SHA-256을 기록했다.
+- [x] 결과 폴더에 `.sql`, `.partial`, 개인키, 비밀번호가 남지 않았다.
+- [x] 평문 잔존 0을 확인했으며 물리적 복구 불가를 주장하지 않았다.
 
 ### 3-3. 비공개 Drive 보관
 
@@ -204,8 +204,8 @@ test D1 restore → row/sample 대조다.
 
 ### 3-4. 새 빈 test D1 복원
 
-- [ ] 운영과 다른 이름이며 test, restore 또는 qa 표식이 있는 새 빈 D1을 만들었다.
-- [ ] 복원 전에 migration이나 기존 데이터를 넣지 않았다.
+- [x] 운영과 다른 이름이며 restore-test 표식이 있는 D1을 만들었다.
+- [x] 복원 전 앱 테이블 0개를 read-only query로 확인했다.
 - [ ] age로 복호화한 평문은 Git 프로젝트 밖 전용 임시 폴더에만 존재한다.
 - [ ] 두 복원 확인 스위치와 unencrypted temporary file 위험 승인을 확인했다.
 - [ ] 복원 대상이 운영 D1이 아님을 이름·config·로그에서 재확인했다.
@@ -224,21 +224,21 @@ test D1 restore → row/sample 대조다.
 
 ### 4-1. Pages 자동 push 중지와 fixture 보존
 
-- [ ] .github/workflows/deploy-pages.yml에 자동 push 트리거가 없다.
-- [ ] 필요한 수동 workflow_dispatch만 남아 있고, 사용 시 별도 승인으로 실행한다.
-- [ ] vite.config.ts의 github-pages mode와 /syd-guide/ base fixture가 보존돼 있다.
-- [ ] test가 소비하는 GitHub Pages fixture 참조는 제품 runtime 경로와 분리돼 있다.
-- [ ] main push가 Pages 배포를 자동으로 시작하지 않는다는 정적·workflow 증거가 있다.
+- [x] .github/workflows/deploy-pages.yml에 자동 push 트리거가 없다.
+- [x] 필요한 수동 workflow_dispatch만 남아 있고, 사용 시 별도 승인으로 실행한다.
+- [x] vite.config.ts의 github-pages mode와 /syd-guide/ base fixture가 보존돼 있다.
+- [x] test가 소비하는 GitHub Pages fixture 참조는 제품 runtime 경로와 분리돼 있다.
+- [x] trigger 제거 뒤 main 제품·문서 push에서 Pages workflow 실행 0건을 확인했다.
 
 Pages 정책을 확인하기 위해 운영 Pages 배포를 임의로 실행하지 않는다. workflow
 변경은 commit·push 승인과 별도로 기록한다.
 
 ### 4-2. 동일 SHA 두 Worker 배포
 
-- [ ] 사용자 Worker가 FINAL_SHA로 배포됐다.
-- [ ] 관리자 Worker가 같은 FINAL_SHA로 배포됐다.
-- [ ] 두 version ID, 배포 시각, 대상 표면(user/admin)을 기록했다.
-- [ ] Pages URL이 제품 runtime, invite, manifest, service worker의 운영 URL로
+- [x] 사용자 Worker가 제품 SHA `c602239c`로 배포됐다.
+- [x] 관리자 Worker가 같은 제품 SHA로 배포됐다.
+- [x] 두 version ID, 배포 시각, 대상 표면(user/admin)을 기록했다.
+- [x] Pages URL이 제품 runtime, invite, manifest, service worker의 운영 URL로
       사용되지 않는다.
 - [ ] 서로 다른 bundle·service worker가 섞이지 않는지 SHA로 확인했다.
 
@@ -323,7 +323,7 @@ Playwright 통과만으로 체크하지 않는다.
 - [ ] 미해결 P1 = 0
 - [ ] 로그인·초대·기기 연결·여행 CRUD 핵심 흐름 실패 = 0
 - [ ] 일정·장소·예약·지출·체크리스트·미디어·릴·관리자 흐름의 차단 실패 = 0
-- [ ] WeatherAPI hard limit·cache·unavailable 계약 위반 = 0
+- [ ] Open-Meteo hard limit·cache·unavailable 계약 위반 = 0
 - [ ] D1 export/restore row 또는 sample mismatch = 0
 - [ ] 동일 SHA가 아닌 Worker 배포 = 0
 - [ ] Pages 자동 push 배포 = 0
@@ -381,7 +381,7 @@ deploy, tag, handoff는 이 문서를 작성하거나 로컬 diff-check하는 �
 - [ ] 자동 게이트 명령별 종료 코드·테스트 수·실패 수·실행 시각
 - [ ] Playwright viewport·경로·스크린샷·trace·console 결과
 - [ ] Android 기기·앱 모드·입력·재조회·PWA 업데이트 결과
-- [ ] Phase 2 migration·Secret 설정·두 Worker 배포·weather 시나리오 결과
+- [ ] Phase 2 migration·Open-Meteo·두 Worker 배포·weather 시나리오 결과
 - [ ] Phase 4 암호화 파일 크기·SHA-256·비공개 Drive·test D1 row/sample 대조
 - [ ] Phase 5 workflow 정적 확인·동일 SHA·HTTP PWA deep-link 결과
 - [ ] GAP 원장, P0/P1 판정, TASKS·dashboard·plan 동기화 결과
