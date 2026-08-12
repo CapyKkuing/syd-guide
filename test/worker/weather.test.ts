@@ -249,6 +249,7 @@ describe("Open-Meteo Best Match weather route", () => {
     const malformedApp = createApp({ now: () => initialNow, weatherFetch: malformedGeocoding });
     const malformed = await malformedApp.request("http://localhost/api/trips/trip-weather/weather", { headers: headers() }, bindings());
     expect(malformed.status).toBe(502);
+    await env.DB.prepare("DELETE FROM weather_refresh_leases").run();
 
     const networkApp = createApp({
       now: () => initialNow,
@@ -256,6 +257,7 @@ describe("Open-Meteo Best Match weather route", () => {
     });
     const network = await networkApp.request("http://localhost/api/trips/trip-weather/weather", { headers: headers() }, bindings());
     expect(network.status).toBe(502);
+    await env.DB.prepare("DELETE FROM weather_refresh_leases").run();
 
     vi.useFakeTimers();
     try {
@@ -277,6 +279,28 @@ describe("Open-Meteo Best Match weather route", () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it("shares a failed refresh cooldown instead of retrying the provider for every concurrent request", async () => {
+    let providerCallCount = 0;
+    const failedFetch = vi.fn<typeof fetch>(async () => {
+      providerCallCount += 1;
+      if (providerCallCount === 1) {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+      return Response.json({ results: [] });
+    });
+    const app = createApp({ now: () => initialNow, weatherFetch: failedFetch });
+
+    const responses = await Promise.all(Array.from({ length: 4 }, () =>
+      app.request("http://localhost/api/trips/trip-weather/weather", { headers: headers() }, bindings())
+    ));
+
+    expect(responses.map((item) => item.status).sort()).toEqual([502, 503, 503, 503]);
+    expect(failedFetch).toHaveBeenCalledTimes(1);
+    await expect(env.DB.prepare(
+      "SELECT used_count FROM weather_provider_usage WHERE billing_month = '2026-08'"
+    ).first()).resolves.toEqual({ used_count: 2 });
   });
 
   it("keeps weather snapshots until their exact expiry boundary", async () => {

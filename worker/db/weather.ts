@@ -6,6 +6,7 @@ export const WEATHER_MONTHLY_LIMIT = 10_000;
 export const CURRENT_CACHE_MS = 60 * 60 * 1_000;
 export const FORECAST_CACHE_MS = 24 * 60 * 60 * 1_000;
 export const WEATHER_REFRESH_LEASE_MS = 25 * 1_000;
+const failedRefreshLeaseToken = "failed";
 
 const forecastSchema = z.array(z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
@@ -100,6 +101,33 @@ export async function releaseWeatherRefreshLease(
   await env.DB.prepare(
     "DELETE FROM weather_refresh_leases WHERE trip_id = ? AND lease_token = ?"
   ).bind(tripId, leaseToken).run();
+}
+
+export async function markWeatherRefreshLeaseFailed(
+  env: Env,
+  tripId: string,
+  leaseToken: string,
+  now: Date,
+): Promise<void> {
+  await env.DB.prepare(
+    `UPDATE weather_refresh_leases
+     SET lease_token = ?, updated_at = ?
+     WHERE trip_id = ? AND lease_token = ?`
+  ).bind(failedRefreshLeaseToken, now.toISOString(), tripId, leaseToken).run();
+}
+
+export async function hasFailedWeatherRefreshLease(
+  env: Env,
+  tripId: string,
+  now: Date,
+): Promise<boolean> {
+  const row = await env.DB.prepare(
+    "SELECT lease_token, lease_expires_at FROM weather_refresh_leases WHERE trip_id = ?"
+  ).bind(tripId).first<{ lease_token: string; lease_expires_at: string }>();
+  return Boolean(
+    row?.lease_token === failedRefreshLeaseToken &&
+    Date.parse(row.lease_expires_at) > now.getTime()
+  );
 }
 
 export async function loadWeatherSnapshot(env: Env, tripId: string): Promise<StoredWeather | null> {

@@ -7,9 +7,11 @@ import type { AppDependencies } from "../auth/access";
 import { requirePrincipal } from "../auth/principal";
 import {
   acquireWeatherRefreshLease,
+  hasFailedWeatherRefreshLease,
   hasFreshCurrent,
   hasFreshForecast,
   loadWeatherSnapshot,
+  markWeatherRefreshLeaseFailed,
   normalizeWeatherQuery,
   releaseWeatherRefreshLease,
   reserveWeatherProviderUsage,
@@ -78,6 +80,7 @@ export function registerWeatherRoutes(
       });
     }
 
+    let releaseLease = true;
     try {
       const refreshNow = dependencies.now();
       const latest = await loadWeatherSnapshot(c.env, tripId);
@@ -119,15 +122,23 @@ export function registerWeatherRoutes(
       });
     } catch (error) {
       if (error instanceof OpenMeteoProviderError || error instanceof TypeError) {
+        releaseLease = false;
+        await markWeatherRefreshLeaseFailed(c.env, tripId, refreshTurn.leaseToken, dependencies.now());
         throw new WeatherError(
           502,
           "WEATHER_PROVIDER_ERROR",
           "현재 날씨 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
         );
       }
+      if (!(error instanceof WeatherError)) {
+        releaseLease = false;
+        await markWeatherRefreshLeaseFailed(c.env, tripId, refreshTurn.leaseToken, dependencies.now());
+      }
       throw error;
     } finally {
-      await releaseWeatherRefreshLease(c.env, tripId, refreshTurn.leaseToken);
+      if (releaseLease) {
+        await releaseWeatherRefreshLease(c.env, tripId, refreshTurn.leaseToken);
+      }
     }
   });
 }
@@ -150,6 +161,13 @@ async function waitForRefreshTurn(
     const leaseToken = await acquireWeatherRefreshLease(env, tripId, checkedAt);
     if (leaseToken) {
       return { kind: "refresh" as const, leaseToken };
+    }
+    if (await hasFailedWeatherRefreshLease(env, tripId, checkedAt)) {
+      throw new WeatherError(
+        503,
+        "WEATHER_REFRESH_FAILED_RECENTLY",
+        "날씨 정보를 방금 갱신하지 못했습니다. 잠시 후 다시 확인해 주세요.",
+      );
     }
   }
   throw new WeatherError(
