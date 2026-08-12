@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { MapPlaceView } from "../../data/contracts";
-import { MapCanvas } from "./MapCanvas";
+import { MapCanvas, type MapRuntime } from "./MapCanvas";
 
 const place = {
   id: "place-one",
@@ -122,5 +122,41 @@ describe("MapCanvas", () => {
     );
 
     expect(screen.getByRole("status")).toHaveTextContent("지도에 표시할 좌표가 없습니다");
+  });
+
+  it("keeps the current map instance when polling returns unchanged places", async () => {
+    const createMap = vi.fn();
+    const removeMap = vi.fn();
+    class FakeMap {
+      constructor() {
+        createMap();
+      }
+      addControl() {}
+      remove() {
+        removeMap();
+      }
+    }
+    class FakeMarker {
+      setLngLat() { return this; }
+      addTo() { return this; }
+    }
+    class FakeNavigationControl {}
+    const loader = vi.fn(async () => ({
+      Map: FakeMap,
+      Marker: FakeMarker,
+      NavigationControl: FakeNavigationControl,
+    }) as unknown as MapRuntime);
+    const onOpenPlace = vi.fn();
+    const { rerender } = render(
+      <MapCanvas loader={loader} onOpenPlace={onOpenPlace} places={[place]} />
+    );
+    await waitFor(() => expect(createMap).toHaveBeenCalledTimes(1));
+
+    rerender(
+      <MapCanvas loader={loader} onOpenPlace={onOpenPlace} places={[{ ...place }]} />
+    );
+
+    await waitFor(() => expect(createMap).toHaveBeenCalledTimes(1));
+    expect(removeMap).not.toHaveBeenCalled();
   });
 });

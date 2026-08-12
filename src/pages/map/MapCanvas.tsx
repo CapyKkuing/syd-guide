@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type Dispatch } from "react";
+import { useEffect, useMemo, useRef, useState, type Dispatch } from "react";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type * as MapLibre from "maplibre-gl";
 import type { MapPlaceView } from "../../data/contracts";
@@ -40,7 +40,12 @@ export function MapCanvas({
   const [attempt, setAttempt] = useState(0);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const failed = useRef(false);
-  const hasLocatedPlaces = places.some(hasCoordinates);
+  const serializedPlaces = JSON.stringify(places);
+  const stablePlaces = useMemo(
+    () => JSON.parse(serializedPlaces) as MapPlaceView[],
+    [serializedPlaces]
+  );
+  const hasLocatedPlaces = stablePlaces.some(hasCoordinates);
 
   useEffect(() => {
     const retry = () => {
@@ -51,7 +56,7 @@ export function MapCanvas({
   }, []);
 
   useEffect(() => {
-    const located = places.filter(hasCoordinates);
+    const located = stablePlaces.filter(hasCoordinates);
     if (!navigator.onLine) {
       failed.current = true;
       return;
@@ -141,7 +146,7 @@ export function MapCanvas({
         map = null;
       }
     };
-  }, [attempt, connectRoute, loader, numberedMarkers, onOpenPlace, places]);
+  }, [attempt, connectRoute, loader, numberedMarkers, onOpenPlace, stablePlaces]);
 
   return (
     <div className="map-canvas-shell">
