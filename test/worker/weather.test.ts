@@ -127,29 +127,68 @@ describe("Open-Meteo Best Match weather route", () => {
     ).first()).resolves.toEqual({ used_count: 2 });
   });
 
-  it("reuses cached coordinates for one current-only request while the forecast is fresh", async () => {
+  it("coalesces concurrent cold refreshes into one provider call set", async () => {
+    let providerCallCount = 0;
+    const weatherFetch = vi.fn<typeof fetch>(async (input) => {
+      providerCallCount += 1;
+      if (providerCallCount === 1) {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+      const url = new URL(String(input));
+      if (url.hostname === "geocoding-api.open-meteo.com") {
+        return geocodingResponse(url.searchParams.get("name") ?? "");
+      }
+      return url.searchParams.has("daily") ? forecastResponse() : currentResponse();
+    });
+    const app = createApp({ now: () => initialNow, weatherFetch });
+
+    const responses = await Promise.all([
+      app.request("http://localhost/api/trips/trip-weather/weather", { headers: headers() }, bindings()),
+      app.request("http://localhost/api/trips/trip-weather/weather", { headers: headers() }, bindings()),
+    ]);
+    const bodies = await Promise.all(responses.map((item) => item.json() as Promise<WeatherResponse>));
+
+    expect(responses.map((item) => item.status)).toEqual([200, 200]);
+    expect(bodies.map((item) => item.status).sort()).toEqual(["cached", "live"]);
+    expect(weatherFetch).toHaveBeenCalledTimes(2);
+    await expect(env.DB.prepare(
+      "SELECT used_count FROM weather_provider_usage WHERE billing_month = '2026-08'"
+    ).first()).resolves.toEqual({ used_count: 2 });
+  });
+
+  it("coalesces concurrent current-only refreshes while the forecast is fresh", async () => {
     let now = initialNow;
     const weatherFetch = openMeteoFetch();
     weatherFetch.mockImplementation(async (input) => {
       const url = new URL(String(input));
       if (url.hostname === "geocoding-api.open-meteo.com") return geocodingResponse("Sydney, Australia");
+      if (!url.searchParams.has("daily")) {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
       return url.searchParams.has("daily") ? forecastResponse() : currentResponse(21);
     });
     const app = createApp({ now: () => now, weatherFetch });
 
     await app.request("http://localhost/api/trips/trip-weather/weather", { headers: headers() }, bindings());
     now = new Date(initialNow.getTime() + 61 * 60 * 1_000);
-    const refreshed = await app.request("http://localhost/api/trips/trip-weather/weather", { headers: headers() }, bindings());
+    const refreshed = await Promise.all([
+      app.request("http://localhost/api/trips/trip-weather/weather", { headers: headers() }, bindings()),
+      app.request("http://localhost/api/trips/trip-weather/weather", { headers: headers() }, bindings()),
+    ]);
+    const refreshedBodies = await Promise.all(
+      refreshed.map((item) => item.json() as Promise<WeatherResponse>)
+    );
 
-    expect(refreshed.status).toBe(200);
-    const refreshedBody = await refreshed.json() as WeatherResponse;
-    expect(refreshedBody).toMatchObject({
+    expect(refreshed.map((item) => item.status)).toEqual([200, 200]);
+    expect(refreshedBodies.map((item) => item.status).sort()).toEqual(["cached", "live"]);
+    const liveBody = refreshedBodies.find((item) => item.status === "live");
+    expect(liveBody).toMatchObject({
       status: "live",
       weather: { temperatureC: 21, condition: "흐림" },
     });
-    expect(refreshedBody.weather).not.toBeNull();
-    if (!refreshedBody.weather) throw new Error("Expected a weather snapshot");
-    expect(refreshedBody.weather.forecast).toEqual(expect.arrayContaining([
+    expect(liveBody?.weather).not.toBeNull();
+    if (!liveBody?.weather) throw new Error("Expected a weather snapshot");
+    expect(liveBody.weather.forecast).toEqual(expect.arrayContaining([
       expect.objectContaining({ date: "2026-08-12" }),
     ]));
     expect(weatherFetch).toHaveBeenCalledTimes(3);

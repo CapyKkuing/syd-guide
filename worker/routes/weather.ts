@@ -6,10 +6,12 @@ import { WEATHER_DISCLAIMER } from "../../src/shared/weather";
 import type { AppDependencies } from "../auth/access";
 import { requirePrincipal } from "../auth/principal";
 import {
+  acquireWeatherRefreshLease,
   hasFreshCurrent,
   hasFreshForecast,
   loadWeatherSnapshot,
   normalizeWeatherQuery,
+  releaseWeatherRefreshLease,
   reserveWeatherProviderUsage,
   saveWeatherSnapshot,
 } from "../db/weather";
@@ -24,6 +26,7 @@ import {
 } from "../services/open-meteo";
 
 const idSchema = z.string().regex(/^[A-Za-z0-9-]{1,100}$/);
+const refreshWaitDelaysMs = [0, 25, 50, 100, 200, 400, 800, 1_600, 3_200, 6_400, 10_000] as const;
 
 export class WeatherError extends Error {
   constructor(
@@ -63,27 +66,50 @@ export function registerWeatherRoutes(
         disclaimer: WEATHER_DISCLAIMER,
       });
     }
-    const canRefreshCurrentOnly = Boolean(cached?.current && hasFreshForecast(cached, now, query));
-    if (!await reserveWeatherProviderUsage(c.env, now, canRefreshCurrentOnly ? 1 : 2)) {
-      throw new WeatherError(
-        429,
-        "WEATHER_FREE_LIMIT_REACHED",
-        "이번 달 날씨 무료 보호 한도에 도달했습니다. 잠시 후 다시 확인해 주세요.",
-      );
+
+    const refreshTurn = await waitForRefreshTurn(c.env, tripId, query, dependencies.now);
+    if (refreshTurn.kind === "cached") {
+      return response(c, {
+        status: "cached",
+        weather: refreshTurn.weather,
+        message: null,
+        attribution: "Open-Meteo · Best Match",
+        disclaimer: WEATHER_DISCLAIMER,
+      });
     }
+
     try {
-      const stored = canRefreshCurrentOnly && cached?.current
+      const refreshNow = dependencies.now();
+      const latest = await loadWeatherSnapshot(c.env, tripId);
+      if (latest?.current && hasFreshCurrent(latest, refreshNow, query) && hasFreshForecast(latest, refreshNow, query)) {
+        return response(c, {
+          status: "cached",
+          weather: latest.current,
+          message: null,
+          attribution: "Open-Meteo · Best Match",
+          disclaimer: WEATHER_DISCLAIMER,
+        });
+      }
+      const canRefreshCurrentOnly = Boolean(latest?.current && hasFreshForecast(latest, refreshNow, query));
+      if (!await reserveWeatherProviderUsage(c.env, refreshNow, canRefreshCurrentOnly ? 1 : 2)) {
+        throw new WeatherError(
+          429,
+          "WEATHER_FREE_LIMIT_REACHED",
+          "이번 달 날씨 무료 보호 한도에 도달했습니다. 잠시 후 다시 확인해 주세요.",
+        );
+      }
+      const stored = canRefreshCurrentOnly && latest?.current
         ? await saveWeatherSnapshot(
           c.env,
           tripId,
           {
-            ...await fetchCurrentWeather(cached.current.location, now, weatherFetch),
-            forecast: cached.forecast,
+            ...await fetchCurrentWeather(latest.current.location, refreshNow, weatherFetch),
+            forecast: latest.forecast,
           },
-          now,
+          refreshNow,
           { refreshForecast: false, query },
         )
-        : await refreshFullForecast(c.env, tripId, query, now, weatherFetch);
+        : await refreshFullForecast(c.env, tripId, query, refreshNow, weatherFetch);
       return response(c, {
         status: "live",
         weather: stored.current,
@@ -100,8 +126,37 @@ export function registerWeatherRoutes(
         );
       }
       throw error;
+    } finally {
+      await releaseWeatherRefreshLease(c.env, tripId, refreshTurn.leaseToken);
     }
   });
+}
+
+async function waitForRefreshTurn(
+  env: AppEnv["Bindings"],
+  tripId: string,
+  query: string,
+  now: () => Date,
+) {
+  for (const delayMs of refreshWaitDelaysMs) {
+    if (delayMs > 0) {
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+    const cached = await loadWeatherSnapshot(env, tripId);
+    const checkedAt = now();
+    if (cached?.current && hasFreshCurrent(cached, checkedAt, query) && hasFreshForecast(cached, checkedAt, query)) {
+      return { kind: "cached" as const, weather: cached.current };
+    }
+    const leaseToken = await acquireWeatherRefreshLease(env, tripId, checkedAt);
+    if (leaseToken) {
+      return { kind: "refresh" as const, leaseToken };
+    }
+  }
+  throw new WeatherError(
+    503,
+    "WEATHER_REFRESH_IN_PROGRESS",
+    "날씨 정보를 갱신하고 있습니다. 잠시 후 다시 확인해 주세요.",
+  );
 }
 
 async function refreshFullForecast(

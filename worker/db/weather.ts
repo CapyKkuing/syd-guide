@@ -5,6 +5,7 @@ import type { Env } from "../env";
 export const WEATHER_MONTHLY_LIMIT = 10_000;
 export const CURRENT_CACHE_MS = 60 * 60 * 1_000;
 export const FORECAST_CACHE_MS = 24 * 60 * 60 * 1_000;
+export const WEATHER_REFRESH_LEASE_MS = 25 * 1_000;
 
 const forecastSchema = z.array(z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
@@ -68,6 +69,37 @@ export async function reserveWeatherProviderUsage(
   ).bind(billingMonth(now), requestCount, now.toISOString(), WEATHER_MONTHLY_LIMIT)
     .first<{ used_count: number }>();
   return row !== null;
+}
+
+export async function acquireWeatherRefreshLease(
+  env: Env,
+  tripId: string,
+  now: Date,
+): Promise<string | null> {
+  const leaseToken = crypto.randomUUID();
+  const leaseExpiresAt = new Date(now.getTime() + WEATHER_REFRESH_LEASE_MS).toISOString();
+  const row = await env.DB.prepare(
+    `INSERT INTO weather_refresh_leases (trip_id, lease_token, lease_expires_at, updated_at)
+     VALUES (?, ?, ?, ?)
+     ON CONFLICT (trip_id) DO UPDATE SET
+       lease_token = excluded.lease_token,
+       lease_expires_at = excluded.lease_expires_at,
+       updated_at = excluded.updated_at
+     WHERE weather_refresh_leases.lease_expires_at <= excluded.updated_at
+     RETURNING lease_token`
+  ).bind(tripId, leaseToken, leaseExpiresAt, now.toISOString())
+    .first<{ lease_token: string }>();
+  return row?.lease_token === leaseToken ? leaseToken : null;
+}
+
+export async function releaseWeatherRefreshLease(
+  env: Env,
+  tripId: string,
+  leaseToken: string,
+): Promise<void> {
+  await env.DB.prepare(
+    "DELETE FROM weather_refresh_leases WHERE trip_id = ? AND lease_token = ?"
+  ).bind(tripId, leaseToken).run();
 }
 
 export async function loadWeatherSnapshot(env: Env, tripId: string): Promise<StoredWeather | null> {
