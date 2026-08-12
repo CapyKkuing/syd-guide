@@ -1175,6 +1175,9 @@ npm run build
 - 2026-08-12 사용자는 위 로컬 결과 보고 뒤 **Open-Meteo 전환의 승인 파일 commit·`main` push, 운영 D1 `0023` 적용, 사용자·관리자 Worker 동일 제품 SHA 배포와 실제 운영 canary**를 승인했다. Open-Meteo는 Secret이 없으므로 Secret 변경은 실행하지 않는다. 승인 파일 밖의 `DataFreshness` 상태 표시, 로컬 사진·목업·`.omo`·`.superpowers`·`src/dev`와 Phase 4 백업·복원, V1 tag, 남은 Android 수동 QA는 이번 실행 단위에서 제외한다.
 - 실행 순서는 `승인 파일 whitelist·자동 게이트 → 제품 commit·main push → 원격 pending migration 확인·0023 적용 → 동일 제품 SHA 두 Worker 배포 → 사용자 HTTP·실제 날씨 live/cache·관리자 Access canary → 계획·대시보드 증거 기록`으로 고정한다. 원격 migration 목록에 `0023` 외 예상하지 못한 pending 항목이 있으면 적용하지 않고 중단한다.
 - 2026-08-12 첫 운영 canary에서 BOM 전용 `/v1/bom`은 HTTP 200이지만 현재 온도·날씨코드·UV가 모두 `null`이었다. Open-Meteo 공식 BOM 문서도 플랫폼 업그레이드 동안 open-data 전달이 일시 중단됐고 종합 Forecast API 사용을 권장한다고 안내한다. 같은 좌표의 `/v1/forecast` Best Match는 현재값과 3일 예보를 정상 반환해, 비용·Secret·제품 한도를 바꾸지 않고 이 endpoint로 보정한다.
+- 2026-08-12 Best Match 보정 제품 커밋 `c602239cc0f0e7bfe46cf3ce90e495c4f5815c6a`를 `main`에 push하고 사용자 Worker version `805f50b4-ca76-48e3-b0e6-822b821f1f67`, 관리자 Worker version `8fc85eaa-a3fe-4ab0-bc0f-ef50e23c4d1b`를 각각 100% 트래픽으로 배포했다. 두 deployment의 `PRODUCT_SHA`가 같은 제품 커밋과 일치한다. 사용자 root·health·manifest·service worker·최종 bundle `/assets/index-D-sCj9MX.js`는 HTTP 200, 관리자 root·health는 Cloudflare Access 경계로 HTTP 302였다.
+- 운영 D1은 `0023`까지 이미 적용돼 새 migration write 없이 날씨 사용량·current·forecast 테이블과 만료 인덱스 2개를 확인했다. Best Match 실공급업체 호출은 Sydney 좌표에서 유효한 현재값·UV·3일 예보와 `Australia/Sydney` 시간대를 반환했다. 전체 Worker 11파일 102건, frontend 69파일 489건, typecheck·lint·production build·diff-check가 통과했다. Secret·결제·유료 호출은 없다.
+- 운영 월 provider counter는 BOM 실패 canary를 포함해 `2`이고 current·forecast cache는 각각 0건이다. 현재 제품 데이터에는 여행 중인 trip이 없고 브라우저의 직접 API 탐색은 client 차단이어서, Best Match 제품 경로의 실제 `live → cached` 화면·사용량 불변 증거는 완료로 확대하지 않는다. 운영 데이터를 임의 변경하지 않고 Phase 6 통합 QA에서 여행 중 QA 데이터가 준비됐을 때 확인한다.
 
 ## 13. 컨텍스트 압축 후 복구 체크리스트
 
