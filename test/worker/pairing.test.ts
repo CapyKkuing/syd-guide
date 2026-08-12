@@ -59,6 +59,29 @@ describe("one-time device pairing", () => {
     await env.DB.prepare("DELETE FROM pair_invites").run();
   });
 
+  it("issues an invite from the deployed partner surface configuration", async () => {
+    const response = await app.request(
+      "http://localhost/api/admin/invites",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Origin: "http://localhost",
+          "X-Dev-Principal": "owner",
+        },
+        body: JSON.stringify({ memberId: "partner" }),
+      },
+      { ...env, DEV_AUTH: "enabled" }
+    );
+
+    expect(response.status).toBe(201);
+    const body = (await response.json()) as { invite: Invite };
+    const url = new URL(body.invite.url);
+    expect(url.origin).toBe(env.APP_ORIGIN);
+    expect(url.pathname).toBe("/pair");
+    expect(url.searchParams.get("token")).toBe(body.invite.token);
+  });
+
   it("accepts a fresh invite once and rejects replay", async () => {
     const invite = await issueInvite();
     const first = await claimInvite(invite.token, "iPhone");

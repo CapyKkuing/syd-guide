@@ -19,6 +19,7 @@
   "vars": {
     "SURFACE": "partner",
     "APP_ORIGIN": "https://couple-travel-guide.yeonuunim521.workers.dev",
+    "PARTNER_ORIGIN": "https://couple-travel-guide.yeonuunim521.workers.dev",
     "GOOGLE_DRIVE_CLIENT_ID": "494144169808-nr0ncu3g27063ggte39i3s1mn5i4jtkv.apps.googleusercontent.com"
   }
 }
