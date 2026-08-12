@@ -87,7 +87,7 @@ export function ParticipantManager({
                 </Text>
               </VStack>
             </StackItem>
-            {member.id !== "owner" ? (
+            {!member.isRepresentative || member.id !== "owner" ? (
               <HStack align="center" gap={1} wrap="wrap">
                 {!member.isRepresentative ? (
                   <Button
@@ -97,7 +97,7 @@ export function ParticipantManager({
                     variant="ghost"
                   >대표자로</Button>
                 ) : null}
-                {deleteTargetId === member.id ? (
+                {member.id !== "owner" && deleteTargetId === member.id ? (
                   <>
                     <Button
                       clickAction={() => remove(member.id)}
@@ -112,14 +112,14 @@ export function ParticipantManager({
                       variant="secondary"
                     >취소</Button>
                   </>
-                ) : (
+                ) : member.id !== "owner" ? (
                   <Button
                     clickAction={() => setDeleteTargetId(member.id)}
                     label={`${member.displayName} 삭제`}
                     size="sm"
                     variant="ghost"
                   >삭제</Button>
-                )}
+                ) : null}
               </HStack>
             ) : null}
           </HStack>

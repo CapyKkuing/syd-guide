@@ -232,6 +232,41 @@ describe("participant management", () => {
     );
   });
 
+  it("lets the administrator become the travel representative again", async () => {
+    const partnerRepresentativeRoster = {
+      ...initialRoster,
+      setupComplete: true,
+      representativeMemberId: "partner",
+      members: initialRoster.members.map((member) => ({
+        ...member,
+        isRepresentative: member.id === "partner",
+      })),
+    };
+    const restoredRoster = {
+      ...partnerRepresentativeRoster,
+      representativeMemberId: "owner",
+      members: partnerRepresentativeRoster.members.map((member) => ({
+        ...member,
+        isRepresentative: member.id === "owner",
+      })),
+    };
+    const request = vi.fn().mockResolvedValue(Response.json({ roster: restoredRoster }));
+    const onChange = vi.fn();
+    vi.stubGlobal("fetch", request);
+
+    render(<ParticipantManager roster={partnerRepresentativeRoster} onChange={onChange} />);
+    await userEvent.click(screen.getByRole("button", { name: "나 대표자로 지정" }));
+
+    await waitFor(() => expect(onChange).toHaveBeenCalledWith(restoredRoster));
+    expect(request).toHaveBeenCalledWith(
+      "/api/admin/participants/owner",
+      expect.objectContaining({
+        method: "PATCH",
+        body: JSON.stringify({ isRepresentative: true }),
+      })
+    );
+  });
+
   it("requires confirmation before removing a participant", async () => {
     const updatedRoster = {
       ...initialRoster,
