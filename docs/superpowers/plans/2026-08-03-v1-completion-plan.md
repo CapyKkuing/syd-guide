@@ -1181,7 +1181,7 @@ npm run build
 
 ### 2026-08-12 · Phase 6 자동·읽기 전용 운영 QA 중간 결과
 
-- 배포 제품 SHA는 `c602239cc0f0e7bfe46cf3ce90e495c4f5815c6a`, 최신 문서 HEAD는 `8fc2f5f40c26b8f6f3409fd2175cbdc161db89f0`로 분리해 기록한다. 두 SHA 사이 제품 소스 차이는 없고 계획서 3줄만 다르다. 사용자 Worker version `805f50b4-ca76-48e3-b0e6-822b821f1f67`과 관리자 Worker version `8fc85eaa-a3fe-4ab0-bc0f-ef50e23c4d1b`는 모두 제품 SHA annotation으로 100% 배포돼 있다.
+- 배포 제품 SHA는 `c602239cc0f0e7bfe46cf3ce90e495c4f5815c6a`, QA 시작 기준 문서 HEAD는 `8fc2f5f40c26b8f6f3409fd2175cbdc161db89f0`로 분리해 기록한다. 두 SHA 사이 제품 소스 차이는 없고 계획서 3줄만 다르다. 이후 증거 문서 commit은 최종 Git 상태에서 별도로 기록한다. 사용자 Worker version `805f50b4-ca76-48e3-b0e6-822b821f1f67`과 관리자 Worker version `8fc85eaa-a3fe-4ab0-bc0f-ef50e23c4d1b`는 모두 제품 SHA annotation으로 100% 배포돼 있다.
 - 현재 소스에서 frontend 69파일 489건, Worker 11파일 102건, Playwright 5개 프로젝트 46/46, `typecheck`, lint, production build와 `git diff --check`를 통과했다. Playwright는 격리된 local D1에 `0001`~`0023`을 적용했으며 운영 D1을 변경하지 않았다.
 - Pages workflow에는 `push` trigger가 없고 수동 `workflow_dispatch`만 남아 있다. trigger 제거 뒤 제품·문서 main push에서 Pages workflow 실행은 0건이며 제품 runtime의 `github.io`·`pages.dev` 참조도 0건이다.
 - 사용자 운영 Today는 DOM 로드·콘솔 warn/error 0·가로 overflow 0으로 확인했다. 다만 내부 브라우저는 최신 `/assets/index-D-sCj9MX.js`가 아니라 구 `/assets/index-COr6lnbW.js`를 사용했다. 관리자 `/library`도 구 `/assets/index-D7j3Hrnj.js`를 유지해 `참여자 설정을 불러오지 못했습니다 / Failed to fetch`를 다시 노출했다. 정상 reload 1회로 바뀌지 않았으므로 `GAP-40`과 관리자 PWA service worker 갱신은 P1 출시 차단으로 유지한다. 코드·자동 회귀·배포 완료를 운영 화면 완료로 확대하지 않는다.

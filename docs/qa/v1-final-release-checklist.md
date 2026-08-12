@@ -56,8 +56,8 @@ Phase 6에서 현재 소스 기준으로 다시 실행했다.
 ### 1-1. 사전 고정
 
 - [x] 최종 구현 범위가 계획서의 현재 실행 단위와 일치한다.
-- [x] 브랜치와 HEAD를 기록했다: `main`, 문서 HEAD `8fc2f5f4`.
-- [x] 배포 제품 SHA `c602239c`와 문서 SHA `8fc2f5f4`를 분리해 기록했다.
+- [x] 브랜치와 QA 시작 기준 HEAD를 기록했다: `main`, 문서 기준 `8fc2f5f4`.
+- [x] 배포 제품 SHA `c602239c`와 QA 시작 기준 문서 SHA `8fc2f5f4`를 분리해 기록했다. 증거 문서 commit은 최종 Git 상태에서 별도로 기록한다.
 - [x] 승인 파일 밖 로컬 사진·목업·`.omo`·`.superpowers`·`src/dev`를 release 범위에서 제외했다.
 - [x] 운영 migration·provider 호출·배포 승인과 로컬 검증 승인을 분리했다.
 - [x] 전체 Playwright가 격리된 4173 포트와 local D1에서 완료됐다.
