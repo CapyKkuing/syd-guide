@@ -18,6 +18,8 @@ import {
 import type { ReelStore } from "./reelStore";
 import type { TravelReel } from "./types";
 
+const THUMBNAIL_LOAD_CONCURRENCY = 4;
+
 interface Props {
   api?: Pick<MediaApi, "remove">;
   media: TripMedia[];
@@ -79,21 +81,15 @@ export function ReelEditor({
     let active = true;
     void (async () => {
       try {
-        const [saved, blobs] = await Promise.all([
-          store.get(tripId),
-          loadThumbnailBlobs(visibleMedia, thumbnailStore, undefined),
-        ]);
-        const hashes = await hashBlobs(blobs);
+        const saved = await store.get(tripId);
         if (!active) return;
-        addPreviewUrls(blobs, createdUrls.current, setPreviews);
-        setSimilarityHashes(hashes);
         const savedNeedsCleanup = saved
           ? reelReferencesMissingMedia(saved, visibleMedia)
           : false;
-        const next = reconcileReel(saved, visibleMedia)
-          ?? composeReel(visibleMedia, { similarityHashes: hashes, tripId });
-        setReel(next);
-        if (!saved || savedNeedsCleanup) await store.save(next);
+        const initial = reconcileReel(saved, visibleMedia)
+          ?? composeReel(visibleMedia, { tripId });
+        setReel(initial);
+        if (savedNeedsCleanup) await store.save(initial);
         if (active) {
           setMessage((current) =>
             current.startsWith("사진 이력")
@@ -102,6 +98,28 @@ export function ReelEditor({
                 ? "자동 구성을 만들었습니다. 순서와 사진을 자유롭게 바꿀 수 있습니다."
                 : "여행 사진을 추가하면 자동 릴이 만들어집니다."
           );
+        }
+
+        const blobs = await loadThumbnailBlobs(
+          visibleMedia,
+          thumbnailStore,
+          undefined,
+          (mediaId, blob) => {
+            if (active) {
+              addPreviewUrls({ [mediaId]: blob }, createdUrls.current, setPreviews);
+            }
+          }
+        );
+        const hashes = await hashBlobs(blobs);
+        if (!active) return;
+        setSimilarityHashes(hashes);
+        if (!saved) {
+          const next = composeReel(visibleMedia, {
+            similarityHashes: hashes,
+            tripId,
+          });
+          setReel(next);
+          await store.save(next);
         }
       } catch {
         if (active) setMessage("저장된 릴을 불러오지 못했습니다. 다시 시도해 주세요.");
@@ -171,9 +189,18 @@ export function ReelEditor({
     }
     setMessage("Drive에서 사진 미리보기를 불러오는 중입니다.");
     try {
-      const blobs = await loadThumbnailBlobs(visibleMedia, thumbnailStore, provider);
+      let loadedCount = 0;
+      const blobs = await loadThumbnailBlobs(
+        visibleMedia,
+        thumbnailStore,
+        provider,
+        (mediaId, blob) => {
+          loadedCount += 1;
+          addPreviewUrls({ [mediaId]: blob }, createdUrls.current, setPreviews);
+          setMessage(`Drive 미리보기 ${loadedCount}/${visibleMedia.length}장을 표시했습니다.`);
+        }
+      );
       const hashes = await hashBlobs(blobs);
-      addPreviewUrls(blobs, createdUrls.current, setPreviews);
       setSimilarityHashes(hashes);
       if (reel?.mode === "auto") {
         const next = composeReel(visibleMedia, {
@@ -613,19 +640,46 @@ async function retryOnce(action: () => Promise<void>): Promise<boolean> {
 async function loadThumbnailBlobs(
   media: TripMedia[],
   store: Pick<MediaThumbnailStore, "get" | "save"> | undefined,
-  provider: MediaStorageProviderClient | undefined
+  provider: MediaStorageProviderClient | undefined,
+  // eslint-disable-next-line no-unused-vars
+  onBlob?: (mediaId: string, blob: Blob) => void
 ): Promise<Record<string, Blob>> {
   if (!store) return {};
   const blobs: Record<string, Blob> = {};
-  for (const item of media) {
+  await forEachConcurrent(media, THUMBNAIL_LOAD_CONCURRENCY, async (item) => {
     let blob = await store.get(item.id);
     if (!blob && provider?.connected) {
       blob = await provider.download(item.thumbnailObjectId);
+      onBlob?.(item.id, blob);
       await store.save(item.id, item.tripId, blob);
+    } else if (blob) {
+      onBlob?.(item.id, blob);
     }
     if (blob) blobs[item.id] = blob;
-  }
+  });
   return blobs;
+}
+
+async function forEachConcurrent<T>(
+  items: T[],
+  concurrency: number,
+  // eslint-disable-next-line no-unused-vars
+  action: (item: T) => Promise<void>
+): Promise<void> {
+  let nextIndex = 0;
+  async function worker() {
+    while (nextIndex < items.length) {
+      const item = items[nextIndex];
+      nextIndex += 1;
+      if (item !== undefined) await action(item);
+    }
+  }
+  await Promise.all(
+    Array.from(
+      { length: Math.min(concurrency, items.length) },
+      () => worker()
+    )
+  );
 }
 
 async function hashBlobs(

@@ -89,6 +89,7 @@ function setup(clientId: string | null = "test-client-id") {
   };
   const thumbnailStore = {
     get: vi.fn().mockResolvedValue(null),
+    remove: vi.fn().mockResolvedValue(undefined),
     save: vi.fn().mockResolvedValue(undefined),
   };
   const ranker = vi.fn().mockResolvedValue([{
@@ -472,5 +473,73 @@ describe("RepresentativePhotoPanel", () => {
       });
     });
     expect(runtime.provider.upload).toHaveBeenCalledTimes(2);
+  });
+
+  it("deletes the representative app history after confirmation and preserves Drive files", async () => {
+    const user = userEvent.setup();
+    const runtime = setup();
+    const onChanged = vi.fn().mockResolvedValue(undefined);
+    vi.mocked(runtime.thumbnailStore.get).mockResolvedValue(
+      new Blob(["thumb"], { type: "image/webp" })
+    );
+    render(
+      <RepresentativePhotoPanel
+        api={runtime.api}
+        media={[runtime.savedMedia]}
+        onChanged={onChanged}
+        provider={runtime.provider}
+        storage={storage}
+        thumbnailStore={runtime.thumbnailStore}
+        trip={{ ...trip, representativeMediaId: runtime.savedMedia.id }}
+        viewerRole="owner"
+      />
+    );
+
+    await user.click(await screen.findByRole("button", { name: "대표사진 삭제" }));
+    expect(screen.getByRole("alertdialog")).toHaveTextContent(
+      "Google Drive 원본과 미리보기 파일은 유지합니다."
+    );
+    await user.click(screen.getByRole("button", { name: "취소" }));
+    expect(runtime.api.remove).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole("button", { name: "대표사진 삭제" }));
+    await user.click(screen.getByRole("button", { name: "앱 이력 삭제 확인" }));
+
+    await waitFor(() => {
+      expect(runtime.api.remove).toHaveBeenCalledWith(trip.id, runtime.savedMedia.id);
+    });
+    expect(runtime.thumbnailStore.remove).toHaveBeenCalledWith(runtime.savedMedia.id);
+    expect(runtime.provider.remove).not.toHaveBeenCalled();
+    expect(onChanged).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("button", { name: "대표사진 삭제" })).not.toBeInTheDocument();
+    expect(screen.getByText(/대표사진 이력을 삭제했습니다.*Google Drive 원본/)).toBeVisible();
+  });
+
+  it("keeps the representative visible when app history deletion fails", async () => {
+    const user = userEvent.setup();
+    const runtime = setup();
+    vi.mocked(runtime.thumbnailStore.get).mockResolvedValue(
+      new Blob(["thumb"], { type: "image/webp" })
+    );
+    vi.mocked(runtime.api.remove).mockRejectedValue(new Error("request failed"));
+    render(
+      <RepresentativePhotoPanel
+        api={runtime.api}
+        media={[runtime.savedMedia]}
+        onChanged={vi.fn()}
+        provider={runtime.provider}
+        storage={storage}
+        thumbnailStore={runtime.thumbnailStore}
+        trip={{ ...trip, representativeMediaId: runtime.savedMedia.id }}
+        viewerRole="owner"
+      />
+    );
+
+    await user.click(await screen.findByRole("button", { name: "대표사진 삭제" }));
+    await user.click(screen.getByRole("button", { name: "앱 이력 삭제 확인" }));
+
+    expect(await screen.findByText("대표사진 이력을 삭제하지 못했습니다. 다시 시도해 주세요.")).toBeVisible();
+    expect(screen.getByRole("button", { name: "대표사진 삭제" })).toBeVisible();
+    expect(runtime.thumbnailStore.remove).not.toHaveBeenCalled();
   });
 });

@@ -22,7 +22,7 @@ interface Props {
   provider?: MediaStorageProviderClient;
   ranker?: typeof rankPhotos;
   storage: TripMediaStorage | null;
-  thumbnailStore?: Pick<MediaThumbnailStore, "get" | "save">;
+  thumbnailStore?: Pick<MediaThumbnailStore, "get" | "remove" | "save">;
   trip: TripSummaryViewModel;
   viewerRole: "owner" | "partner";
 }
@@ -46,6 +46,7 @@ export function RepresentativePhotoPanel({
   const [previews, setPreviews] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [message, setMessage] = useState(
     api
       ? "사진은 내 Google Drive에 저장되고 AI 분석은 이 기기에서만 실행됩니다."
@@ -228,6 +229,49 @@ export function RepresentativePhotoPanel({
     }
   }
 
+  async function removeRepresentativeHistory() {
+    if (!api || !representative || !thumbnailStore) return;
+    setBusy(true);
+    setMessage("대표사진 이력을 삭제하는 중입니다.");
+    try {
+      await api.remove(trip.id, representative.id);
+      let localCleanupFailed = false;
+      try {
+        await thumbnailStore.remove(representative.id);
+      } catch {
+        localCleanupFailed = true;
+      }
+
+      const previewUrl = previews[representative.id];
+      if (previewUrl && createdUrls.current.delete(previewUrl)) {
+        URL.revokeObjectURL(previewUrl);
+      }
+      setPreviews((current) => {
+        const next = { ...current };
+        delete next[representative.id];
+        return next;
+      });
+      setItems((current) => current.filter((item) => item.id !== representative.id));
+      setRepresentativeId(null);
+      setEditorOpen(false);
+      setDeleteOpen(false);
+      try {
+        await onChanged();
+      } catch {
+        localCleanupFailed = true;
+      }
+      setMessage(
+        localCleanupFailed
+          ? "대표사진 이력은 삭제됐습니다. 화면이 남아 있으면 다시 불러와 주세요. Google Drive 원본은 유지됩니다."
+          : "대표사진 이력을 삭제했습니다. Google Drive 원본과 미리보기 파일은 유지됩니다."
+      );
+    } catch {
+      setMessage("대표사진 이력을 삭제하지 못했습니다. 다시 시도해 주세요.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function loadRepresentativeFromDrive() {
     if (!representative || !provider || !thumbnailStore || !provider.connected) return;
     if (previews[representative.id]) return;
@@ -285,6 +329,11 @@ export function RepresentativePhotoPanel({
               대표사진 편집
             </button>
           ) : null}
+          {representative && api ? (
+            <button className="danger-button" disabled={busy} onClick={() => setDeleteOpen(true)} type="button">
+              대표사진 삭제
+            </button>
+          ) : null}
         </div>
         <label className={busy || !api ? "photo-upload is-disabled" : "photo-upload"}>
           <span>{busy ? "처리 중…" : "여행 사진 선택"}</span>
@@ -300,6 +349,27 @@ export function RepresentativePhotoPanel({
           />
         </label>
         <p className="representative-photo__message" aria-live="polite">{message}</p>
+        {deleteOpen && representative ? (
+          <div
+            aria-labelledby="representative-photo-delete-title"
+            aria-modal="true"
+            className="representative-photo__delete-confirm"
+            role="alertdialog"
+          >
+            <div>
+              <strong id="representative-photo-delete-title">{representative.originalName} 대표사진 이력을 삭제할까요?</strong>
+              <span>앱 기록에서만 지우며 Google Drive 원본과 미리보기 파일은 유지합니다.</span>
+            </div>
+            <div className="representative-photo__delete-actions">
+              <button className="secondary-button" disabled={busy} onClick={() => setDeleteOpen(false)} type="button">
+                취소
+              </button>
+              <button className="danger-button" disabled={busy} onClick={() => void removeRepresentativeHistory()} type="button">
+                {busy ? "삭제 중…" : "앱 이력 삭제 확인"}
+              </button>
+            </div>
+          </div>
+        ) : null}
       </div>
 
       {candidates.length ? (

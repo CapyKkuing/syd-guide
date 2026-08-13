@@ -26,6 +26,89 @@ function photo(index: number): TripMedia {
 }
 
 describe("ReelEditor", () => {
+  it("renders the saved reel before slow thumbnail cache reads finish", async () => {
+    const saved: TravelReel = {
+      tripId: "trip-one",
+      scenes: [{ id: "scene-1", mediaId: "media-1", durationMs: 3_000 }],
+      excludedMediaIds: [],
+      durationMs: 3_000,
+      mode: "edited",
+    };
+    const store = {
+      get: vi.fn().mockResolvedValue(saved),
+      save: vi.fn().mockResolvedValue(undefined),
+    };
+    const thumbnailStore = {
+      get: vi.fn().mockReturnValue(new Promise<Blob | null>(() => undefined)),
+      remove: vi.fn().mockResolvedValue(undefined),
+      save: vi.fn().mockResolvedValue(undefined),
+    };
+
+    render(
+      <ReelEditor
+        media={[photo(1)]}
+        store={store}
+        thumbnailStore={thumbnailStore}
+        tripId="trip-one"
+      />
+    );
+
+    expect((await screen.findAllByText("0:03")).length).toBeGreaterThan(0);
+    expect(screen.getByRole("button", { name: "미리보기 재생" })).toBeEnabled();
+  });
+
+  it("downloads Drive previews concurrently and reveals the first completed image", async () => {
+    const user = userEvent.setup();
+    const photos = [photo(1), photo(2), photo(3), photo(4), photo(5)];
+    const store = {
+      get: vi.fn().mockResolvedValue(null),
+      save: vi.fn().mockResolvedValue(undefined),
+    };
+    const thumbnailStore = {
+      get: vi.fn().mockResolvedValue(null),
+      remove: vi.fn().mockResolvedValue(undefined),
+      save: vi.fn().mockResolvedValue(undefined),
+    };
+    const downloads = photos.map(() => deferred<Blob>());
+    const provider = {
+      provider: "google-drive" as const,
+      connected: true,
+      connect: vi.fn().mockResolvedValue(undefined),
+      createFolder: vi.fn().mockResolvedValue({ id: "folder" }),
+      upload: vi.fn().mockResolvedValue({ id: "uploaded" }),
+      download: vi.fn((objectId: string) => {
+        const index = photos.findIndex((item) => item.thumbnailObjectId === objectId);
+        return downloads[index]!.promise;
+      }),
+      remove: vi.fn().mockResolvedValue(undefined),
+      folderUrl: vi.fn().mockReturnValue("#"),
+    };
+    let objectUrlIndex = 0;
+    vi.stubGlobal("URL", {
+      ...URL,
+      createObjectURL: vi.fn(() => `blob:preview-${objectUrlIndex += 1}`),
+      revokeObjectURL: vi.fn(),
+    });
+
+    render(
+      <ReelEditor
+        media={photos}
+        provider={provider}
+        store={store}
+        thumbnailStore={thumbnailStore}
+        tripId="trip-one"
+      />
+    );
+
+    await screen.findByText("0:15");
+    await user.click(screen.getByRole("button", { name: "Drive 미리보기 새로 불러오기" }));
+    await waitFor(() => expect(provider.download).toHaveBeenCalledTimes(4));
+    expect(provider.download).not.toHaveBeenCalledWith(photos[4]!.thumbnailObjectId);
+
+    downloads[0]!.resolve(new Blob(["first"], { type: "image/webp" }));
+    expect(await screen.findByRole("img", { name: "1번째 릴 사진" })).toBeVisible();
+  });
+
   it("edits, replaces, undoes, and saves a photo-only silent reel", async () => {
     const user = userEvent.setup();
     const store = {
@@ -254,3 +337,12 @@ describe("ReelEditor", () => {
     expect(screen.queryByText("photo-2.jpg")).not.toBeInTheDocument();
   });
 });
+
+function deferred<T>() {
+  // eslint-disable-next-line no-unused-vars
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((resolvePromise) => {
+    resolve = resolvePromise;
+  });
+  return { promise, resolve };
+}
