@@ -170,7 +170,7 @@ describe("RepresentativePhotoPanel", () => {
         runtime.savedMedia.id
       );
     });
-    expect(screen.getByRole("button", { name: "대표사진" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "현재 대표사진" })).toBeDisabled();
   });
 
   it("explains the missing OAuth configuration without creating a folder", async () => {
@@ -475,17 +475,22 @@ describe("RepresentativePhotoPanel", () => {
     expect(runtime.provider.upload).toHaveBeenCalledTimes(2);
   });
 
-  it("deletes the representative app history after confirmation and preserves Drive files", async () => {
+  it("protects the current representative and deletes a non-current photo history after confirmation", async () => {
     const user = userEvent.setup();
     const runtime = setup();
     const onChanged = vi.fn().mockResolvedValue(undefined);
+    const historyMedia = {
+      ...runtime.savedMedia,
+      id: "22222222-2222-4222-8222-222222222222",
+      originalName: "opera-house.jpg",
+    };
     vi.mocked(runtime.thumbnailStore.get).mockResolvedValue(
       new Blob(["thumb"], { type: "image/webp" })
     );
     render(
       <RepresentativePhotoPanel
         api={runtime.api}
-        media={[runtime.savedMedia]}
+        media={[runtime.savedMedia, historyMedia]}
         onChanged={onChanged}
         provider={runtime.provider}
         storage={storage}
@@ -495,29 +500,38 @@ describe("RepresentativePhotoPanel", () => {
       />
     );
 
-    await user.click(await screen.findByRole("button", { name: "대표사진 삭제" }));
+    expect(await screen.findByRole("button", { name: "현재 대표사진" })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: "대표사진 삭제" })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "이력 삭제" }));
     expect(screen.getByRole("alertdialog")).toHaveTextContent(
       "Google Drive 원본과 미리보기 파일은 유지합니다."
     );
     await user.click(screen.getByRole("button", { name: "취소" }));
     expect(runtime.api.remove).not.toHaveBeenCalled();
 
-    await user.click(screen.getByRole("button", { name: "대표사진 삭제" }));
+    await user.click(screen.getByRole("button", { name: "이력 삭제" }));
     await user.click(screen.getByRole("button", { name: "앱 이력 삭제 확인" }));
 
     await waitFor(() => {
-      expect(runtime.api.remove).toHaveBeenCalledWith(trip.id, runtime.savedMedia.id);
+      expect(runtime.api.remove).toHaveBeenCalledWith(trip.id, historyMedia.id);
     });
-    expect(runtime.thumbnailStore.remove).toHaveBeenCalledWith(runtime.savedMedia.id);
+    expect(runtime.thumbnailStore.remove).toHaveBeenCalledWith(historyMedia.id);
     expect(runtime.provider.remove).not.toHaveBeenCalled();
     expect(onChanged).toHaveBeenCalledTimes(1);
-    expect(screen.queryByRole("button", { name: "대표사진 삭제" })).not.toBeInTheDocument();
-    expect(screen.getByText(/대표사진 이력을 삭제했습니다.*Google Drive 원본/)).toBeVisible();
+    expect(screen.getByRole("button", { name: "현재 대표사진" })).toBeVisible();
+    expect(screen.queryByRole("button", { name: "이력 삭제" })).not.toBeInTheDocument();
+    expect(screen.getByText(/사진 이력을 삭제했습니다.*Google Drive 원본/)).toBeVisible();
   });
 
-  it("keeps the representative visible when app history deletion fails", async () => {
+  it("keeps a non-current history card visible when deletion fails", async () => {
     const user = userEvent.setup();
     const runtime = setup();
+    const historyMedia = {
+      ...runtime.savedMedia,
+      id: "22222222-2222-4222-8222-222222222222",
+      originalName: "opera-house.jpg",
+    };
     vi.mocked(runtime.thumbnailStore.get).mockResolvedValue(
       new Blob(["thumb"], { type: "image/webp" })
     );
@@ -525,7 +539,7 @@ describe("RepresentativePhotoPanel", () => {
     render(
       <RepresentativePhotoPanel
         api={runtime.api}
-        media={[runtime.savedMedia]}
+        media={[runtime.savedMedia, historyMedia]}
         onChanged={vi.fn()}
         provider={runtime.provider}
         storage={storage}
@@ -535,11 +549,11 @@ describe("RepresentativePhotoPanel", () => {
       />
     );
 
-    await user.click(await screen.findByRole("button", { name: "대표사진 삭제" }));
+    await user.click(await screen.findByRole("button", { name: "이력 삭제" }));
     await user.click(screen.getByRole("button", { name: "앱 이력 삭제 확인" }));
 
-    expect(await screen.findByText("대표사진 이력을 삭제하지 못했습니다. 다시 시도해 주세요.")).toBeVisible();
-    expect(screen.getByRole("button", { name: "대표사진 삭제" })).toBeVisible();
+    expect(await screen.findByText("사진 이력을 삭제하지 못했습니다. 다시 시도해 주세요.")).toBeVisible();
+    expect(screen.getByRole("button", { name: "이력 삭제" })).toBeVisible();
     expect(runtime.thumbnailStore.remove).not.toHaveBeenCalled();
   });
 });

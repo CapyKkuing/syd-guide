@@ -46,7 +46,7 @@ export function RepresentativePhotoPanel({
   const [previews, setPreviews] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteMediaId, setDeleteMediaId] = useState<string | null>(null);
   const [message, setMessage] = useState(
     api
       ? "사진은 내 Google Drive에 저장되고 AI 분석은 이 기기에서만 실행됩니다."
@@ -54,14 +54,13 @@ export function RepresentativePhotoPanel({
   );
   const createdUrls = useRef(new Set<string>());
 
-  const candidates = useMemo(
+  const candidateAndHistory = useMemo(
     () => [...items]
-      .filter((item) => item.aiScore !== null)
-      .sort((left, right) => (right.aiScore ?? 0) - (left.aiScore ?? 0))
-      .slice(0, 3),
+      .sort((left, right) => (right.aiScore ?? -1) - (left.aiScore ?? -1)),
     [items]
   );
   const representative = items.find((item) => item.id === representativeId);
+  const deleteTarget = items.find((item) => item.id === deleteMediaId);
   const coverUrl = representative ? previews[representative.id] : undefined;
 
   useEffect(() => {
@@ -154,7 +153,7 @@ export function RepresentativePhotoPanel({
         }
       }
       setMessage(
-        `업로드 완료 · AI 추천 상위 ${Math.min(uploaded.length, 3)}장에서 대표사진을 골라 주세요.`
+        "업로드 완료 · AI 추천 점수를 확인해 대표사진을 골라 주세요."
       );
     } catch (error) {
       setMessage(errorMessage(error));
@@ -229,32 +228,30 @@ export function RepresentativePhotoPanel({
     }
   }
 
-  async function removeRepresentativeHistory() {
-    if (!api || !representative || !thumbnailStore) return;
+  async function removePhotoHistory(media: TripMedia) {
+    if (!api || !thumbnailStore || media.id === representativeId) return;
     setBusy(true);
-    setMessage("대표사진 이력을 삭제하는 중입니다.");
+    setMessage("사진 이력을 삭제하는 중입니다.");
     try {
-      await api.remove(trip.id, representative.id);
+      await api.remove(trip.id, media.id);
       let localCleanupFailed = false;
       try {
-        await thumbnailStore.remove(representative.id);
+        await thumbnailStore.remove(media.id);
       } catch {
         localCleanupFailed = true;
       }
 
-      const previewUrl = previews[representative.id];
+      const previewUrl = previews[media.id];
       if (previewUrl && createdUrls.current.delete(previewUrl)) {
         URL.revokeObjectURL(previewUrl);
       }
       setPreviews((current) => {
         const next = { ...current };
-        delete next[representative.id];
+        delete next[media.id];
         return next;
       });
-      setItems((current) => current.filter((item) => item.id !== representative.id));
-      setRepresentativeId(null);
-      setEditorOpen(false);
-      setDeleteOpen(false);
+      setItems((current) => current.filter((item) => item.id !== media.id));
+      setDeleteMediaId(null);
       try {
         await onChanged();
       } catch {
@@ -262,11 +259,11 @@ export function RepresentativePhotoPanel({
       }
       setMessage(
         localCleanupFailed
-          ? "대표사진 이력은 삭제됐습니다. 화면이 남아 있으면 다시 불러와 주세요. Google Drive 원본은 유지됩니다."
-          : "대표사진 이력을 삭제했습니다. Google Drive 원본과 미리보기 파일은 유지됩니다."
+          ? "사진 이력은 삭제됐습니다. 화면이 남아 있으면 다시 불러와 주세요. Google Drive 원본은 유지됩니다."
+          : "사진 이력을 삭제했습니다. Google Drive 원본과 미리보기 파일은 유지됩니다."
       );
     } catch {
-      setMessage("대표사진 이력을 삭제하지 못했습니다. 다시 시도해 주세요.");
+      setMessage("사진 이력을 삭제하지 못했습니다. 다시 시도해 주세요.");
     } finally {
       setBusy(false);
     }
@@ -329,11 +326,6 @@ export function RepresentativePhotoPanel({
               대표사진 편집
             </button>
           ) : null}
-          {representative && api ? (
-            <button className="danger-button" disabled={busy} onClick={() => setDeleteOpen(true)} type="button">
-              대표사진 삭제
-            </button>
-          ) : null}
         </div>
         <label className={busy || !api ? "photo-upload is-disabled" : "photo-upload"}>
           <span>{busy ? "처리 중…" : "여행 사진 선택"}</span>
@@ -349,7 +341,7 @@ export function RepresentativePhotoPanel({
           />
         </label>
         <p className="representative-photo__message" aria-live="polite">{message}</p>
-        {deleteOpen && representative ? (
+        {deleteTarget ? (
           <div
             aria-labelledby="representative-photo-delete-title"
             aria-modal="true"
@@ -357,14 +349,14 @@ export function RepresentativePhotoPanel({
             role="alertdialog"
           >
             <div>
-              <strong id="representative-photo-delete-title">{representative.originalName} 대표사진 이력을 삭제할까요?</strong>
+              <strong id="representative-photo-delete-title">{deleteTarget.originalName} 사진 이력을 삭제할까요?</strong>
               <span>앱 기록에서만 지우며 Google Drive 원본과 미리보기 파일은 유지합니다.</span>
             </div>
             <div className="representative-photo__delete-actions">
-              <button className="secondary-button" disabled={busy} onClick={() => setDeleteOpen(false)} type="button">
+              <button className="secondary-button" disabled={busy} onClick={() => setDeleteMediaId(null)} type="button">
                 취소
               </button>
-              <button className="danger-button" disabled={busy} onClick={() => void removeRepresentativeHistory()} type="button">
+              <button className="danger-button" disabled={busy} onClick={() => void removePhotoHistory(deleteTarget)} type="button">
                 {busy ? "삭제 중…" : "앱 이력 삭제 확인"}
               </button>
             </div>
@@ -372,26 +364,41 @@ export function RepresentativePhotoPanel({
         ) : null}
       </div>
 
-      {candidates.length ? (
-        <div className="representative-photo__candidates" aria-label="AI 추천 대표사진 후보">
-          {candidates.map((candidate, index) => (
+      {candidateAndHistory.length ? (
+        <div className="representative-photo__candidates" aria-label="AI 추천 대표사진 후보와 사진 이력">
+          {candidateAndHistory.map((candidate, index) => {
+            const isRepresentative = candidate.id === representativeId;
+            return (
             <article key={candidate.id} className={candidate.id === representativeId ? "photo-candidate is-selected" : "photo-candidate"}>
               {previews[candidate.id] ? (
                 <img src={previews[candidate.id]} alt={`AI 추천 후보 ${index + 1}`} />
               ) : (
                 <div className="photo-candidate__placeholder">Drive 연결 후 미리보기</div>
               )}
-              <p>추천 {Math.round((candidate.aiScore ?? 0) * 100)}점</p>
-              <button
-                className="secondary-button"
-                disabled={busy || candidate.id === representativeId}
-                onClick={() => void chooseRepresentative(candidate.id)}
-                type="button"
-              >
-                {candidate.id === representativeId ? "대표사진" : "대표사진으로 선택"}
-              </button>
+              <p>{candidate.aiScore === null ? "사진 이력" : `추천 ${Math.round(candidate.aiScore * 100)}점`}</p>
+              <div className={isRepresentative ? "photo-candidate__actions photo-candidate__actions--single" : "photo-candidate__actions"}>
+                <button
+                  className="secondary-button"
+                  disabled={busy || isRepresentative}
+                  onClick={() => void chooseRepresentative(candidate.id)}
+                  type="button"
+                >
+                  {isRepresentative ? "현재 대표사진" : "대표사진으로 선택"}
+                </button>
+                {!isRepresentative && api ? (
+                  <button
+                    className="secondary-button photo-candidate__delete-button"
+                    disabled={busy}
+                    onClick={() => setDeleteMediaId(candidate.id)}
+                    type="button"
+                  >
+                    이력 삭제
+                  </button>
+                ) : null}
+              </div>
             </article>
-          ))}
+            );
+          })}
         </div>
       ) : null}
       {editorOpen && representative && coverUrl && api ? (

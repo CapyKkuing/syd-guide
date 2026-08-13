@@ -95,7 +95,9 @@
 
 - ~~관리자 Cloudflare Access 세션 만료 복구 수정의 운영 배포·검증.~~
 
-  관리자 Access 복구와 선택 여행 편집 복귀는 `main` 반영·사용자/관리자 Worker 배포까지 완료했다. 최신 관리자 설치 PWA에서 완전 종료 후 여행 편집창이 바로 열리는 실기기 확인은 별도 운영 증거로 남긴다.
+  ~~관리자 Access 복구와 선택 여행 편집 복귀는 `main` 반영·사용자/관리자 Worker 배포까지 완료했다. 최신 관리자 설치 PWA에서 완전 종료 후 여행 편집창이 바로 열리는 실기기 확인은 별도 운영 증거로 남긴다.~~
+
+  2026-08-12 최신 관리자 설치 PWA를 완전히 종료·재실행한 뒤 선택 여행 수정창이 정상적으로 열리는 것을 사용자 실기기에서 확인해 Phase 0 운영 증거를 완료했다.
 
 - ~~다음 승인 후 진행할 범위는 **Phase 0 배포 게이트**다.~~
 
@@ -199,7 +201,7 @@
 
 | 실행 단위 | 상태 | 완료된 범위 | 남은 범위 |
 |---|---|---|---|
-| Phase 0 관리자 인증 | 운영 검증 일부 대기 | 코드·테스트·push·두 Worker 배포, 참여자·초대·기기 확인 | 최신 관리자 PWA 여행 편집창 최종 확인 |
+| Phase 0 관리자 인증 | 완료 | 코드·테스트·push·두 Worker 배포, 참여자·초대·기기 확인, 2026-08-12 최신 설치 관리자 PWA 완전 종료·재실행 뒤 선택 여행 수정창 열림 확인 | 없음 |
 | Phase 1A 모바일 일정 | ~~방향 변경 로컬 검증 완료·운영 미배포~~<br>~~온라인 전용 운영 배포 완료·실기기 QA 대기~~<br>~~Android 사용자·관리자 실기기 QA 통과, 자동 재연결 보류, iPhone QA 대기~~<br>V1 완료 | 날짜 이동, 모바일 드래그, 화살표, 이동 메모 입력·수정, 서버 직접 저장, 5초 자동 재조회, 오프라인 편집 차단, network-only 서비스 워커를 구현했다. 기존 오프라인 충돌 보정 이력은 `GAP-31`에 보존한다. `typecheck`·lint·build, frontend 460건, Worker 91건, 실제 브라우저 E2E 41건이 통과했다. 커밋 `65d7238` push와 두 Worker 배포·운영 정적/API 대조를 완료했다.<br>2026-08-09 Android 설치 앱의 메모 저장, 일정 4→1, 다른 기기 3.60초 반영과 오프라인 차단을 확인했고 관리자 앱의 여행 편집·참여자·초대·기기 관리 진입도 통과했다. Android 자동 재연결은 사용자 승인으로 보류하고 수동 `다시 불러오기`를 허용한다. | iPhone 사용자·관리자 실기기 QA는 상용화 앱 출시 단계로 이관. 오프라인 동기화는 폐기 확정 |
 | Phase 1B 장소 허브 | 진행 중 | ~~A안 통합 피드, 저장·추천 중복 통합, 필터·정렬, 지도 전환, 상세·투표·편집 UI 통일, 390·1440px 로컬 QA, 800회 하드 리밋 자동 증명, GAP-04 A안 확정~~<br>~~A안 통합 피드, 저장·추천 중복 통합, 필터·정렬, 지도 전환, 목록·상세·투표·편집 UI 보정, 390·1440px 로컬 QA, 800회 하드 리밋 자동 증명, GAP-04 A안 확정. 지도 보기 헤더·검색·필터·장소 목록 UI 통일은 미완료~~<br>~~2026-08-03 지도 보기 헤더·검색·필터·결과·장소 목록 UI 통일과 390·1440px 로컬 QA를 완료했다.~~<br>위 로컬 범위와 운영 정적 bundle의 통합 피드 UI 표식, 운영 D1의 장소·SKU 사용량을 읽기 전용으로 확인했다.<br>2026-08-08 `GAP-29` 장소 식별 충돌을 보정하고 같은 이름·다른 Google Place가 합쳐지지 않는 회귀 테스트와 전체 자동 게이트를 통과했다.<br>2026-08-09 `GAP-33` 투표 UI 제거와 `GAP-34` Places 사용량 표시 보정을 통합하고 전체 자동·브라우저 검증을 통과했다.<br>2026-08-09 운영 실데이터의 추천·사진·중복 병합·필터·정렬·상세·길찾기와 필터·정렬 사진 `+0`, 상세 사진 `+1`을 확인했다. | ~~운영 인증 세션에서 실제 추천·사진·중복 병합·필터·정렬·길찾기, 800회 차단, 실제 설치폰의 장소·지도 터치 QA. 투표 선택 QA는 폐기~~<br>운영 800회 실제 차단 경계와 Android 설치폰 장소·지도 터치·상세·편집·넘침 QA. 투표 선택 QA는 폐기 |
 | Phase 1C 필수 도구 | 진행 중 | ~~기존 교통·비상·주의사항·예약·비용 화면, 다인 정산·예약 체크인 로컬 구현·자동 검증~~<br>~~위 범위와 `0017`·`0018` 운영 D1 적용~~<br>~~위 범위, `0017`·`0018` 운영 D1 적용, `GAP-25` 정산 묶음 원자 생성·완료와 멱등 재시도 로컬 구현·자동·390px 화면 검증~~<br>2026-08-08 `GAP-30` 비용별 정산 묶음 원자 소유권, 동시·재시도 멱등성, 동기화 뒤 송금 완료 활성화를 보정했다. Google Vision OCR 공통 초안·Worker provider 경계·월 800페이지 차단·수동 입력 fallback도 로컬 구현·mock 자동 검증했다.<br>2026-08-09 `GAP-35` 주의사항 온라인 전용 문구와 상태 회귀를 통합하고 전체 자동·브라우저 검증을 통과했다.<br>2026-08-09 `0019`·`0021`·`0022` 운영 migration을 적용하고 기본 체크리스트 9개·정산 소유권·Vision 사용량 schema를 확인했다.<br>~~2026-08-09 Vision API·최소 IAM·Secret과 generic 요청 본문 보정을 운영 배포했고 실제 JPG OCR·3/800 사용량·편집 가능한 초안을 확인했다. `GAP-37` 영문 라벨 매핑 오류는 보정 대기다.~~<br>2026-08-09 `GAP-37`까지 보정·운영 배포했다. 실제 JPG OCR 1회에서 예약처·예약번호·종류·시작·종료와 편집 가능 상태, 사용량 `4/800`, 오류 0을 확인했다.<br>2026-08-09 QA 전용 완료 여행에서 AUD 30 공동 비용의 3인 정산 송금 2건과 개별 완료·원본 비용 완료 경계를 운영 확인했다. 예약 `체크인 전` 저장·재조회와 `체크인 완료` 수정 저장·재조회, Drive 이미지 미리보기도 통과했다. | ~~운영 D1 적용·화면 QA, OCR 공급업체 승인·연동, 전체 상태별 QA~~<br>~~정산·예약 운영 실데이터·화면 QA, `GAP-37` OCR 영문 라벨 매핑 보정, 설치폰 상태별 QA~~<br>~~정산·예약 운영 실데이터·화면 QA와 설치폰 상태별 QA~~<br>PDF Drive 미리보기 운영 증거와 설치폰 상태별 QA |
@@ -209,12 +211,12 @@
 | Phase 2 실제 날씨 | 로컬 구현·자동 검증 완료, 운영 연결 대기 | ~~WeatherAPI.com Free-only·월 10,000회·현재 60분/예보 24시간·출처·면책을 확정했고 Worker·D1 0023 초안·Today 상태 UI를 구현~~<br>~~2026-08-12 Open-Meteo BOM ACCESS-G 전환을 로컬 구현했다.~~<br>2026-08-12 BOM open-data 일시 중단을 실제 호출로 확인해 Open-Meteo Best Match로 보정했다. 제품 월 10,000 provider request·현재 60분/예보 24시간·출처·면책과 Worker·D1 0023·Today 상태 UI를 유지한다. | 운영 D1 `0023` 적용, 실제 Open-Meteo 호출 1회, 사용자·관리자 배포와 최종 통합 QA |
 | ~~Phase 3~6~~ | ~~대기~~ | ~~온라인 전용 PWA 기반과 일부 운영 증거 존재~~ | ~~설치폰 입력 회귀, 백업·복원, Workers 단일 운영, 최종 QA~~ |
 | Phase 3 설치 PWA 최종 검증 | 대기 | 온라인 전용 PWA 기반과 Android 일부 운영 증거 존재 | 최종 통합 QA에서 남은 설치폰 입력 회귀 |
-| Phase 4 D1 백업·복원 | 로컬 구현·검증·암호화 키 생성 완료, 운영 리허설 대기 | 공식 export·test restore·`age` 공개키 암호화 경계, 안전 스크립트와 수동 Drive runbook 구현·검증 | ~~`age` 설치·복구키 위치~~ 완료. 운영 export·Drive 업로드·별도 빈 테스트 D1 복원은 각각 승인 대기 |
+| Phase 4 D1 백업·복원 | 완료 | 공식 export·`age` 암호화, 비공개 Drive 제한 공유·다운로드 SHA 일치, 별도 빈 테스트 D1 실제 복원, 27개 테이블과 비민감 구조 지표 대조, 평문 잔존 0 확인 | 없음 |
 | ~~Phase 5~6~~ | ~~대기~~ | ~~Workers 단일 운영 참조 감사와 최종 QA 계획 존재~~ | ~~Pages workflow 중지, Workers 단일 운영, 최종 통합 QA·출시 판정~~ |
 | Phase 5 Workers 단일 운영 | 로컬 설정·참조 감사 완료, 원격 반영 대기 | Pages workflow의 `main` push 자동 트리거를 제거하고 수동 `workflow_dispatch`와 `/syd-guide/` fixture를 유지했다. 제품 runtime의 Pages URL 참조가 없고 대상 fixture 테스트가 통과했다. | commit·push 뒤 자동 Pages 미실행 확인, 동일 SHA 두 Worker 배포와 HTTP·PWA deep-link 운영 QA |
 | Phase 6 최종 통합·출시 | 실행 체크리스트 준비 완료, 최종 일괄 QA 대기 | `docs/qa/v1-final-release-checklist.md`에 로컬 자동 게이트, Phase 1 잔여 실기기·운영 QA, 날씨·백업·Workers 운영 순서, P0/P1·출시 승인 경계를 통합했다. | 모든 구현 묶음 종료 뒤 전체 자동·운영·Android QA, 문서 동기화, commit·push·deploy·tag·handoff 각각 별도 승인 |
 
-**2026-08-11 Phase 1 1차 묶음 상태 보정:** 위 Phase 1D 행의 `GAP-39 배포·운영 QA` 대기는 완료로 대체한다. 남은 Phase 1D 범위는 실제 설치폰 JPEG EXIF·최초 대표자 선택·PWA 설치와 다른 기기 빈 캐시 성능이다. 관리자 `GAP-40`은 코드·자동 검증·push·두 Worker 배포까지 완료했으나 내부 브라우저의 구 서비스 워커가 이전 HTML·번들을 반환해 운영 복구 화면 재검증만 남았다.
+**2026-08-11 Phase 1 1차 묶음 상태 보정:** 위 Phase 1D 행의 `GAP-39 배포·운영 QA` 대기는 완료로 대체한다. 남은 Phase 1D 범위는 실제 설치폰 JPEG EXIF·최초 대표자 선택·PWA 설치와 다른 기기 빈 캐시 성능이다. ~~관리자 `GAP-40`은 코드·자동 검증·push·두 Worker 배포까지 완료했으나 내부 브라우저의 구 서비스 워커가 이전 HTML·번들을 반환해 운영 복구 화면 재검증만 남았다.~~ 2026-08-12 최신 설치 관리자 PWA의 완전 종료·재실행과 여행 수정창 복귀를 사용자 실기기에서 확인해 `GAP-40`을 완료했다.
 
 ~~현재 승인 범위는 Phase 1 로컬 코드·테스트·화면 QA다. Phase 단위 commit은 Phase 1의 합의된 작업을 모두 완료한 뒤 진행한다. push, migration, Secret, 외부 API 설정, 배포는 각각 별도 승인을 받는다.~~
 
@@ -254,10 +256,10 @@
 | GAP-04 | 관광·숙소·교통을 장소 통합 피드에 포함할지 결정 | **A안 승인 완료** | 맛집·카페만 장소 메인 피드에 표시하고 관광·숙소·교통은 지도·검색에서 제공 | Phase 1B |
 | GAP-05 | 일정 이동 메모 입력·수정 | 로컬 구현·자동·화면 검증 | ~~실제 설치폰에서 저장·재편집·오프라인 동기화 확인~~<br>실제 설치폰 온라인 상태에서 서버 즉시 저장·재편집·다른 기기 자동 반영 확인 | Phase 1A 보완 |
 | GAP-06 | 3명 이상 정산의 모든 송금 표시와 개별 완료 | ~~로컬 구현·자동 검증~~<br>~~로컬 구현·자동 검증·운영 migration 적용~~<br>2026-08-09 QA 전용 완료 여행에서 3인 공동 비용의 송금 2건 생성, 첫 송금 뒤 둘째·원본 미완료, 둘째 완료 뒤 원본 완료를 운영 확인 | 복수 송금이 운영 데이터에서 모두 보이고 한 송금 완료가 다른 송금을 완료시키지 않음 | Phase 1C 완료 |
-| GAP-07 | 예약의 체크인 전·완료 상태와 탑승권 보관 | ~~로컬 구현·자동 검증~~<br>~~로컬 구현·자동 검증·운영 migration 적용~~<br>2026-08-09 운영 QA에서 `체크인 전` 저장·재조회, `체크인 완료` 수정·재조회와 Drive 이미지 미리보기 통과. PDF 운영 화면 증거는 남음 | 운영에서 예약 상태 저장·수정과 관련 파일 미리보기 확인 | Phase 1C 진행 중 |
+| GAP-07 | 예약의 체크인 전·완료 상태와 탑승권 보관 | ~~로컬 구현·자동 검증~~<br>~~로컬 구현·자동 검증·운영 migration 적용~~<br>~~2026-08-09 운영 QA에서 `체크인 전` 저장·재조회, `체크인 완료` 수정·재조회와 Drive 이미지 미리보기 통과. PDF 운영 화면 증거는 남음~~<br>2026-08-12 개인정보 없는 1페이지 PDF를 운영 QA 예약에 저장했다. Drive `alt=media` 다운로드 뒤 iframe `미리보기 준비 완료`, D1 `google-drive`·`application/pdf` 메타데이터, 페이지 재실행 뒤 예약·파일명 유지, 오류·overflow 0을 확인했다. | 운영에서 예약 상태 저장·수정과 이미지·PDF 관련 파일 미리보기 확인 | Phase 1C 완료 |
 | GAP-18 | 예약증·항공권 이미지/PDF OCR로 예약 정보 초안 자동 채우기 | ~~미구현~~<br>~~2026-08-08 로컬 구현·자동 검증. 이미지·PDF를 사용자가 명시 실행하면 Worker가 Google Vision 공통 초안으로 변환하고 저장 전 편집할 수 있다. 월 800페이지 차단·미설정·한도 초과 때 수동 입력을 유지한다. 운영 Vision API·Secret·`0022` migration·실제 호출은 미승인·미적용~~<br>~~2026-08-09 `0022` 운영 migration 적용·schema 검증 완료. Vision API·Secret·실제 호출은 별도 승인 대기~~<br>2026-08-09 Vision API·최소 IAM·Worker Secret·`0022`·`GAP-37`을 운영 적용했다. 실제 JPG OCR에서 예약처·예약번호·종류·시작·종료, 편집 가능 상태, `4/800` 사용량과 오류 0을 확인했다. PDF 운영 화면 증거는 별도로 남는다. | OCR 결과는 저장 전 사용자가 검토·수정하고, 무료 하드 리밋 초과 시 수동 입력이 항상 가능 | Phase 1C 보완 |
 | GAP-08 | 대표사진 미리보기 자르기·밝기, Drive 원본 비변경 | ~~로컬 구현·자동·390px 화면 검증~~<br>~~로컬 구현·자동·390px 화면 검증. 편집 저장은 Drive 원본 재업로드 없이 preview metadata만 변경. 2026-08-09 `0020` 운영 migration 적용·기본값 검증 완료~~<br>2026-08-09 `0020` 운영 적용 뒤 자르기 `16:9`·밝기 `+12` 저장과 편집 전후 Drive 원본 SHA-256 동일, 추가 업로드 0회를 확인 | ~~편집값은 미리보기에만 적용되고 원본 checksum·파일이 유지됨~~<br>실제 Drive 원본 checksum·파일 보존 확인 완료 | Phase 1D 완료 |
-| GAP-09 | 사진 EXIF 촬영시각을 릴 정렬에 사용 | 로컬 구현·자동 검증 | 실제 설치폰 JPEG는 촬영시각을 우선 사용하고 EXIF가 없으면 업로드시각 사용 | Phase 1D |
+| GAP-09 | 사진 EXIF 촬영시각을 릴 정렬에 사용 | ~~로컬 구현·자동 검증~~<br>~~2026-08-12 실제 Android JPEG의 EXIF 촬영시각이 운영 D1 `captured_at`에 정확히 저장되고 화면 미리보기가 표시됐다. 저장된 기존 릴은 새 사진을 제외 목록에 넣어 운영 릴 순서 자체는 아직 변경하지 않았다.~~<br>2026-08-12 `자동 구성으로 되돌리기` 뒤 릴이 1장·0:03에서 7장·0:21로 재구성됐고 새 JPEG가 기존 `capturedAt=null`·업로드시각 fallback 사진들 뒤 7번째에 배치됐다. 페이지 재실행 후에도 동일 순서가 유지됐다. | 실제 설치폰 JPEG는 촬영시각을 우선 사용하고 EXIF가 없으면 업로드시각 사용. 실제 JPEG 저장과 자동 릴 정렬·재실행 유지 통과 | Phase 1D 완료 |
 | GAP-10 | 최초 여행 설정에서 대표자가 참여자 중 대표자를 선택 | ~~불일치~~<br>로컬 구현·자동·390px 화면 검증 | ~~첫 설정과 관리 화면에서 대표자 지정·변경 확인~~<br>운영 관리자 PWA 최초 설정에서 동행자를 대표자로 지정한 뒤 관리 화면에서 변경·유지 확인 | Phase 1D |
 | GAP-11 | 샘플이 아닌 실제 날씨 | ~~미구현~~<br>로컬 구현·자동 검증 완료, 운영 연결 대기 | ~~live·cached·offline·quota 상태와 갱신시각 확인~~<br>live·서버 cached·quota 상태와 갱신시각 확인. 기기 오프라인 날씨는 제외<br>~~WeatherAPI.com Free-only, 월 10,000회 원자 차단, current 60분·forecast 24시간 정규화 캐시와 Today live/cached/unavailable·출처/면책 UI를 구현했다. current·forecast는 물리적으로 분리 저장하고 목적지 query가 현재 여행과 일치할 때만 재사용한다. 운영 Secret·migration·실제 호출·배포·최종 QA는 별도 승인이다.~~<br>~~2026-08-12 Open-Meteo BOM ACCESS-G로 전환했다.~~<br>2026-08-12 실제 BOM 전용 응답의 현재값이 모두 `null`임을 확인하고 같은 공급업체의 Best Match로 보정했다. 월 10,000 provider request 원자 차단, current 60분·forecast 24시간 정규화 캐시와 Today live/cached/unavailable·출처/면책 UI를 유지한다. current·forecast는 물리적으로 분리 저장하고 목적지 query가 현재 여행과 일치할 때만 재사용한다. | Phase 2 |
 | GAP-12 | Android·iPhone 설치 PWA 비행기 모드 cold start·수정·재연결 | ~~실기기 미검증~~<br>2026-08-08 사용자 결정으로 **폐기 승인**. 오프라인 기능을 V1에서 제거하고 `GAP-32`로 대체 | ~~두 실제 기기의 체크리스트와 결과 증거 기록~~<br>완료 조건 폐기. 이력만 보존 | ~~Phase 3~~<br>GAP-32로 대체 |
@@ -265,7 +267,7 @@
 | GAP-14 | Cloudflare Workers만 운영 | ~~불일치~~<br>로컬 workflow 자동 트리거 제거·참조 감사 완료, 원격 반영 대기 | GitHub Pages 자동 workflow 중지 후 두 Worker 동일 SHA 정상. 수동 fixture는 유지 | Phase 5 |
 | GAP-15 | 향후 다른 클라우드 저장소 전환 경계 | 부분 구현 | 상용화용 provider·DB migration 결정 문서화 | Phase 5 또는 연기 승인 |
 | GAP-16 | 전체 모바일 UI 일관성과 실데이터·빈 상태·오류·오프라인 상태 | ~~미검증~~<br>오프라인 데이터 화면은 범위에서 제거. 실데이터·빈 상태·오류·온라인 필요 상태는 미검증 | Phase별 화면 QA와 최종 통합 게이트 모두 통과 | Phase 1·6 |
-| GAP-17 | 최신 관리자 설치 PWA의 여행 편집 복귀 | 운영 확인 대기 | 완전 종료·재실행 후 선택 여행 편집창이 바로 열림 | Phase 0·6 |
+| GAP-17 | 최신 관리자 설치 PWA의 여행 편집 복귀 | 2026-08-12 사용자 실기기 운영 확인 완료 | 완전 종료·재실행 후 선택 여행 편집창이 바로 열림 | Phase 0·6 완료 |
 | GAP-19 | 오늘 화면의 항공편 확인이 선택 여행의 항공편 입력으로 바로 이동 | 로컬 자동·화면 검증 | 해당 여행 편집창의 항공편 영역이 바로 열리고 초점이 이동함 | Phase 1 보정 |
 | GAP-20 | 숙소 예약이 숙소 종류가 선택된 입력창을 바로 열고 시트가 잘리지 않음 | ~~로컬 자동·Android·iPhone 화면 검증~~<br>로컬 자동·Chromium/WebKit 브라우저 화면 검증 | 320·390·786px에서 가로 스크롤 없이 숙소 입력창이 바로 열림. 실제 설치폰은 Phase 3에서 별도 확인 | Phase 1 보정 |
 | GAP-21 | 여권 확인이 여권 입력·수정창으로 바로 이동 | ~~로컬 자동·Android·iPhone 화면 검증~~<br>로컬 자동·Chromium/WebKit 브라우저 화면 검증 | 기존 여권은 수정, 없으면 필수 준비·여권이 선택된 생성창이 열림. 실제 설치폰은 Phase 3에서 별도 확인 | Phase 1 보정 |
@@ -287,7 +289,16 @@
 | GAP-37 | 영문 예약 문서의 예약처 라벨과 예약번호를 올바른 필드로 분리 | ~~2026-08-09 운영 JPG OCR에서 `Hotel: Sample Harbour Hotel` 대신 `Reservation: TEST-20260809` 행이 예약처로 들어가고 예약번호가 비어 있는 불일치를 발견했다. Vision 호출·날짜·종류·편집 가능 상태·3/800 사용량은 정상이다.~~<br>2026-08-09 로컬 파서 보정·회귀·전체 Worker 검증과 사용자 Worker 배포·운영 JPG 재검증 완료. 예약처 `Sample Harbour Hotel`, 예약번호 `TEST-20260809`, 종류·시작·종료를 정확히 채웠고 사용량 `4/800`, 편집 가능, 저장 0, 오류 0을 확인했다. | `Hotel:` 값은 라벨 없이 예약처로, `Reservation:` 값은 예약번호로 채운다. 명시적 OCR 성공 때 인식된 초안을 적용하는 현재 동작은 유지하고, 실패·한도 초과 때만 기존 수동 입력을 보존한다. 실제 샘플 회귀 테스트와 운영 1회 재검증을 통과한다. | Phase 1C 보정 완료 |
 | GAP-38 | Drive 여행사진 폴더에서 원본과 미리보기 파일이 같은 사진 2장처럼 노출되지 않음 | ~~2026-08-09 Android 실제 사진 업로드 QA에서 사진마다 원본과 `-thumb.webp`가 같은 폴더에 생성돼 사용자가 중복 사진으로 인식하는 불일치를 발견했다. 데이터 중복 재시도 오류가 아니라 현재 저장 설계다.~~<br>~~2026-08-09 원본 1개만 저장하고 다른 기기는 원본을 첫 1회 내려받아 로컬 캐시로 재사용하는 안을 승인·로컬 구현했다.~~<br>독립 검수에서 새 기기 빈 캐시는 사진당 최대 25MB 원본, 20장 기준 최대 약 500MB를 내려받을 수 있는 모바일 성능 회귀를 발견해 1차 제품 변경을 되돌렸다.<br>~~2026-08-09 사용자는 여행사진 루트의 `앱 미리보기` 하위 폴더를 찾아 재사용하고 WebP를 분리 저장하는 안을 승인했다. 원본은 루트, 썸네일은 하위 폴더에 저장하며 새 권한·migration은 추가하지 않는다.~~<br>~~2026-08-09 승인된 하위 폴더 방식을 로컬 구현했다. 기존 `앱 미리보기` 폴더를 재사용하고 없으면 한 번 생성하며, 원본은 여행사진 루트·WebP는 하위 폴더에 올린다. 폴더 존재·최초 생성·원본 비재업로드·릴 편집·재생 회귀 8건, typecheck·변경 파일 lint·production build·`git diff --check`와 독립 검수를 통과했다.~~<br>2026-08-09 제품 커밋 `7e35ea4`를 push하고 두 Worker에 배포했다. 운영 Drive에서 새 사진 2장의 원본은 루트에 각각 1개, WebP는 단 하나의 `앱 미리보기` 폴더에 각각 1개 저장됐다. 두 번째 업로드가 같은 폴더를 재사용했고 앱의 Drive 미리보기 새로 불러오기 뒤 모든 화면 이미지가 정상 로드됐다. 기존 루트의 과거 썸네일은 자동 이동하지 않는 기존 자료로 남긴다. | 원본은 유지하면서 다중 기기 저용량 미리보기를 보존하고, 사용자가 보는 여행사진 루트에는 사진 1장당 원본만 보인다. 새 권한·migration 없이 로컬 회귀·Drive 운영 재검증을 통과한다. | Phase 1D 보정 완료. 다른 기기 빈 캐시 전송량·시간은 성능 QA로 별도 유지 |
 | GAP-39 | Drive 연결 후 대표사진 후보·선택 카드가 귀국 후 히어로 배경과 시각적으로 어긋나며, 릴 제외 사진 이력을 개별 정리할 수 없음 | ~~2026-08-11 Android 운영 화면에서 불일치 발견. 후보 카드 영역은 수치상 가로 overflow가 없지만 히어로 우측·하단에 여백 없이 붙어 별도 박스처럼 보인다. 제외 사진은 `릴에 추가`만 있고 이력 삭제가 없다. 삭제가 앱 미디어 기록만 지우는지 Drive 원본·WebP도 지우는지는 결정 대기~~<br>~~2026-08-11 A안 승인: 앱의 사진 이력과 대표사진·릴·제외 목록 참조 및 로컬 썸네일 캐시만 삭제하고 Google Drive 원본과 WebP 미리보기 파일은 보존한다. 오늘·추억 편집 경로에 확인·취소·실패 유지·성공 안내를 구현했고, 후보 배경 정렬과 함께 자동 검증 및 391·1280px 화면 검증을 통과했다.~~<br>2026-08-11 제품 커밋 `04b3917` 배포 뒤 운영 QA에서 `the_rocks.jpg` 앱 이력을 확인 후 삭제했다. 제외 사진 6→5장과 재조회 유지, 운영 D1 대상 행 0·다른 미디어 6개·대표사진 유지, Google Drive 원본 JPEG와 WebP 미리보기 파일 보존, `Failed to fetch`·가로 넘침 0을 확인했다. | 후보 영역이 히어로 배경 안에서 동일한 안쪽 여백·모서리·폭을 사용하고 320·390·1280px에서 넘침이 없다. 제외 사진은 확인 후 개별 삭제할 수 있으며, 승인된 삭제 범위와 대표사진·릴 참조 정리·실패 처리·Drive 원본 정책을 자동·화면 검증한다. | Phase 1D 보정 완료: 구현·자동·화면·배포·운영 QA 완료 |
-| GAP-40 | 관리자 비인증 브라우저에서 Access 복구 대신 `참여자 설정을 불러오지 못했습니다 / Failed to fetch`가 노출됨 | ~~2026-08-11 `04b3917` 배포 뒤 관리자 `/library` 운영 QA에서 재현했다. 정적 앱은 열리지만 참여자 API의 브라우저 네트워크 오류가 `ACCESS_REFRESH_REQUIRED`로 변환되지 않았다.~~<br>2026-08-11 브라우저 realm이 다른 오류도 `name = TypeError`로 식별하도록 최소 보정하고 회귀를 추가했다. frontend 68파일 485건, Worker 95건, typecheck·lint·build·Playwright 46건 통과, 커밋 `8cf0d978` push와 두 Worker 배포·정적 자산 hash 일치까지 완료했다. 현재 내부 브라우저는 구 서비스 워커가 이전 HTML·번들을 계속 반환해 새 복구 화면 운영 확인이 차단됐다. | 브라우저 realm이 다른 `TypeError: Failed to fetch`도 관리자 Access 만료로 분류해 `관리자 로그인이 필요합니다`와 재로그인 링크를 표시한다. 일반 사용자 호스트·오프라인 차단·HTTP 오류 분류는 유지하고 자동·운영 재검증을 통과한다. | 로컬·자동·배포 완료, 구 서비스 워커 해제 후 운영 재검증 대기 |
+| GAP-40 | 관리자 비인증 브라우저에서 Access 복구 대신 `참여자 설정을 불러오지 못했습니다 / Failed to fetch`가 노출됨 | ~~2026-08-11 `04b3917` 배포 뒤 관리자 `/library` 운영 QA에서 재현했다. 정적 앱은 열리지만 참여자 API의 브라우저 네트워크 오류가 `ACCESS_REFRESH_REQUIRED`로 변환되지 않았다.~~<br>~~2026-08-11 브라우저 realm이 다른 오류도 `name = TypeError`로 식별하도록 최소 보정하고 회귀를 추가했다. frontend 68파일 485건, Worker 95건, typecheck·lint·build·Playwright 46건 통과, 커밋 `8cf0d978` push와 두 Worker 배포·정적 자산 hash 일치까지 완료했다. 내부 브라우저는 구 서비스 워커가 이전 HTML·번들을 계속 반환해 새 복구 화면 운영 확인이 차단됐다.~~<br>2026-08-12 사용자가 설치 관리자 PWA를 완전히 종료하고 재실행한 뒤 여행을 선택해 수정창이 정상적으로 열리는 것을 확인했다. raw `Failed to fetch`가 흐름을 차단하지 않아 최신 설치 PWA 운영 재검증까지 통과했다. | 브라우저 realm이 다른 `TypeError: Failed to fetch`도 관리자 Access 만료로 분류해 `관리자 로그인이 필요합니다`와 재로그인 링크를 표시한다. 일반 사용자 호스트·오프라인 차단·HTTP 오류 분류는 유지하고 자동·운영 재검증을 통과한다. | 완료 |
+| GAP-41 | Android 설치 PWA에서 Google Drive 재연결 창이 열리지 않아 여행사진 선택·업로드가 차단됨 | ~~2026-08-12 사용자 실기기에서 재현. Drive access token은 앱 메모리에만 있어 완전 종료 뒤 사라지지만, 재연결이 Google 기본 계정 선택 동작을 덮어쓴 `requestAccessToken({ prompt: "" })`를 사용하고 `error_callback`의 오류 종류도 버려 `Google Drive 연결 창을 열지 못했습니다.`만 표시한다. 내부 브라우저에서도 연결 버튼이 진행 상태에 고착되고 OAuth 팝업이 열리지 않았다.~~<br>~~2026-08-12 로컬 최소 보정 완료. `requestAccessToken()`의 Google 기본 대화형 계정 선택을 사용하고 `popup_failed_to_open`·`popup_closed`를 각각 재시도 가능한 한국어 안내로 변환했다. 회귀 테스트는 수정 전 3건 실패를 확인한 뒤 5/5 통과했고 typecheck·대상 lint·production build·diff-check도 통과했다. 로컬 완료 여행 화면에서 실제 Google callback의 `popup_closed` 안내와 연결 버튼 재활성화를 확인했다. commit·push·두 Worker 배포와 Android 설치 PWA 재연결·JPEG 업로드는 대기한다.~~<br>2026-08-12 실제 차단 원인은 Google OAuth `origin_mismatch`였다. 사용자·관리자 Worker 주소를 승인된 JavaScript 원본으로 저장·재확인한 뒤 사용자가 Android PWA에서 Drive 재연결과 실제 JPEG 업로드를 완료했다. 운영 D1의 최신 미디어는 `image/jpeg`, `captured_at = 2026-08-12T20:46:14+09:00`이며 운영 화면 미리보기도 확인했다. 별도 로컬 팝업 오류 UX 보정은 미커밋 상태로 유지한다. | Google OAuth 운영 원본 설정 뒤 Android PWA 재연결과 실제 JPEG 1장 업로드 성공. 토큰·비밀번호는 저장하지 않고 기존 `drive.file` 범위를 유지한다. 별도 오류 UX 보정의 출시 여부는 후속 결정 | Phase 1D·Phase 6 운영 차단 완료 |
+| GAP-42 | Android 설치 PWA의 지도가 5초 자동 재조회마다 초기화돼 드래그·확대 상태가 사라짐 | 2026-08-12 사용자 실기기에서 재현. `SyncProvider`의 5초 snapshot 재조회가 내용이 같은 새 `places` 배열을 만들고, `MapCanvas` effect가 배열 참조 변경마다 기존 MapLibre 인스턴스를 제거·재생성해 `fitBounds` 초기 화면으로 돌아가는 것이 원인이다. 로컬에서 동일 장소 polling 시 map cleanup이 발생하는 실패 테스트를 먼저 확인한 뒤, 장소 값이 실제로 같으면 안정된 배열을 재사용하도록 최소 보정했다. 기존 MapCanvas 4건을 포함한 지도 28건, typecheck·대상 lint·production build, 391px fixture 지도 확대 후 11초 유지·오류 0·overflow 0을 통과했다.<br>제품 커밋 `686cd154a726bb697c627c5c2835bdfc13340130`을 main에 push하고 사용자·관리자 Worker에 같은 `PRODUCT_SHA`로 100% 배포했다. 운영 번들 hash가 로컬 build와 일치했고, 운영 지도에서 12초 동안 두 번 이상의 polling을 지난 뒤에도 같은 map 인스턴스·마커 위치·확대 상태가 유지됐다. `Failed to fetch`·console warn/error·가로 overflow는 0이었다.<br>2026-08-12 사용자가 Android 설치 PWA에서 지도를 드래그·핀치 확대하고 15초 이상 기다린 뒤에도 확대 상태가 유지됨을 확인했다. | 같은 내용의 5초 재조회에서는 지도 인스턴스와 사용자의 확대·이동 상태를 유지하고, 장소 데이터가 실제로 바뀔 때만 지도 마커·경계를 다시 구성한다. 코드·자동·commit·push·두 Worker 배포·운영 브라우저·Android 설치 PWA 실기기 검증 완료 | 완료 |
+| GAP-43 | 관리 화면에서 동행자를 대표자로 바꾼 뒤 보안 관리자인 본인을 다시 대표자로 복구할 수 없음 | 2026-08-12 운영 대표자 QA 시작 시 현재 대표자가 본인임을 확인했다. `ParticipantManager`는 `owner`가 아닌 참여자에게만 대표자 지정 액션을 렌더하므로 동행자로 변경하면 UI에서 본인으로 되돌릴 수 없다. 사용자는 본인에게도 대표자 지정 액션을 제공해 동행자→본인 복구와 재실행 유지를 검증하는 보정을 승인했다.<br>현재 대표자가 아닌 모든 활성 참여자에게 대표자 지정 액션을 제공하도록 로컬 보정했다. 보안 관리자 삭제 제한은 유지했다. 동행자→본인 PATCH와 roster 반영 회귀를 추가해 참여자 테스트 8건, typecheck·대상 lint·production build·diff-check를 통과했다. 실제 `ParticipantManager`를 사용하는 391·1280px 로컬 화면에서 본인 대표자 버튼 표시·클릭 뒤 배지 이동·가로 overflow 0·console warn/error 0을 확인했다.<br>제품 커밋 `9ddd54928242521c3734a75cdc4be0ebbb625258`을 main에 push하고 사용자 Worker 버전 `fdef3c60-bee2-40bd-9e42-69e0fbb4930d`, 관리자 Worker 버전 `2efa0f5a-9924-4cb5-adc8-16714833fbc5`에 같은 `PRODUCT_SHA`로 100% 배포했다. 사용자 root·health·manifest·service worker는 HTTP 200, 관리자 root·health는 Access 보호 HTTP 302였고 운영 JS 번들 SHA-256이 clean build와 일치했다.<br>2026-08-12 사용자가 Android 설치 관리자 PWA에서 본인→동행자 변경 후 완전 종료·재실행해도 동행자 대표자가 유지되고, 이어 동행자→본인으로 복구한 뒤 완전 종료·재실행해도 본인 대표자가 유지됨을 확인했다. | 현재 대표자가 아닌 모든 활성 참여자에게 대표자 지정 액션을 제공하되, 보안 관리자 권한과 참여자 삭제 제한은 유지한다. 로컬 구현·자동·화면·commit·push·두 Worker 배포·정적 운영 검증과 Android 설치 관리자 PWA 양방향 변경·재실행 유지 검증 완료 | 완료 |
+| GAP-44 | 소유자 세션의 사용자 앱에서 `참여자 기기 연결`을 누르면 `Pairing is not configured`로 초대 생성이 차단됨 | 2026-08-12 빈 캐시·다른 기기 QA 준비 중 사용자 실기기에서 재현했다. 초대 UI와 owner 권한은 사용자·관리자 surface 모두에서 허용되지만, 초대 링크를 만드는 `issueInvite`는 `PARTNER_ORIGIN`이 없으면 `PAIRING_NOT_CONFIGURED`를 반환한다. 운영 관리자 Worker에는 `PARTNER_ORIGIN`이 있고 사용자 Worker에는 없음을 배포 버전 binding에서 값 노출 없이 확인했다. 테스트 helper가 양쪽 surface에 모두 `PARTNER_ORIGIN`을 넣어 운영 설정 누락을 가리고 있었다.<br>2026-08-12 사용자 승인: 추천안 A를 적용한다. 사용자 Worker에도 기존 사용자 앱 원본을 `PARTNER_ORIGIN`으로 설정해 현재 owner 초대 UI를 그대로 복구한다. 역할·데이터 권한과 관리자 Access 정책은 변경하지 않는다.<br>설정 추가 전 동일 운영 설정을 읽는 회귀가 `Pairing is not configured`로 실패하고, 보정 뒤 통과함을 확인했다. pairing Worker 9건, Worker 전체 103건, pairing Playwright 5건, typecheck·대상 lint·production build·diff-check를 통과했다. 제품 커밋 `7f127c6afe79117249b980137fd9dd8f237f9d74`를 main에 push하고 clean archive로 다시 pairing 9건·typecheck·build를 통과한 뒤 사용자 Worker `44a14fc6-0741-400b-9069-1718b72cfeac`, 관리자 Worker `fd5888d2-f6a9-49b8-aa97-6efd6a3edfa4`에 같은 `PRODUCT_SHA`로 100% 배포했다. 사용자 Worker의 운영 binding에서 `PARTNER_ORIGIN`이 `APP_ORIGIN`과 동일함을 확인했고 사용자 root·health·manifest·service worker 200, 관리자 root·health Access 302를 확인했다.<br>배포 뒤 사용자가 설치 PWA에서 초대 링크가 정상 표시됨을 확인했다. 운영 D1의 최신 초대 메타데이터는 생성·10분 만료가 기록됐고 `used_at`이 설정돼 1회 claim까지 완료된 상태였다. 토큰·기기 정보는 조회하지 않았다.<br>사용자가 새 게스트 환경에서 여행을 선택해 오늘 화면까지 여는 데 성공했지만, 열린 여행은 여행 전 상태여서 종료된 `QA 완료 여행`과 릴을 확인한 증거는 아니다. | 사용자·관리자 Worker의 초대 링크 origin 계약이 일치하고, owner 세션의 초대 생성·게스트 pair claim·기기 목록 유지가 자동·운영 검증을 통과한다. 새 게스트 환경에서 종료된 QA 여행 선택이 가능해야 한다. | 초대·claim·게스트 여행 열기 확인 완료, 종료된 QA 여행 선택 확인 대기 |
+
+| GAP-45 | 여러 기기가 같은 날씨 cache miss를 동시에 처리하면 Open-Meteo 호출과 월 사용량이 중복됨 | 2026-08-13 live→cached 운영 QA에서 첫 full refresh는 사용량 `13→15`, 즉시 cached 재조회는 `15` 유지로 통과했다. QA 여행 원상복구로 query가 다시 `Sydney`가 된 순간 열린 두 기기가 동시에 cache miss를 처리했고 사용량이 `15→19`로 증가했다. 마지막 저장 snapshot은 한 세트뿐이지만 현재 route는 각 요청이 cache를 읽은 직후 각각 사용량을 예약하고 공급업체를 호출하며, 갱신 중임을 공유하는 lease가 없었다.<br>사용자는 D1 refresh lease로 한 요청만 공급업체를 호출하고 동시 요청은 결과를 기다려 새 캐시를 쓰는 추천안을 승인했다. migration `0024_weather_refresh_leases.sql`, lease 획득·대기·해제와 성공 경로 회귀를 구현해 첫 제품 커밋 `377e4b333e20272e9bf92a1e3209fdcbb8839da1`을 push하고 migration·두 Worker 배포를 완료했다.<br>운영 실패 query 검증에서 leader 실패 직후 대기 요청이 lease를 차례로 인수해 사용량이 `21→57`, 후속 복구까지 59로 증가하는 새 실패 경로를 발견했다. QA 여행은 즉시 원복했다. 실패 결과를 짧은 lease cooldown으로 공유하고 동시 요청이 공급업체를 재호출하지 않는 회귀를 추가한 핫픽스 `8863b08e0297c70593e6d306dc8fcefc1f00e6ea`를 push했다. 깨끗한 archive에서 날씨 Worker 9건·typecheck·production build, pre-push에서 lint·프론트엔드 494건을 통과했다.<br>사용자 Worker `90bd804d-7be8-4cd7-9b2a-887fddffd4be`, 관리자 Worker `43f11e87-f252-42bf-83ee-b8b5648cefb5`에 정확한 핫픽스 SHA를 100% 배포했다. 두 로그인 탭을 동시에 `Sydney, Australia` cache miss로 열자 둘 다 정상 날씨를 표시했고 사용량은 `61→63`으로 full refresh 한 세트만 반영됐다. QA 여행을 `Sydney`, `2026-07-01~02`, `completed`, version 25로 원상복구하자 열린 탭이 바뀐 query의 full refresh 한 세트를 실행해 `63→65`가 됐고, current·forecast 동일 fetchedAt, lease 0을 확인했다. 동시 중복 없이 각 query당 정확히 한 세트만 반영됐다. | 동일 trip·query·refresh 종류의 동시 요청 중 하나만 공급업체를 호출하고 나머지는 갱신 결과를 기다려 cached 응답을 사용한다. 실패도 cooldown 동안 공유해 동시 재호출을 차단한다. 월 한도 예약은 실제 호출 수만 반영돼야 한다. | 구현·자동·commit·push·migration·두 Worker 배포·운영 동시 성공 QA·원상복구 완료 |
+| GAP-46 | Android 설치 PWA의 여행 수정창에서 긴 여행지 선택값이 오른쪽으로 밀려 화면 밖으로 나감 | 2026-08-13 사용자 실기기에서 재현. 첫 보정은 저장된 선택 토큰의 외곽 폭만 검사해 `.trip-form .astryx-typeahead`를 숨겼지만, Android 재검증에서 긴 무공백 한글을 편집할 때 입력값과 top-layer 추천 행이 여전히 오른쪽 경계를 벗어났다. Astryx 추천 팝오버는 최소 폭만 입력창에 맞고 긴 항목의 고유 폭만큼 더 커졌다. 팝오버 폭 자체를 `anchor-size(width)`로 입력 컨트롤과 같게 고정했다. 실제 긴 무공백 한글을 편집해 열린 input·option·dropdown·popover의 좌우 경계를 320·390·430px Android emulation에서 검사하고, 직접 입력 선택→시간대 선택→저장→재열기까지 회귀로 고정했다. 제품 커밋 `eb26827816e13da44da8c7741b5dbb5cf2bb5576`을 main에 push하고 두 Worker에 동일 SHA로 100% 배포했다.<br>Android 재검증에서도 추천 행이 벗어나 사용자가 긴 내용의 줄바꿈을 확정했다. 3차 보정은 추천 label과 선택 token의 `nowrap`·말줄임을 해제하고 `overflow-wrap: anywhere`를 적용했다. 제품 커밋 `4bf4c2e279fe7539445a548c0fe3e9b692dcef23`을 main에 push하고 두 Worker에 같은 SHA로 100% 배포했으며 운영 CSS 해시와 줄바꿈 selector를 확인했다. Android 설치 PWA를 완전히 종료·재실행한 실기기 재검증에서도 긴 추천 label과 선택 token의 여러 줄 표시, 저장·재열기가 정상임을 사용자가 확인했다. | ~~120자 이하의 긴 무공백 한글 입력값과 추천 행이 한 줄 말줄임으로 시트 안에 유지된다.~~<br>120자 이하의 긴 무공백 한글 추천 label과 선택 token은 화면 폭을 넘기기 전에 여러 줄로 감기고, 편집 input은 컨트롤 내부에서만 스크롤한다. 320·390·430px에서 input·option·popover·문서·여행 수정창 가로 overflow가 0이며 여행지 선택·저장·재열기 동작이 유지된다. | 완료 |
+
+**2026-08-12 GAP-44 상태 보정:** 위 GAP-44 행의 `종료된 QA 여행 선택 확인 대기`는 사용자 운영 확인으로 완료됐다. 초대 생성·1회 claim·게스트 목록의 종료된 `QA 완료 여행` 표시·선택까지 통과했다. 빈 캐시 WebP·첫 로딩 성능은 GAP-44가 아니라 GAP-38의 별도 실기기 QA로 유지한다.
 
 ### 엄격한 V1 진행률 기준
 
@@ -295,7 +306,7 @@
 
 | 완성 게이트 | 배점 | 현재 인정 | 100% 조건 |
 |---|---:|---:|---|
-| 관리자 인증 복구 | 8 | 7 | 최신 관리자 PWA에서 재로그인 후 여행 편집창이 바로 열리는지 최종 확인 |
+| 관리자 인증 복구 | 8 | 8 | 2026-08-12 최신 설치 관리자 PWA 완전 종료·재실행 뒤 여행 수정창 열림 확인 |
 | 핵심 여행 기능·모바일 UI | 28 | 18 | 핵심 화면 전부 실데이터·390px·실기기에서 사용 가능 |
 | 실제 날씨 | 10 | 0 | ~~실시간·캐시·오프라인·한도 초과 상태 확인~~<br>실시간·서버 캐시·한도 초과 상태와 기기 오프라인 차단 확인 |
 | ~~Android·iPhone PWA 오프라인~~<br>~~Android·iPhone 온라인 전용 PWA·동기화~~<br>Android V1 온라인 전용 PWA·동기화 | 20 | ~~5~~<br>3 | ~~두 기기에서 설치·오프라인 차단·온라인 복귀·서버 직접 저장·5초 이내 다중 기기 갱신 통과~~<br>Android 사용자·관리자 설치, 오프라인 차단, 서버 직접 저장·5초 이내 다중 기기 갱신 통과. 자동 온라인 복귀는 수동 다시 불러오기를 허용하고 iPhone은 상용화 단계에서 검증 |
@@ -306,7 +317,7 @@
 
 ## 3. Phase 0: 관리자 인증 오류 복구
 
-> 상태: 코드 수정·회귀 테스트·`main` push·사용자/관리자 Worker 배포 완료. 최신 관리자 PWA의 여행 편집창 최종 확인만 남음.
+> 상태: 코드 수정·회귀 테스트·`main` push·사용자/관리자 Worker 배포와 2026-08-12 최신 설치 관리자 PWA 완전 종료·재실행 뒤 여행 수정창 복귀 운영 확인까지 완료.
 
 ### 문제
 
@@ -345,7 +356,7 @@
 - 사용자 운영 `/library` HTTP 200, 관리자 운영 `/library`는 Cloudflare Access 로그인 이동 HTTP 302 확인.
 - 운영 번들 `/assets/index-B1T_1Bb_.js`에서 여행 편집 동작과 `edit=` 경로 포함 확인.
 - 참여자·초대·기기 관리는 사용자가 운영 화면에서 정상 확인함.
-- 남은 수동 확인: 관리자 PWA를 완전히 종료·재실행한 뒤 `여행 정보 편집`이 선택 여행의 수정창을 여는지 확인.
+- 완료된 수동 확인: 2026-08-12 관리자 PWA를 완전히 종료·재실행한 뒤 선택 여행의 수정창이 정상적으로 열리는 것을 사용자 실기기에서 확인했다.
 
 ## 4. Phase 1: 핵심 여행 기능과 모바일 UI 마감
 
@@ -1190,6 +1201,148 @@ npm run build
 - Open-Meteo 운영 상태는 월 counter 2, current/forecast cache 각 0, 여행 중 trip 0이다. 따라서 실제 제품 `live → cached`는 geocoding+forecast 2 provider request와 D1 cache write, 여행 중 QA 데이터 없이는 확인할 수 없다. 이 쓰기와 임시 QA trip 변경은 현재 중간 QA에서 실행하지 않고 사용자 확인 항목으로 유지한다.
 - 위 결과는 Phase 6 자동·읽기 전용 게이트의 중간 통과다. Android 실제 JPEG EXIF·Places·PDF·대표자/PWA·빈 캐시 릴, GAP-40 구 service worker 해제, Phase 4 실제 restore, 날씨 제품 live/cache, P0/P1 0건 판정과 V1 tag가 끝나기 전에는 Task 20·Phase 6·V1을 완료 처리하지 않는다.
 
+### 2026-08-12 · 관리자 설치 PWA 운영 재검증 완료
+
+- 사용자가 관리자 설치 PWA를 완전히 종료한 뒤 다시 실행하고 여행을 선택해 수정창이 정상적으로 열리는 것을 확인했다.
+- 이 사용자 실기기 증거로 Phase 0의 마지막 운영 항목, `GAP-17`, `GAP-40`, Phase 5의 관리자 PWA 업데이트 smoke, Phase 6 관리자 Access 복구를 완료 처리한다. 앞선 내부 브라우저의 구 service worker 재현은 이력으로 보존한다.
+- 이 기록 과정에서 제품 코드·운영 데이터·Git·배포 상태는 변경하지 않았다.
+- 남은 출시 게이트는 Android 실제 JPEG EXIF·Places·PDF·최초 대표자·빈 캐시 릴, Phase 4 실제 restore와 27개 테이블 대조, 날씨 제품 live→cached, Places 800회 경계, 최종 P0·P1 0건 판정과 V1 tag다.
+
+### 2026-08-12 · Phase 4 테스트 D1 실제 복원·대조 완료
+
+- 사용자가 `key.age` 비밀번호를 복원 터미널 프롬프트에 직접 입력해 `couple-travel-guide-restore-test`에 암호화 백업을 복원했다. 비밀번호·키·복호화 SQL 내용은 채팅·명령 인자·기록에 남기지 않았다.
+- 복원 뒤 사용자 테이블 27개가 모두 존재했다. 현재 운영과 24개 테이블 row count가 정확히 일치했고, `weather_current_snapshots`·`weather_forecast_snapshots`·`weather_provider_usage`만 운영 1행·복원 0행이었다.
+- 암호화 백업 시각은 `2026-08-11T21:36:17Z`, 위 날씨 3행 생성 시각은 `2026-08-12T11:10:03Z`로 백업 이후의 정상 운영 변경이다. 따라서 복원 오류가 아니라 백업 시점 이후 데이터 차이다.
+- 여행 날짜·일정 순서·예약·장소·미디어 구조를 값 없이 집계한 17개 비민감 지표는 운영·복원에서 전부 일치했다. 여행·일정·예약·장소·미디어·대표사진·스토리지 참조 위반과 일정 위치 중복은 양쪽 모두 0건이었다.
+- 모든 대조 쿼리는 운영·복원 D1에서 `changes = 0`, `rows_written = 0`, `changed_db = false`였다. `D:\TravelGuideRestoreTemp`의 평문 SQL·임시 복원 디렉터리와 백업 폴더의 평문·partial은 0개이며 암호화 `.sql.age` 1개만 유지했다.
+- Phase 4의 남은 완료 조건은 비공개 Drive의 링크·외부 공유 비활성 상태와 Drive에서 다시 받은 파일의 SHA-256 일치에 대한 사용자 명시 확인 및 canonical runbook 기록이다.
+
+### 2026-08-12 · Phase 4 Drive 보관 증거·최종 완료
+
+- 사용자가 Google Drive 백업 폴더의 일반 액세스가 `제한됨`이고 외부 링크 공유가 꺼져 있음을 확인했다.
+- Drive에서 다시 내려받은 `.sql.age`의 SHA-256이 로컬 기준값 `C5C1F0C8DE1EBC5E172F2057D5B3B7EF9EB93F556D972DDA5EDE125C0E16D75D`와 일치함을 확인했다.
+- 암호화 export·Drive 보관·별도 테스트 D1 복원·27개 사용자 테이블·비민감 구조 지표·참조 무결성·평문 cleanup까지 모든 Phase 4 완료 조건을 충족했다. 복원 테스트 D1은 증거 보존을 위해 유지하며 삭제는 별도 승인 대상으로 남긴다.
+
+### 2026-08-12 · GAP-41 Android Google Drive 재연결 차단
+
+- 사용자가 Android 설치 PWA에서 `Google Drive 연결`이 실패해 여행사진 선택·업로드를 진행할 수 없다고 보고했다. 같은 운영 Today 화면의 내부 브라우저 재현에서는 연결 버튼이 `Google Drive 연결 창을 여는 중입니다.` 상태에 남고 새 OAuth 탭이 열리지 않았다.
+- 현재 Google Drive access token은 `GoogleDriveProvider` 인스턴스 메모리에만 보관하므로 설치 앱 완전 종료 뒤 재연결이 정상적으로 계정 선택·로그인·동의 UI를 열어야 한다. 토큰 영구 저장·DB·Secret·OAuth 범위 확대는 이번 보정에 포함하지 않는다.
+- 최소 보정 범위는 Google Identity Services의 기본 대화형 계정 선택 동작을 사용하고, 팝업 열기 실패와 사용자 닫기를 구분해 한국어 복구 안내를 제공하며, 연결 버튼 진행 상태가 항상 해제되는지 자동 검증하는 것이다.
+- 현재 승인 범위는 계획서·로컬 제품 코드·회귀 테스트·typecheck·lint·build·로컬/운영 화면 읽기 QA다. commit·push·Worker 배포·Google OAuth 설정 변경·운영 Drive 업로드는 별도 승인 또는 사용자 실기기 입력 전에는 실행하지 않는다.
+- 로컬 보정 뒤 Google 기본 계정 선택 요청에 인자를 덮어쓰지 않는 회귀와 팝업 차단·닫힘 안내를 포함한 provider 5/5, frontend 전체 69파일 492건, typecheck·전체 lint·production build·diff-check가 통과했다. 로컬 완료 여행 화면의 실제 Google callback에서도 `popup_closed` 안내가 표시되고 연결 버튼이 다시 활성화됐다. ~~운영 Android 결과는 배포 전이므로 완료로 확대하지 않는다.~~ 이후 실제 원인이 OAuth `origin_mismatch`로 확인돼 콘솔 설정으로 운영 연결을 복구했으며, 이 로컬 UX 보정은 미커밋 후속 결정으로 분리한다.
+- 사용자 실기기에서 Google OAuth `400 origin_mismatch`가 확인됐다. 2026-08-12 Google 인증 플랫폼의 실제 `Couple Travel Guide Drive` 웹 클라이언트에서 사용자·관리자 Worker 주소가 `승인된 JavaScript 원본`에 정확히 입력돼 있음을 확인하고 저장했다. 콘솔의 `OAuth 클라이언트가 저장되었습니다.` 알림과 재진입 후 두 주소 유지까지 확인했다. 설정 반영에는 콘솔 안내상 5분에서 몇 시간이 걸릴 수 있으며, 다음 증거는 사용자 Android PWA의 Drive 재연결·JPEG 업로드 결과다.
+- 설정 반영 뒤 사용자가 Android PWA의 Drive 재연결과 실제 JPEG 업로드를 완료했다. 운영 D1 읽기 전용 조회에서 `20260812_204614.jpg`, `image/jpeg`, `captured_at = 2026-08-12T20:46:14+09:00`, `created_at = 2026-08-12T12:14:47.584Z`를 확인했고 `changes = 0`, `rows_written = 0`이었다. 운영 Today 화면의 제외 사진 목록에도 해당 JPEG 미리보기가 표시됐다. saved reel은 새 사진을 제외 목록에 유지하므로 릴 순서 운영 증거는 별도로 남긴다.
+- 사용자 승인 아래 `자동 구성으로 되돌리기`를 한 번 실행했다. 릴은 1장·0:03에서 7장·0:21로 바뀌고 순서는 `sydney_harbour_bridge` → `18_london` → `10_riverfront` → `xopp` → `whale_watching` → PNG → 실제 Android JPEG였다. 마지막 JPEG의 유효 EXIF 시각이 기존 null·업로드시각 fallback 사진들보다 뒤이므로 기대 순서와 일치하며, 페이지 재실행 뒤에도 7장·동일 순서가 유지됐다. 사진·Drive 원본·미디어 이력 삭제는 0건이다.
+- 대표사진 운영 선택 승인 뒤 읽기 전용 D1 대조에서 새 JPEG의 AI 점수는 약 44.5점으로 확인됐다. 운영 화면은 상위 3장(약 73·64·62점)만 후보로 노출하므로 새 JPEG는 정상 UI에서 대표사진으로 선택할 수 없다. 숨은 API 직접 호출이나 다른 사진 임의 선택은 하지 않았으며, `상위 후보를 선택해 대표사진 유지 동작만 검증`할지 `전체 미디어에서 대표사진을 선택하도록 제품 UI를 보정`할지 사용자 결정 대기다.
+- 사용자가 상위 후보 선택으로 운영 유지 동작을 검증하는 1안을 승인했다. 첫 번째 73점 후보를 한 번 선택하자 화면에 `대표사진을 저장했습니다.`가 표시되고 해당 버튼이 비활성 `대표사진` 상태로 바뀌었다. 운영 D1 읽기 전용 조회에서 `representative_media_id`가 `10_riverfront_skyline_day.jpg`의 ID로 저장됐고 `changes = 0`, `rows_written = 0`이었다. 페이지 재실행 후에도 같은 첫 후보가 `대표사진`으로 유지됐으며 `Failed to fetch`와 가로 overflow는 없었다. 다른 사진·릴·Drive 파일 변경과 삭제는 0건이다.
+
+### 2026-08-12 · Phase 1C 예약 PDF 운영 QA
+
+- 개인정보 없는 A4 1페이지 `booking-preview-qa.pdf`를 생성해 Poppler 렌더와 텍스트 추출로 잘림·겹침·민감정보 부재를 확인했다.
+- QA 완료 여행의 새 `QA PDF Preview` 예약에 시작 일시 `2026-07-01 10:00`과 PDF를 저장했다. 예약은 0개에서 1개로 바뀌었고 Drive 업로드·부모 폴더 연결·예약 mutation이 각각 성공했다.
+- 예약 상세에서 파일명·PDF 유형이 표시됐고 `Drive 미리보기` 뒤 Drive `alt=media` 다운로드, blob iframe, `미리보기 준비 완료`를 확인했다. 내장 PDF 뷰어 내용은 자동화 스크린샷에서 흰 면으로 캡처됐으므로 렌더 픽셀 증거로 확대하지 않는다.
+- 운영 D1 읽기 전용 조회에서 예약 문서 provider가 `google-drive`, 파일명이 `booking-preview-qa.pdf`, MIME이 `application/pdf`, 문서 ID와 예약 저장소 루트 ID가 존재하며 조회 메타는 `changes = 0`, `rows_written = 0`이었다.
+- 페이지 재실행 뒤에도 예약 1개와 동일 파일 메타데이터가 유지됐다. `Failed to fetch`·일반 오류·브라우저 경고/오류·가로 overflow는 0이었다. QA 예약과 Drive PDF는 후속 정리 승인 전까지 증거로 유지한다.
+
+### 2026-08-12 · Phase 1B 장소·지도 391px 운영 브라우저 QA
+
+- 운영 D1을 읽기 전용으로 조회해 `legacy-sydney-2026` 여행에 장소 69개, 좌표가 있는 장소 19개가 있음을 확인했다. 조회 메타데이터의 `changes`와 `rows_written`은 모두 0이었다.
+- 운영 사용자 화면을 391×844로 확인했다. 장소 통합 목록, `내 저장 3` 필터, 저장 장소 상세, 기존 값이 채워진 수정창 진입과 저장 없는 닫기, 지도 전환, 확대 버튼, 지도 마커 상세 열기가 동작했다.
+- 수정·삭제·추가·새로고침은 실행하지 않았다. Places 사용량은 검색 `26/800`, 사진 `169/800`으로 화면 조작 전후 동일했다.
+- 전체 확인에서 `Failed to fetch`, 브라우저 console warn/error, 문서 가로 overflow는 0이었다. 지도·수정창의 컨트롤 잘림도 보이지 않았다.
+- 이 증거는 내부 브라우저의 Android 크기 운영 QA다. 설치 PWA에서 손가락 스크롤·지도 드래그·핀치 확대·마커 탭·상세·수정창 닫기와 가로 넘침을 사용자가 확인하기 전에는 `1B-6`과 `GAP-03`의 실기기 완료로 확대하지 않는다.
+
+### 2026-08-12 · GAP-42 지도 자동 초기화 보정
+
+- 사용자가 Android 설치 PWA에서 지도를 움직이지 않아도 주기적으로 새로고침되고, 확대 중에도 초기 축소 화면으로 돌아가는 것을 확인했다. 목록·상세·편집 닫기·마커·가로 넘침은 정상이라고 확인했다.
+- 근본 원인은 5초 snapshot polling이 같은 장소 값의 새 배열을 만들 때마다 `MapCanvas` effect가 MapLibre 인스턴스를 정리하고 새로 만드는 참조 의존성이었다.
+- 수정 전 회귀 테스트에서 동일 값 배열 재렌더 뒤 기존 map `remove()`가 1회 호출되는 실패를 확인했다. 장소 전체 값이 같으면 안정된 배열을 유지하는 최소 보정 뒤 새 테스트와 기존 MapCanvas 4건, MapPage 23건을 합친 28건이 통과했다.
+- typecheck·변경 파일 lint·production build를 통과했다. 정적 fixture 391×844 지도에서 확대 뒤 11초 동안 초기 화면으로 돌아가지 않았고 `Failed to fetch`·console warn/error·가로 overflow는 0이었다. Cloudflare 로컬 dev runner는 별도 내부 오류로 시작하지 못해 실제 5초 API polling의 브라우저 재현은 자동 인스턴스 회귀로 대신했다.
+- 이번 범위는 로컬 코드·테스트·화면 검증이다. commit·push·두 Worker 배포와 Android 설치 PWA의 드래그·핀치 확대 15초 유지 재검증은 별도 승인·사용자 입력 전까지 완료 처리하지 않는다.
+- 사용자 승인 뒤 제품 커밋 `686cd154a726bb697c627c5c2835bdfc13340130`을 main에 push하고 사용자 Worker version `56b4d1be-1e67-425e-9946-2d8b87f2e7c4`, 관리자 Worker version `8d5ac7d6-013c-46de-a92f-539709adcfa9`에 같은 `PRODUCT_SHA`로 100% 배포했다. 사용자 root·health·manifest·service worker는 HTTP 200, 관리자 root·health는 Access 302였고 운영 번들 SHA-256은 로컬 build와 일치했다. 운영 지도에서 확대 후 12초 동안 두 번 이상의 polling을 지나도 같은 map 인스턴스와 마커 위치를 유지했고 `Failed to fetch`·console warn/error·가로 overflow는 0이었다. Android 설치 PWA의 손가락 드래그·핀치 확대 15초 유지 재검증 전까지 `GAP-42`는 진행 중으로 유지한다.
+- 2026-08-12 사용자가 Android 설치 PWA에서 지도를 드래그·핀치 확대하고 15초 이상 기다린 뒤에도 확대 상태가 유지됨을 확인했다. 기존 목록·상세·편집 닫기·마커·가로 넘침 정상 확인과 합쳐 `GAP-42`와 `1B-6` 실기기 게이트를 완료로 전환한다.
+
+### 2026-08-12 · GAP-44 참여자 초대 Worker 설정 불일치
+
+- 사용자가 소유자 세션의 설치 사용자 PWA에서 `참여자 기기 연결`을 눌렀을 때 `Pairing is not configured`가 표시돼 새 게스트 환경의 QA 여행 선택이 차단됐다.
+- `createInvite`는 현재 origin의 `/api/admin/invites`를 호출한다. owner 기기 세션은 사용자 Worker에서도 관리 API를 사용할 수 있고 사용자 화면에도 `PairingManager`가 렌더된다.
+- 운영 배포 binding을 읽기 전용으로 대조한 결과 관리자 Worker에는 사용자 앱 주소인 `PARTNER_ORIGIN`이 있지만, 사용자 Worker에는 `APP_ORIGIN`과 `SURFACE=partner`만 있고 `PARTNER_ORIGIN`이 없다. 따라서 사용자 Worker의 `issueInvite`가 D1 쓰기 전에 500 `PAIRING_NOT_CONFIGURED`로 중단된다.
+- 최근 대표자·지도·날씨 배포에서 생긴 회귀가 아니라, owner 관리 UI를 양쪽 surface에서 허용한 코드와 user Worker 설정이 처음부터 맞지 않았던 잠복 불일치다. 기존 Worker 테스트가 partner surface에도 `PARTNER_ORIGIN`을 주입해 이 경계를 탐지하지 못했다.
+- 추천안 A는 사용자 Worker에도 기존 사용자 앱 주소를 `PARTNER_ORIGIN`으로 넣고 설정 계약 회귀를 추가하는 최소 보정이다. 역할·데이터 권한은 늘리지 않고 이미 허용된 owner 초대 동작만 복구한다.
+- 대안 B는 사용자 surface의 초대 UI를 숨기고 관리자 Access surface로 이동시키는 변경이다. 보안 경계는 더 단순하지만 설치 사용자 PWA에서 바로 초대하는 현재 동선이 달라지고 frontend·라우팅 변경 범위가 커진다.
+- 사용자가 추천안 A와 로컬 보정·회귀·typecheck·lint·build·commit·push·두 Worker 동일 SHA 배포를 승인했다. 운영 D1 migration·Secret·기존 초대/기기 삭제는 범위에 포함하지 않는다.
+- 사용자 Worker `wrangler.jsonc`에 기존 사용자 앱 주소를 `PARTNER_ORIGIN`으로 추가하고, 실제 Wrangler partner 설정을 로드해 owner 초대 URL을 생성하는 Worker 회귀를 추가했다. 설정 추가 전에는 동일 운영 오류로 실패했고 보정 뒤 통과했다.
+- pairing Worker 9건, Worker 전체 103건, pairing Playwright 5건, typecheck·대상 lint·production build·diff-check를 통과했다. push 전 전체 lint·typecheck·frontend 테스트도 저장소 hook에서 통과했다.
+- 제품 커밋 `7f127c6afe79117249b980137fd9dd8f237f9d74`를 main에 push했다. 다른 미커밋 UI·Drive 변경을 제외하기 위해 해당 SHA만 clean archive로 추출해 pairing 9건·typecheck·production build를 다시 통과한 뒤 배포했다.
+- 사용자 Worker version `44a14fc6-0741-400b-9069-1718b72cfeac`과 관리자 Worker version `fd5888d2-f6a9-49b8-aa97-6efd6a3edfa4`가 같은 `PRODUCT_SHA`로 100% 배포됐다. 사용자 Worker 실제 binding에 `PARTNER_ORIGIN`이 존재하고 `APP_ORIGIN`과 동일하며, 사용자 root·health·manifest·service worker 200과 관리자 root·health Access 302를 확인했다.
+- 남은 완료 조건은 사용자가 설치 PWA에서 `참여자 기기 연결`을 다시 눌러 초대 URL이 표시되는지 확인하고, 새 게스트 환경에서 링크 claim 뒤 QA 여행을 선택하는 것이다. 이 사용자 동작 전에는 GAP-44를 완료로 확대하지 않는다.
+- 사용자가 설치 PWA에서 초대 링크가 정상 표시됨을 확인했다. 운영 D1을 토큰 없이 읽은 결과 최신 초대의 생성·10분 만료 메타데이터와 `used_at` 설정을 확인해 초대 생성과 1회 claim까지 통과했다. 남은 조건은 새 게스트 화면에서 QA 여행이 표시되고 선택되는지 확인하는 것이다.
+- 사용자가 새 게스트 환경에서 여행을 선택해 오늘 화면까지 열었지만 해당 화면은 여행 전 상태였다. 따라서 종료된 `QA 완료 여행`과 귀국 후 릴을 연 증거로 확대하지 않는다. 다음 단계는 게스트 여행 목록에서 종료된 QA 여행을 선택하는 것이다.
+- 사용자가 게스트 여행 목록에서 종료된 `QA 완료 여행`이 표시되는 것을 확인하고 선택했다. GAP-44의 초대 생성·1회 claim·게스트 완료 여행 선택 조건은 모두 통과했다. 다른 기기 빈 캐시 WebP 미리보기와 첫 로딩 성능은 GAP-38의 별도 실기기 QA로 이어간다.
+- 새 게스트 환경은 Drive 인증 정보가 없는 초기 상태여서 대표사진과 릴 미리보기 대신 `Drive 연결 후 표시` 안내가 정상 노출됐다. 빈 캐시 WebP·첫 로딩 측정은 이 기기에서 Drive를 연결한 직후 시작하며, 연결 전 상태를 미리보기 실패로 판정하지 않는다.
+- 사용자가 새 게스트 환경에서 Drive를 연결한 직후 대표사진과 릴 미리보기가 모두 1초 이내 표시됨을 확인했다. 다른 기기 빈 캐시 첫 로딩 화면 조건은 통과했다. 개발자 도구 기반 실제 전송 바이트 수와 현재 7장·21초보다 충분한 사진을 사용한 2분 기본·3분 상한은 아직 확인하지 않았으므로 별도 잔여로 유지한다.
+- 사용자는 이전 기기에서 릴 사진 미리보기가 1장만 표시됐던 것과 달리, 이번 새 게스트 빈 캐시에서는 릴의 모든 사진 미리보기가 표시됐다고 확인했다. 따라서 다중 WebP 미리보기 표시 회귀는 운영 실기기에서 통과했다. 현재 릴의 끝까지 재생 여부는 다음 확인으로 유지한다.
+- 사용자가 현재 7장·21초 릴을 재생해 모든 사진이 빈 화면·멈춤 없이 순서대로 끝까지 재생됨을 확인했다. 현재 데이터 규모의 실기기 재생 조건은 통과했다. 충분한 사진을 사용한 2분 기본·3분 상한과 개발자 도구 기반 실제 전송 바이트 수는 이 증거로 확대하지 않고 별도 잔여로 유지한다.
+- 2026-08-13 사용자 결정: V1 날씨 위치는 기기 GPS 권한을 추가하지 않고 여행 목적지 `Sydney` 기준으로 유지한다. 기기 현재 위치는 출국 전 한국 날씨를 표시할 수 있고 새 위치 권한·개인정보 경계를 만들기 때문이다. 추후 동네 단위 정확도가 필요하면 기기 GPS가 아니라 일정·장소의 명시적 좌표를 사용하는 별도 요구로 검토한다.
+- 날씨 운영 QA를 위해 사용자 승인 후 QA 여행의 원본 `2026-07-01~02`, `completed`, version 16을 기록하고 `2026-08-13`, `active`, version 17로 조건부 임시 전환했다. 변경 전 날씨 사용량은 13이었다. 사용자가 여행 중 화면의 날씨 표시를 확인했지만 운영 D1 사용량과 캐시 시각은 변하지 않았고, 서버 시각 `2026-08-12T15:13:51Z` 기준 기존 current cache가 `15:46:46Z`까지 유효해 이 화면은 cached 증거로 판정했다. 새 live 호출·즉시 cached 재조회와 원래 날짜 복구가 남았다.
+- 기다리지 않고 같은 Sydney를 명확히 한 `Sydney, Australia` query로 임시 전환해 사용자 화면의 live 표시를 확인했다. 사용량은 `13→15`, current·forecast는 같은 fetchedAt으로 각각 60분·24시간 캐시됐다. 즉시 두 번째 화면 조회 뒤에도 사용량 15와 두 캐시 시각이 유지돼 cached 경로를 통과했다.
+- 이후 목적지·날짜·상태를 원래 `Sydney`, `2026-07-01~02`, `completed`로 복구해 version 19를 읽기 전용으로 확인했다. 복구 query 변경을 열린 두 기기가 동시에 감지하면서 사용량이 `15→19`로 증가했고, 현재 route에 갱신 lease가 없어 동일 cache miss의 공급업체 호출이 중복되는 GAP-45를 발견했다. 6초 뒤 사용량 19 유지와 복구 상태를 재확인했다. 이 문제를 보정하기 전에는 날씨 운영 범위를 완전 완료로 확대하지 않는다.
+- 2026-08-13 GAP-45 완료: D1 refresh lease와 실패 cooldown을 적용한 최종 제품 SHA `8863b08e0297c70593e6d306dc8fcefc1f00e6ea`를 main에 push하고 migration `0024` 적용 뒤 사용자·관리자 Worker에 같은 SHA로 100% 배포했다. 운영 두 탭 동시 `Sydney, Australia` cache miss에서 날씨 화면 2개 모두 정상, 사용량 `61→63`만 증가했다. 원상복구 query `Sydney`도 열린 탭에서 한 세트만 갱신해 최종 65, current·forecast 동일 fetchedAt, lease 0을 확인했다. QA 여행은 `Sydney`, `2026-07-01~02`, `completed`, version 25다. 실패 query QA 중 발견한 재시도 폭주로 사용량이 21에서 59까지 증가했으며, 이는 무료 제품 한도 카운터를 소비했지만 결제는 발생하지 않았다. 실패 cooldown 회귀로 동시 실패는 provider 1회만 호출하도록 고정했다.
+
+### 2026-08-13 · GAP-46 긴 여행지 모바일 overflow 로컬 보정
+
+- 원인은 Astryx `Typeahead` 선택 토큰의 내부 flex 고유 폭이 폼의 기존 `min-width: 0` 경계를 넘어서는 것이었다. 여행지 데이터·저장 API는 바꾸지 않고 `.trip-form .astryx-typeahead`에 `width/min-width/max-width`와 `overflow: hidden`만 추가했다.
+- 로컬 E2E는 390px에서 기존 문제를 재현한 뒤, 120자 이하 긴 여행지를 실제 API로 생성하고 여행 수정창을 열어 320·390·430px의 control/dialog 경계와 문서 가로 overflow를 검사했다. 변경 저장 후 다시 편집창을 열었을 때 같은 여행지가 유지되는 것도 확인했다.
+- 검증은 trip form 33건, 신규 Playwright 1건, typecheck, 전체 lint, production build, diff-check가 통과했다. 390px 실패 시 첨부 화면에서도 토큰이 시트 오른쪽 경계 안에서 잘리는 형태를 직접 확인했다.
+- 이 범위는 로컬 코드·자동·화면 증거다. commit·push·두 Worker 동일 SHA 배포와 Android 설치 PWA에서 같은 긴 여행지 재검증은 외부 단계로 남긴다.
+- 2026-08-13 사용자가 직전 보고의 다음 단계 진행을 승인했다. 이번 외부 실행은 GAP-46 코드·회귀만 커밋해 `main`에 push하고 사용자·관리자 Worker를 같은 제품 SHA로 배포하는 범위로 제한한다. Android 설치 PWA 재검증은 배포 뒤 사용자 확인으로 남긴다.
+- 제품 커밋 `6c24f0324b56a8b416d08fce98e264f22269dd1f`은 CSS와 E2E 2개 파일만 포함해 main에 push했다. 깨끗한 커밋 archive에서 production build와 두 Wrangler dry-run을 통과한 뒤 사용자 Worker 버전 `61287674-8f17-4e82-8c80-6b1c50b6545a`, 관리자 Worker 버전 `402a2300-7ba0-4c06-8802-5daa9d960d34`에 같은 SHA tag/message로 100% 배포했다.
+- 사용자 root·health·manifest·service worker·CSS는 HTTP 200, 관리자 root·health는 Access HTTP 302였다. 운영 CSS SHA-256은 깨끗한 build와 일치했고 `.trip-form .astryx-typeahead` 보정 selector가 실제 운영 asset에 포함됐다. 남은 증거는 Android 설치 PWA에서 같은 긴 여행지를 열어 수정창 가로 경계와 저장·재열기를 확인하는 1건이다.
+- 2026-08-13 Android 설치 PWA 재검증에서 긴 무공백 한글을 편집하자 입력값과 열린 추천 항목이 여전히 오른쪽 경계를 벗어났다. 첫 회귀는 저장된 선택 토큰과 Typeahead 외곽만 검사했고, 편집 input과 wrapper 밖 top-layer에 렌더되는 추천 popover를 포함하지 못했다. 따라서 첫 배포를 완료 증거로 확대하지 않고, 실제 입력·추천 목록 경로를 재현하는 2차 보정으로 되돌린다.
+- 2차 재현에서 320px 입력 컨트롤 오른쪽은 295px인데 추천 팝오버가 313px까지 18px 더 커져 실패했다. `.trip-form [popover]`의 폭을 CSS anchor 폭과 같게 고정한 뒤 320·390·430px에서 input·option·dropdown·popover가 모두 컨트롤·시트 경계 안에 유지됐다. 긴 무공백 한글 직접 입력 선택, 시간대 재선택, 저장, 재열기도 통과했다.
+- Android emulation E2E 1건과 그 안의 production build, trip form 33건, typecheck, 전체 lint, 변경 테스트 lint, diff-check를 통과했다. 이번 2차 범위는 로컬 코드·자동·화면 검증이며 commit·push·두 Worker 배포와 Android 설치 PWA 재검증은 별도 승인 전까지 완료 처리하지 않는다.
+- 2026-08-13 사용자가 2차 보정의 CSS·E2E 2파일 커밋, `main` push, 사용자·관리자 Worker 동일 SHA 배포를 승인했다. migration·Secret·운영 데이터 변경은 제외하고, 배포 뒤 Android 설치 PWA 재검증은 사용자 입력으로 유지한다.
+- CSS와 E2E 2개 파일만 포함한 제품 커밋 `eb26827816e13da44da8c7741b5dbb5cf2bb5576`을 `main`에 push했다. pre-push에서 lint·typecheck·frontend 69파일 494건·production build를 통과했고, 깨끗한 commit archive에서 production build와 두 Wrangler dry-run을 다시 통과했다.
+- 사용자 Worker version `5e80f431-f7ec-4e4d-b253-ffa48ccbe581`과 관리자 Worker version `f2ea0773-3797-454e-81bb-feb197a10f19`가 같은 `PRODUCT_SHA`로 각각 100% 배포됐다. 사용자 root·health·manifest·service worker·CSS는 HTTP 200, 관리자 root·health는 Access HTTP 302였다. 운영 CSS `/assets/index-Bu6_ihG3.css` SHA-256은 clean build와 일치했고 `anchor-size(width)` 보정이 포함됐다. migration·Secret·운영 데이터는 변경하지 않았다.
+- 남은 증거는 Android 설치 PWA를 완전히 종료·재실행한 뒤 같은 긴 무공백 한글을 여행지에 입력해 추천 행·입력값이 수정창 오른쪽 경계 안에 유지되고, 직접 입력 선택→시간대 선택→저장→재열기까지 정상인지 확인하는 1건이다.
+- 2026-08-13 Android 설치 PWA 재검증에서 추천 항목이 여전히 화면 오른쪽을 벗어났다. 사용자는 긴 내용이 화면 폭을 넘으면 숨김·말줄임이 아니라 여러 줄로 줄바꿈하도록 결정했다. 3차 보정은 Typeahead의 긴 추천 label과 선택 token에 무공백 줄바꿈을 적용하고, 편집 input 자체는 네이티브 단일 행 입력의 내부 스크롤만 허용하되 컨트롤·시트 밖으로는 나가지 않게 한다. 이번 승인 범위는 계획서·로컬 코드·테스트·브라우저 QA이며 commit·push·두 Worker 배포는 결과 보고 뒤 별도 승인으로 유지한다.
+- 3차 로컬 보정은 Astryx 추천 label·선택 token의 `white-space: nowrap`·말줄임을 해제하고 `overflow-wrap: anywhere`와 가변 높이를 적용했다. Playwright 회귀에서 320·390·430px 추천 label·선택 token이 두 줄 이상으로 감기고 문서 가로 overflow 0, 직접 입력 선택→시간대 선택→저장→재열기가 통과했다.
+- 실제 Codex 내장 브라우저 390px에서 추천 label 높이 48px/line-height 24px, 선택 token label 높이 37.49px/line-height 20px로 줄바꿈을 확인했다. 320·390·430px 모두 `documentElement.scrollWidth === innerWidth`였고 console warn/error는 0건이었다. typecheck·대상 ESLint·E2E 내부 production build·diff-check도 통과했다. CSS는 저장소 ESLint 대상이 아니어서 rendered browser와 computed style로 검증했다. commit·push·배포·운영 데이터 변경은 실행하지 않았다.
+- 2026-08-13 사용자가 3차 보정의 제품 2파일 commit, `main` push, 사용자·관리자 Worker 동일 SHA 배포를 승인했다. CSS와 E2E만 포함한 제품 커밋 `4bf4c2e279fe7539445a548c0fe3e9b692dcef23`을 push했고, pre-push에서 lint·typecheck·frontend 69파일 494건·production build를 통과했다. 첫 push 시 이 작업이 연 로컬 QA Wrangler 프로세스가 `dist`를 잠가 build가 `EPERM`으로 중단됐으나 해당 프로세스만 종료한 뒤 build와 push를 다시 통과했다.
+- 깨끗한 commit archive 448파일에서 production build와 사용자·관리자 Wrangler dry-run을 통과했다. 사용자 Worker version `54553387-458f-4f22-8c43-d821acd0f87f`, 관리자 Worker version `9d85a93f-5168-427d-b708-ae4f7cfc98b4`가 같은 `PRODUCT_SHA`로 각각 100% 배포됐다.
+- 사용자 root·health·manifest·service worker·CSS는 HTTP 200, 관리자 root·health는 Access HTTP 302였다. 운영 CSS `/assets/index-CwmYcBaH.css` SHA-256 `17c59ff1e65f83fe8e51d10421804b8702ecbab468227d1a585ba6ac73c8a21b`는 clean build와 일치했고 추천 label·선택 token의 `overflow-wrap:anywhere` selector가 포함됐다. migration·Secret·운영 데이터는 변경하지 않았다. 남은 증거는 Android 설치 PWA 완전 종료·재실행 후 같은 긴 무공백 한글의 추천 label·선택 token 줄바꿈, 저장·재열기 확인 1건이다.
+- 2026-08-13 사용자가 Android 설치 PWA 완전 종료·재실행 뒤 같은 긴 여행지의 추천 label·선택 token 줄바꿈과 저장·재열기가 정상임을 확인했다. 이 사용자 실기기 증거로 `GAP-46`을 완료 처리한다.
+- 다음 사용자 결정은 실제 사진 릴의 2분 기본·3분 상한 증거 범위다. 자동 회귀는 41장 입력에서 40장·120초 자동 상한과 편집 릴 180초 상한을 검증하고, 운영 Android 설치 PWA는 현재 7장·21초 릴의 모든 미리보기·끝까지 재생을 확인했다. 추천은 실제 사진 40~60장을 추가 업로드하지 않고 이 결합 증거를 V1 완료 기준으로 승인하는 것이다. 실제 대규모 업로드를 요구하면 사용자 사진 선택·Drive 쓰기·업로드 시간이 추가된다.
+- 사용자가 실제 사진 40~60장을 추가 업로드하지 않고 자동 40장·120초/편집 180초 상한과 운영 Android 7장·21초 전체 재생의 결합 증거를 V1 릴 완료 기준으로 승인했다. `1D-10`은 완료 처리한다. 다른 기기 빈 캐시에서 모든 미리보기가 1초 이내 표시된 사용자 증거는 유지하며, 개발자 도구 기반 정확한 전송 바이트 수는 별도 승인 결정으로 분리한다.
+- 사용자가 개발자 도구 기반 정확한 전송 바이트 측정을 생략하고, 새 게스트 빈 캐시에서 대표사진·모든 릴 미리보기 1초 이내 표시, 누락 0, 7장 릴 전체 재생 정상 결과를 V1 성능 기준으로 승인했다. `GAP-38`의 다른 기기 빈 캐시 성능 잔여를 완료 처리한다.
+- 다음 사용자 결정은 Places 운영 월 800회 경계의 증거 범위다. Worker 회귀 7건은 사진·텍스트 검색·주변 추천 각 SKU의 사용량이 800일 때 HTTP 429 `PLACES_FREE_LIMIT_REACHED`를 반환하고 공급업체 fetch가 0회임을 재검증했다. 추천은 실제 운영 호출을 800회까지 소진하지 않고 이 결정적 자동 증거와 앞서 완료한 운영 실데이터·Android 장소/지도 QA를 V1 차단 기준으로 승인하는 것이다.
+- 사용자가 실제 운영 Google Places 호출을 800회까지 소진하지 않고, 사진·텍스트 검색·주변 추천 각 SKU의 800회 경계에서 HTTP 429와 공급업체 호출 0회를 보장하는 Worker 회귀 7/7을 V1 차단 증거로 승인했다. 앞서 통과한 운영 실데이터와 Android 장소·지도 QA를 합쳐 `1B-5`와 Phase 1B 잔여 운영 게이트를 완료 처리한다.
+- 다음 제품 결정은 `GAP-41` 조사 중 만든 Google Drive 연결 실패 안내 보정의 출시 여부다. 현재 운영 OAuth 원본 설정과 Android Drive 연결·JPEG 업로드는 정상이다. 로컬 2파일 보정은 기본 Google 계정 선택기를 사용하고 팝업 차단과 사용자 닫힘을 구분해 한국어 복구 안내를 제공하며, provider 5/5·대상 lint·typecheck를 통과했다. 추천은 이 UX 보정을 commit·main push하고 두 Worker에 같은 SHA로 배포한 뒤 설치 PWA에서 Drive 연결 1회를 재확인하는 것이다. migration·Secret·OAuth 콘솔·Drive 데이터는 변경하지 않는다.
+- 2026-08-13 사용자가 위 Google Drive 연결 실패 안내 UX 보정의 출시를 승인했다. 정확한 제품 범위는 `src/services/media/googleDriveProvider.ts`와 `src/services/media/googleDriveProvider.test.ts` 2파일이며, 이 변경만 commit해 `main`에 push하고 사용자·관리자 Worker를 같은 제품 SHA로 배포한 뒤 운영 정적 자산을 검증한다. migration·Secret·Google OAuth 콘솔 설정·Drive 데이터 변경과 다른 미커밋 문서·UI·목업은 제외한다. 배포 뒤 Android 설치 PWA의 Drive 연결 1회는 사용자 실기기 확인으로 남긴다.
+- 제품 커밋 `3db97e42e3186659ef9c23a413cd0bb02d83b35f`는 승인된 Drive provider·회귀 테스트 2파일만 포함해 `main`에 push했다. 대상 provider 5건, typecheck, 전체 lint, production build, diff-check를 통과했고 pre-push에서 frontend 69파일 494건과 동일 자동 게이트를 다시 통과했다.
+- 정확한 commit archive에서 production build와 사용자·관리자 Wrangler dry-run을 통과했다. 사용자 Worker version `98f392ef-650a-4ed0-8ed2-3332628d8c68`, 관리자 Worker version `20e8ccdc-d976-41ff-a97d-3776f821b606`이 같은 `PRODUCT_SHA`로 각각 100% 배포됐다.
+- 사용자 root·health·manifest·service worker·bundle은 HTTP 200, 관리자 root·health는 Access HTTP 302였다. 운영 bundle `/assets/index-DIufPUyf.js` SHA-256 `C26D893ECE749BD29BC999B0B41BEEC5ABF7845FD973DF153AF4CA4E0E433034`는 clean build와 일치했고 팝업 차단·사용자 닫힘 한국어 안내를 포함한다. migration·Secret·OAuth 콘솔·Drive 데이터는 변경하지 않았다. ~~남은 증거는 Android 설치 PWA 완전 종료·재실행 뒤 Drive 연결 1회다.~~
+- 사용자가 Android 설치 PWA에서 Drive 재연결 성공을 확인했다. 이 증거로 `GAP-41` 후속 UX 보정의 운영 실기기 확인을 완료 처리한다.
+
+### 2026-08-13 · GAP-47 릴 미리보기 지연·대표사진 삭제 로컬 보정
+
+- 사용자가 Drive 연결 뒤 대표사진은 표시되지만 릴 미리보기가 모두 나타나기까지 몇 분이 걸리고, 대표사진 영역에 삭제 버튼이 없다고 보고했다.
+- 코드 조사에서 `ReelEditor`가 저장된 릴과 모든 기기 캐시를 기다린 뒤에만 첫 화면을 만들고, Drive 새로 불러오기는 모든 WebP를 한 장씩 순차 다운로드·저장한 뒤 한 번에 화면에 반영하는 것을 확인했다. 첫 릴 구조는 즉시 표시하고, 썸네일은 제한된 병렬 요청으로 받아 도착 순서대로 화면·기기 캐시에 반영하며, 유사도 해시는 비차단 후속 계산으로 분리한다.
+- 대표사진 삭제는 기존 `GAP-39 A안`을 재사용한다. 확인창 뒤 앱 `trip_media` 이력·대표사진 참조·릴/제외 참조·기기 썸네일 캐시만 정리하고 Google Drive 원본과 WebP 미리보기 파일은 보존한다. 취소·성공·실패 상태와 다른 사진 보존을 자동 검증한다.
+- 현재 승인 범위는 계획서·로컬 제품 코드·회귀 테스트·typecheck·lint·build·로컬 브라우저 화면 QA다. commit·push·두 Worker 배포·migration·Secret·OAuth 콘솔·운영 Drive/D1 데이터 변경은 결과 보고 뒤 별도 승인으로 유지한다.
+- 완료 기준은 저장 릴 구조가 썸네일 전체 완료를 기다리지 않고 먼저 렌더되고, 여러 Drive 미리보기가 제한 병렬·점진 표시되며, 대표사진 삭제 확인·취소·성공·실패와 Drive 삭제 미호출이 자동·모바일 화면에서 확인되는 것이다.
+- 로컬 보정을 완료했다. 저장된 릴은 기기 썸네일 전체를 기다리지 않고 먼저 렌더하며, Drive WebP는 최대 4개를 병렬 다운로드해 각 파일이 도착하는 즉시 화면에 표시하고 이후 기기 캐시에 저장한다. 대표사진 삭제는 확인창 뒤 앱 이력·기기 캐시만 정리하고 Google Drive 원본·WebP는 보존한다.
+- `ReelEditor`·`RepresentativePhotoPanel` 대상 18건, typecheck, 전체 lint, production build, diff-check를 통과했다. 390px와 1280px 로컬 실제 브라우저에서 가로 넘침 0, 삭제 확인·취소·성공 상태, Drive 보존 안내, 삭제 뒤 대표사진 버튼 제거와 릴 재구성을 확인했다. 로컬 미리보기의 `github-pages` base 때문에 이미지 fixture 자체는 표시되지 않았지만 제품 컴포넌트의 구조·상태·상호작용과 콘솔 오류 0은 확인했다.
+- 현재 상태는 `로컬 구현·자동·화면 검증 완료, commit·push·두 Worker 배포와 설치 PWA 실데이터 속도 재확인 대기`다. 배포 전에는 운영 로딩 개선 완료로 확대하지 않는다.
+- 2026-08-13 사용자가 승인한 제품 5파일만 커밋 `d629902f0628110352f2860a3940072ca708e33a`로 만들어 `main`에 push했다. 정확한 commit archive에서 대상 18건·typecheck·전체 lint·production build·사용자·관리자 Wrangler dry-run을 통과했고, pre-push에서도 frontend 69파일 498건과 동일 자동 게이트를 통과했다.
+- 첫 배포 annotation에 실제 커밋과 다른 전체 SHA를 적은 기록 오류를 배포 후 검증에서 발견했다. 같은 정확한 artifact를 실제 전체 SHA로 즉시 재배포해 잘못 표시된 이전 버전을 0%로 밀어냈다. 최종 사용자 Worker version `2e478d2c-96de-4a0d-a973-9709f33f2a6d`, 관리자 Worker version `048f6b40-dc45-452e-a84c-2040e4b4719f`가 정확한 같은 `PRODUCT_SHA`로 각각 100%다. 사용자 root·health·manifest·service worker·bundle은 HTTP 200, 관리자 root·health는 Access HTTP 302였다. 운영 JS `/assets/index-nAUm86RQ.js` SHA-256 `796c1cecc5b3b56446cac70ce18969844715aee1af4096c8607a3bca8bdfb50d`는 clean build와 일치했다.
+- migration·Secret·OAuth 콘솔·Drive/D1 데이터는 변경하지 않았다. 남은 증거는 Android 설치 PWA를 완전히 종료·재실행한 뒤 Drive 연결 후 릴 구조가 즉시 표시되고 여러 미리보기가 이전보다 빠르게 순차 등장하는지, 대표사진 삭제 확인·성공 뒤 Drive 원본이 유지되는지 확인하는 실기기 1건이다.
+- 2026-08-13 실기기 재검증에서 릴 미리보기가 빠르게 표시됨을 사용자가 확인했다. 이 증거로 GAP-47 성능 보정의 운영 실기기 조건을 완료 처리한다.
+- ~~대표사진 영역의 현재 대표사진을 삭제하는 버튼을 제공한다.~~ 사용자가 의도한 삭제 대상은 현재 대표사진이 아니라 과거 대표사진 이력이며, 현재 대표사진은 보호해야 한다. 현재 대표 영역의 삭제 버튼은 제거하고, 삭제 액션은 현재 대표가 아닌 이력 항목 안에서 기존 카드 액션과 같은 높이·폭·간격으로 제공한다.
+- 현재 schema는 `trips.representative_media_id`에 현재 대표 한 건만 저장하고 `trip_media`에는 과거 대표 선택 여부를 기록하지 않는다. 따라서 기존 데이터에서 “과거에 대표로 선택됨”과 “업로드됐지만 대표로 선택된 적 없음”을 구분할 수 없다. 비현재 등록 사진 전체를 삭제 가능한 이력으로 볼지, 향후 대표 선택부터 별도 선택 이력을 저장할지 사용자 결정 전에는 삭제 대상 구현을 진행하지 않는다.
+- 2026-08-13 사용자가 **A안**을 승인했다. 현재 대표사진은 삭제 불가로 보호하고, 현재 대표가 아닌 등록 사진 전체를 사진 이력으로 표시해 카드 안에서 삭제한다. 기존 카드 선택 버튼과 같은 높이·폭·간격을 유지하고 위험 동작은 색상으로만 구분한다. 앱 `trip_media`·릴/제외 참조·기기 썸네일만 정리하며 Google Drive 원본·WebP는 보존한다. 별도 선택 이력 schema/migration은 추가하지 않는다. 이번 범위는 로컬 제품 코드·회귀 테스트·typecheck·lint·build·390px/데스크톱 화면 QA이며 commit·push·배포는 결과 확인 뒤 별도 승인이다.
+- A안 로컬 보정을 완료했다. 상단 `대표사진 삭제` 버튼을 제거했고, 모든 등록 사진을 AI 점수 순으로 표시한다. 현재 대표 카드에는 비활성 `현재 대표사진`만, 비현재 카드에는 같은 2열 카드 액션의 `대표사진으로 선택`·위험 색상 `이력 삭제`를 제공한다. 삭제 확인·취소·성공·실패는 비현재 사진에만 적용하며, 성공 뒤 현재 대표는 그대로 유지되고 Drive `remove`는 호출하지 않는다. 대상 회귀 10건, typecheck, 전체 lint, production build, diff-check를 통과했다. 390px·1440px 실제 로컬 브라우저에서 두 카드 버튼의 높이·폭·간격 일치, 가로 넘침 0, 확인→취소→확인 삭제 뒤 현재 대표 유지와 콘솔 warn/error 0을 확인했다. 현재 상태는 `로컬 구현·자동·화면 검증 완료, commit·push·두 Worker 배포와 설치 PWA 확인 대기`다.
+
 ## 13. 컨텍스트 압축 후 복구 체크리스트
 
 컨텍스트가 압축되거나 작업이 이어질 때마다 구현을 재개하기 전에 다음을 확인한다.
@@ -1201,6 +1354,9 @@ npm run build
 
    ~~`현재 작업 상태`와 `GAP-01~23` 전체를 코드·테스트·운영 증거와 다시 대조했는가.~~<br>~~`현재 작업 상태`와 `GAP-01~24` 전체를 코드·테스트·운영 증거와 다시 대조했는가.~~<br>~~`현재 작업 상태`와 `GAP-01~27` 전체를 코드·테스트·운영 증거와 다시 대조했는가.~~<br>~~`현재 작업 상태`와 `GAP-01~28` 전체를 코드·테스트·운영 증거와 다시 대조했는가.~~<br>~~`현재 작업 상태`와 `GAP-01~30` 전체를 코드·테스트·운영 증거와 다시 대조했는가.~~<br>~~`현재 작업 상태`와 `GAP-01~31` 전체를 코드·테스트·운영 증거와 다시 대조했는가.~~<br>~~`현재 작업 상태`와 `GAP-01~32` 전체를 코드·테스트·운영 증거와 다시 대조했는가.~~<br>~~`현재 작업 상태`와 `GAP-01~36` 전체를 코드·테스트·운영 증거와 다시 대조했는가.~~<br>~~`현재 작업 상태`와 `GAP-01~38` 전체를 코드·테스트·운영 증거와 다시 대조했는가.~~<br>`현재 작업 상태`와 `GAP-01~39` 전체를 코드·테스트·운영 증거와 다시 대조했는가.
 4-1. `GAP-40`까지 포함한 최신 원장을 코드·자동·운영 증거와 대조했는가.
+4-2. `GAP-41` Google Drive 설치 PWA 재연결 차단의 코드·자동·운영 증거를 대조했는가.
+4-3. `GAP-42` 지도 5초 자동 재조회 초기화의 코드·자동·배포·실기기 증거를 대조했는가.
+4-4. `GAP-44` 참여자 초대 UI와 사용자 Worker `PARTNER_ORIGIN` 불일치의 승인 방향·코드·설정·배포 증거를 대조했는가.
 5. 최신 사용자 요구사항과 코드·계획이 달라진 부분을 구현 전에 보고했는가.
 6. 현재 실행 단위의 완료 기준을 모두 충족했는가. 하위 작업 하나를 Phase 완료로 확대하지 않았는가.
 7. `구현`, `자동 검증`, `화면 검증`, `운영 검증`, `완료`를 구분해 기록했는가.
