@@ -8,6 +8,58 @@ describe("GoogleDriveProvider", () => {
     Reflect.deleteProperty(window, "google");
   });
 
+  it("uses the interactive Google account chooser when reconnecting", async () => {
+    const requestAccessToken = vi.fn();
+    const initTokenClient: NonNullable<Window["google"]>["accounts"]["oauth2"]["initTokenClient"] = vi.fn((config) => {
+      requestAccessToken.mockImplementation(() => config.callback({
+        access_token: "test-access-token",
+      }));
+      return { requestAccessToken };
+    });
+    Object.defineProperty(window, "google", {
+      configurable: true,
+      value: {
+        accounts: {
+          oauth2: {
+            initTokenClient,
+          },
+        },
+      },
+    });
+
+    await new GoogleDriveProvider().connect("test-client-id");
+
+    expect(requestAccessToken).toHaveBeenCalledWith();
+  });
+
+  it.each([
+    [
+      "popup_failed_to_open",
+      "Google Drive 연결 창이 차단되었습니다. 브라우저에서 팝업을 허용한 뒤 다시 시도해 주세요.",
+    ],
+    [
+      "popup_closed",
+      "Google Drive 연결 창이 닫혔습니다. 연결 버튼을 눌러 다시 시도해 주세요.",
+    ],
+  ])("explains the Google OAuth %s error", async (type, message) => {
+    const initTokenClient: NonNullable<Window["google"]>["accounts"]["oauth2"]["initTokenClient"] = vi.fn((config) => ({
+      requestAccessToken: () => Reflect.apply(config.error_callback, undefined, [{ type }]),
+    }));
+    Object.defineProperty(window, "google", {
+      configurable: true,
+      value: {
+        accounts: {
+          oauth2: {
+            initTokenClient,
+          },
+        },
+      },
+    });
+
+    await expect(new GoogleDriveProvider().connect("test-client-id"))
+      .rejects.toThrow(message);
+  });
+
   it("finds one untrashed child folder with an escaped Drive query", async () => {
     const fetcher = vi.fn().mockResolvedValue(new Response(JSON.stringify({
       files: [{ id: "preview-folder" }],

@@ -14,6 +14,10 @@ interface TokenClient {
   requestAccessToken(options?: { prompt?: string }): void;
 }
 
+interface GoogleOAuthError {
+  type: string;
+}
+
 interface GoogleIdentity {
   accounts: {
     oauth2: {
@@ -21,7 +25,7 @@ interface GoogleIdentity {
         client_id: string;
         scope: string;
         callback: (response: TokenResponse) => void;
-        error_callback: () => void;
+        error_callback: (error: GoogleOAuthError) => void;
       }): TokenClient;
     };
   };
@@ -60,9 +64,9 @@ export class GoogleDriveProvider implements MediaStorageProviderClient {
             reject(new Error(response.error_description ?? "Google Drive 연결이 취소되었습니다."));
           }
         },
-        error_callback: () => reject(new Error("Google Drive 연결 창을 열지 못했습니다.")),
+        error_callback: (error) => reject(new Error(googleOAuthErrorMessage(error.type))),
       });
-      client.requestAccessToken({ prompt: "" });
+      client.requestAccessToken();
     });
   }
 
@@ -163,6 +167,16 @@ export class GoogleDriveProvider implements MediaStorageProviderClient {
 
 function escapeDriveQueryValue(value: string): string {
   return value.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+}
+
+function googleOAuthErrorMessage(type: string): string {
+  if (type === "popup_failed_to_open") {
+    return "Google Drive 연결 창이 차단되었습니다. 브라우저에서 팝업을 허용한 뒤 다시 시도해 주세요.";
+  }
+  if (type === "popup_closed") {
+    return "Google Drive 연결 창이 닫혔습니다. 연결 버튼을 눌러 다시 시도해 주세요.";
+  }
+  return "Google Drive 연결 창을 열지 못했습니다. 다시 시도해 주세요.";
 }
 
 let googleIdentityPromise: Promise<void> | null = null;
