@@ -203,3 +203,21 @@ Drive 폴더 / 공유 상태:
 운영 DB 비변경 확인:
 결론:
 ```
+
+### 2026-08-12 실제 복원 기록
+
+```text
+실행일: 2026-08-12 KST
+실행자: 사용자 직접 비밀번호 입력, Codex 읽기 전용 검증
+운영 DB: couple-travel-guide
+암호화 백업 파일: couple-travel-guide-20260811T213611Z-428eb6c6.sql.age
+크기 / SHA-256: 136,447 bytes / C5C1F0C8DE1EBC5E172F2057D5B3B7EF9EB93F556D972DDA5EDE125C0E16D75D
+Drive 폴더 / 공유 상태: 일반 액세스 제한됨, 링크·외부 공유 꺼짐 사용자 확인
+테스트 D1: couple-travel-guide-restore-test
+row count 대조: 27개 복원. 현재 운영과 24개 일치, 백업 이후 생성된 날씨 3개만 운영 1 / 복원 0
+비민감 표본 대조: 구조 지표 17/17 일치, 참조 무결성 위반 0
+평문 잔존 확인: restore work 0, backup plain SQL 0, partial 0
+운영 DB 비변경 확인: changes 0, rows_written 0, changed_db false
+Drive 다운로드 SHA: 로컬 기준 SHA-256과 일치 사용자 확인
+결론: 암호화 백업·비공개 Drive·테스트 D1 복원·대조·평문 cleanup 통과, Phase 4 완료
+```

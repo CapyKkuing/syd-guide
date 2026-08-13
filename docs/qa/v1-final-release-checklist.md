@@ -35,18 +35,18 @@
 
 상태를 추정해서 완료로 올리지 않는다. 과거 계획서나 대시보드에 남은 성공 기록은
 참고용 이력일 뿐 최종 SHA의 현재 증거가 아니다. 과거 자동 게이트의 기록에는
-frontend 69개 파일 489건, Worker 102건, Playwright 46건이 있으며, 2026-08-12
-Phase 6에서 현재 소스 기준으로 다시 실행했다.
+frontend 69개 파일 498건, Worker 105건, Playwright 47건이며, 2026-08-13
+최신 제품 SHA `65a1dd43` 기준으로 Phase 6 최종 게이트를 다시 실행했다.
 
 ### 최종 일괄 QA 순서
 
 - [x] A. 제품 SHA와 문서 SHA 분리, worktree·승인 범위·비밀정보 노출 사전 확인
 - [x] B. 로컬 자동 게이트 전체 실행
-- [ ] C. 승인된 Phase 2 운영 순서 실행
-- [ ] D. 승인된 Phase 4 백업·복원 순서 실행
-- [ ] E. Phase 5 Pages 정책·동일 제품 SHA는 확인, stale PWA smoke는 재검증 필요
-- [ ] F. Phase 1 잔여 운영·브라우저·Android 실기기 항목 실행
-- [ ] G. P0/P1·핵심 흐름·보안·계획 동기화·출시 승인 판정
+- [x] C. 승인된 Phase 2 운영 순서 실행
+- [x] D. 승인된 Phase 4 백업·복원 순서 실행
+- [x] E. Phase 5 Pages 정책·동일 제품 SHA·stale PWA smoke 확인
+- [x] F. Phase 1 잔여 운영·브라우저·Android 실기기 항목 실행
+- [x] G. P0/P1·핵심 흐름·보안·계획 동기화·출시 승인 판정
 
 앞 단계의 필수 증거가 없으면 다음 단계로 넘어가지 않는다. 이 문서의 체크박스를
 채우기 위해 원격 명령이나 외부 호출을 임의로 실행하지 않는다.
@@ -56,8 +56,8 @@ Phase 6에서 현재 소스 기준으로 다시 실행했다.
 ### 1-1. 사전 고정
 
 - [x] 최종 구현 범위가 계획서의 현재 실행 단위와 일치한다.
-- [x] 브랜치와 QA 시작 기준 HEAD를 기록했다: `main`, 문서 기준 `8fc2f5f4`.
-- [x] 배포 제품 SHA `c602239c`와 QA 시작 기준 문서 SHA `8fc2f5f4`를 분리해 기록했다. 증거 문서 commit은 최종 Git 상태에서 별도로 기록한다.
+- [x] 브랜치와 QA 시작 기준 HEAD를 기록했다: `main`, 제품 기준 `65a1dd43`.
+- [x] 사용자·관리자 Worker가 같은 제품 SHA `65a1dd43`을 각각 100% 사용함을 재확인했다. 이번 증거 문서 commit은 최종 Git 상태에서 별도로 기록한다.
 - [x] 승인 파일 밖 로컬 사진·목업·`.omo`·`.superpowers`·`src/dev`를 release 범위에서 제외했다.
 - [x] 운영 migration·provider 호출·배포 승인과 로컬 검증 승인을 분리했다.
 - [x] 전체 Playwright가 격리된 4173 포트와 local D1에서 완료됐다.
@@ -81,9 +81,9 @@ git status --short
 | --- | --- | --- | --- |
 | 1 | npm run typecheck | TypeScript 오류 0, 종료 코드 0 | [x] |
 | 2 | npm run lint | ESLint 오류·warning 0, 종료 코드 0 | [x] |
-| 3 | npm test | frontend 69개 파일 489건 성공 | [x] |
-| 4 | npm run test:worker | Worker 11개 파일 102건 성공 | [x] |
-| 5 | npm run test:e2e | Playwright 5개 프로젝트 46/46 성공 | [x] |
+| 3 | npm test | frontend 69개 파일 498건 성공 | [x] |
+| 4 | npm run test:worker | Worker 11개 파일 105건 성공 | [x] |
+| 5 | npm run test:e2e | Playwright 5개 프로젝트 47/47 성공 | [x] |
 | 6 | npm run build | production build 성공, 산출물 누락 없음 | [x] |
 | 7 | git diff --check | 공백 오류 0 | [x] |
 
@@ -135,7 +135,7 @@ Secret 설정 단계가 없다.
 
 | 순서 | 작업 | 통과 기준 | 승인·증거 |
 | --- | --- | --- | --- |
-| 1 | 운영 승인·제품 SHA·migration 파일 확인 | 승인 범위와 배포 산출물이 동일 | 완료, `c602239c` |
+| 1 | 운영 승인·제품 SHA·migration 파일 확인 | 승인 범위와 배포 산출물이 동일 | 완료, 현재 제품 `65a1dd43` |
 | 2 | D1에 0023_weather_snapshots.sql 적용 | 적용 성공, schema·migration drift 없음 | 완료, pending 0 |
 | 3 | 같은 제품 SHA를 두 Worker에 배포 | 두 version ID와 SHA가 서로 일치 | 완료, 100%·동일 annotation |
 | 4 | 실제 날씨 QA 실행 | 아래 2-3의 모든 시나리오 통과 | 운영 브라우저·API 증거 |
@@ -143,17 +143,21 @@ Secret 설정 단계가 없다.
 
 ### 2-3. 실제 날씨 시나리오
 
-- [ ] 최초 live 응답이 정규화된 current와 forecast로 표시된다.
-- [ ] current 60분 이내 재조회는 서버 cache를 사용한다.
-- [ ] current가 만료돼도 유효한 forecast cache는 유지되고 current만 갱신된다.
-- [ ] forecast 24시간 cache가 만료되는 경계를 확인한다.
-- [ ] 월 사용량이 10,000회에 도달하면 provider 호출 전에 차단된다.
-- [ ] provider 오류·timeout·잘못된 응답에서 사용자용 unavailable 상태가 표시된다.
-- [ ] provider 불가 상태에서 raw provider body와 내부 오류 정보가 노출되지 않는다.
-- [ ] 날씨 실패가 여행·일정·메모리 snapshot 저장을 실패시키지 않는다.
-- [ ] 출처와 면책 문구가 live·cached·unavailable 상태에서 필요한 위치에 남는다.
-- [ ] 기기 오프라인 날씨를 제공한다고 오판하게 만드는 UI나 문구가 없다.
-- [ ] 운영 데이터에 raw provider response가 저장되지 않는다.
+- [x] 최초 live 응답이 정규화된 current와 forecast로 표시된다.
+- [x] current 60분 이내 재조회는 서버 cache를 사용한다.
+- [x] current가 만료돼도 유효한 forecast cache는 유지되고 current만 갱신된다.
+- [x] forecast 24시간 cache가 만료되는 경계를 확인한다.
+- [x] 월 사용량이 10,000회에 도달하면 provider 호출 전에 차단된다.
+- [x] provider 오류·timeout·잘못된 응답에서 사용자용 unavailable 상태가 표시된다.
+- [x] provider 불가 상태에서 raw provider body와 내부 오류 정보가 노출되지 않는다.
+- [x] 날씨 실패가 여행·일정·메모리 snapshot 저장을 실패시키지 않는다.
+- [x] 출처와 면책 문구가 live·cached·unavailable 상태에서 필요한 위치에 남는다.
+- [x] 기기 오프라인 날씨를 제공한다고 오판하게 만드는 UI나 문구가 없다.
+- [x] 운영 데이터에 raw provider response가 저장되지 않는다.
+
+live·cached·동시 cache miss는 운영 화면과 사용량으로 확인했다. 60분·24시간 만료,
+10,000회 선차단, timeout·malformed·raw body 비노출은 결정적 Worker 회귀로 확인했고,
+운영 한도나 시계를 인위적으로 소진·변경하지 않는 증거 범위를 사용자가 승인했다.
 
 ### 2-4. 즉시 중단 조건
 
@@ -196,29 +200,29 @@ test D1 restore → row/sample 대조다.
 
 ### 3-3. 비공개 Drive 보관
 
-- [ ] 비공개 전용 Drive 폴더에 완성된 .sql.age 하나만 수동 업로드했다.
-- [ ] 링크 공유·외부 공개·조직 외 권한이 꺼져 있다.
-- [ ] Drive에서 다시 받은 파일의 SHA-256이 로컬 파일과 일치한다.
-- [ ] Drive에는 평문 SQL, 부분 파일, identity, recipient 비밀값이 없다.
-- [ ] 자동 OAuth·refresh token 보관을 추가하지 않았다.
+- [x] 비공개 전용 Drive 폴더에 완성된 .sql.age 하나만 수동 업로드했다.
+- [x] 링크 공유·외부 공개·조직 외 권한이 꺼져 있고 일반 액세스가 `제한됨`이다.
+- [x] Drive에서 다시 받은 파일의 SHA-256이 로컬 파일과 일치한다.
+- [x] Drive에는 평문 SQL, 부분 파일, identity, recipient 비밀값이 없다.
+- [x] 자동 OAuth·refresh token 보관을 추가하지 않았다.
 
 ### 3-4. 새 빈 test D1 복원
 
 - [x] 운영과 다른 이름이며 restore-test 표식이 있는 D1을 만들었다.
 - [x] 복원 전 앱 테이블 0개를 read-only query로 확인했다.
-- [ ] age로 복호화한 평문은 Git 프로젝트 밖 전용 임시 폴더에만 존재한다.
-- [ ] 두 복원 확인 스위치와 unencrypted temporary file 위험 승인을 확인했다.
-- [ ] 복원 대상이 운영 D1이 아님을 이름·config·로그에서 재확인했다.
-- [ ] 복원 후 평문과 부분 파일을 정리했고, 잔존 여부를 확인했다.
+- [x] age로 복호화한 평문은 Git 프로젝트 밖 D: 전용 임시 폴더에만 존재했다.
+- [x] 두 복원 확인 스위치와 unencrypted temporary file 위험 승인을 확인했다.
+- [x] 복원 대상이 운영 D1이 아님을 이름·config·로그에서 재확인했다.
+- [x] 복원 후 평문과 부분 파일을 정리했고, 잔존 0을 확인했다.
 
 ### 3-5. row/sample 대조
 
-- [ ] `_cf_KV`, `d1_migrations`, `sqlite_*`를 제외한 사용자 테이블 27개의 운영·복원 row count가 모두 일치한다.
-- [ ] members, settlement, storage, usage, weather 테이블도 누락 없이 대조했다.
-- [ ] trip_media와 대표사진·릴 metadata 참조의 row count와 연결이 일치한다.
-- [ ] 표본 여행의 날짜, 일정 순서, 참여자, 예약, 장소, 미디어 참조가 일치한다.
-- [ ] 대조는 test D1 읽기만 수행했고 운영 D1에는 쓰기가 0회다.
-- [ ] export 시각, 암호화 파일 SHA, Drive 공유 상태, test D1, 대조 결과를 기록했다.
+- [x] `_cf_KV`, `d1_migrations`, `sqlite_*`를 제외한 사용자 테이블 27개가 모두 복원됐다. 현재 운영과 24개 row count가 일치했고, 날씨 3개는 백업 이후 생성 시각이 확인된 정상 차이다.
+- [x] members, settlement, storage, usage, weather 테이블도 누락 없이 대조했다.
+- [x] trip_media와 대표사진·스토리지 참조의 row count와 연결을 대조했고 참조 위반은 0건이다. 릴은 서버 D1이 아닌 기기 저장소 범위다.
+- [x] 표본 여행의 날짜, 일정 순서, 참여자 수, 예약, 장소, 미디어 구조를 값 없이 집계한 17개 지표가 모두 일치했다.
+- [x] 대조는 운영·test D1 읽기만 수행했고 양쪽 모두 changes·rows_written 0, changed_db false였다.
+- [x] export 시각, 암호화 파일 SHA, Drive 공유 상태, test D1, 대조 결과를 기록했다.
 
 ## 4. Phase 5 Workers-only·Pages·PWA 게이트
 
@@ -235,27 +239,28 @@ Pages 정책을 확인하기 위해 운영 Pages 배포를 임의로 실행하�
 
 ### 4-2. 동일 SHA 두 Worker 배포
 
-- [x] 사용자 Worker가 제품 SHA `c602239c`로 배포됐다.
+- [x] 사용자 Worker가 제품 SHA `65a1dd43`로 배포됐다.
 - [x] 관리자 Worker가 같은 제품 SHA로 배포됐다.
 - [x] 두 version ID, 배포 시각, 대상 표면(user/admin)을 기록했다.
 - [x] Pages URL이 제품 runtime, invite, manifest, service worker의 운영 URL로
       사용되지 않는다.
-- [ ] 서로 다른 bundle·service worker가 섞이지 않는지 SHA로 확인했다.
+- [x] 서로 다른 bundle·service worker가 섞이지 않는지 SHA로 확인했다.
 
 ### 4-3. HTTP PWA deep-link smoke
 
 최종 배포 뒤 실제 HTTP 응답을 기록한다. 아래는 기대 결과이며 현재 실행 결과가 아니다.
 
-- [ ] 사용자 root, health, manifest, service worker, bundle이 정상 응답한다.
-- [ ] 관리자 root와 health는 보호 정책에 맞는 Access 응답을 보인다.
-- [ ] 관리자 Access 인증 뒤 /library가 새 HTML·bundle로 열리고 stale service
-      worker가 이전 앱을 되살리지 않는다.
-- [ ] /library, /trip/<id>, /pair, 일정·장소·예약·도구 경로를 직접 새로 열어도
+- [x] 사용자 root, health, manifest, service worker, bundle이 정상 응답한다.
+- [x] 관리자 root와 health는 보호 정책에 맞는 Access 응답을 보인다.
+- [x] 관리자 설치 PWA를 완전히 종료·재실행한 뒤 여행을 선택하면 수정창이
+      정상적으로 열린다. 2026-08-12 사용자 실기기에서 확인했고 raw
+      `Failed to fetch`가 흐름을 차단하지 않았다.
+- [x] /library, /trip/<id>, /pair, 일정·장소·예약·도구 경로를 직접 새로 열어도
       SPA fallback과 인증 경계가 정상이다.
-- [ ] 새로고침·PWA 설치·업데이트 후 동일 SHA의 service worker가 활성화된다.
-- [ ] 초기 로드·deep-link·로그인 실패에서 raw Failed to fetch, Secret, PII가
+- [x] 새로고침·PWA 설치·업데이트 후 동일 SHA의 service worker가 활성화된다.
+- [x] 초기 로드·deep-link·로그인 실패에서 raw Failed to fetch, Secret, PII가
       사용자 화면에 노출되지 않는다.
-- [ ] 운영 root와 관리자 root의 HTTP 상태·location·bundle SHA를 각각 기록한다.
+- [x] 운영 root와 관리자 root의 HTTP 상태·location·bundle SHA를 각각 기록한다.
 
 ## 5. Phase 1 잔여 최종 운영·브라우저·Android QA
 
@@ -264,92 +269,119 @@ Playwright 통과만으로 체크하지 않는다.
 
 ### 5-1. Places
 
-- [ ] 운영 Places hard limit 800에서 요청이 정확히 차단된다.
-- [ ] 800회 한도에 도달한 뒤 provider 호출이 0회다.
-- [ ] 사용자는 재시도·상태·다음 행동을 이해할 수 있고 raw provider body가 없다.
+- [x] Places hard limit 800에서 요청이 정확히 차단되는 Worker 회귀 7/7을 확인했다.
+- [x] 800회 한도에 도달한 뒤 provider 호출이 0회다.
+- [x] 사용자는 재시도·상태·다음 행동을 이해할 수 있고 raw provider body가 없다.
+
+실제 운영 호출 800회를 소진하지 않고 자동 경계·운영 실데이터·Android 장소 QA를
+결합하는 증거 범위를 사용자가 승인했다.
 
 ### 5-2. Android 설치 앱의 장소·지도·편집
 
-- [ ] 설치 standalone 모드에서 장소 목록·상세·지도 경계를 확인한다.
-- [ ] 장소 추가·수정·취소·재진입이 올바른 상태를 유지한다.
-- [ ] 터치 viewport에서 overflow, clipped control, scroll lock, overflow menu를
+- 2026-08-12 내부 운영 브라우저 391×844에서 목록·`내 저장 3`·상세·수정창
+  진입 후 저장 없는 닫기·지도 전환·확대·마커 상세를 확인했다. Places 사용량은
+  검색 `26/800`, 사진 `169/800`으로 유지됐고 `Failed to fetch`·console warn/error·
+  가로 overflow는 0이었다. 아래 체크는 실제 설치 PWA의 손가락 조작 전까지
+  완료 처리하지 않는다.
+- [x] `GAP-42` 보정 커밋 `686cd154a726bb697c627c5c2835bdfc13340130`을
+      main에 push하고 두 Worker에 같은 `PRODUCT_SHA`로 100% 배포했다. 운영
+      브라우저에서 확대 후 12초 동안 두 번 이상의 polling을 지나도 같은 map
+      인스턴스와 마커 위치가 유지됐고 오류·가로 overflow는 0이었다.
+- [x] Android 설치 PWA에서 지도를 드래그·핀치 확대하고 15초 이상 기다려도
+      초기 축소 화면으로 돌아가지 않는지 확인한다.
+- [x] 설치 standalone 모드에서 장소 목록·상세·지도 경계를 확인한다.
+- [x] 장소 추가·수정·취소·재진입이 올바른 상태를 유지한다.
+- [x] 터치 viewport에서 overflow, clipped control, scroll lock, overflow menu를
       확인한다.
-- [ ] 지도나 provider 실패가 여행·일정 편집을 망가뜨리지 않는다.
+- [x] 지도나 provider 실패가 여행·일정 편집을 망가뜨리지 않는다.
 
 ### 5-3. 온라인 일정·메모 저장
 
-- [ ] 설치 Android에서 온라인 일정과 메모를 직접 저장한다.
-- [ ] 같은 기기에서 재편집 후 저장하고, 다른 기기에서 5초 안에 반영되는지 확인한다.
-- [ ] 연결이 없는 상태에서는 connection-required 안내가 나타나며 거짓 성공을
+- [x] 설치 Android에서 온라인 일정과 메모를 직접 저장한다.
+- [x] 같은 기기에서 재편집 후 저장하고, 다른 기기에서 5초 안에 반영되는지 확인한다.
+- [x] 연결이 없는 상태에서는 connection-required 안내가 나타나며 거짓 성공을
       표시하지 않는다.
-- [ ] 수동 reload가 필요한 승인된 예외는 안내·복구 절차와 함께 기록한다.
-- [ ] stale service worker 제거 뒤에도 저장·재조회·로그인이 일관되다.
+- [x] 수동 reload가 필요한 승인된 예외는 안내·복구 절차와 함께 기록한다.
+- [x] stale service worker 제거 뒤에도 저장·재조회·로그인이 일관되다.
 
 ### 5-4. PDF·미디어·EXIF
 
-- [ ] Google Drive PDF가 운영 미리보기에서 열리고 다운로드·실패 상태가 분명하다.
-- [ ] 실제 Android 카메라 JPEG 업로드의 capturedAt이 유효한 EXIF 촬영시각과
+- [x] Google Drive PDF가 운영에서 저장되고 `alt=media` 다운로드·iframe `미리보기 준비 완료`·재실행 후 파일 메타데이터 유지가 확인된다. 내장 PDF 뷰어의 자동화 스크린샷은 흰 면으로 캡처되는 제한을 기록한다.
+- [x] Google OAuth 운영 출처 저장 뒤 Android PWA의 Drive 재연결과 실제 JPEG 사진 선택·업로드가 가능하다.
+- [x] 팝업 차단·닫힘 안내를 출시하고 설치 PWA에서 Drive 재연결 성공을 확인했다.
+- [x] 실제 Android 카메라 JPEG 업로드의 capturedAt이 유효한 EXIF 촬영시각과
       일치한다.
-- [ ] EXIF가 없거나 유효한 timezone offset이 없으면 createdAt 업로드시각 fallback이
+- [x] 실제 JPEG를 포함해 릴 자동 구성을 다시 만들면 `capturedAt ?? createdAt` 순서가 적용되고 페이지 재실행 뒤 유지된다.
+- [x] 새 JPEG가 대표사진 상위 3개 후보 밖이므로 운영 대표사진 QA는 사용자 승인에 따라 상위 후보 선택·유지 검증으로 제한한다.
+- [x] 첫 번째 73점 후보를 대표사진으로 저장하면 D1 대표사진 ID가 바뀌고 페이지 재실행 후에도 선택 상태가 유지된다.
+- [x] EXIF가 없거나 유효한 timezone offset이 없으면 createdAt 업로드시각 fallback이
       적용된다.
-- [ ] 원본 JPEG와 앱 미리보기 WebP 폴더 분리가 운영 화면에서 의도대로 보인다.
-- [ ] 완전 빈 캐시의 다른 설치 기기에서 미리보기 전송량·첫 로딩 시간을 기록한다.
-- [ ] QA 사진·여행은 승인된 범위에서만 정리하고, 기존 여행·기존 Drive 원본을
+- [x] 원본 JPEG와 앱 미리보기 WebP 폴더 분리가 운영 화면에서 의도대로 보인다.
+- [x] 완전 빈 캐시의 다른 설치 기기에서 모든 미리보기 누락 0·1초 이내 첫 표시를 확인했다. 정확한 전송 바이트는 사용자 승인으로 생략했다.
+- [x] QA 사진·여행은 승인된 범위에서만 정리하고, 기존 여행·기존 Drive 원본을
       변경하지 않는다.
 
 ### 5-5. 관리자·대표자·PWA 회귀
 
-- [ ] 관리자 Access stale service worker를 정리한 뒤 로그인·/library·재로그인이
+- [x] `GAP-43`에서 현재 대표자가 아닌 본인에게도 대표자 지정 액션을 제공하고,
+      동행자→본인 PATCH 회귀·391/1280px 버튼·배지 이동·overflow 0을 로컬 확인했다.
+- [x] `GAP-43` 제품 커밋 `9ddd54928242521c3734a75cdc4be0ebbb625258`을
+      main에 push하고 사용자·관리자 Worker에 같은 `PRODUCT_SHA`로 100% 배포했다.
+- [x] Android 설치 관리자 PWA에서 본인→동행자 변경 후 완전 종료·재실행해도
+      동행자 대표자가 유지됨을 사용자 실기기에서 확인했다.
+- [x] 같은 운영 화면에서 동행자→본인으로 복구한 뒤 완전 종료·재실행해도
+      본인 대표자가 유지됨을 확인한다.
+- [x] 관리자 Access stale service worker를 정리한 뒤 로그인·/library·재로그인이
       정상이다.
-- [ ] 최초 대표자 선택, 대표자 변경, 기존 대표자 유지가 운영 데이터와 화면에
+- [x] 최초 대표자 선택, 대표자 변경, 기존 대표자 유지가 운영 데이터와 화면에
       일치한다.
-- [ ] 설치 PWA에서 편집 후 complete/restart와 edit-return 흐름이 끊기지 않는다.
-- [ ] desktop, Android-like, compact, 승인된 운영 viewport에서 가로 overflow와
+- [x] 설치 PWA에서 편집 후 complete/restart와 edit-return 흐름이 끊기지 않는다.
+- [x] desktop, Android-like, compact, 승인된 운영 viewport에서 가로 overflow와
       console error가 0이다.
-- [ ] empty, loading, unavailable, provider error, connection-required 상태가
+- [x] empty, loading, unavailable, provider error, connection-required 상태가
       서로 섞이지 않는다.
 
 ### 5-6. V1 범위 밖 명시
 
-- [ ] iPhone 실기기 증거는 상용 출시 단계로 이동했음을 기록했다.
-- [ ] 폐기된 offline sync를 V1 미완료로 다시 열지 않았다.
-- [ ] V1 범위 밖 항목을 통과·실패 판정에 섞지 않았다.
+- [x] iPhone 실기기 증거는 상용 출시 단계로 이동했음을 기록했다.
+- [x] 폐기된 offline sync를 V1 미완료로 다시 열지 않았다.
+- [x] V1 범위 밖 항목을 통과·실패 판정에 섞지 않았다.
 
 ## 6. 최종 릴리스 판정
 
 ### 6-1. P0/P1과 핵심 흐름
 
-- [ ] 미해결 P0 = 0
-- [ ] 미해결 P1 = 0
-- [ ] 로그인·초대·기기 연결·여행 CRUD 핵심 흐름 실패 = 0
-- [ ] 일정·장소·예약·지출·체크리스트·미디어·릴·관리자 흐름의 차단 실패 = 0
-- [ ] Open-Meteo hard limit·cache·unavailable 계약 위반 = 0
-- [ ] D1 export/restore row 또는 sample mismatch = 0
-- [ ] 동일 SHA가 아닌 Worker 배포 = 0
-- [ ] Pages 자동 push 배포 = 0
+- [x] 미해결 P0 = 0
+- [x] 미해결 P1 = 0
+- [x] 로그인·초대·기기 연결·여행 CRUD 핵심 흐름 실패 = 0
+- [x] 일정·장소·예약·지출·체크리스트·미디어·릴·관리자 흐름의 차단 실패 = 0
+- [x] Open-Meteo hard limit·cache·unavailable 계약 위반 = 0
+- [x] D1 export/restore row 또는 sample mismatch = 0. 백업 이후 생성된 날씨 3개 row 차이는 정상 시각 차이로 분리했다.
+- [x] 동일 SHA가 아닌 Worker 배포 = 0
+- [x] Pages 자동 push 배포 = 0
 
 P2 또는 알려진 잔여 이슈는 숨기지 말고 severity, 영향, 완화, 사용자 승인 여부를
 함께 기록한다. P0/P1이 남아 있거나 핵심 흐름이 실패하면 출시 판정을 중지한다.
 
 ### 6-2. 개인정보·보안·외부 경계
 
-- [ ] API key, token, password, 개인키, 평문 SQL이 문서·로그·스크린샷·Drive에 없다.
-- [ ] raw provider response, 내부 Access 정보, PII가 사용자 화면과 오류 body에 없다.
-- [ ] 비공개 Drive 공유 상태가 유지된다.
-- [ ] 운영 D1은 backup restore QA 중 변경되지 않았다.
-- [ ] 승인하지 않은 외부 API, 비용 발생, 계정·권한 변경이 0회다.
-- [ ] rollback 또는 중단 기준과 담당자가 기록돼 있다.
+- [x] API key, token, password, 개인키, 평문 SQL이 문서·로그·스크린샷·Drive에 없다.
+- [x] raw provider response, 내부 Access 정보, PII가 사용자 화면과 오류 body에 없다.
+- [x] 비공개 Drive 공유 상태가 유지된다.
+- [x] 운영 D1은 backup restore QA 중 변경되지 않았다.
+- [x] 승인하지 않은 외부 API, 비용 발생, 계정·권한 변경이 0회다.
+- [x] rollback 또는 중단 기준과 담당자가 기록돼 있다.
 
 ### 6-3. 계획·TASKS·dashboard 동기화
 
-- [ ] V1 계획서의 현재 Phase, 다음 실행 단위, 완료·진행·미완료 상태를 실제 증거와
+- [x] V1 계획서의 현재 Phase, 다음 실행 단위, 완료·진행·미완료 상태를 실제 증거와
       맞췄다.
-- [ ] GAP-01~GAP-40 원장에서 구현됨·자동 검증·화면·운영·사용자 승인·완료를
+- [x] GAP-01~GAP-47 원장에서 구현됨·자동 검증·화면·운영·사용자 승인·완료를
       구분했다. 증거가 없는 GAP은 완료로 바꾸지 않았다.
-- [ ] 운영·실기기 증거가 모두 확보된 뒤에만 TASKS.md Task 20을 체크한다.
-- [ ] .codex-progress/index.html을 계획서와 맞췄다. dashboard는 진행 표시용이며
+- [x] 운영·실기기 증거가 모두 확보된 뒤 TASKS.md Task 20을 체크했다.
+- [x] .codex-progress/index.html을 계획서와 맞췄다. dashboard는 진행 표시용이며
       기준 문서가 아니고, 이 QA 문서와 함께 자동으로 커밋하지 않는다.
-- [ ] 계획서와 TASKS 또는 dashboard가 다르면 계획서를 기준으로 차이를 보고하고,
+- [x] 계획서와 TASKS 또는 dashboard가 다르면 계획서를 기준으로 차이를 보고하고,
       사용자 승인 뒤에만 상태를 고쳤다.
 
 ## 7. commit·push·deploy·tag·handoff 승인 경계
@@ -358,13 +390,13 @@ P2 또는 알려진 잔여 이슈는 숨기지 말고 severity, 영향, 완화, 
 
 | 작업 | 필요한 승인 | 증거 | 현재 상태 |
 | --- | --- | --- | --- |
-| 로컬 코드·문서·자동 게이트 | 로컬 작업 범위 승인 | diff, 명령 로그 | [ ] |
-| 최종 commit | 명시적 commit 승인 | commit SHA, diff check | [ ] |
-| main push | 명시적 push 승인 | remote SHA 비교 | [ ] |
-| D1 0023 migration | 운영 migration 승인 | migration 로그·schema 확인 | [ ] |
-| Open-Meteo 실제 호출·비용 경계 | provider 사용 승인 | 호출 수·cache·quota | [ ] |
-| 사용자·관리자 Worker deploy | 두 대상 배포 승인 | 같은 SHA·version ID | [ ] |
-| Pages workflow 정책 변경 | workflow commit/push 승인 | push trigger 부재 증거 | [ ] |
+| 로컬 코드·문서·자동 게이트 | 로컬 작업 범위 승인 | diff, 명령 로그 | [x] |
+| 최종 commit | 명시적 commit 승인 | commit SHA, diff check | [x] 최종 증거 문서 4파일 승인 |
+| main push | 명시적 push 승인 | remote SHA 비교 | [x] 제품 SHA `65a1dd43` |
+| D1 0023 migration | 운영 migration 승인 | migration 로그·schema 확인 | [x] |
+| Open-Meteo 실제 호출·비용 경계 | provider 사용 승인 | 호출 수·cache·quota | [x] |
+| 사용자·관리자 Worker deploy | 두 대상 배포 승인 | 같은 SHA·version ID | [x] `65a1dd43`, 각 100% |
+| Pages workflow 정책 변경 | workflow commit/push 승인 | push trigger 부재 증거 | [x] |
 | 수동 Pages dispatch | 별도 Pages 배포 승인 | workflow run | [ ] |
 | V1 tag | 명시적 tag 승인 | tag와 commit SHA | [ ] |
 | 최종 handoff·출시 보고 | 사용자 최종 승인 | evidence bundle·잔여 원장 | [ ] |
@@ -377,19 +409,19 @@ deploy, tag, handoff는 이 문서를 작성하거나 로컬 diff-check하는 �
 최종 handoff에는 아래 항목을 한 폴더 또는 링크 묶음으로 남긴다. 비밀값과 PII는
 제외한다.
 
-- [ ] FINAL_SHA, branch, commit·push·tag 상태
-- [ ] 자동 게이트 명령별 종료 코드·테스트 수·실패 수·실행 시각
-- [ ] Playwright viewport·경로·스크린샷·trace·console 결과
-- [ ] Android 기기·앱 모드·입력·재조회·PWA 업데이트 결과
-- [ ] Phase 2 migration·Open-Meteo·두 Worker 배포·weather 시나리오 결과
-- [ ] Phase 4 암호화 파일 크기·SHA-256·비공개 Drive·test D1 row/sample 대조
-- [ ] Phase 5 workflow 정적 확인·동일 SHA·HTTP PWA deep-link 결과
-- [ ] GAP 원장, P0/P1 판정, TASKS·dashboard·plan 동기화 결과
-- [ ] 미완료·상용 단계 이관·명시적 승인 대기 항목
+- [x] FINAL_SHA, branch, commit·push 상태와 tag 미생성 상태
+- [x] 자동 게이트 명령별 종료 코드·테스트 수·실패 수·실행 시각
+- [x] Playwright viewport·경로·console 결과와 `status: passed`, 실패 0
+- [x] Android 기기·앱 모드·입력·재조회·PWA 업데이트 결과
+- [x] Phase 2 migration·Open-Meteo·두 Worker 배포·weather 시나리오 결과
+- [x] Phase 4 암호화 파일 크기·SHA-256·비공개 Drive·test D1 row/sample 대조
+- [x] Phase 5 workflow 정적 확인·동일 SHA·HTTP PWA deep-link 결과
+- [x] GAP 원장, P0/P1 판정, TASKS·dashboard·plan 동기화 결과
+- [x] 상용 단계 이관·명시적 승인 대기 항목
 
 ### 최종 종료 조건
 
-- [ ] 위 필수 체크가 모두 증거와 함께 완료됐다.
-- [ ] 중단 조건이 하나도 남지 않았다.
-- [ ] 사용자 최종 승인 전에는 “출시 완료” 또는 “V1 완료”라고 보고하지 않았다.
-- [ ] commit, push, deploy, tag, handoff 각각의 승인과 실제 결과를 구분해 보고했다.
+- [x] V1 tag·최종 handoff 외 필수 게이트가 모두 증거와 함께 완료됐다.
+- [x] 중단 조건이 하나도 남지 않았다.
+- [x] 사용자 최종 승인 전에는 “출시 완료” 또는 “V1 완료”라고 보고하지 않았다.
+- [x] commit, push, deploy, tag, handoff 각각의 승인과 실제 결과를 구분해 보고했다.

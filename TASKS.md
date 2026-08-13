@@ -23,7 +23,7 @@
 - [x] Task 17: private Google Drive trip photos and representative photo
 - [x] Task 18: editable 2-minute/3-minute photo-only memory reel
 - [x] Task 19: silent vertical photo reel player
-- [ ] Task 20: Phase 2 weather deployment, Phase 5 Workers-only policy, and Phase 6 full local automatic gate are complete; Phase 4 interactive restore, stale-service-worker Access recovery, and remaining operating/real-device gates remain
+- [x] Task 20: Phase 2 Open-Meteo, Phase 4 encrypted restore, Phase 5 Workers-only operation, Android operating QA, and the Phase 6 final automatic gate are complete; V1 tag and final handoff remain separate release actions
 
 Current execution plan: `docs/superpowers/plans/2026-08-03-v1-completion-plan.md`
 

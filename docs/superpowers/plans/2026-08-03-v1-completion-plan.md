@@ -1344,6 +1344,31 @@ npm run build
 - A안 로컬 보정을 완료했다. 상단 `대표사진 삭제` 버튼을 제거했고, 모든 등록 사진을 AI 점수 순으로 표시한다. 현재 대표 카드에는 비활성 `현재 대표사진`만, 비현재 카드에는 같은 2열 카드 액션의 `대표사진으로 선택`·위험 색상 `이력 삭제`를 제공한다. 삭제 확인·취소·성공·실패는 비현재 사진에만 적용하며, 성공 뒤 현재 대표는 그대로 유지되고 Drive `remove`는 호출하지 않는다. 대상 회귀 10건, typecheck, 전체 lint, production build, diff-check를 통과했다. 390px·1440px 실제 로컬 브라우저에서 두 카드 버튼의 높이·폭·간격 일치, 가로 넘침 0, 확인→취소→확인 삭제 뒤 현재 대표 유지와 콘솔 warn/error 0을 확인했다. 현재 상태는 `로컬 구현·자동·화면 검증 완료, commit·push·두 Worker 배포와 설치 PWA 확인 대기`다.
 - 2026-08-13 사용자 결정: `이력 삭제` 버튼은 확인창 없이 즉시 앱 이력을 삭제한다. 현재 대표사진 보호, Google Drive 원본·WebP 보존, 삭제 실패 시 카드 유지 정책은 그대로 둔다. 이번 보정은 로컬 코드·회귀 테스트·typecheck·lint·build 검증 범위로 진행한다.
 
+### 2026-08-13 · Phase 6 최종 통합 게이트
+
+- `GAP-47`의 비현재 대표사진 이력 즉시 삭제를 제품 커밋 `65a1dd43bac7f5928dc100e1276982960629d5a7`로 `main`에 push하고 사용자·관리자 Worker에 같은 `PRODUCT_SHA`로 배포했다. 사용자는 설치 PWA에서 현재 대표사진 보호, 비현재 이력의 확인창 없는 삭제, 빠른 릴 미리보기와 Drive 원본 유지 동작을 확인했다.
+- 최종 소스 기준 `npm run typecheck`, `npm run lint`, frontend 69파일 498건, Worker 11파일 105건, production build, Playwright 5개 프로젝트 47건, `git diff --check`가 모두 통과했다. 첫 Worker 병렬 실행은 로컬 Cloudflare pool의 포트 시작 실패로 종료됐으나 다른 게이트와 분리해 단독 재실행한 결과 105/105가 통과했으므로 제품 실패로 판정하지 않는다.
+- Playwright의 `.last-run.json`은 `status: passed`, 실패 0을 기록했다. 전체 E2E는 production build와 local D1 migration `0001~0024`만 사용했으며 운영 D1을 변경하지 않았다.
+- 사용자 Worker deployment `c9045f88-efff-47ce-9aad-a5e30952d991`와 관리자 Worker deployment `ea560581-ccc6-44e8-8a30-d99d2c1ce5c6`는 같은 `PRODUCT_SHA=65a1dd43...`을 각각 100% 사용한다. Pages workflow는 수동 `workflow_dispatch`만 남고 `main` push trigger가 없으며 제품 runtime에 `github.io`·`pages.dev` 참조가 없다.
+- build가 만드는 `dist/couple_travel_guide/.dev.vars`는 Git ignored 로컬 서버 산출물이고, 두 Wrangler 설정의 공개 asset directory는 `dist/client`다. `dist/client`에는 `.dev.vars`가 없다. 추적 production 파일의 비밀 리터럴 검사에서 실제 key·token·개인키는 발견되지 않았고, legacy HTML의 Google-key 모양 문자열은 data URI 안의 97자 base64 조각으로 확인했다.
+- Phase 4 실제 복원·27개 테이블/17개 비민감 구조 지표·참조 위반 0·평문 잔존 0, Open-Meteo live·cached 운영, Places 800회 선차단 자동 경계, Android 일정·장소·지도·PDF·JPEG EXIF·대표자·Drive·릴·긴 여행지·대표사진 이력 QA를 모두 최종 증거로 대조했다. 실제 Places 800회 소진, 정확한 릴 전송 바이트, 실사진 40~60장 업로드는 사용자가 승인한 결정적 자동·운영 결합 증거로 대체한다. iPhone은 상용화 단계로 이관하고 폐기된 offline sync는 다시 열지 않는다.
+- 최종 판정은 `미해결 P0=0`, `미해결 P1=0`, 핵심 흐름 차단 실패 0이다. `TASKS.md` Task 20을 완료 처리한다. 사용자는 이어진 지시로 최종 증거 문서 4파일의 commit·`main` push를 승인했다. 실행 SHA는 Git 상태와 종료 보고에 기록하며, V1 tag·최종 handoff는 여전히 각각 별도 승인 전까지 실행하지 않는다.
+
+**이 표가 위의 과거 현재 작업 상태 표를 대체한다.**
+
+| 실행 단위 | 최종 상태 | 남은 범위 |
+|---|---|---|
+| Phase 0 관리자 인증 | V1 완료 | 없음 |
+| Phase 1A 일정·온라인 전용 PWA | V1 완료 | iPhone은 상용화 단계, Android 자동 재연결은 수동 `다시 불러오기` 예외 승인 |
+| Phase 1B 장소·지도 | V1 완료 | 실제 운영 800회 소진은 사용자 승인으로 생략 |
+| Phase 1C 필수 도구·PDF·정산 | V1 완료 | 없음 |
+| Phase 1D 사진·대표자·릴·관리 | V1 완료 | 정확한 전송 바이트와 실사진 40~60장 추가 업로드는 사용자 승인으로 생략 |
+| Phase 2 Open-Meteo 날씨 | 완료 | 상업 공개 전 라이선스 재검토 |
+| Phase 3 설치 PWA 최종 검증 | V1 완료 | iPhone은 상용화 단계 |
+| Phase 4 D1 백업·복원 | 완료 | 테스트 D1 보존·삭제는 별도 파괴적 승인 |
+| Phase 5 Workers 단일 운영 | 완료 | 수동 Pages dispatch는 실행하지 않음 |
+| Phase 6 최종 통합 게이트 | 통과 | 문서 commit·push, V1 tag, 최종 handoff 각각 별도 승인 |
+
 ## 13. 컨텍스트 압축 후 복구 체크리스트
 
 컨텍스트가 압축되거나 작업이 이어질 때마다 구현을 재개하기 전에 다음을 확인한다.
