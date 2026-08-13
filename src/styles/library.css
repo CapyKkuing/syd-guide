@@ -381,6 +381,7 @@
 }
 
 .trip-form [popover] {
+  width: anchor-size(width);
   min-width: 0;
   max-width: calc(100vw - var(--space-8));
   overflow-x: hidden;
