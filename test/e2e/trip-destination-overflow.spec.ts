@@ -52,12 +52,13 @@ test("a long edited destination and its suggestion stay inside the mobile trip e
       const option = dropdown?.querySelector<HTMLElement>("[role='option']");
       const popover = dropdown?.closest<HTMLElement>("[popover]");
       const dialogElement = control?.closest<HTMLElement>("[role='dialog']");
-      if (!control || !input || !dropdown || !option || !popover || !dialogElement) {
+      const optionLabel = option?.querySelector<HTMLElement>(".astryx-typeahead-item span");
+      if (!control || !input || !dropdown || !option || !popover || !dialogElement || !optionLabel) {
         throw new Error("destination typeahead surface is incomplete");
       }
       const rect = (element: HTMLElement) => {
         const bounds = element.getBoundingClientRect();
-        return { left: bounds.left, right: bounds.right, width: bounds.width };
+        return { left: bounds.left, right: bounds.right, width: bounds.width, height: bounds.height };
       };
       return {
         control: rect(control),
@@ -66,6 +67,12 @@ test("a long edited destination and its suggestion stay inside the mobile trip e
         option: rect(option),
         popover: rect(popover),
         dialog: rect(dialogElement),
+        optionLabel: {
+          ...rect(optionLabel),
+          lineHeight: Number.parseFloat(getComputedStyle(optionLabel).lineHeight),
+          overflowWrap: getComputedStyle(optionLabel).overflowWrap,
+          whiteSpace: getComputedStyle(optionLabel).whiteSpace,
+        },
         documentWidth: document.documentElement.scrollWidth,
         viewportWidth: window.innerWidth,
       };
@@ -76,10 +83,26 @@ test("a long edited destination and its suggestion stay inside the mobile trip e
       expect(surface.right).toBeLessThanOrEqual(dimensions.dialog.right + 1);
     }
     expect(dimensions.popover.width).toBeLessThanOrEqual(dimensions.control.width + 1);
+    expect(dimensions.optionLabel.height).toBeGreaterThan(dimensions.optionLabel.lineHeight * 1.5);
+    expect(dimensions.optionLabel.overflowWrap).toBe("anywhere");
+    expect(dimensions.optionLabel.whiteSpace).toBe("normal");
     expect(dimensions.documentWidth).toBeLessThanOrEqual(dimensions.viewportWidth);
   }
 
   await directOption.click();
+  const selectedToken = destinationControl.locator(".astryx-token");
+  const selectedTokenLabel = selectedToken.locator("span").first();
+  await expect(selectedToken).toBeVisible();
+  const selectedTokenMetrics = await selectedTokenLabel.evaluate((element) => ({
+    height: element.getBoundingClientRect().height,
+    lineHeight: Number.parseFloat(getComputedStyle(element).lineHeight),
+    overflowWrap: getComputedStyle(element).overflowWrap,
+    whiteSpace: getComputedStyle(element).whiteSpace,
+  }));
+  expect(selectedTokenMetrics.height).toBeGreaterThan(selectedTokenMetrics.lineHeight * 1.5);
+  expect(selectedTokenMetrics.overflowWrap).toBe("anywhere");
+  expect(selectedTokenMetrics.whiteSpace).toBe("normal");
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   const timeZoneControl = dialog.locator(".astryx-typeahead").nth(1);
   await timeZoneControl.click();
   await timeZoneControl.getByRole("combobox").fill("Sydney");

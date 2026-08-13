@@ -401,6 +401,40 @@
   overflow: hidden;
 }
 
+.trip-form .astryx-typeahead-dropdown [role="option"],
+.trip-form .astryx-typeahead-item,
+.trip-form .astryx-typeahead-item > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.trip-form .astryx-typeahead-item span {
+  overflow: visible;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+  white-space: normal;
+}
+
+.trip-form .astryx-typeahead .astryx-token {
+  height: auto;
+  align-items: flex-start;
+  padding-block: var(--space-1);
+  white-space: normal;
+}
+
+.trip-form .astryx-typeahead .astryx-token button {
+  min-width: 0;
+  overflow: visible;
+  white-space: normal;
+}
+
+.trip-form .astryx-typeahead .astryx-token button > span {
+  overflow: visible;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+  white-space: normal;
+}
+
 .trip-form .astryx-date-time-input > * {
   min-width: 0;
 }
