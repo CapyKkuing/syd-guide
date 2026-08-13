@@ -46,7 +46,6 @@ export function RepresentativePhotoPanel({
   const [previews, setPreviews] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
-  const [deleteMediaId, setDeleteMediaId] = useState<string | null>(null);
   const [message, setMessage] = useState(
     api
       ? "사진은 내 Google Drive에 저장되고 AI 분석은 이 기기에서만 실행됩니다."
@@ -60,7 +59,6 @@ export function RepresentativePhotoPanel({
     [items]
   );
   const representative = items.find((item) => item.id === representativeId);
-  const deleteTarget = items.find((item) => item.id === deleteMediaId);
   const coverUrl = representative ? previews[representative.id] : undefined;
 
   useEffect(() => {
@@ -251,7 +249,6 @@ export function RepresentativePhotoPanel({
         return next;
       });
       setItems((current) => current.filter((item) => item.id !== media.id));
-      setDeleteMediaId(null);
       try {
         await onChanged();
       } catch {
@@ -341,27 +338,6 @@ export function RepresentativePhotoPanel({
           />
         </label>
         <p className="representative-photo__message" aria-live="polite">{message}</p>
-        {deleteTarget ? (
-          <div
-            aria-labelledby="representative-photo-delete-title"
-            aria-modal="true"
-            className="representative-photo__delete-confirm"
-            role="alertdialog"
-          >
-            <div>
-              <strong id="representative-photo-delete-title">{deleteTarget.originalName} 사진 이력을 삭제할까요?</strong>
-              <span>앱 기록에서만 지우며 Google Drive 원본과 미리보기 파일은 유지합니다.</span>
-            </div>
-            <div className="representative-photo__delete-actions">
-              <button className="secondary-button" disabled={busy} onClick={() => setDeleteMediaId(null)} type="button">
-                취소
-              </button>
-              <button className="danger-button" disabled={busy} onClick={() => void removePhotoHistory(deleteTarget)} type="button">
-                {busy ? "삭제 중…" : "앱 이력 삭제 확인"}
-              </button>
-            </div>
-          </div>
-        ) : null}
       </div>
 
       {candidateAndHistory.length ? (
@@ -389,7 +365,7 @@ export function RepresentativePhotoPanel({
                   <button
                     className="secondary-button photo-candidate__delete-button"
                     disabled={busy}
-                    onClick={() => setDeleteMediaId(candidate.id)}
+                    onClick={() => void removePhotoHistory(candidate)}
                     type="button"
                   >
                     이력 삭제

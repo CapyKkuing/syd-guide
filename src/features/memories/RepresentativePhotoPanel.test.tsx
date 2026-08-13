@@ -475,7 +475,7 @@ describe("RepresentativePhotoPanel", () => {
     expect(runtime.provider.upload).toHaveBeenCalledTimes(2);
   });
 
-  it("protects the current representative and deletes a non-current photo history after confirmation", async () => {
+  it("protects the current representative and immediately deletes a non-current photo history", async () => {
     const user = userEvent.setup();
     const runtime = setup();
     const onChanged = vi.fn().mockResolvedValue(undefined);
@@ -504,14 +504,6 @@ describe("RepresentativePhotoPanel", () => {
     expect(screen.queryByRole("button", { name: "대표사진 삭제" })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "이력 삭제" }));
-    expect(screen.getByRole("alertdialog")).toHaveTextContent(
-      "Google Drive 원본과 미리보기 파일은 유지합니다."
-    );
-    await user.click(screen.getByRole("button", { name: "취소" }));
-    expect(runtime.api.remove).not.toHaveBeenCalled();
-
-    await user.click(screen.getByRole("button", { name: "이력 삭제" }));
-    await user.click(screen.getByRole("button", { name: "앱 이력 삭제 확인" }));
 
     await waitFor(() => {
       expect(runtime.api.remove).toHaveBeenCalledWith(trip.id, historyMedia.id);
@@ -550,7 +542,6 @@ describe("RepresentativePhotoPanel", () => {
     );
 
     await user.click(await screen.findByRole("button", { name: "이력 삭제" }));
-    await user.click(screen.getByRole("button", { name: "앱 이력 삭제 확인" }));
 
     expect(await screen.findByText("사진 이력을 삭제하지 못했습니다. 다시 시도해 주세요.")).toBeVisible();
     expect(screen.getByRole("button", { name: "이력 삭제" })).toBeVisible();
