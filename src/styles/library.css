@@ -393,6 +393,13 @@
   max-width: 100%;
 }
 
+.trip-form .astryx-typeahead {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
 .trip-form .astryx-date-time-input > * {
   min-width: 0;
 }
