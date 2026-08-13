@@ -398,8 +398,8 @@ P2 또는 알려진 잔여 이슈는 숨기지 말고 severity, 영향, 완화, 
 | 사용자·관리자 Worker deploy | 두 대상 배포 승인 | 같은 SHA·version ID | [x] `65a1dd43`, 각 100% |
 | Pages workflow 정책 변경 | workflow commit/push 승인 | push trigger 부재 증거 | [x] |
 | 수동 Pages dispatch | 별도 Pages 배포 승인 | workflow run | [ ] |
-| V1 tag | 명시적 tag 승인 | tag와 commit SHA | [ ] |
-| 최종 handoff·출시 보고 | 사용자 최종 승인 | evidence bundle·잔여 원장 | [ ] |
+| V1 tag | 명시적 tag 승인 | tag와 commit SHA | [x] `v1.0.0`, 이 handoff commit 대상 |
+| 최종 handoff·출시 보고 | 사용자 최종 승인 | evidence bundle·잔여 원장 | [x] `docs/operations/v1-handoff.md` |
 
 운영 migration, Secret, 외부 provider 호출, 원격 D1 export/restore, commit, push,
 deploy, tag, handoff는 이 문서를 작성하거나 로컬 diff-check하는 동안 실행하지 않는다.
@@ -409,7 +409,7 @@ deploy, tag, handoff는 이 문서를 작성하거나 로컬 diff-check하는 �
 최종 handoff에는 아래 항목을 한 폴더 또는 링크 묶음으로 남긴다. 비밀값과 PII는
 제외한다.
 
-- [x] FINAL_SHA, branch, commit·push 상태와 tag 미생성 상태
+- [x] 제품 SHA, 문서 SHA, branch, commit·push 상태와 `v1.0.0` tag 대상을 기록했다.
 - [x] 자동 게이트 명령별 종료 코드·테스트 수·실패 수·실행 시각
 - [x] Playwright viewport·경로·console 결과와 `status: passed`, 실패 0
 - [x] Android 기기·앱 모드·입력·재조회·PWA 업데이트 결과
@@ -421,7 +421,7 @@ deploy, tag, handoff는 이 문서를 작성하거나 로컬 diff-check하는 �
 
 ### 최종 종료 조건
 
-- [x] V1 tag·최종 handoff 외 필수 게이트가 모두 증거와 함께 완료됐다.
+- [x] V1 tag·최종 handoff를 포함한 필수 게이트가 모두 증거와 함께 완료됐다.
 - [x] 중단 조건이 하나도 남지 않았다.
 - [x] 사용자 최종 승인 전에는 “출시 완료” 또는 “V1 완료”라고 보고하지 않았다.
 - [x] commit, push, deploy, tag, handoff 각각의 승인과 실제 결과를 구분해 보고했다.

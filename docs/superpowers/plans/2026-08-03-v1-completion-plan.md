@@ -1369,6 +1369,13 @@ npm run build
 | Phase 5 Workers 단일 운영 | 완료 | 수동 Pages dispatch는 실행하지 않음 |
 | Phase 6 최종 통합 게이트 | 통과 | 문서 commit·push, V1 tag, 최종 handoff 각각 별도 승인 |
 
+### 2026-08-13 · V1 tag와 최종 handoff 승인
+
+- 사용자가 최종 증거 문서 commit·push 완료 뒤 V1 tag와 최종 handoff 진행을 승인했다.
+- 기존 local·remote tag가 없고 계획서의 제품 완료 이름이 V1이므로 첫 정식 tag는 `v1.0.0`으로 정한다. `package.json`의 내부 패키지 버전은 제품 코드 변경 없이 유지한다.
+- `docs/operations/v1-handoff.md`에 제품 SHA, 최종 게이트 결과, 운영·실기기·복구 증거, 승인된 V1 예외, 보안·rollback 인계를 기록한다.
+- `v1.0.0`은 이 handoff 문서를 포함한 최종 `main` commit을 가리키며, main commit push 성공과 local·remote tag SHA 일치 확인으로 V1 출시 기록을 종료한다. Worker 재배포·migration·Secret·운영 데이터 변경은 실행하지 않는다.
+
 ## 13. 컨텍스트 압축 후 복구 체크리스트
 
 컨텍스트가 압축되거나 작업이 이어질 때마다 구현을 재개하기 전에 다음을 확인한다.
